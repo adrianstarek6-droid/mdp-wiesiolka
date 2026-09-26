@@ -68,4 +68,692 @@ label{font-size:13px;color:#bbb}
 .login-card{width:min(430px,100%);background:#171a20;border:1px solid #353a44;border-radius:24px;padding:30px;box-shadow:0 25px 80px #0009;text-align:center}
 .login-logo{width:76px;height:76px;border-radius:22px;background:#fff;color:#c5161d;display:grid;place-items:center;font-size:40px;margin:0 auto 18px}
 .kicker{font-size:11px;font-weight:900;letter-spacing:1.3px;color:#ef555b}
-.login-card h1{font-size:30px
+.login-card h1{font-size:30px;margin:7px 0}
+.login-btn{width:100%;padding:13px}
+.hint{text-align:center;color:#707782;font-size:11px;margin-top:12px}
+.toast{position:fixed;right:15px;bottom:15px;z-index:20;background:#242a33;border:1px solid #424a56;border-radius:12px;padding:13px 15px;box-shadow:0 10px 30px #0008;max-width:340px}
+.toast b{display:block;margin-bottom:3px}
+
+@media(max-width:700px){
+.grid{grid-template-columns:1fr}
+.wide{grid-column:auto}
+.quick{grid-template-columns:repeat(3,1fr)}
+.row{grid-template-columns:1fr}
+.eventtop{flex-direction:column}
+}
+</style>
+</head>
+
+<body>
+
+<div id="loginScreen" class="login">
+<div class="login-card">
+
+<div class="login-logo">🔥</div>
+<div class="kicker">MŁODZIEŻOWA DRUŻYNA POŻARNICZA</div>
+<h1>MDP WIESIÓŁKA</h1>
+
+<p class="muted">Panel drużyny</p>
+
+<label>Imię i nazwisko</label>
+<input id="loginName" placeholder="np. Jan Kowalski">
+
+<label>Typ konta</label>
+<select id="loginRole">
+<option value="member">👨‍🚒 Członek MDP</option>
+<option value="admin">🛡️ Opiekun / Administrator</option>
+</select>
+
+<label>Kod dostępu</label>
+<input id="loginCode" type="password" placeholder="Kod dostępu">
+
+<button class="primary login-btn" onclick="login()">ZALOGUJ SIĘ →</button>
+
+</div>
+</div>
+
+<div id="appScreen" class="hidden">
+
+<header>
+<div class="brand">
+<div class="logo">🔥</div>
+<div>
+<h1>MDP WIESIÓŁKA</h1>
+<p>Panel drużyny • <span id="userLabel"></span></p>
+</div>
+</div>
+</header>
+
+<main>
+
+<div class="tabs">
+<button class="active" onclick="tab('home',this)">🏠 Start</button>
+<button onclick="tab('events',this)">📅 Zbiórki</button>
+<button onclick="tab('ann',this)" class="bell">🔔 Informacje <span id="bellCount" class="count">0</span></button>
+<button onclick="tab('members',this)">👥 Członkowie</button>
+<button id="adminTab" class="hidden" onclick="tab('admin',this)">⚙️ Zarządzanie</button>
+<button onclick="logout()">Wyloguj</button>
+</div>
+
+<section id="home" class="tab">
+
+<div class="quick">
+<div class="q">📅<b id="qEvents">0</b><span>zbiórek</span></div>
+<div class="q">🔥<b id="qAttendance">0%</b><span>moja frekwencja</span></div>
+<div class="q">🔔<b id="qUnread">0</b><span>nieprzeczytane</span></div>
+</div>
+
+<div class="grid">
+
+<div class="card wide">
+<div class="muted">NAJBLIŻSZA ZBIÓRKA</div>
+<h2 id="nextTitle">—</h2>
+<p class="muted" id="nextInfo">—</p>
+<div id="nextActions"></div>
+</div>
+
+<div class="card wide">
+<h3>📢 Najnowsze informacje</h3>
+<div id="latestAnn"></div>
+</div>
+
+<div class="card wide">
+<h3>📆 Kalendarz MDP</h3>
+<div id="calendar"></div>
+<p class="muted">Kliknij dzień ze zbiórką, aby zobaczyć szczegóły.</p>
+</div>
+
+</div>
+</section>
+
+<section id="events" class="tab hidden">
+<div class="card">
+<h2>📅 Zbiórki</h2>
+<p class="muted">Odpowiedz na każdą zbiórkę. Administrator może ją usunąć.</p>
+<div id="eventsList"></div>
+</div>
+</section>
+
+<section id="ann" class="tab hidden">
+<div class="card">
+<h2>🔔 Informacje</h2>
+<p class="muted">Ogłoszenia od opiekunów MDP.</p>
+<div id="annList"></div>
+</div>
+</section>
+
+<section id="members" class="tab hidden">
+<div class="card">
+<h2>👥 Członkowie MDP</h2>
+<div id="membersList"></div>
+</div>
+</section>
+
+<section id="admin" class="tab hidden">
+
+<div class="grid">
+
+<div class="card">
+<h2>➕ Dodaj zbiórkę</h2>
+
+<form onsubmit="addEvent(event)">
+
+<label>Tytuł</label>
+<input id="newTitle" required placeholder="np. Zbiórka treningowa">
+
+<div class="row">
+
+<div>
+<label>Data</label>
+<input id="newDate" type="date" required>
+</div>
+
+<div>
+<label>Godzina</label>
+<input id="newTime" type="time" value="17:00" required>
+</div>
+
+</div>
+
+<label>Miejsce</label>
+<input id="newPlace" value="Remiza OSP Wiesiółka">
+
+<label>Opis</label>
+<textarea id="newDesc" rows="3"></textarea>
+
+<button class="primary">DODAJ ZBIÓRKĘ</button>
+
+</form>
+</div>
+
+<div class="card">
+<h2>📢 Dodaj informację</h2>
+
+<form onsubmit="addAnn(event)">
+
+<label>Tytuł</label>
+<input id="annTitle" required placeholder="np. Zmiana godziny zbiórki">
+
+<label>Treść</label>
+<textarea id="annText" rows="4" required></textarea>
+
+<button class="primary">OPUBLIKUJ INFORMACJĘ</button>
+
+</form>
+</div>
+
+<div class="card wide">
+<h2>🗑️ Zarządzanie treścią</h2>
+<p class="muted">Tutaj możesz usuwać nieaktualne zbiórki i informacje.</p>
+<div id="adminContent"></div>
+</div>
+
+</div>
+</section>
+
+</main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+
+let user=null,events=[],anns=[];
+
+const members=["Adrian Starek"];
+
+async function api(url,opt={}){
+let r=await fetch(url,{headers:{"Content-Type":"application/json"},...opt});
+if(!r.ok)throw new Error(await r.text());
+return r.json()
+}
+
+async function login(){
+
+let n=loginName.value.trim(),
+role=loginRole.value,
+code=loginCode.value;
+
+if(!n)return alert("Wpisz imię i nazwisko.");
+
+if((role==="admin"&&code!=="0000")||(role==="member"&&code!=="1234"))
+return alert("Nieprawidłowy kod dostępu.");
+
+user={name:n,role};
+
+document.getElementById("loginScreen").classList.add("hidden");
+document.getElementById("appScreen").classList.remove("hidden");
+
+userLabel.textContent=n+(role==="admin"?" • ADMIN":"");
+
+if(role==="admin")adminTab.classList.remove("hidden");
+
+await load();
+
+if("Notification"in window&&Notification.permission==="default")
+Notification.requestPermission().catch(()=>{});
+
+registerSW();
+
+setTimeout(enablePush,700)
+}
+
+function logout(){
+location.reload()
+}
+
+function tab(id,b){
+
+document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
+
+document.getElementById(id).classList.remove("hidden");
+
+document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+
+b.classList.add("active");
+
+}
+
+function fmt(d){
+
+return new Date(d).toLocaleString("pl-PL",{
+weekday:"long",
+day:"2-digit",
+month:"long",
+hour:"2-digit",
+minute:"2-digit"
+})
+
+}
+
+function resp(e){
+return e.responses?.[user.name]||null
+}
+
+async function setResp(id,status){
+
+await api("/api/events/"+id+"/response",{
+method:"POST",
+body:JSON.stringify({
+name:user.name,
+status
+})
+});
+
+await load();
+
+toast(
+"Odpowiedź zapisana",
+"Twój status został zaktualizowany."
+)
+
+}
+
+function buttons(e){
+
+let r=resp(e);
+
+return `<div class="actions">
+<button class="yes" onclick="setResp(${e.id},'yes')">✓ Potwierdź${r==="yes"?" ✓":""}</button>
+<button class="no" onclick="setResp(${e.id},'no')">✕ Odrzuć${r==="no"?" ✓":""}</button>
+<button class="maybe" onclick="setResp(${e.id},'maybe')">? Może będę${r==="maybe"?" ✓":""}</button>
+</div>`
+
+}
+
+async function load(){
+
+let d=await api("/api/data");
+
+events=d.events;
+anns=d.announcements;
+
+render()
+
+}
+
+function render(){
+
+events.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+let next=events.find(e=>new Date(e.date)>=new Date())||events[0];
+
+qEvents.textContent=events.length;
+
+let total=0,yes=0;
+
+events.forEach(e=>{
+
+if(resp(e)){
+total++;
+if(resp(e)==="yes")yes++
+}
+
+});
+
+qAttendance.textContent=(total?Math.round(yes/total*100):0)+"%";
+
+qUnread.textContent=anns.length;
+
+bellCount.textContent=anns.length;
+
+if(next){
+
+nextTitle.textContent=next.title;
+
+nextInfo.textContent=`${fmt(next.date)} • ${next.place}`;
+
+nextActions.innerHTML=buttons(next)
+
+}
+
+eventsList.innerHTML=events.map(e=>`
+
+<div class="event">
+
+<div class="eventtop">
+
+<div>
+
+<h3>${e.title}</h3>
+
+<div class="muted">
+📅 ${fmt(e.date)}
+<br>
+📍 ${e.place}
+</div>
+
+<p class="muted">${e.desc||""}</p>
+
+</div>
+
+<span class="badge">${resp(e)||"brak odpowiedzi"}</span>
+
+</div>
+
+${buttons(e)}
+
+</div>
+
+`).join("")||"<p class='muted'>Brak zbiórek.</p>";
+
+annList.innerHTML=anns.map(a=>`
+
+<div class="ann">
+
+<div class="meta">
+${new Date(a.createdAt).toLocaleString("pl-PL")}
+</div>
+
+<h3>${a.title}</h3>
+
+<div class="muted">
+${a.text}
+</div>
+
+</div>
+
+`).join("")||"<p class='muted'>Brak informacji.</p>";
+
+latestAnn.innerHTML=anns.slice(0,2).map(a=>`
+
+<div class="ann">
+
+<h3>${a.title}</h3>
+
+<div class="muted">
+${a.text}
+</div>
+
+</div>
+
+`).join("")||"<p class='muted'>Brak informacji.</p>";
+
+membersList.innerHTML=members.map(n=>`
+
+<div class="event" style="display:flex;justify-content:space-between">
+
+<span>👤 ${n}</span>
+
+<span class="muted">
+Członek MDP
+</span>
+
+</div>
+
+`).join("");
+
+if(user.role==="admin")
+
+adminContent.innerHTML=
+
+`<h3>Zbiórki</h3>`+
+
+events.map(e=>`
+
+<div class="event" style="display:flex;justify-content:space-between;gap:10px">
+
+<span>
+<b>${e.title}</b>
+<br>
+<span class="muted">${fmt(e.date)}</span>
+</span>
+
+<button class="danger small" onclick="delEvent(${e.id})">
+Usuń
+</button>
+
+</div>
+
+`).join("")+
+
+`<h3 style="margin-top:20px">
+Informacje
+</h3>`+
+
+anns.map(a=>`
+
+<div class="event" style="display:flex;justify-content:space-between;gap:10px">
+
+<span>
+<b>${a.title}</b>
+</span>
+
+<button class="danger small" onclick="delAnn(${a.id})">
+Usuń
+</button>
+
+</div>
+
+`).join("");
+
+buildCalendar()
+
+}
+
+function buildCalendar(){
+
+let c=calendar,
+now=new Date(),
+y=now.getFullYear(),
+m=now.getMonth(),
+first=(new Date(y,m,1).getDay()+6)%7,
+days=new Date(y,m+1,0).getDate(),
+out="";
+
+["Pn","Wt","Śr","Cz","Pt","Sb","Nd"].forEach(x=>
+out+=`<div class="day head">${x}</div>`
+);
+
+for(let i=0;i<first;i++)
+out+=`<div class="day empty"></div>`;
+
+for(let d=1;d<=days;d++){
+
+let iso=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+let es=events.filter(e=>e.date.startsWith(iso));
+
+out+=`
+
+<button class="day ${es.length?"eventday":""}" onclick="calendarDay('${iso}')">
+
+<b>${d}</b>
+
+${es.map(e=>`<span>🔥 ${e.title}</span>`).join("")}
+
+</button>`
+
+}
+
+c.innerHTML=out
+
+}
+
+function calendarDay(iso){
+
+let es=events.filter(e=>e.date.startsWith(iso));
+
+if(!es.length)return;
+
+alert(
+
+es.map(e=>
+`${e.title}
+${fmt(e.date)}
+📍 ${e.place}
+${e.desc||""}`
+).join("\n\n")
+
+)
+
+}
+
+async function addEvent(ev){
+
+ev.preventDefault();
+
+await api("/api/events",{
+method:"POST",
+body:JSON.stringify({
+title:newTitle.value,
+date:newDate.value+"T"+newTime.value,
+place:newPlace.value,
+desc:newDesc.value
+})
+});
+
+ev.target.reset();
+
+newPlace.value="Remiza OSP Wiesiółka";
+
+await load();
+
+toast(
+"Dodano zbiórkę",
+"Członkowie zobaczą ją od razu."
+)
+
+}
+
+async function addAnn(ev){
+
+ev.preventDefault();
+
+await api("/api/announcements",{
+method:"POST",
+body:JSON.stringify({
+title:annTitle.value,
+text:annText.value
+})
+});
+
+ev.target.reset();
+
+await load();
+
+toast(
+"Opublikowano informację",
+"Powiadomienie push zostanie wysłane do zapisanych urządzeń."
+)
+
+}
+
+async function delEvent(id){
+
+if(!confirm("Usunąć tę zbiórkę?"))return;
+
+await api("/api/events/"+id,{
+method:"DELETE"
+});
+
+await load();
+
+toast(
+"Usunięto zbiórkę",
+""
+)
+
+}
+
+async function delAnn(id){
+
+if(!confirm("Usunąć tę informację?"))return;
+
+await api("/api/announcements/"+id,{
+method:"DELETE"
+});
+
+await load();
+
+toast(
+"Usunięto informację",
+""
+)
+
+}
+
+function toast(title,text){
+
+let t=document.getElementById("toast");
+
+t.innerHTML=`<b>${title}</b>${text||""}`;
+
+t.classList.remove("hidden");
+
+setTimeout(()=>t.classList.add("hidden"),3500)
+
+}
+
+async function registerSW(){
+
+if(!("serviceWorker"in navigator))return;
+
+try{
+await navigator.serviceWorker.register("/sw.js")
+}catch(e){}
+
+}
+
+function b64ToBytes(b64){
+
+let s=b64.replace(/-/g,"+").replace(/_/g,"/");
+
+while(s.length%4)s+="=";
+
+let raw=atob(s),
+a=new Uint8Array(raw.length);
+
+for(let i=0;i<raw.length;i++)
+a[i]=raw.charCodeAt(i);
+
+return a
+
+}
+
+async function enablePush(){
+
+try{
+
+if(
+!window.isSecureContext||
+!("serviceWorker"in navigator)||
+!("PushManager"in window)||
+!("Notification"in window)||
+Notification.permission!=="granted"
+)return;
+
+let k=(await api("/api/push/public-key")).key;
+
+if(!k)return;
+
+let reg=await navigator.serviceWorker.ready;
+
+let sub=await reg.pushManager.getSubscription();
+
+if(!sub)
+
+sub=await reg.pushManager.subscribe({
+userVisibleOnly:true,
+applicationServerKey:b64ToBytes(k)
+});
+
+await api("/api/push/subscribe",{
+method:"POST",
+body:JSON.stringify(sub.toJSON())
+})
+
+}catch(e){
+
+console.log("Push:",e.message)
+
+}
+
+}
+
+load().catch(()=>{})
+
+</script>
+
+</body>
+</html>
