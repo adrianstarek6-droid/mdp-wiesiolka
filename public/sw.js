@@ -1,4 +1,5 @@
-const CACHE_NAME = "mdp-wiesiolka-v1";
+
+const CACHE_NAME = "mdp-wiesiolka-v2";
 
 const FILES_TO_CACHE = [
   "./",
@@ -12,6 +13,8 @@ self.addEventListener("install", event => {
       return cache.addAll(FILES_TO_CACHE);
     })
   );
+
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
@@ -24,6 +27,8 @@ self.addEventListener("activate", event => {
       )
     )
   );
+
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
