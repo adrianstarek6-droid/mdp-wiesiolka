@@ -1,6 +1,39 @@
-self.addEventListener("push",event=>{
- let d={title:"MDP WIESIÓŁKA",body:"Nowa informacja",url:"/"};
- try{d=event.data.json()}catch(e){}
- event.waitUntil(self.registration.showNotification(d.title,{body:d.body,icon:"/icon.svg",badge:"/icon.svg",data:{url:d.url||"/"}}))
+const CACHE_NAME = "mdp-wiesiolka-v1";
+
+const FILES_TO_CACHE = [
+    "/",
+    "/index.html",
+    "/manifest.json"
+];
+
+self.addEventListener("install", event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(FILES_TO_CACHE);
+        })
+    );
+
+    self.skipWaiting();
 });
-self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs=>{for(const c of cs)if("focus"in c)return c.focus();return clients.openWindow(event.notification.data?.url||"/")}))});
+
+self.addEventListener("activate", event => {
+    event.waitUntil(
+        caches.keys().then(keys => {
+            return Promise.all(
+                keys
+                    .filter(key => key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            );
+        })
+    );
+
+    self.clients.claim();
+});
+
+self.addEventListener("fetch", event => {
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            return cachedResponse || fetch(event.request);
+        })
+    );
+});
