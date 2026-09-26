@@ -1,12 +1,13 @@
 {
-  "name": "MDP WIESIÓŁKA",
-  "short_name": "MDP WIESIÓŁKA",
+  "name": "MDP Wiesiółka",
+  "short_name": "MDP Wiesiółka",
+  "description": "Młodzieżowa Drużyna Pożarnicza Wiesiółka",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0b0d11",
+  "orientation": "portrait",
+  "background_color": "#111111",
   "theme_color": "#d71920",
-  "description": "Oficjalna aplikacja MDP WIESIÓŁKA",
   "icons": [
     {
       "src": "/icon-192.png",
