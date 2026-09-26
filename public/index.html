@@ -22,8 +22,42 @@
 
 <title>MDP WIESIÓŁKA</title>
 
-
 <style>
+
+/* =========================
+   EKRAN STARTOWY
+========================= */
+
+#splashScreen{
+position:fixed;
+inset:0;
+z-index:99999;
+background:#080808;
+display:flex;
+align-items:center;
+justify-content:center;
+opacity:1;
+visibility:visible;
+transition:opacity .6s ease,visibility .6s ease;
+}
+
+#splashScreen.hide{
+opacity:0;
+visibility:hidden;
+pointer-events:none;
+}
+
+#splashScreen img{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+}
+
+
+/* =========================
+   GŁÓWNY STYL
+========================= */
 
 :root{
 --red:#d71920;
@@ -824,6 +858,24 @@ padding:11px
 
 <body>
 
+<!-- =========================
+     EKRAN STARTOWY
+========================= -->
+
+<div id="splashScreen">
+
+<img
+src="/file_000000004254824698c9689b2102225a.png"
+alt="MDP Wiesiółka"
+>
+
+</div>
+
+
+<!-- =========================
+     LOGOWANIE
+========================= -->
+
 <div id="loginScreen" class="login">
 
 <div class="login-card">
@@ -886,6 +938,7 @@ ZALOGUJ SIĘ →
 </div>
 
 </div>
+
 
 <div id="appScreen" class="hidden">
 
@@ -1383,6 +1436,7 @@ class="toast hidden"
 >
 </div>
 
+
 <script>
 
 let user=null;
@@ -1392,6 +1446,30 @@ let members=[];
 
 let calendarMonth=new Date().getMonth();
 let calendarYear=new Date().getFullYear();
+
+
+/* =========================
+   EKRAN STARTOWY
+========================= */
+
+window.addEventListener("load",()=>{
+
+setTimeout(()=>{
+
+const splash=
+document.getElementById("splashScreen");
+
+if(splash)
+splash.classList.add("hide");
+
+},1800);
+
+});
+
+
+/* =========================
+   API
+========================= */
 
 async function api(url,opt={}){
 
@@ -1411,6 +1489,11 @@ throw new Error(await r.text());
 return r.json();
 
 }
+
+
+/* =========================
+   LOGOWANIE
+========================= */
 
 async function login(){
 
@@ -1491,11 +1574,21 @@ alert(
 
 }
 
+
+/* =========================
+   WYLOGOWANIE
+========================= */
+
 function logout(){
 
 location.reload();
 
 }
+
+
+/* =========================
+   ZAKŁADKI
+========================= */
 
 function tab(id,b){
 
@@ -1520,6 +1613,11 @@ b.classList.add("active");
 
 }
 
+
+/* =========================
+   DATA
+========================= */
+
 function fmt(d){
 
 return new Date(d)
@@ -1535,6 +1633,11 @@ minute:"2-digit"
 );
 
 }
+
+
+/* =========================
+   ODPOWIEDZI
+========================= */
 
 function resp(e){
 
@@ -1596,6 +1699,11 @@ alert("Nie udało się zapisać odpowiedzi.");
 
 }
 
+
+/* =========================
+   PRZYCISKI ZBIÓREK
+========================= */
+
 function buttons(e){
 
 let r=resp(e);
@@ -1631,6 +1739,11 @@ onclick="setResp(${e.id},'maybe')"
 
 }
 
+
+/* =========================
+   ŁADOWANIE
+========================= */
+
 async function load(){
 
 let d=await api("/api/data");
@@ -1642,6 +1755,11 @@ members=d.members || [];
 render();
 
 }
+
+
+/* =========================
+   RENDER
+========================= */
 
 function render(){
 
@@ -2014,6 +2132,11 @@ buildCalendar();
 
 }
 
+
+/* =========================
+   KALENDARZ
+========================= */
+
 function buildCalendar(){
 
 let c=
@@ -2297,6 +2420,11 @@ ${e.desc||""}`
 
 }
 
+
+/* =========================
+   DODAWANIE ZBIÓRKI
+========================= */
+
 async function addEvent(ev){
 
 ev.preventDefault();
@@ -2338,6 +2466,11 @@ alert("Nie udało się dodać zbiórki.");
 
 }
 
+
+/* =========================
+   DODAWANIE INFORMACJI
+========================= */
+
 async function addAnn(ev){
 
 ev.preventDefault();
@@ -2373,6 +2506,11 @@ alert("Nie udało się opublikować informacji.");
 }
 
 }
+
+
+/* =========================
+   USUWANIE
+========================= */
 
 async function delEvent(id){
 
@@ -2469,6 +2607,11 @@ alert("Nie udało się usunąć członka.");
 
 }
 
+
+/* =========================
+   TOAST
+========================= */
+
 function toast(title,text){
 
 let t=
@@ -2485,6 +2628,11 @@ setTimeout(
 );
 
 }
+
+
+/* =========================
+   SERVICE WORKER
+========================= */
 
 async function registerSW(){
 
@@ -2512,6 +2660,11 @@ e
 }
 
 }
+
+
+/* =========================
+   PUSH
+========================= */
 
 function b64ToBytes(b64){
 
@@ -2609,7 +2762,9 @@ e.message
 }
 
 
-/* START */
+/* =========================
+   START
+========================= */
 
 registerSW();
 
@@ -2620,4 +2775,4 @@ load().catch(
 </script>
 
 </body>
-  </html>
+</html>
