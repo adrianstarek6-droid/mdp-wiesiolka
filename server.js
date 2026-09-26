@@ -19,34 +19,20 @@ let db = fs.existsSync(DB)
       members: []
     };
 
-/*
-  Jeśli masz już stary data.json bez "members",
-  dodajemy pustą tablicę automatycznie.
-*/
-if (!Array.isArray(db.members)) {
-  db.members = [];
-}
-
-if (!Array.isArray(db.events)) {
-  db.events = [];
-}
-
-if (!Array.isArray(db.announcements)) {
-  db.announcements = [];
-}
-
-if (!Array.isArray(db.subscriptions)) {
-  db.subscriptions = [];
-}
+// Uzupełnienie brakujących danych w starym data.json
+if (!Array.isArray(db.events)) db.events = [];
+if (!Array.isArray(db.announcements)) db.announcements = [];
+if (!Array.isArray(db.subscriptions)) db.subscriptions = [];
+if (!Array.isArray(db.members)) db.members = [];
 
 const save = () => {
   fs.writeFileSync(DB, JSON.stringify(db, null, 2));
 };
 
 
-/* =========================
-   POWIADOMIENIA PUSH
-========================= */
+// =========================
+// POWIADOMIENIA PUSH
+// =========================
 
 const pub =
   process.env.VAPID_PUBLIC_KEY ||
@@ -87,9 +73,9 @@ async function pushAll(payload) {
 }
 
 
-/* =========================
-   GŁÓWNE DANE
-========================= */
+// =========================
+// GŁÓWNE DANE
+// =========================
 
 app.get("/api/data", (req, res) => {
   res.json({
@@ -100,29 +86,17 @@ app.get("/api/data", (req, res) => {
 });
 
 
-/* =========================
-   CZŁONKOWIE MDP
-========================= */
+// =========================
+// CZŁONKOWIE MDP
+// =========================
 
-/*
-  Pobieranie wszystkich członków
-*/
+// Pobieranie listy członków
 app.get("/api/members", (req, res) => {
   res.json(db.members);
 });
 
 
-/*
-  Dodawanie nowego członka
-
-  Wysyłane:
-  {
-    "name": "Jan Kowalski"
-  }
-
-  Jeśli osoba już istnieje,
-  nie zostanie dodana drugi raz.
-*/
+// Dodawanie członka
 app.post("/api/members", (req, res) => {
   const name = String(req.body.name || "").trim();
 
@@ -132,10 +106,7 @@ app.post("/api/members", (req, res) => {
     });
   }
 
-  /*
-    Sprawdzamy bez względu na wielkość liter,
-    np. Jan Kowalski = jan kowalski
-  */
+  // Sprawdzenie, czy osoba już istnieje
   const exists = db.members.some(
     m => m.toLowerCase() === name.toLowerCase()
   );
@@ -149,11 +120,10 @@ app.post("/api/members", (req, res) => {
     });
   }
 
+  // Dodanie nowego członka
   db.members.push(name);
 
-  /*
-    Sortowanie alfabetyczne
-  */
+  // Sortowanie alfabetyczne
   db.members.sort((a, b) =>
     a.localeCompare(b, "pl")
   );
@@ -169,14 +139,11 @@ app.post("/api/members", (req, res) => {
 });
 
 
-/*
-  Usuwanie członka
-
-  Przykład:
-  DELETE /api/members/Jan%20Kowalski
-*/
+// Usuwanie członka
 app.delete("/api/members/:name", (req, res) => {
-  const name = decodeURIComponent(req.params.name).trim();
+  const name = decodeURIComponent(
+    req.params.name
+  ).trim();
 
   const before = db.members.length;
 
@@ -199,12 +166,12 @@ app.delete("/api/members/:name", (req, res) => {
 });
 
 
-/* =========================
-   ZBIÓRKI
-========================= */
+// =========================
+// ZBIÓRKI
+// =========================
 
 app.post("/api/events", (req, res) => {
-  let e = {
+  const e = {
     id: Date.now(),
     title: req.body.title,
     date: req.body.date,
@@ -230,9 +197,7 @@ app.post("/api/events", (req, res) => {
 });
 
 
-/*
-  Usuwanie zbiórki
-*/
+// Usuwanie zbiórki
 app.delete("/api/events/:id", (req, res) => {
   db.events = db.events.filter(
     e => e.id != req.params.id
@@ -246,121 +211,132 @@ app.delete("/api/events/:id", (req, res) => {
 });
 
 
-/*
-  Odpowiedź członka na zbiórkę
-
-  status:
-  yes = obecność
-  no = nieobecność
-  maybe = może
-*/
-app.post("/api/events/:id/response", (req, res) => {
-  let e = db.events.find(
-    e => e.id == req.params.id
-  );
-
-  if (!e) {
-    return res.status(404).end();
-  }
-
-  e.responses = e.responses || {};
-
-  const name = String(req.body.name || "").trim();
-  const status = req.body.status;
-
-  if (!name) {
-    return res.status(400).json({
-      error: "Brak imienia i nazwiska."
-    });
-  }
-
-  if (!["yes", "no", "maybe"].includes(status)) {
-    return res.status(400).json({
-      error: "Nieprawidłowy status."
-    });
-  }
-
-  e.responses[name] = status;
-
-  save();
-
-  res.json(e);
-});
-
-
-/* =========================
-   OGŁOSZENIA
-========================= */
-
-app.post("/api/announcements", (req, res) => {
-  let a = {
-    id: Date.now(),
-    title: req.body.title,
-    text: req.body.text,
-    createdAt: new Date().toISOString()
-  };
-
-  db.announcements.unshift(a);
-
-  save();
-
-  pushAll({
-    title: "📢 MDP WIESIÓŁKA",
-    body: a.title
-  });
-
-  res.json(a);
-});
-
-
-/*
-  Usuwanie ogłoszenia
-*/
-app.delete("/api/announcements/:id", (req, res) => {
-  db.announcements =
-    db.announcements.filter(
-      a => a.id != req.params.id
+// Odpowiedź na zbiórkę
+app.post(
+  "/api/events/:id/response",
+  (req, res) => {
+    const e = db.events.find(
+      e => e.id == req.params.id
     );
 
-  save();
+    if (!e) {
+      return res.status(404).end();
+    }
 
-  res.json({
-    ok: true
-  });
-});
+    e.responses = e.responses || {};
 
+    const name = String(
+      req.body.name || ""
+    ).trim();
 
-/* =========================
-   POWIADOMIENIA PUSH
-========================= */
+    const status = req.body.status;
 
-app.post("/api/push/subscribe", (req, res) => {
-  if (
-    !db.subscriptions.some(
-      s => s.endpoint === req.body.endpoint
-    )
-  ) {
-    db.subscriptions.push(req.body);
+    if (!name) {
+      return res.status(400).json({
+        error: "Brak imienia i nazwiska."
+      });
+    }
+
+    if (
+      !["yes", "no", "maybe"].includes(status)
+    ) {
+      return res.status(400).json({
+        error: "Nieprawidłowy status."
+      });
+    }
+
+    e.responses[name] = status;
+
+    save();
+
+    res.json(e);
   }
-
-  save();
-
-  res.json({
-    ok: true
-  });
-});
+);
 
 
-app.get("/api/push/public-key", (req, res) => {
-  res.json({
-    key: pub || ""
-  });
-});
+// =========================
+// OGŁOSZENIA
+// =========================
+
+app.post(
+  "/api/announcements",
+  (req, res) => {
+    const a = {
+      id: Date.now(),
+      title: req.body.title,
+      text: req.body.text,
+      createdAt: new Date().toISOString()
+    };
+
+    db.announcements.unshift(a);
+
+    save();
+
+    pushAll({
+      title: "📢 MDP WIESIÓŁKA",
+      body: a.title
+    });
+
+    res.json(a);
+  }
+);
 
 
-/* =========================
-   AUTOMATYCZNE PRZYPOMNIENIA
-========================= */
+// Usuwanie ogłoszenia
+app.delete(
+  "/api/announcements/:id",
+  (req, res) => {
+    db.announcements =
+      db.announcements.filter(
+        a => a.id != req.params.id
+      );
+
+    save();
+
+    res.json({
+      ok: true
+    });
+  }
+);
+
+
+// =========================
+// POWIADOMIENIA
+// =========================
+
+app.post(
+  "/api/push/subscribe",
+  (req, res) => {
+    if (
+      !db.subscriptions.some(
+        s => s.endpoint === req.body.endpoint
+      )
+    ) {
+      db.subscriptions.push(req.body);
+    }
+
+    save();
+
+    res.json({
+      ok: true
+    });
+  }
+);
+
+
+app.get(
+  "/api/push/public-key",
+  (req, res) => {
+    res.json({
+      key: pub || ""
+    });
+  }
+);
+
+
+// =========================
+// PRZYPOMNIENIA O ZBIÓRKACH
+// =========================
 
 setInterval(async () => {
   const now = Date.now();
@@ -369,10 +345,6 @@ setInterval(async () => {
     const diff =
       new Date(e.date).getTime() - now;
 
-    /*
-      Przypomnienie, jeśli zbiórka
-      jest za mniej niż godzinę.
-    */
     if (
       diff > 0 &&
       diff < 61 * 60 * 1000 &&
@@ -381,7 +353,8 @@ setInterval(async () => {
       e.reminderSent = true;
 
       await pushAll({
-        title: "🔥 Zbiórka za mniej niż godzinę",
+        title:
+          "🔥 Zbiórka za mniej niż godzinę",
         body: e.title,
         url: "/"
       });
@@ -392,15 +365,16 @@ setInterval(async () => {
 }, 60 * 1000);
 
 
-/* =========================
-   URUCHOMIENIE SERWERA
-========================= */
+// =========================
+// START SERWERA
+// =========================
 
 app.listen(
   process.env.PORT || 3000,
-  () =>
+  () => {
     console.log(
       "MDP WIESIÓŁKA działa na porcie " +
       (process.env.PORT || 3000)
-    )
+    );
+  }
 );
