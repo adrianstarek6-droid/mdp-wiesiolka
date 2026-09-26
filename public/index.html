@@ -1,13 +1,27 @@
 <!doctype html>
 <html lang="pl">
 <head>
+
 <meta charset="utf-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
 <meta name="theme-color" content="#d71920">
+
 <meta name="mobile-web-app-capable" content="yes">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="manifest" href="/manifest.webmanifest">
+
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="manifest" href="/manifest.json">
+
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="apple-touch-icon" href="/icon-192.png">
+
 <title>MDP WIESIÓŁKA</title>
+
 
 <style>
 
@@ -137,8 +151,6 @@ color:var(--muted);
 font-size:14px
 }
 
-/* QUICK */
-
 .quick{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -163,8 +175,6 @@ margin-top:5px
 font-size:12px;
 color:var(--muted)
 }
-
-/* FREKWENCJA */
 
 .attendance-card{
 background:linear-gradient(145deg,#191c23,#101216);
@@ -280,8 +290,6 @@ background:#292e37;
 color:#fff
 }
 
-/* EVENTS */
-
 .event{
 border-bottom:1px solid #30343d;
 padding:16px 0
@@ -352,8 +360,6 @@ padding:7px 10px;
 font-size:12px
 }
 
-/* INFORMACJE */
-
 .notice{
 display:flex;
 gap:10px;
@@ -391,8 +397,6 @@ color:#858c97
 margin-top:5px
 }
 
-/* BELL */
-
 .bell{
 position:relative
 }
@@ -410,8 +414,6 @@ height:17px;
 display:grid;
 place-items:center
 }
-
-/* KALENDARZ */
 
 .calendar-wrap{
 background:linear-gradient(145deg,#171a20,#0f1115);
@@ -583,8 +585,6 @@ background:#d71920
 box-shadow:0 0 0 3px #d7192033
 }
 
-/* CZŁONKOWIE */
-
 .member-card{
 display:flex;
 align-items:center;
@@ -626,8 +626,6 @@ color:#858c97;
 margin-top:3px
 }
 
-/* FORMULARZE */
-
 input,
 textarea,
 select{
@@ -650,8 +648,6 @@ display:grid;
 grid-template-columns:1fr 1fr;
 gap:10px
 }
-
-/* LOGIN */
 
 .login{
 min-height:100vh;
@@ -707,8 +703,6 @@ font-size:11px;
 margin-top:12px
 }
 
-/* TOAST */
-
 .toast{
 position:fixed;
 right:15px;
@@ -726,8 +720,6 @@ max-width:340px
 display:block;
 margin-bottom:3px
 }
-
-/* MOBILE */
 
 @media(max-width:700px){
 
@@ -832,8 +824,6 @@ padding:11px
 
 <body>
 
-<!-- LOGOWANIE -->
-
 <div id="loginScreen" class="login">
 
 <div class="login-card">
@@ -897,9 +887,6 @@ ZALOGUJ SIĘ →
 
 </div>
 
-
-<!-- APLIKACJA -->
-
 <div id="appScreen" class="hidden">
 
 <header>
@@ -927,10 +914,7 @@ Panel drużyny •
 
 </header>
 
-
 <main>
-
-<!-- MENU -->
 
 <div class="tabs">
 
@@ -980,9 +964,6 @@ Wyloguj
 
 </div>
 
-
-<!-- START -->
-
 <section
 id="home"
 class="tab"
@@ -1009,9 +990,6 @@ class="tab"
 </div>
 
 </div>
-
-
-<!-- FREKWENCJA -->
 
 <div class="attendance-card">
 
@@ -1042,7 +1020,6 @@ id="attendancePercent"
 
 </div>
 
-
 <div class="attendance-bar">
 
 <div
@@ -1051,7 +1028,6 @@ id="attendanceBar"
 </div>
 
 </div>
-
 
 <div class="attendance-stats">
 
@@ -1075,7 +1051,6 @@ Obecność
 
 </div>
 
-
 <div class="attendance-stat absent">
 
 <div class="stat-icon">
@@ -1095,7 +1070,6 @@ Nieobecność
 </div>
 
 </div>
-
 
 <div class="attendance-stat total">
 
@@ -1121,11 +1095,7 @@ Odpowiedzi
 
 </div>
 
-
 <div class="grid">
-
-
-<!-- NAJBLIŻSZA -->
 
 <div class="card wide">
 
@@ -1149,9 +1119,6 @@ id="nextInfo"
 
 </div>
 
-
-<!-- INFORMACJE -->
-
 <div class="card wide">
 
 <h3>
@@ -1162,9 +1129,6 @@ id="nextInfo"
 </div>
 
 </div>
-
-
-<!-- KALENDARZ -->
 
 <div class="card wide">
 
@@ -1184,9 +1148,6 @@ Kliknij dzień ze zbiórką, aby zobaczyć szczegóły.
 </div>
 
 </section>
-
-
-<!-- ZBIÓRKI -->
 
 <section
 id="events"
@@ -1210,9 +1171,6 @@ Odpowiedz na każdą zbiórkę.
 
 </section>
 
-
-<!-- INFORMACJE -->
-
 <section
 id="ann"
 class="tab hidden"
@@ -1234,9 +1192,6 @@ Ogłoszenia od opiekunów MDP.
 </div>
 
 </section>
-
-
-<!-- CZŁONKOWIE -->
 
 <section
 id="members"
@@ -1260,16 +1215,12 @@ Lista członków drużyny.
 
 </section>
 
-
-<!-- ADMIN -->
-
 <section
 id="admin"
 class="tab hidden"
 >
 
 <div class="grid">
-
 
 <div class="card">
 
@@ -1350,7 +1301,6 @@ DODAJ ZBIÓRKĘ
 
 </div>
 
-
 <div class="card">
 
 <h2>
@@ -1389,7 +1339,6 @@ OPUBLIKUJ INFORMACJĘ
 
 </div>
 
-
 <div class="card wide">
 
 <h2>
@@ -1404,7 +1353,6 @@ Tutaj opiekun może usuwać członków z listy MDP.
 </div>
 
 </div>
-
 
 <div class="card wide">
 
@@ -1429,13 +1377,11 @@ Tutaj możesz usuwać nieaktualne zbiórki i informacje.
 
 </div>
 
-
 <div
 id="toast"
 class="toast hidden"
 >
 </div>
-
 
 <script>
 
@@ -1444,14 +1390,8 @@ let events=[];
 let anns=[];
 let members=[];
 
-
-/* KALENDARZ */
-
 let calendarMonth=new Date().getMonth();
 let calendarYear=new Date().getFullYear();
-
-
-/* API */
 
 async function api(url,opt={}){
 
@@ -1472,9 +1412,6 @@ return r.json();
 
 }
 
-
-/* LOGOWANIE */
-
 async function login(){
 
 let n=loginName.value.trim();
@@ -1491,11 +1428,6 @@ if(
 return alert("Nieprawidłowy kod dostępu.");
 
 try{
-
-/*
-  Jeśli loguje się zwykły członek,
-  automatycznie dodajemy go do MDP.
-*/
 
 if(role==="member"){
 
@@ -1559,17 +1491,11 @@ alert(
 
 }
 
-
-/* WYLOGOWANIE */
-
 function logout(){
 
 location.reload();
 
 }
-
-
-/* ZMIANA ZAKŁADKI */
 
 function tab(id,b){
 
@@ -1594,9 +1520,6 @@ b.classList.add("active");
 
 }
 
-
-/* DATA */
-
 function fmt(d){
 
 return new Date(d)
@@ -1613,17 +1536,11 @@ minute:"2-digit"
 
 }
 
-
-/* ODPOWIEDŹ */
-
 function resp(e){
 
 return e.responses?.[user.name] || null;
 
 }
-
-
-/* ODPOWIEDŹ NA ZBIÓRKĘ */
 
 async function setResp(id,status){
 
@@ -1679,9 +1596,6 @@ alert("Nie udało się zapisać odpowiedzi.");
 
 }
 
-
-/* PRZYCISKI */
-
 function buttons(e){
 
 let r=resp(e);
@@ -1717,9 +1631,6 @@ onclick="setResp(${e.id},'maybe')"
 
 }
 
-
-/* ŁADOWANIE */
-
 async function load(){
 
 let d=await api("/api/data");
@@ -1732,18 +1643,12 @@ render();
 
 }
 
-
-/* RENDER */
-
 function render(){
 
 events.sort(
 (a,b)=>
 new Date(a.date)-new Date(b.date)
 );
-
-
-/* NAJBLIŻSZA */
 
 let next=
 events.find(
@@ -1752,14 +1657,8 @@ e=>new Date(e.date)>=new Date()
 ||
 events[0];
 
-
-/* PODSTAWOWE STATYSTYKI */
-
 qEvents.textContent=
 events.length;
-
-
-/* FREKWENCJA */
 
 let total=0;
 let yes=0;
@@ -1788,9 +1687,6 @@ Math.round((yes/total)*100)
 :
 0;
 
-
-/* GÓRNE STATYSTYKI */
-
 qAttendance.textContent=
 attendancePercent+"%";
 
@@ -1799,9 +1695,6 @@ anns.length;
 
 bellCount.textContent=
 anns.length;
-
-
-/* KARTA FREKWENCJI */
 
 document
 .getElementById("attendancePercent")
@@ -1828,9 +1721,6 @@ document
 .style.width=
 attendancePercent+"%";
 
-
-/* NAJBLIŻSZA ZBIÓRKA */
-
 if(next){
 
 nextTitle.textContent=
@@ -1849,9 +1739,6 @@ nextInfo.textContent="Brak zaplanowanych zbiórek.";
 nextActions.innerHTML="";
 
 }
-
-
-/* LISTA ZBIÓREK */
 
 eventsList.innerHTML=
 events
@@ -1898,9 +1785,6 @@ ${buttons(e)}
 ||
 "<p class='muted'>Brak zbiórek.</p>";
 
-
-/* INFORMACJE */
-
 annList.innerHTML=
 anns
 .map(a=>`
@@ -1927,9 +1811,6 @@ ${a.text}
 ||
 "<p class='muted'>Brak informacji.</p>";
 
-
-/* NAJNOWSZE */
-
 latestAnn.innerHTML=
 anns
 .slice(0,2)
@@ -1951,9 +1832,6 @@ ${a.text}
 .join("")
 ||
 "<p class='muted'>Brak informacji.</p>";
-
-
-/* CZŁONKOWIE */
 
 if(members.length){
 
@@ -2012,12 +1890,7 @@ Pierwszy członek pojawi się tutaj po zalogowaniu.
 
 }
 
-
-/* ADMIN */
-
-if(user.role==="admin"){
-
-/* CZŁONKOWIE */
+if(user && user.role==="admin"){
 
 adminMembers.innerHTML=
 members.length
@@ -2060,9 +1933,6 @@ Usuń
 .join("")
 :
 "<p class='muted'>Brak członków.</p>";
-
-
-/* TREŚĆ */
 
 adminContent.innerHTML=
 
@@ -2140,15 +2010,9 @@ Usuń
 
 }
 
-
-/* KALENDARZ */
-
 buildCalendar();
 
 }
-
-
-/* BUDOWANIE KALENDARZA */
 
 function buildCalendar(){
 
@@ -2245,9 +2109,6 @@ onclick="changeCalendarMonth(1)"
 <div class="calendar-grid">
 `;
 
-
-/* DNI TYGODNIA */
-
 weekdays.forEach(day=>{
 
 out+=`
@@ -2259,9 +2120,6 @@ ${day}
 `;
 
 });
-
-
-/* PUSTE DNI */
 
 for(
 let i=0;
@@ -2277,9 +2135,6 @@ out+=`
 `;
 
 }
-
-
-/* DNI */
 
 for(
 let day=1;
@@ -2308,7 +2163,6 @@ classes+=" today";
 
 if(dayEvents.length)
 classes+=" eventday";
-
 
 out+=`
 
@@ -2346,7 +2200,6 @@ ${dayEvents.length>2?`
 
 }
 
-
 out+=`
 
 </div>
@@ -2382,9 +2235,6 @@ out;
 
 }
 
-
-/* ZMIANA MIESIĄCA */
-
 function changeCalendarMonth(change){
 
 calendarMonth+=change;
@@ -2407,9 +2257,6 @@ buildCalendar();
 
 }
 
-
-/* WRÓĆ DO DZISIAJ */
-
 function goToday(){
 
 let now=
@@ -2424,9 +2271,6 @@ now.getFullYear();
 buildCalendar();
 
 }
-
-
-/* DZIEŃ KALENDARZA */
 
 function calendarDay(iso){
 
@@ -2452,9 +2296,6 @@ ${e.desc||""}`
 );
 
 }
-
-
-/* DODAWANIE ZBIÓRKI */
 
 async function addEvent(ev){
 
@@ -2497,9 +2338,6 @@ alert("Nie udało się dodać zbiórki.");
 
 }
 
-
-/* DODAWANIE INFORMACJI */
-
 async function addAnn(ev){
 
 ev.preventDefault();
@@ -2536,9 +2374,6 @@ alert("Nie udało się opublikować informacji.");
 
 }
 
-
-/* USUWANIE ZBIÓRKI */
-
 async function delEvent(id){
 
 if(
@@ -2570,9 +2405,6 @@ alert("Nie udało się usunąć zbiórki.");
 
 }
 
-
-/* USUWANIE INFORMACJI */
-
 async function delAnn(id){
 
 if(
@@ -2603,9 +2435,6 @@ alert("Nie udało się usunąć informacji.");
 }
 
 }
-
-
-/* USUWANIE CZŁONKA */
 
 async function delMember(name){
 
@@ -2640,9 +2469,6 @@ alert("Nie udało się usunąć członka.");
 
 }
 
-
-/* TOAST */
-
 function toast(title,text){
 
 let t=
@@ -2660,26 +2486,32 @@ setTimeout(
 
 }
 
-
-/* SERVICE WORKER */
-
 async function registerSW(){
 
-if(!("serviceWorker"in navigator))
+if(!("serviceWorker" in navigator))
 return;
 
 try{
 
 await navigator.serviceWorker.register(
-"/sw.js"
+"/sw.js",
+{
+scope:"/"
+}
 );
 
-}catch(e){}
+console.log("Service Worker działa");
+
+}catch(e){
+
+console.error(
+"Service Worker:",
+e
+);
 
 }
 
-
-/* PUSH */
+}
 
 function b64ToBytes(b64){
 
@@ -2712,7 +2544,6 @@ raw.charCodeAt(i);
 return a;
 
 }
-
 
 async function enablePush(){
 
@@ -2780,6 +2611,8 @@ e.message
 
 /* START */
 
+registerSW();
+
 load().catch(
 ()=>{}
 );
@@ -2787,4 +2620,4 @@ load().catch(
 </script>
 
 </body>
-</html>
+  </html>
