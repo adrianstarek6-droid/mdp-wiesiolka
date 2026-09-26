@@ -1,201 +1,407 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>MDP Wiesiółka</title>
+    <title>MDP Wiesiółka</title>
 
-<style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d71920">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-body {
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-    line-height: 1.6;
-}
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-header {
-    min-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 30px;
-    background:
-        linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.85)),
-        #222;
-}
+        html {
+            scroll-behavior: smooth;
+        }
 
-header h1 {
-    font-size: 48px;
-    margin-bottom: 10px;
-}
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #111;
+            color: white;
+            line-height: 1.6;
+        }
 
-header p {
-    font-size: 20px;
-    color: #ccc;
-}
+        header {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px 20px;
 
-.btn {
-    display: inline-block;
-    margin-top: 25px;
-    padding: 13px 25px;
-    background: #d71920;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: bold;
-}
+            background:
+                linear-gradient(
+                    rgba(0,0,0,.72),
+                    rgba(0,0,0,.9)
+                ),
+                #222;
+        }
 
-section {
-    padding: 60px 20px;
-    max-width: 1100px;
-    margin: auto;
-}
+        header h1 {
+            font-size: clamp(38px, 10vw, 65px);
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
 
-h2 {
-    text-align: center;
-    font-size: 32px;
-    margin-bottom: 35px;
-}
+        header p {
+            font-size: 20px;
+            color: #ccc;
+        }
 
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 20px;
-}
+        .btn {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 14px 28px;
+            background: #d71920;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: .2s;
+        }
 
-.card {
-    background: #1d1d1d;
-    padding: 25px;
-    border-radius: 15px;
-    text-align: center;
-    border: 1px solid #333;
-}
+        .btn:hover {
+            transform: scale(1.04);
+            background: #ef2028;
+        }
 
-.card h3 {
-    color: #e21b23;
-    margin-bottom: 10px;
-}
+        section {
+            max-width: 1100px;
+            margin: auto;
+            padding: 65px 20px;
+        }
 
-.info {
-    text-align: center;
-    color: #ccc;
-}
+        h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 35px;
+        }
 
-footer {
-    background: #090909;
-    text-align: center;
-    padding: 25px;
-    color: #888;
-}
+        .info {
+            max-width: 800px;
+            margin: auto;
+            text-align: center;
+            color: #ccc;
+            font-size: 17px;
+        }
 
-.red {
-    color: #e21b23;
-}
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(230px, 1fr)
+            );
+            gap: 20px;
+        }
 
-@media (max-width: 600px) {
-    header h1 {
-        font-size: 36px;
-    }
+        .card {
+            background: #1c1c1c;
+            padding: 28px 22px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid #333;
+            transition: .2s;
+        }
 
-    header p {
-        font-size: 17px;
-    }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #d71920;
+        }
 
-    h2 {
-        font-size: 27px;
-    }
-}
-</style>
+        .card h3 {
+            color: #e21b23;
+            margin-bottom: 12px;
+            font-size: 21px;
+        }
+
+        .card p {
+            color: #ccc;
+        }
+
+        .red {
+            color: #e21b23;
+            font-weight: bold;
+        }
+
+        footer {
+            background: #090909;
+            text-align: center;
+            padding: 28px 15px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        /* Przycisk instalacji */
+        #installButton {
+            display: none;
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            z-index: 9999;
+
+            border: none;
+            border-radius: 12px;
+            padding: 14px 22px;
+
+            background: #d71920;
+            color: white;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            box-shadow: 0 5px 25px rgba(0,0,0,.5);
+        }
+
+        #installButton.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+
+            header {
+                min-height: 80vh;
+            }
+
+            header p {
+                font-size: 17px;
+            }
+
+            section {
+                padding: 50px 18px;
+            }
+
+            h2 {
+                font-size: 28px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<header>
-    <h1>🚒 MDP Wiesiółka</h1>
-    <p>Młodzieżowa Drużyna Pożarnicza</p>
-    <a href="#o-nas" class="btn">Poznaj nas</a>
-</header>
+    <header>
+        <h1>🚒 MDP Wiesiółka</h1>
 
-<section id="o-nas">
-    <h2>O nas</h2>
+        <p>
+            Młodzieżowa Drużyna Pożarnicza
+        </p>
 
-    <p class="info">
-        Młodzieżowa Drużyna Pożarnicza w Wiesiółce to grupa młodych osób,
-        które rozwijają swoje zainteresowania związane z pożarnictwem,
-        uczą się współpracy, odpowiedzialności oraz zasad bezpieczeństwa.
-    </p>
-</section>
+        <a href="#o-nas" class="btn">
+            Poznaj nas
+        </a>
+    </header>
 
-<section>
-    <h2>Członkowie MDP</h2>
 
-    <div class="card-container">
-        <div class="card">
-            <h3>Członkowie</h3>
-            <p>2018</p>
+    <section id="o-nas">
+
+        <h2>O nas</h2>
+
+        <p class="info">
+            Młodzieżowa Drużyna Pożarnicza w Wiesiółce
+            to grupa młodych osób, które rozwijają swoje
+            zainteresowania związane z pożarnictwem.
+            Uczymy się współpracy, odpowiedzialności,
+            bezpieczeństwa oraz pomagania innym.
+        </p>
+
+    </section>
+
+
+    <section>
+
+        <h2>Członkowie MDP</h2>
+
+        <div class="card-container">
+
+            <div class="card">
+                <h3>Członkowie</h3>
+                <p>2018</p>
+            </div>
+
+            <div class="card">
+                <h3>Opiekunowie</h3>
+                <p>9982018</p>
+            </div>
+
         </div>
 
-        <div class="card">
-            <h3>Opiekunowie</h3>
-            <p>9982018</p>
+    </section>
+
+
+    <section>
+
+        <h2>Nasza drużyna</h2>
+
+        <div class="card-container">
+
+            <div class="card">
+                <h3>🔥 Ćwiczenia</h3>
+                <p>
+                    Regularnie uczestniczymy w ćwiczeniach
+                    i zdobywamy nowe umiejętności.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>🏆 Zawody</h3>
+                <p>
+                    Bierzemy udział w zawodach MDP
+                    i sprawdzamy swoje umiejętności.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>🤝 Współpraca</h3>
+                <p>
+                    Uczymy się działania w grupie,
+                    odpowiedzialności i wzajemnej pomocy.
+                </p>
+            </div>
+
         </div>
-    </div>
-</section>
 
-<section>
-    <h2>Nasza drużyna</h2>
+    </section>
 
-    <div class="card-container">
 
-        <div class="card">
-            <h3>🔥 Ćwiczenia</h3>
-            <p>
-                Regularnie uczestniczymy w ćwiczeniach,
-                podczas których zdobywamy nowe umiejętności.
-            </p>
-        </div>
+    <section>
 
-        <div class="card">
-            <h3>🏆 Zawody</h3>
-            <p>
-                Bierzemy udział w zawodach MDP
-                i sprawdzamy swoje umiejętności.
-            </p>
-        </div>
+        <h2>OSP Wiesiółka</h2>
 
-        <div class="card">
-            <h3>🤝 Współpraca</h3>
-            <p>
-                Uczymy się działania w grupie,
-                odpowiedzialności i wzajemnej pomocy.
-            </p>
-        </div>
+        <p class="info">
 
-    </div>
-</section>
+            MDP działa przy
+            <span class="red">OSP Wiesiółka</span>.
 
-<section>
-    <h2>OSP Wiesiółka</h2>
+            Wspólnie rozwijamy młodych przyszłych
+            strażaków i promujemy bezpieczeństwo
+            w naszej społeczności.
 
-    <p class="info">
-        MDP działa przy <span class="red">OSP Wiesiółka</span>.
-        Wspólnie rozwijamy młodych przyszłych strażaków
-        i promujemy bezpieczeństwo w naszej społeczności.
-    </p>
-</section>
+        </p>
 
-<footer>
-    <p>© 2026 MDP Wiesiółka</p>
-</footer>
+    </section>
+
+
+    <footer>
+
+        <p>
+            © 2026 MDP Wiesiółka
+        </p>
+
+    </footer>
+
+
+    <!-- Przycisk instalowania aplikacji -->
+
+    <button id="installButton">
+        📱 Zainstaluj aplikację
+    </button>
+
+
+    <script>
+
+        /* Rejestracja Service Workera */
+
+        if ("serviceWorker" in navigator) {
+
+            window.addEventListener("load", () => {
+
+                navigator.serviceWorker
+                    .register("/sw.js")
+                    .then(() => {
+                        console.log(
+                            "Service Worker działa"
+                        );
+                    })
+                    .catch(error => {
+                        console.log(
+                            "Błąd Service Workera:",
+                            error
+                        );
+                    });
+
+            });
+
+        }
+
+
+        /* Instalacja PWA */
+
+        let deferredPrompt;
+
+        const installButton =
+            document.getElementById("installButton");
+
+
+        window.addEventListener(
+            "beforeinstallprompt",
+            (event) => {
+
+                event.preventDefault();
+
+                deferredPrompt = event;
+
+                installButton.classList.add("show");
+
+            }
+        );
+
+
+        installButton.addEventListener(
+            "click",
+            async () => {
+
+                if (!deferredPrompt) {
+                    return;
+                }
+
+                deferredPrompt.prompt();
+
+                const { outcome } =
+                    await deferredPrompt.userChoice;
+
+                console.log(
+                    "Instalacja:",
+                    outcome
+                );
+
+                deferredPrompt = null;
+
+                installButton.classList.remove(
+                    "show"
+                );
+
+            }
+        );
+
+
+        window.addEventListener(
+            "appinstalled",
+            () => {
+
+                installButton.classList.remove(
+                    "show"
+                );
+
+                console.log(
+                    "MDP Wiesiółka została zainstalowana!"
+                );
+
+            }
+        );
+
+    </script>
 
 </body>
 </html>
