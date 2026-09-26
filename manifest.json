@@ -1,7 +1,6 @@
 {
   "name": "MDP Wiesiółka",
   "short_name": "MDP Wiesiółka",
-  "description": "Młodzieżowa Drużyna Pożarnicza Wiesiółka",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
