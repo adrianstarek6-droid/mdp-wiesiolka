@@ -276,7 +276,10 @@ code=loginCode.value;
 
 if(!n)return alert("Wpisz imię i nazwisko.");
 
-if((role==="admin"&&code!=="0000")||(role==="member"&&code!=="1234"))
+if(
+(role==="admin"&&code!=="9982018")||
+(role==="member"&&code!=="2018")
+)
 return alert("Nieprawidłowy kod dostępu.");
 
 user={name:n,role};
@@ -286,7 +289,8 @@ document.getElementById("appScreen").classList.remove("hidden");
 
 userLabel.textContent=n+(role==="admin"?" • ADMIN":"");
 
-if(role==="admin")adminTab.classList.remove("hidden");
+if(role==="admin")
+adminTab.classList.remove("hidden");
 
 await load();
 
