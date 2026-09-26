@@ -1,2712 +1,2022 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
-
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<meta charset="utf-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MDP OSP Wiesiółka</title>
 
 <meta name="theme-color" content="#d71920">
-
-<meta name="mobile-web-app-capable" content="yes">
-
-<!-- iPhone / iPad -->
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
 
-<meta name="apple-mobile-web-app-status-bar-style"
-content="black-translucent">
-
-<meta name="apple-mobile-web-app-title"
-content="MDP Wiesiółka">
-
-<!-- PWA -->
 <link rel="manifest" href="./manifest.json">
-
-<!-- Ikony aplikacji -->
-<link rel="icon"
-type="image/png"
-sizes="192x192"
-href="./icon-192.png">
-
-<link rel="icon"
-type="image/png"
-sizes="512x512"
-href="./icon-512.png">
-
-<link rel="apple-touch-icon"
-sizes="180x180"
-href="./icon-192.png">
-
-<title>MDP WIESIÓŁKA</title>
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 
 <style>
-
-:root{
---red:#d71920;
---dark:#0b0d11;
---card:#171a20;
---line:#303641;
---muted:#9ba2ad;
---green:#29b66b;
---yellow:#d6a52e;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
-*{
-box-sizing:border-box
+:root{
+  --red:#d71920;
+  --red-dark:#a90f15;
+  --black:#080808;
+  --dark:#111;
+  --dark2:#181818;
+  --dark3:#222;
+  --gray:#aaa;
+  --white:#fff;
+  --green:#20c777;
+  --orange:#ff9d00;
 }
 
 body{
-margin:0;
-background:radial-gradient(circle at 20% -10%,#421014,#0b0d11 38%);
-color:#fff;
-font-family:Arial,Inter,sans-serif
+  font-family:Arial,Helvetica,sans-serif;
+  background:#080808;
+  color:white;
+  min-height:100vh;
 }
 
-header{
-background:linear-gradient(125deg,#720a0f,#d71920 55%,#970e14);
-padding:18px 16px;
-position:sticky;
-top:0;
-z-index:5
-}
-
-.brand{
-max-width:1080px;
-margin:auto;
-display:flex;
-align-items:center;
-gap:13px
-}
-
-.logo{
-width:52px;
-height:52px;
-border-radius:15px;
-background:#fff;
-display:grid;
-place-items:center;
-font-size:28px
-}
-
-.brand h1{
-font-size:21px;
-margin:0
-}
-
-.brand p{
-margin:3px 0 0;
-color:#ffd8da;
-font-size:13px
-}
-
-main{
-max-width:1080px;
-margin:auto;
-padding:18px 14px 50px
-}
-
-.tabs{
-display:flex;
-gap:8px;
-overflow:auto;
-margin-bottom:18px
-}
-
-.tabs button{
-white-space:nowrap;
-border:0;
-background:#20252e;
-color:#ddd;
-padding:11px 14px;
-border-radius:12px;
-font-weight:800;
-cursor:pointer
-}
-
-.tabs button.active{
-background:var(--red);
-color:#fff
-}
-
-.tab{
-display:block
-}
-
-.hidden{
-display:none!important
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:15px
-}
-
-.wide{
-grid-column:1/-1
-}
-
-.card{
-background:linear-gradient(145deg,#191c23,#13161b);
-border:1px solid var(--line);
-border-radius:19px;
-padding:18px;
-box-shadow:0 10px 35px #0004
-}
-
-h2{
-margin:0 0 6px
-}
-
-h3{
-margin:0 0 8px
-}
-
-.muted{
-color:var(--muted);
-font-size:14px
-}
-
-.quick{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-bottom:15px
-}
-
-.q{
-background:#181c23;
-border:1px solid #303641;
-border-radius:15px;
-padding:14px
-}
-
-.q b{
-display:block;
-font-size:23px;
-margin-top:5px
-}
-
-.q span{
-font-size:12px;
-color:var(--muted)
-}
-
-.attendance-card{
-background:linear-gradient(145deg,#191c23,#101216);
-border:1px solid #343a45;
-border-radius:22px;
-padding:20px;
-margin-bottom:15px;
-box-shadow:0 15px 45px #0007
-}
-
-.attendance-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:15px
-}
-
-.attendance-kicker{
-font-size:10px;
-font-weight:900;
-letter-spacing:1.5px;
-color:#d71920
-}
-
-.attendance-card h2{
-margin:5px 0;
-font-size:22px
-}
-
-.attendance-card p{
-margin:0;
-color:#858c97;
-font-size:12px
-}
-
-.attendance-percent{
-min-width:75px;
-height:75px;
-border-radius:50%;
-display:grid;
-place-items:center;
-background:#211417;
-border:4px solid #d71920;
-font-size:18px;
-font-weight:900;
-color:#fff
-}
-
-.attendance-bar{
-height:10px;
-background:#292e37;
-border-radius:99px;
-overflow:hidden;
-margin:20px 0
-}
-
-.attendance-bar div{
-height:100%;
-width:0%;
-background:linear-gradient(90deg,#d71920,#ff4b52);
-border-radius:99px;
-transition:.5s
-}
-
-.attendance-stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px
-}
-
-.attendance-stat{
-display:flex;
-align-items:center;
-gap:9px;
-background:#15181e;
-border:1px solid #292e37;
-border-radius:14px;
-padding:11px
-}
-
-.attendance-stat .stat-icon{
-width:34px;
-height:34px;
-border-radius:10px;
-display:grid;
-place-items:center;
-font-weight:900
-}
-
-.attendance-stat strong{
-display:block;
-font-size:18px
-}
-
-.attendance-stat span{
-display:block;
-font-size:10px;
-color:#858c97
-}
-
-.present .stat-icon{
-background:#123d29;
-color:#29d879
-}
-
-.absent .stat-icon{
-background:#43191d;
-color:#ff5b62
-}
-
-.total .stat-icon{
-background:#292e37;
-color:#fff
-}
-
-.event{
-border-bottom:1px solid #30343d;
-padding:16px 0
-}
-
-.event:last-child{
-border:0
-}
-
-.eventtop{
-display:flex;
-justify-content:space-between;
-gap:12px
-}
-
-.badge{
-font-size:11px;
-font-weight:900;
-padding:6px 9px;
-border-radius:99px;
-background:#292e37;
-height:max-content
-}
-
-.actions{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-margin-top:12px
-}
-
-.actions button,
-.primary,
-.danger,
-.secondary{
-border:0;
-border-radius:10px;
-padding:10px 13px;
-color:#fff;
-font-weight:800;
-cursor:pointer
-}
-
-.yes{
-background:#218c55
-}
-
-.no,
-.danger{
-background:#9e252b
-}
-
-.maybe{
-background:#856d1d
-}
-
-.primary{
-background:var(--red)
-}
-
-.secondary{
-background:#2a3039
-}
-
-.danger.small,
-.secondary.small{
-padding:7px 10px;
-font-size:12px
-}
-
-.notice{
-display:flex;
-gap:10px;
-background:#251b1d;
-border:1px solid #4a292c;
-border-radius:13px;
-padding:12px;
-margin-top:12px
-}
-
-.notice b{
-font-size:13px
-}
-
-.notice span{
-font-size:12px;
-color:#adb3bd
-}
-
-.ann{
-padding:14px 0;
-border-bottom:1px solid #30343d
-}
-
-.ann:last-child{
-border:0
-}
-
-.ann .meta{
-font-size:11px;
-color:#858c97
-}
-
-.ann h3{
-margin-top:5px
-}
-
-.bell{
-position:relative
-}
-
-.count{
-position:absolute;
-top:-5px;
-right:-4px;
-background:#fff;
-color:#d71920;
-border-radius:99px;
-font-size:9px;
-min-width:17px;
-height:17px;
-display:grid;
-place-items:center
-}
-
-.calendar-wrap{
-background:linear-gradient(145deg,#171a20,#0f1115);
-border:1px solid #343a45;
-border-radius:22px;
-padding:16px;
-box-shadow:0 15px 45px #0008;
-overflow:hidden
-}
-
-.calendar-top{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px;
-margin-bottom:16px
-}
-
-.calendar-title{
-font-size:21px;
-font-weight:900;
-text-transform:capitalize
-}
-
-.calendar-subtitle{
-font-size:11px;
-color:#858c97;
-margin-top:3px
-}
-
-.calendar-nav{
-display:flex;
-gap:7px
-}
-
-.calendar-nav button{
-width:40px;
-height:40px;
-border:1px solid #363c47;
-border-radius:12px;
-background:#20252d;
-color:#fff;
-font-size:18px;
-font-weight:900;
-cursor:pointer;
-transition:.2s
-}
-
-.calendar-nav button:hover{
-background:#d71920;
-border-color:#d71920;
-transform:scale(1.05)
-}
-
-.calendar-grid{
-display:grid;
-grid-template-columns:repeat(7,1fr);
-gap:5px
-}
-
-.calendar-weekday{
-text-align:center;
-font-size:10px;
-font-weight:900;
-color:#777e89;
-padding:7px 0;
-text-transform:uppercase
-}
-
-.calendar-day{
-position:relative;
-min-height:72px;
-border:1px solid #292e37;
-background:linear-gradient(145deg,#16191f,#12151a);
-border-radius:12px;
-padding:8px;
-cursor:pointer;
-transition:.2s;
-overflow:hidden
-}
-
-.calendar-day:hover{
-border-color:#d71920;
-transform:translateY(-2px);
-box-shadow:0 8px 20px #0007
-}
-
-.calendar-day.empty{
-opacity:.15;
-cursor:default
-}
-
-.calendar-day.empty:hover{
-transform:none;
-box-shadow:none;
-border-color:#292e37
-}
-
-.calendar-number{
-font-size:14px;
-font-weight:900;
-color:#fff
-}
-
-.calendar-day.today{
-border-color:#d71920;
-box-shadow:inset 0 0 0 1px #d71920,0 0 15px #d7192033
-}
-
-.calendar-day.today .calendar-number{
-display:inline-grid;
-place-items:center;
-width:28px;
-height:28px;
-background:#d71920;
-border-radius:50%
-}
-
-.calendar-day.eventday{
-background:linear-gradient(145deg,#35171a,#211316);
-border-color:#a9141b
-}
-
-.calendar-event{
-margin-top:7px;
-font-size:9px;
-font-weight:800;
-color:#ff7378;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-background:#d7192018;
-border-left:3px solid #d71920;
-padding:4px 5px;
-border-radius:5px
-}
-
-.calendar-more{
-font-size:8px;
-color:#9ba2ad;
-margin-top:3px
-}
-
-.calendar-legend{
-display:flex;
-gap:15px;
-margin-top:15px;
-padding-top:12px;
-border-top:1px solid #292e37;
-font-size:10px;
-color:#8e959f
-}
-
-.calendar-legend span{
-display:flex;
-align-items:center;
-gap:6px
-}
-
-.legend-dot{
-width:9px;
-height:9px;
-border-radius:50%;
-display:inline-block;
-background:#d71920
-}
-
-.legend-dot.today{
-box-shadow:0 0 0 3px #d7192033
-}
-
-.member-card{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:12px;
-padding:14px;
-margin-top:10px;
-background:linear-gradient(145deg,#191c23,#13161b);
-border:1px solid #303641;
-border-radius:14px
-}
-
-.member-left{
-display:flex;
-align-items:center;
-gap:12px;
-min-width:0
-}
-
-.member-avatar{
-width:42px;
-height:42px;
-border-radius:50%;
-background:linear-gradient(145deg,#d71920,#79090e);
-display:grid;
-place-items:center;
-font-size:19px;
-flex-shrink:0
-}
-
-.member-name{
-font-weight:900;
-font-size:14px
-}
-
-.member-role{
-font-size:11px;
-color:#858c97;
-margin-top:3px
-}
-
+button,
 input,
 textarea,
 select{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:1px solid #363b46;
-background:#101318;
-color:#fff;
-margin:6px 0 12px
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* LOGIN */
+
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at top,#3b0808 0,#100000 35%,#050505 75%);
+}
+
+.loginBox{
+  width:100%;
+  max-width:430px;
+  background:rgba(20,20,20,.96);
+  border:1px solid #333;
+  border-radius:24px;
+  padding:30px 22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.65);
+  text-align:center;
+}
+
+.logo{
+  width:95px;
+  height:95px;
+  margin:0 auto 18px;
+  border-radius:50%;
+  background:#171717;
+  border:3px solid var(--red);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+}
+
+.loginBox h1{
+  font-size:25px;
+  margin-bottom:7px;
+}
+
+.loginBox p{
+  color:#aaa;
+  margin-bottom:25px;
+}
+
+.input{
+  width:100%;
+  background:#0c0c0c;
+  border:1px solid #3a3a3a;
+  color:white;
+  padding:15px;
+  border-radius:13px;
+  outline:none;
+  margin-bottom:12px;
+}
+
+.input:focus{
+  border-color:var(--red);
+}
+
+.primaryBtn{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:15px;
+  color:white;
+  background:var(--red);
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.primaryBtn:active{
+  transform:scale(.98);
+}
+
+.loginError{
+  color:#ff6060;
+  min-height:22px;
+  margin-top:12px;
+  font-size:14px;
+}
+
+/* APP */
+
+#app{
+  min-height:100vh;
+  padding-bottom:90px;
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(8,8,8,.94);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid #252525;
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    16px
+    12px;
+}
+
+.topbarInner{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.brandLogo{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#191919;
+  border:2px solid var(--red);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+
+.brandText strong{
+  display:block;
+  font-size:16px;
+}
+
+.brandText span{
+  color:#999;
+  font-size:12px;
+}
+
+.roleBadge{
+  background:#241010;
+  border:1px solid #4d1c1c;
+  color:#ff7676;
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:11px;
+  font-weight:bold;
+}
+
+/* CONTENT */
+
+.content{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:20px 15px;
+}
+
+.tab{
+  display:none;
+}
+
+.tab.active{
+  display:block;
+}
+
+.pageTitle{
+  margin-bottom:17px;
+}
+
+.pageTitle h2{
+  font-size:25px;
+  margin-bottom:5px;
+}
+
+.pageTitle p{
+  color:#929292;
+  font-size:14px;
+}
+
+/* CARDS */
+
+.card{
+  background:linear-gradient(145deg,#171717,#101010);
+  border:1px solid #292929;
+  border-radius:18px;
+  padding:17px;
+  margin-bottom:14px;
+}
+
+.cardTitle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:13px;
+}
+
+.cardTitle h3{
+  font-size:17px;
+}
+
+.cardTitle span{
+  color:#888;
+  font-size:12px;
+}
+
+.hero{
+  background:
+    linear-gradient(135deg,rgba(215,25,32,.23),rgba(215,25,32,.02)),
+    #151515;
+  border:1px solid #422020;
+}
+
+.hero h2{
+  font-size:25px;
+  margin-bottom:7px;
+}
+
+.hero p{
+  color:#aaa;
+  line-height:1.5;
+}
+
+/* STATS */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.stat{
+  background:#151515;
+  border:1px solid #292929;
+  border-radius:16px;
+  padding:15px 10px;
+  text-align:center;
+}
+
+.stat strong{
+  display:block;
+  font-size:23px;
+  margin-bottom:4px;
+}
+
+.stat span{
+  color:#888;
+  font-size:11px;
+}
+
+/* EVENT */
+
+.event{
+  border:1px solid #2b2b2b;
+  background:#141414;
+  border-radius:15px;
+  padding:14px;
+  margin-bottom:10px;
+}
+
+.eventDate{
+  color:#ff6767;
+  font-size:12px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.event h4{
+  font-size:16px;
+  margin-bottom:5px;
+}
+
+.event p{
+  color:#999;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.eventActions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+
+/* BUTTONS */
+
+.btn{
+  border:1px solid #373737;
+  background:#202020;
+  color:white;
+  padding:10px 13px;
+  border-radius:11px;
+  font-size:13px;
+}
+
+.btn:hover{
+  background:#292929;
+}
+
+.btn.red{
+  background:var(--red);
+  border-color:var(--red);
+}
+
+.btn.green{
+  background:#12633f;
+  border-color:#1b8a58;
+}
+
+.btn.orange{
+  background:#754800;
+  border-color:#9b6100;
+}
+
+.btn.danger{
+  background:#5b1515;
+  border-color:#862020;
+}
+
+/* ANNOUNCEMENT */
+
+.announcement{
+  padding:14px;
+  background:#151515;
+  border:1px solid #2a2a2a;
+  border-radius:15px;
+  margin-bottom:10px;
+}
+
+.announcementTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+}
+
+.announcement h4{
+  font-size:15px;
+}
+
+.announcement small{
+  color:#777;
+}
+
+.announcement p{
+  color:#aaa;
+  line-height:1.5;
+  font-size:14px;
+}
+
+/* MEMBER */
+
+.member{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px 0;
+  border-bottom:1px solid #292929;
+}
+
+.member:last-child{
+  border-bottom:0;
+}
+
+.avatar{
+  width:43px;
+  height:43px;
+  flex-shrink:0;
+  border-radius:50%;
+  background:#292929;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#ddd;
+}
+
+.memberInfo{
+  flex:1;
+}
+
+.memberInfo strong{
+  display:block;
+  font-size:14px;
+}
+
+.memberInfo span{
+  display:block;
+  color:#777;
+  font-size:12px;
+  margin-top:3px;
+}
+
+/* FORMS */
+
+.formGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.formFull{
+  grid-column:1/-1;
 }
 
 label{
-font-size:13px;
-color:#bbb
+  display:block;
+  color:#aaa;
+  font-size:12px;
+  margin-bottom:6px;
 }
 
-.row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px
+textarea.input{
+  min-height:100px;
+  resize:vertical;
 }
 
-.login{
-min-height:100vh;
-display:grid;
-place-items:center;
-padding:25px;
-background:radial-gradient(circle at 50% 0,#551217,#0b0d11 45%)
+select.input{
+  appearance:auto;
 }
 
-.login-card{
-width:min(430px,100%);
-background:#171a20;
-border:1px solid #353a44;
-border-radius:24px;
-padding:30px;
-box-shadow:0 25px 80px #0009;
-text-align:center
+/* BOTTOM NAV */
+
+.bottomNav{
+  position:fixed;
+  z-index:50;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(11,11,11,.97);
+  border-top:1px solid #292929;
+  padding:
+    7px
+    7px
+    calc(7px + env(safe-area-inset-bottom));
+  display:flex;
+  justify-content:center;
 }
 
-.login-logo{
-width:76px;
-height:76px;
-border-radius:22px;
-background:#fff;
-color:#c5161d;
-display:grid;
-place-items:center;
-font-size:40px;
-margin:0 auto 18px
+.navInner{
+  width:100%;
+  max-width:900px;
+  display:flex;
+  justify-content:space-around;
+  gap:3px;
 }
 
-.kicker{
-font-size:11px;
-font-weight:900;
-letter-spacing:1.3px;
-color:#ef555b
+.navBtn{
+  flex:1;
+  border:0;
+  background:transparent;
+  color:#777;
+  padding:8px 3px;
+  border-radius:12px;
+  font-size:10px;
 }
 
-.login-card h1{
-font-size:30px;
-margin:7px 0
+.navBtn .icon{
+  display:block;
+  font-size:19px;
+  margin-bottom:3px;
 }
 
-.login-btn{
-width:100%;
-padding:13px
+.navBtn.active{
+  color:white;
+  background:#211010;
 }
 
-.hint{
-text-align:center;
-color:#707782;
-font-size:11px;
-margin-top:12px
+.navBtn.active .icon{
+  color:#ff4048;
 }
 
-.toast{
-position:fixed;
-right:15px;
-bottom:15px;
-z-index:20;
-background:#242a33;
-border:1px solid #424a56;
-border-radius:12px;
-padding:13px 15px;
-box-shadow:0 10px 30px #0008;
-max-width:340px
+/* EMPTY */
+
+.empty{
+  text-align:center;
+  padding:30px 10px;
+  color:#777;
 }
 
-.toast b{
-display:block;
-margin-bottom:3px
+.emptyIcon{
+  font-size:35px;
+  margin-bottom:10px;
 }
 
-@media(max-width:700px){
+/* TOAST */
 
-.grid{
-grid-template-columns:1fr
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:90px;
+  transform:translateX(-50%) translateY(20px);
+  background:#252525;
+  border:1px solid #444;
+  color:white;
+  padding:12px 17px;
+  border-radius:12px;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  z-index:100;
+  font-size:13px;
+  max-width:90%;
+  text-align:center;
 }
 
-.wide{
-grid-column:auto
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
 }
 
-.quick{
-grid-template-columns:repeat(3,1fr)
+/* DESKTOP */
+
+@media(min-width:700px){
+  .content{
+    padding:30px 20px;
+  }
+
+  .bottomNav{
+    padding-bottom:10px;
+  }
+
+  .navBtn{
+    max-width:130px;
+    font-size:11px;
+  }
 }
 
-.row{
-grid-template-columns:1fr
+/* SMALL */
+
+@media(max-width:420px){
+  .stats{
+    gap:7px;
+  }
+
+  .stat{
+    padding:13px 5px;
+  }
+
+  .stat strong{
+    font-size:20px;
+  }
+
+  .formGrid{
+    grid-template-columns:1fr;
+  }
+
+  .formFull{
+    grid-column:auto;
+  }
 }
-
-.eventtop{
-flex-direction:column
-}
-
-}
-
-@media(max-width:600px){
-
-.attendance-card{
-padding:16px
-}
-
-.attendance-percent{
-min-width:65px;
-height:65px;
-font-size:16px
-}
-
-.attendance-stats{
-gap:6px
-}
-
-.attendance-stat{
-padding:8px;
-gap:6px
-}
-
-.attendance-stat .stat-icon{
-width:29px;
-height:29px
-}
-
-.attendance-stat strong{
-font-size:16px
-}
-
-.attendance-stat span{
-font-size:9px
-}
-
-.calendar-wrap{
-padding:11px;
-border-radius:18px
-}
-
-.calendar-grid{
-gap:3px
-}
-
-.calendar-day{
-min-height:58px;
-padding:6px;
-border-radius:9px
-}
-
-.calendar-number{
-font-size:12px
-}
-
-.calendar-event{
-font-size:7px;
-padding:3px;
-margin-top:5px
-}
-
-.calendar-title{
-font-size:18px
-}
-
-.calendar-nav button{
-width:36px;
-height:36px
-}
-
-.member-card{
-padding:11px
-}
-
-}
-
 </style>
 </head>
 
 <body>
 
-<div id="loginScreen" class="login">
+<!-- LOGIN -->
 
-<div class="login-card">
+<section id="loginScreen">
 
-<div class="login-logo">🔥</div>
+  <div class="loginBox">
 
-<div class="kicker">
-MŁODZIEŻOWA DRUŻYNA POŻARNICZA
-</div>
+    <div class="logo">🚒</div>
 
-<h1>MDP WIESIÓŁKA</h1>
+    <h1>MDP OSP Wiesiółka</h1>
+    <p>Aplikacja Młodzieżowej Drużyny Pożarniczej</p>
 
-<p class="muted">
-Panel drużyny
-</p>
+    <input
+      id="loginName"
+      class="input"
+      type="text"
+      placeholder="Imię i nazwisko"
+      autocomplete="name"
+    >
 
-<label>
-Imię i nazwisko
-</label>
+    <input
+      id="loginCode"
+      class="input"
+      type="password"
+      placeholder="Kod dostępu"
+      inputmode="numeric"
+    >
 
-<input
-id="loginName"
-placeholder="np. Jan Kowalski"
-autocomplete="name"
->
+    <button class="primaryBtn" onclick="login()">
+      Zaloguj się
+    </button>
 
-<label>
-Typ konta
-</label>
+    <div id="loginError" class="loginError"></div>
 
-<select id="loginRole">
-
-<option value="member">
-👨‍🚒 Członek MDP
-</option>
-
-<option value="admin">
-🛡️ Opiekun / Administrator
-</option>
-
-</select>
-
-<label>
-Kod dostępu
-</label>
-
-<input
-id="loginCode"
-type="password"
-placeholder="Kod dostępu"
->
-
-<button
-class="primary login-btn"
-onclick="login()"
->
-ZALOGUJ SIĘ →
-</button>
-
-</div>
-</div>
-
-
-<div id="appScreen" class="hidden">
-
-<header>
-
-<div class="brand">
-
-<div class="logo">
-🔥
-</div>
-
-<div>
-
-<h1>
-MDP WIESIÓŁKA
-</h1>
-
-<p>
-Panel drużyny •
-<span id="userLabel"></span>
-</p>
-
-</div>
-
-</div>
-
-</header>
-
-
-<main>
-
-<div class="tabs">
-
-<button
-class="active"
-onclick="tab('home',this)"
->
-🏠 Start
-</button>
-
-<button
-onclick="tab('events',this)"
->
-📅 Zbiórki
-</button>
-
-<button
-onclick="tab('ann',this)"
-class="bell"
->
-🔔 Informacje
-
-<span
-id="bellCount"
-class="count"
->
-0
-</span>
-
-</button>
-
-<button
-onclick="tab('members',this)"
->
-👥 Członkowie
-</button>
-
-<button
-id="adminTab"
-class="hidden"
-onclick="tab('admin',this)"
->
-⚙️ Zarządzanie
-</button>
-
-<button onclick="logout()">
-Wyloguj
-</button>
-
-</div>
-
-
-<section
-id="home"
-class="tab"
->
-
-<div class="quick">
-
-<div class="q">
-📅
-<b id="qEvents">0</b>
-<span>zbiórek</span>
-</div>
-
-<div class="q">
-🔥
-<b id="qAttendance">0%</b>
-<span>frekwencja</span>
-</div>
-
-<div class="q">
-🔔
-<b id="qUnread">0</b>
-<span>informacje</span>
-</div>
-
-</div>
-
-
-<div class="attendance-card">
-
-<div class="attendance-header">
-
-<div>
-
-<div class="attendance-kicker">
-MOJA FREKWENCJA
-</div>
-
-<h2>
-📊 Obecność
-</h2>
-
-<p>
-Twoja frekwencja na zbiórkach MDP
-</p>
-
-</div>
-
-<div
-class="attendance-percent"
-id="attendancePercent"
->
-0%
-</div>
-
-</div>
-
-
-<div class="attendance-bar">
-
-<div
-id="attendanceBar"
->
-</div>
-
-</div>
-
-
-<div class="attendance-stats">
-
-<div class="attendance-stat present">
-
-<div class="stat-icon">
-✓
-</div>
-
-<div>
-
-<strong id="presentCount">
-0
-</strong>
-
-<span>
-Obecność
-</span>
-
-</div>
-
-</div>
-
-
-<div class="attendance-stat absent">
-
-<div class="stat-icon">
-✕
-</div>
-
-<div>
-
-<strong id="absentCount">
-0
-</strong>
-
-<span>
-Nieobecność
-</span>
-
-</div>
-
-</div>
-
-
-<div class="attendance-stat total">
-
-<div class="stat-icon">
-📅
-</div>
-
-<div>
-
-<strong id="attendanceTotal">
-0
-</strong>
-
-<span>
-Odpowiedzi
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="grid">
-
-
-<div class="card wide">
-
-<div class="muted">
-NAJBLIŻSZA ZBIÓRKA
-</div>
-
-<h2 id="nextTitle">
-—
-</h2>
-
-<p
-class="muted"
-id="nextInfo"
->
-—
-</p>
-
-<div id="nextActions">
-</div>
-
-</div>
-
-
-<div class="card wide">
-
-<h3>
-📢 Najnowsze informacje
-</h3>
-
-<div id="latestAnn">
-</div>
-
-</div>
-
-
-<div class="card wide">
-
-<h3>
-📆 Kalendarz MDP
-</h3>
-
-<div id="calendar">
-</div>
-
-<p class="muted">
-Kliknij dzień ze zbiórką, aby zobaczyć szczegóły.
-</p>
-
-</div>
-
-</div>
+  </div>
 
 </section>
 
 
-<section
-id="events"
-class="tab hidden"
->
+<!-- APP -->
 
-<div class="card">
+<div id="app" class="hidden">
 
-<h2>
-📅 Zbiórki
-</h2>
+  <header class="topbar">
 
-<p class="muted">
-Odpowiedz na każdą zbiórkę.
-</p>
+    <div class="topbarInner">
 
-<div id="eventsList">
+      <div class="brand">
+
+        <div class="brandLogo">🚒</div>
+
+        <div class="brandText">
+          <strong>MDP Wiesiółka</strong>
+          <span>OSP Wiesiółka</span>
+        </div>
+
+      </div>
+
+      <div id="roleBadge" class="roleBadge">
+        CZŁONEK MDP
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <!-- START -->
+
+    <section id="tab-home" class="tab active">
+
+      <div class="pageTitle">
+        <h2>Witaj! 👋</h2>
+        <p id="welcomeText">Witaj w aplikacji MDP.</p>
+      </div>
+
+      <div class="card hero">
+
+        <h2>MDP OSP Wiesiółka 🚒</h2>
+
+        <p>
+          Oficjalna aplikacja naszej Młodzieżowej Drużyny
+          Pożarniczej. Tutaj znajdziesz najważniejsze informacje,
+          zbiórki, ogłoszenia oraz obecności.
+        </p>
+
+      </div>
+
+      <div class="stats">
+
+        <div class="stat">
+          <strong id="statMembers">0</strong>
+          <span>Członków</span>
+        </div>
+
+        <div class="stat">
+          <strong id="statEvents">0</strong>
+          <span>Zbiórek</span>
+        </div>
+
+        <div class="stat">
+          <strong id="statNews">0</strong>
+          <span>Ogłoszeń</span>
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Najbliższa zbiórka</h3>
+          <span>📅</span>
+        </div>
+
+        <div id="nextEvent"></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Ostatnie ogłoszenia</h3>
+          <span>📢</span>
+        </div>
+
+        <div id="homeAnnouncements"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ZBIÓRKI -->
+
+    <section id="tab-events" class="tab">
+
+      <div class="pageTitle">
+        <h2>Zbiórki 📅</h2>
+        <p>Terminy spotkań i wydarzeń MDP.</p>
+      </div>
+
+      <div id="eventsList"></div>
+
+    </section>
+
+
+    <!-- INFORMACJE -->
+
+    <section id="tab-news" class="tab">
+
+      <div class="pageTitle">
+        <h2>Informacje 📢</h2>
+        <p>Ogłoszenia i ważne informacje.</p>
+      </div>
+
+      <div id="newsList"></div>
+
+    </section>
+
+
+    <!-- CZŁONKOWIE -->
+
+    <section id="tab-members" class="tab">
+
+      <div class="pageTitle">
+        <h2>Członkowie 👥</h2>
+        <p>Lista członków MDP OSP Wiesiółka.</p>
+      </div>
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Nasza drużyna</h3>
+          <span id="memberCountLabel">0 osób</span>
+        </div>
+
+        <div id="membersList"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ZARZĄDZANIE -->
+
+    <section id="tab-admin" class="tab">
+
+      <div class="pageTitle">
+        <h2>Zarządzanie 🧑‍🚒</h2>
+        <p>Panel opiekuna MDP.</p>
+      </div>
+
+
+      <!-- DODAJ ZBIÓRKĘ -->
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Dodaj zbiórkę</h3>
+          <span>📅</span>
+        </div>
+
+        <div class="formGrid">
+
+          <div>
+            <label>Nazwa</label>
+            <input id="eventTitle" class="input" placeholder="Np. Zbiórka MDP">
+          </div>
+
+          <div>
+            <label>Data</label>
+            <input id="eventDate" class="input" type="date">
+          </div>
+
+          <div>
+            <label>Godzina</label>
+            <input id="eventTime" class="input" type="time">
+          </div>
+
+          <div>
+            <label>Miejsce</label>
+            <input id="eventPlace" class="input" placeholder="Np. Remiza OSP">
+          </div>
+
+          <div class="formFull">
+            <label>Opis</label>
+            <textarea
+              id="eventDescription"
+              class="input"
+              placeholder="Informacje dotyczące zbiórki..."
+            ></textarea>
+          </div>
+
+        </div>
+
+        <button class="btn red" onclick="addEvent()">
+          + Dodaj zbiórkę
+        </button>
+
+      </div>
+
+
+      <!-- DODAJ OGŁOSZENIE -->
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Dodaj ogłoszenie</h3>
+          <span>📢</span>
+        </div>
+
+        <div class="formGrid">
+
+          <div class="formFull">
+            <label>Tytuł</label>
+            <input id="newsTitle" class="input" placeholder="Tytuł ogłoszenia">
+          </div>
+
+          <div class="formFull">
+            <label>Treść</label>
+            <textarea
+              id="newsContent"
+              class="input"
+              placeholder="Treść ogłoszenia..."
+            ></textarea>
+          </div>
+
+        </div>
+
+        <button class="btn red" onclick="addNews()">
+          + Dodaj ogłoszenie
+        </button>
+
+      </div>
+
+
+      <!-- DODAJ CZŁONKA -->
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Dodaj członka</h3>
+          <span>👤</span>
+        </div>
+
+        <div class="formGrid">
+
+          <div class="formFull">
+            <label>Imię i nazwisko</label>
+            <input
+              id="memberName"
+              class="input"
+              placeholder="Np. Jan Kowalski"
+            >
+          </div>
+
+          <div>
+            <label>Rok dołączenia</label>
+            <input
+              id="memberYear"
+              class="input"
+              type="number"
+              placeholder="2026"
+            >
+          </div>
+
+          <div>
+            <label>Funkcja</label>
+            <select id="memberFunction" class="input">
+              <option>Członek MDP</option>
+              <option>Dowódca</option>
+              <option>Zastępca dowódcy</option>
+              <option>Inna</option>
+            </select>
+          </div>
+
+        </div>
+
+        <button class="btn red" onclick="addMember()">
+          + Dodaj członka
+        </button>
+
+      </div>
+
+
+      <!-- ZARZĄDZANIE TREŚCIĄ -->
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Usuń zbiórki</h3>
+          <span>🗑️</span>
+        </div>
+
+        <div id="adminEvents"></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Usuń ogłoszenia</h3>
+          <span>🗑️</span>
+        </div>
+
+        <div id="adminNews"></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Usuń członków</h3>
+          <span>🗑️</span>
+        </div>
+
+        <div id="adminMembers"></div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="cardTitle">
+          <h3>Ustawienia</h3>
+          <span>⚙️</span>
+        </div>
+
+        <button class="btn danger" onclick="resetAllData()">
+          Wyczyść dane aplikacji
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- NAVIGATION -->
+
+  <nav class="bottomNav">
+
+    <div class="navInner">
+
+      <button class="navBtn active" data-tab="home" onclick="openTab('home')">
+        <span class="icon">🏠</span>
+        Start
+      </button>
+
+      <button class="navBtn" data-tab="events" onclick="openTab('events')">
+        <span class="icon">📅</span>
+        Zbiórki
+      </button>
+
+      <button class="navBtn" data-tab="news" onclick="openTab('news')">
+        <span class="icon">📢</span>
+        Info
+      </button>
+
+      <button class="navBtn" data-tab="members" onclick="openTab('members')">
+        <span class="icon">👥</span>
+        Członkowie
+      </button>
+
+      <button
+        id="adminNav"
+        class="navBtn hidden"
+        data-tab="admin"
+        onclick="openTab('admin')"
+      >
+        <span class="icon">⚙️</span>
+        Zarządzanie
+      </button>
+
+      <button class="navBtn" onclick="logout()">
+        <span class="icon">🚪</span>
+        Wyloguj
+      </button>
+
+    </div>
+
+  </nav>
+
 </div>
 
-</div>
 
-</section>
-
-
-<section
-id="ann"
-class="tab hidden"
->
-
-<div class="card">
-
-<h2>
-🔔 Informacje
-</h2>
-
-<p class="muted">
-Ogłoszenia od opiekunów MDP.
-</p>
-
-<div id="annList">
-</div>
-
-</div>
-
-</section>
-
-
-<section
-id="members"
-class="tab hidden"
->
-
-<div class="card">
-
-<h2>
-👥 Członkowie MDP
-</h2>
-
-<p class="muted">
-Lista członków drużyny.
-</p>
-
-<div id="membersList">
-</div>
-
-</div>
-
-</section>
-
-
-<section
-id="admin"
-class="tab hidden"
->
-
-<div class="grid">
-
-
-<div class="card">
-
-<h2>
-➕ Dodaj zbiórkę
-</h2>
-
-<form
-onsubmit="addEvent(event)"
->
-
-<label>
-Tytuł
-</label>
-
-<input
-id="newTitle"
-required
-placeholder="np. Zbiórka treningowa"
->
-
-<div class="row">
-
-<div>
-
-<label>
-Data
-</label>
-
-<input
-id="newDate"
-type="date"
-required
->
-
-</div>
-
-
-<div>
-
-<label>
-Godzina
-</label>
-
-<input
-id="newTime"
-type="time"
-value="17:00"
-required
->
-
-</div>
-
-</div>
-
-
-<label>
-Miejsce
-</label>
-
-<input
-id="newPlace"
-value="Remiza OSP Wiesiółka"
->
-
-
-<label>
-Opis
-</label>
-
-<textarea
-id="newDesc"
-rows="3"
-></textarea>
-
-
-<button class="primary">
-DODAJ ZBIÓRKĘ
-</button>
-
-</form>
-
-</div>
-
-
-<div class="card">
-
-<h2>
-📢 Dodaj informację
-</h2>
-
-<form
-onsubmit="addAnn(event)"
->
-
-<label>
-Tytuł
-</label>
-
-<input
-id="annTitle"
-required
-placeholder="np. Zmiana godziny zbiórki"
->
-
-<label>
-Treść
-</label>
-
-<textarea
-id="annText"
-rows="4"
-required
-></textarea>
-
-<button class="primary">
-OPUBLIKUJ INFORMACJĘ
-</button>
-
-</form>
-
-</div>
-
-
-<div class="card wide">
-
-<h2>
-👥 Zarządzanie członkami
-</h2>
-
-<p class="muted">
-Tutaj opiekun może usuwać członków z listy MDP.
-</p>
-
-<div id="adminMembers">
-</div>
-
-</div>
-
-
-<div class="card wide">
-
-<h2>
-🗑️ Zarządzanie treścią
-</h2>
-
-<p class="muted">
-Tutaj możesz usuwać nieaktualne zbiórki i informacje.
-</p>
-
-<div id="adminContent">
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-</main>
-
-</div>
-
-
-<div
-id="toast"
-class="toast hidden"
->
-</div>
+<div id="toast"></div>
 
 
 <script>
 
-let user=null;
-let events=[];
-let anns=[];
-let members=[];
+/* =========================
+   DANE
+========================= */
 
-let calendarMonth=new Date().getMonth();
-let calendarYear=new Date().getFullYear();
+const MEMBER_CODE = "2018";
+const ADMIN_CODE = "9982018";
 
-
-async function api(url,opt={}){
-
-let r=await fetch(
-url,
-{
-headers:{
-"Content-Type":"application/json"
-},
-...opt
-}
-);
-
-if(!r.ok)
-throw new Error(await r.text());
-
-return r.json();
-
-}
+let currentUser = null;
+let currentRole = null;
 
 
-async function login(){
+/* =========================
+   DOM
+========================= */
 
-let n=loginName.value.trim();
-let role=loginRole.value;
-let code=loginCode.value;
+const loginScreen = document.getElementById("loginScreen");
+const app = document.getElementById("app");
+const loginName = document.getElementById("loginName");
+const loginCode = document.getElementById("loginCode");
+const loginError = document.getElementById("loginError");
 
-if(!n)
-return alert("Wpisz imię i nazwisko.");
 
-if(
-(role==="admin" && code!=="9982018") ||
-(role==="member" && code!=="2018")
-)
-return alert("Nieprawidłowy kod dostępu.");
+/* =========================
+   STORAGE
+========================= */
 
-try{
+const defaultMembers = [
+  {
+    id: 1,
+    name: "Członek MDP",
+    year: "2018",
+    function: "Członek MDP"
+  }
+];
 
-if(role==="member"){
+const defaultEvents = [
+  {
+    id: 1,
+    title: "Zbiórka MDP",
+    date: "2026-10-03",
+    time: "17:00",
+    place: "Remiza OSP Wiesiółka",
+    description: "Regularna zbiórka Młodzieżowej Drużyny Pożarniczej."
+  }
+];
 
-await api(
-"/api/members",
-{
-method:"POST",
-body:JSON.stringify({
-name:n
-})
-}
-);
+const defaultNews = [
+  {
+    id: 1,
+    title: "Witamy w aplikacji MDP",
+    content: "Tutaj będą pojawiały się najważniejsze informacje dotyczące naszej drużyny.",
+    date: new Date().toLocaleDateString("pl-PL")
+  }
+];
 
-}
 
-user={
-name:n,
-role:role
-};
+function getData(key, fallback){
 
-document
-.getElementById("loginScreen")
-.classList
-.add("hidden");
+  const saved = localStorage.getItem(key);
 
-document
-.getElementById("appScreen")
-.classList
-.remove("hidden");
+  if(!saved){
+    localStorage.setItem(key, JSON.stringify(fallback));
+    return fallback;
+  }
 
-userLabel.textContent=
-n+(role==="admin"?" • ADMIN":"");
-
-if(role==="admin")
-adminTab.classList.remove("hidden");
-
-await load();
-
-if(
-"Notification" in window &&
-Notification.permission==="default"
-)
-Notification.requestPermission().catch(()=>{});
-
-registerSW();
-
-setTimeout(
-enablePush,
-700
-);
-
-}catch(e){
-
-console.error(e);
-
-alert(
-"Nie udało się zalogować. Sprawdź połączenie z serwerem."
-);
+  try{
+    return JSON.parse(saved);
+  }catch{
+    localStorage.setItem(key, JSON.stringify(fallback));
+    return fallback;
+  }
 
 }
+
+
+function saveData(key, data){
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+
+let members = getData("mdp_members", defaultMembers);
+let events = getData("mdp_events", defaultEvents);
+let news = getData("mdp_news", defaultNews);
+
+
+/* =========================
+   LOGIN
+========================= */
+
+function login(){
+
+  const name = loginName.value.trim();
+  const code = loginCode.value.trim();
+
+  loginError.textContent = "";
+
+  if(!name){
+    loginError.textContent = "Wpisz imię i nazwisko.";
+    return;
+  }
+
+  if(code === MEMBER_CODE){
+
+    currentUser = name;
+    currentRole = "member";
+
+    localStorage.setItem(
+      "mdp_session",
+      JSON.stringify({
+        name: currentUser,
+        role: currentRole
+      })
+    );
+
+    startApp();
+    return;
+  }
+
+  if(code === ADMIN_CODE){
+
+    currentUser = name;
+    currentRole = "admin";
+
+    localStorage.setItem(
+      "mdp_session",
+      JSON.stringify({
+        name: currentUser,
+        role: currentRole
+      })
+    );
+
+    startApp();
+    return;
+  }
+
+  loginError.textContent = "Nieprawidłowy kod dostępu.";
+
+}
+
+
+loginCode.addEventListener("keydown", function(e){
+
+  if(e.key === "Enter"){
+    login();
+  }
+
+});
+
+
+/* =========================
+   SESSION
+========================= */
+
+function checkSession(){
+
+  const session = localStorage.getItem("mdp_session");
+
+  if(!session){
+    return;
+  }
+
+  try{
+
+    const data = JSON.parse(session);
+
+    currentUser = data.name;
+    currentRole = data.role;
+
+    startApp();
+
+  }catch{
+
+    localStorage.removeItem("mdp_session");
+
+  }
+
+}
+
+
+function startApp(){
+
+  loginScreen.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  document.getElementById("welcomeText").textContent =
+    "Zalogowano jako " + currentUser + ".";
+
+  const badge = document.getElementById("roleBadge");
+  const adminNav = document.getElementById("adminNav");
+
+  if(currentRole === "admin"){
+
+    badge.textContent = "OPIEKUN MDP";
+    adminNav.classList.remove("hidden");
+
+  }else{
+
+    badge.textContent = "CZŁONEK MDP";
+    adminNav.classList.add("hidden");
+
+  }
+
+  renderAll();
 
 }
 
 
 function logout(){
 
-location.reload();
+  localStorage.removeItem("mdp_session");
 
-}
+  currentUser = null;
+  currentRole = null;
 
+  app.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
 
-function tab(id,b){
-
-document
-.querySelectorAll(".tab")
-.forEach(x=>
-x.classList.add("hidden")
-);
-
-document
-.getElementById(id)
-.classList
-.remove("hidden");
-
-document
-.querySelectorAll(".tabs button")
-.forEach(x=>
-x.classList.remove("active")
-);
-
-b.classList.add("active");
-
-}
-
-
-function fmt(d){
-
-return new Date(d)
-.toLocaleString(
-"pl-PL",
-{
-weekday:"long",
-day:"2-digit",
-month:"long",
-hour:"2-digit",
-minute:"2-digit"
-}
-);
-
-}
-
-
-function resp(e){
-
-return e.responses?.[user.name] || null;
-
-}
-
-
-async function setResp(id,status){
-
-try{
-
-await api(
-"/api/events/"+id+"/response",
-{
-method:"POST",
-body:JSON.stringify(
-{
-name:user.name,
-status:status
-}
-)
-}
-);
-
-await load();
-
-if(status==="yes"){
-
-toast(
-"✓ Obecność",
-"Zbiórka została oznaczona jako obecna."
-);
-
-}
-
-if(status==="no"){
-
-toast(
-"✕ Nieobecność",
-"Zbiórka została oznaczona jako nieobecna."
-);
-
-}
-
-if(status==="maybe"){
-
-toast(
-"? Może będę",
-"Twój status został zapisany."
-);
-
-}
-
-}catch(e){
-
-alert("Nie udało się zapisać odpowiedzi.");
-
-}
-
-}
-
-
-function buttons(e){
-
-let r=resp(e);
-
-return `
-
-<div class="actions">
-
-<button
-class="yes"
-onclick="setResp(${e.id},'yes')"
->
-✓ Potwierdź${r==="yes"?" ✓":""}
-</button>
-
-<button
-class="no"
-onclick="setResp(${e.id},'no')"
->
-✕ Odrzuć${r==="no"?" ✓":""}
-</button>
-
-<button
-class="maybe"
-onclick="setResp(${e.id},'maybe')"
->
-? Może będę${r==="maybe"?" ✓":""}
-</button>
-
-</div>
-
-`;
-
-}
-
-
-async function load(){
-
-let d=await api("/api/data");
-
-events=d.events || [];
-anns=d.announcements || [];
-members=d.members || [];
-
-render();
-
-}
-
-
-function render(){
-
-events.sort(
-(a,b)=>
-new Date(a.date)-new Date(b.date)
-);
-
-let next=
-events.find(
-e=>new Date(e.date)>=new Date()
-)
-||
-events[0];
-
-qEvents.textContent=
-events.length;
-
-let total=0;
-let yes=0;
-let no=0;
-
-events.forEach(e=>{
-
-let r=resp(e);
-
-if(r==="yes"){
-yes++;
-total++;
-}
-
-if(r==="no"){
-no++;
-total++;
-}
-
-});
-
-let attendancePercent=
-total
-?
-Math.round((yes/total)*100)
-:
-0;
-
-qAttendance.textContent=
-attendancePercent+"%";
-
-qUnread.textContent=
-anns.length;
-
-bellCount.textContent=
-anns.length;
-
-document
-.getElementById("attendancePercent")
-.textContent=
-attendancePercent+"%";
-
-document
-.getElementById("presentCount")
-.textContent=
-yes;
-
-document
-.getElementById("absentCount")
-.textContent=
-no;
-
-document
-.getElementById("attendanceTotal")
-.textContent=
-total;
-
-document
-.getElementById("attendanceBar")
-.style.width=
-attendancePercent+"%";
-
-
-if(next){
-
-nextTitle.textContent=
-next.title;
-
-nextInfo.textContent=
-`${fmt(next.date)} • ${next.place}`;
-
-nextActions.innerHTML=
-buttons(next);
-
-}else{
-
-nextTitle.textContent="Brak zbiórek";
-
-nextInfo.textContent=
-"Brak zaplanowanych zbiórek.";
-
-nextActions.innerHTML="";
-
-}
-
-
-eventsList.innerHTML=
-events
-.map(e=>`
-
-<div class="event">
-
-<div class="eventtop">
-
-<div>
-
-<h3>
-${e.title}
-</h3>
-
-<div class="muted">
-
-📅 ${fmt(e.date)}
-
-<br>
-
-📍 ${e.place}
-
-</div>
-
-<p class="muted">
-${e.desc||""}
-</p>
-
-</div>
-
-<span class="badge">
-${resp(e)||"brak odpowiedzi"}
-</span>
-
-</div>
-
-${buttons(e)}
-
-</div>
-
-`)
-.join("")
-||
-"<p class='muted'>Brak zbiórek.</p>";
-
-
-annList.innerHTML=
-anns
-.map(a=>`
-
-<div class="ann">
-
-<div class="meta">
-${new Date(a.createdAt)
-.toLocaleString("pl-PL")}
-</div>
-
-<h3>
-${a.title}
-</h3>
-
-<div class="muted">
-${a.text}
-</div>
-
-</div>
-
-`)
-.join("")
-||
-"<p class='muted'>Brak informacji.</p>";
-
-
-latestAnn.innerHTML=
-anns
-.slice(0,2)
-.map(a=>`
-
-<div class="ann">
-
-<h3>
-${a.title}
-</h3>
-
-<div class="muted">
-${a.text}
-</div>
-
-</div>
-
-`)
-.join("")
-||
-"<p class='muted'>Brak informacji.</p>";
-
-
-if(members.length){
-
-membersList.innerHTML=
-members
-.map(n=>`
-
-<div class="member-card">
-
-<div class="member-left">
-
-<div class="member-avatar">
-👤
-</div>
-
-<div>
-
-<div class="member-name">
-${n}
-</div>
-
-<div class="member-role">
-Członek MDP
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-`)
-.join("");
-
-}else{
-
-membersList.innerHTML=`
-
-<div class="notice">
-
-<div>👥</div>
-
-<div>
-
-<b>Brak członków</b>
-
-<span>
-Pierwszy członek pojawi się tutaj po zalogowaniu.
-</span>
-
-</div>
-
-</div>
-
-`;
-
-}
-
-
-if(user && user.role==="admin"){
-
-adminMembers.innerHTML=
-members.length
-?
-members
-.map(n=>`
-
-<div class="member-card">
-
-<div class="member-left">
-
-<div class="member-avatar">
-👤
-</div>
-
-<div>
-
-<div class="member-name">
-${n}
-</div>
-
-<div class="member-role">
-Członek MDP
-</div>
-
-</div>
-
-</div>
-
-<button
-class="danger small"
-onclick='delMember(${JSON.stringify(n)})'
->
-Usuń
-</button>
-
-</div>
-
-`)
-.join("")
-:
-"<p class='muted'>Brak członków.</p>";
-
-
-adminContent.innerHTML=
-
-`<h3>Zbiórki</h3>`+
-
-events
-.map(e=>`
-
-<div
-class="event"
-style="display:flex;justify-content:space-between;gap:10px"
->
-
-<span>
-
-<b>
-${e.title}
-</b>
-
-<br>
-
-<span class="muted">
-${fmt(e.date)}
-</span>
-
-</span>
-
-<button
-class="danger small"
-onclick="delEvent(${e.id})"
->
-Usuń
-</button>
-
-</div>
-
-`)
-.join("")+
-
-`
-
-<h3 style="margin-top:20px">
-Informacje
-</h3>
-
-`+
-
-anns
-.map(a=>`
-
-<div
-class="event"
-style="display:flex;justify-content:space-between;gap:10px"
->
-
-<span>
-
-<b>
-${a.title}
-</b>
-
-</span>
-
-<button
-class="danger small"
-onclick="delAnn(${a.id})"
->
-Usuń
-</button>
-
-</div>
-
-`)
-.join("");
-
-}
-
-buildCalendar();
-
-}
-
-
-function buildCalendar(){
-
-let c=
-document.getElementById("calendar");
-
-let monthNames=[
-"styczeń",
-"luty",
-"marzec",
-"kwiecień",
-"maj",
-"czerwiec",
-"lipiec",
-"sierpień",
-"wrzesień",
-"październik",
-"listopad",
-"grudzień"
-];
-
-let weekdays=[
-"Pn",
-"Wt",
-"Śr",
-"Cz",
-"Pt",
-"Sb",
-"Nd"
-];
-
-let firstDay=
-new Date(
-calendarYear,
-calendarMonth,
-1
-);
-
-let daysInMonth=
-new Date(
-calendarYear,
-calendarMonth+1,
-0
-).getDate();
-
-let startDay=
-(firstDay.getDay()+6)%7;
-
-let today=
-new Date();
-
-let out=`
-
-<div class="calendar-wrap">
-
-<div class="calendar-top">
-
-<div>
-
-<div class="calendar-title">
-${monthNames[calendarMonth]} ${calendarYear}
-</div>
-
-<div class="calendar-subtitle">
-KALENDARZ MDP WIESIÓŁKA
-</div>
-
-</div>
-
-<div class="calendar-nav">
-
-<button
-onclick="changeCalendarMonth(-1)"
->
-‹
-</button>
-
-<button
-onclick="goToday()"
->
-●
-</button>
-
-<button
-onclick="changeCalendarMonth(1)"
->
-›
-</button>
-
-</div>
-
-</div>
-
-<div class="calendar-grid">
-`;
-
-weekdays.forEach(day=>{
-
-out+=`
-
-<div class="calendar-weekday">
-${day}
-</div>
-
-`;
-
-});
-
-
-for(
-let i=0;
-i<startDay;
-i++
-){
-
-out+=`
-
-<div class="calendar-day empty">
-</div>
-
-`;
-
-}
-
-
-for(
-let day=1;
-day<=daysInMonth;
-day++
-){
-
-let iso=
-`${calendarYear}-${String(calendarMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-
-let dayEvents=
-events.filter(
-e=>e.date.startsWith(iso)
-);
-
-let isToday=
-today.getFullYear()===calendarYear &&
-today.getMonth()===calendarMonth &&
-today.getDate()===day;
-
-let classes=
-"calendar-day";
-
-if(isToday)
-classes+=" today";
-
-if(dayEvents.length)
-classes+=" eventday";
-
-out+=`
-
-<div
-class="${classes}"
-onclick="calendarDay('${iso}')"
->
-
-<div class="calendar-number">
-${day}
-</div>
-
-${dayEvents
-.slice(0,2)
-.map(e=>`
-
-<div class="calendar-event">
-🔥 ${e.title}
-</div>
-
-`)
-.join("")}
-
-${dayEvents.length>2?`
-
-<div class="calendar-more">
-+${dayEvents.length-2} więcej
-</div>
-
-`:""}
-
-</div>
-
-`;
-
-}
-
-
-out+=`
-
-</div>
-
-<div class="calendar-legend">
-
-<span>
-
-<i class="legend-dot">
-</i>
-
-Zbiórka
-
-</span>
-
-<span>
-
-<i class="legend-dot today">
-</i>
-
-Dzisiaj
-
-</span>
-
-</div>
-
-</div>
-
-`;
-
-c.innerHTML=
-out;
-
-}
-
-
-function changeCalendarMonth(change){
-
-calendarMonth+=change;
-
-if(calendarMonth<0){
-
-calendarMonth=11;
-calendarYear--;
-
-}
-
-if(calendarMonth>11){
-
-calendarMonth=0;
-calendarYear++;
-
-}
-
-buildCalendar();
-
-}
-
-
-function goToday(){
-
-let now=
-new Date();
-
-calendarMonth=
-now.getMonth();
-
-calendarYear=
-now.getFullYear();
-
-buildCalendar();
-
-}
-
-
-function calendarDay(iso){
-
-let es=
-events.filter(
-e=>e.date.startsWith(iso)
-);
-
-if(!es.length)
-return;
-
-alert(
-
-es
-.map(e=>
-`${e.title}
-${fmt(e.date)}
-📍 ${e.place}
-${e.desc||""}`
-)
-.join("\n\n")
-
-);
-
-}
-
-
-async function addEvent(ev){
-
-ev.preventDefault();
-
-try{
-
-await api(
-"/api/events",
-{
-method:"POST",
-body:JSON.stringify(
-{
-title:newTitle.value,
-date:newDate.value+"T"+newTime.value,
-place:newPlace.value,
-desc:newDesc.value
-}
-)
-}
-);
-
-ev.target.reset();
-
-newPlace.value=
-"Remiza OSP Wiesiółka";
-
-await load();
-
-toast(
-"Dodano zbiórkę",
-"Członkowie zobaczą ją od razu."
-);
-
-}catch(e){
-
-alert("Nie udało się dodać zbiórki.");
-
-}
-
-}
-
-
-async function addAnn(ev){
-
-ev.preventDefault();
-
-try{
-
-await api(
-"/api/announcements",
-{
-method:"POST",
-body:JSON.stringify(
-{
-title:annTitle.value,
-text:annText.value
-}
-)
-}
-);
-
-ev.target.reset();
-
-await load();
-
-toast(
-"Opublikowano informację",
-"Powiadomienie push zostanie wysłane."
-);
-
-}catch(e){
-
-alert("Nie udało się opublikować informacji.");
-
-}
-
-}
-
-
-async function delEvent(id){
-
-if(
-!confirm("Usunąć tę zbiórkę?")
-)
-return;
-
-try{
-
-await api(
-"/api/events/"+id,
-{
-method:"DELETE"
-}
-);
-
-await load();
-
-toast(
-"Usunięto zbiórkę",
-""
-);
-
-}catch(e){
-
-alert("Nie udało się usunąć zbiórki.");
-
-}
-
-}
-
-
-async function delAnn(id){
-
-if(
-!confirm("Usunąć tę informację?")
-)
-return;
-
-try{
-
-await api(
-"/api/announcements/"+id,
-{
-method:"DELETE"
-}
-);
-
-await load();
-
-toast(
-"Usunięto informację",
-""
-);
-
-}catch(e){
-
-alert("Nie udało się usunąć informacji.");
-
-}
-
-}
-
-
-async function delMember(name){
-
-if(
-!confirm(
-`Usunąć "${name}" z listy członków MDP?`
-)
-)
-return;
-
-try{
-
-await api(
-"/api/members/"+encodeURIComponent(name),
-{
-method:"DELETE"
-}
-);
-
-await load();
-
-toast(
-"Usunięto członka",
-name
-);
-
-}catch(e){
-
-alert("Nie udało się usunąć członka.");
-
-}
-
-}
-
-
-function toast(title,text){
-
-let t=
-document.getElementById("toast");
-
-t.innerHTML=
-`<b>${title}</b>${text||""}`;
-
-t.classList.remove("hidden");
-
-setTimeout(
-()=>t.classList.add("hidden"),
-3500
-);
+  loginName.value = "";
+  loginCode.value = "";
 
 }
 
 
 /* =========================
-   PWA / SERVICE WORKER
-   ========================= */
+   NAVIGATION
+========================= */
 
-async function registerSW(){
+function openTab(name){
 
-if(!("serviceWorker" in navigator))
-return;
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.classList.remove("active");
+  });
 
-try{
+  const selected = document.getElementById("tab-" + name);
 
-await navigator.serviceWorker.register(
-"./sw.js",
-{
-scope:"./"
-}
-);
+  if(selected){
+    selected.classList.add("active");
+  }
 
-console.log("Service Worker działa");
+  document.querySelectorAll(".navBtn").forEach(btn=>{
+    btn.classList.remove("active");
+  });
 
-}catch(e){
+  const activeButton =
+    document.querySelector('.navBtn[data-tab="' + name + '"]');
 
-console.error(
-"Service Worker:",
-e
-);
+  if(activeButton){
+    activeButton.classList.add("active");
+  }
 
-}
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
 
 }
 
 
 /* =========================
-   PUSH
-   ========================= */
+   RENDER
+========================= */
 
-function b64ToBytes(b64){
+function renderAll(){
 
-let s=
-b64
-.replace(/-/g,"+")
-.replace(/_/g,"/");
+  members = getData("mdp_members", defaultMembers);
+  events = getData("mdp_events", defaultEvents);
+  news = getData("mdp_news", defaultNews);
 
-while(
-s.length%4
-)
-s+="=";
+  renderStats();
+  renderNextEvent();
+  renderHomeNews();
+  renderEvents();
+  renderNews();
+  renderMembers();
 
-let raw=
-atob(s);
-
-let a=
-new Uint8Array(
-raw.length
-);
-
-for(
-let i=0;
-i<raw.length;
-i++
-)
-a[i]=
-raw.charCodeAt(i);
-
-return a;
+  if(currentRole === "admin"){
+    renderAdmin();
+  }
 
 }
 
 
-async function enablePush(){
+/* =========================
+   STATS
+========================= */
 
-try{
+function renderStats(){
 
-if(
-!window.isSecureContext ||
-!("serviceWorker"in navigator) ||
-!("PushManager"in window) ||
-!("Notification"in window) ||
-Notification.permission!=="granted"
-)
-return;
+  document.getElementById("statMembers").textContent =
+    members.length;
 
-let k=
-(await api(
-"/api/push/public-key"
-)).key;
+  document.getElementById("statEvents").textContent =
+    events.length;
 
-if(!k)
-return;
+  document.getElementById("statNews").textContent =
+    news.length;
 
-let reg=
-await navigator
-.serviceWorker
-.ready;
-
-let sub=
-await reg.pushManager
-.getSubscription();
-
-if(!sub)
-
-sub=
-await reg.pushManager
-.subscribe(
-{
-userVisibleOnly:true,
-applicationServerKey:
-b64ToBytes(k)
-}
-);
-
-await api(
-"/api/push/subscribe",
-{
-method:"POST",
-body:JSON.stringify(
-sub.toJSON()
-)
-}
-);
-
-}catch(e){
-
-console.log(
-"Push:",
-e.message
-);
+  document.getElementById("memberCountLabel").textContent =
+    members.length + (members.length === 1 ? " osoba" : " osób");
 
 }
+
+
+/* =========================
+   EVENTS
+========================= */
+
+function formatDate(date){
+
+  if(!date){
+    return "";
+  }
+
+  const parts = date.split("-");
+
+  if(parts.length !== 3){
+    return date;
+  }
+
+  return parts[2] + "." + parts[1] + "." + parts[0];
+
+}
+
+
+function renderNextEvent(){
+
+  const box = document.getElementById("nextEvent");
+
+  if(!events.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        <div class="emptyIcon">📅</div>
+        Brak zaplanowanych zbiórek.
+      </div>
+    `;
+
+    return;
+  }
+
+  const sorted = [...events].sort((a,b)=>
+    (a.date + a.time).localeCompare(b.date + b.time)
+  );
+
+  const event = sorted[0];
+
+  box.innerHTML = eventHTML(event,false);
+
+}
+
+
+function eventHTML(event, admin=false){
+
+  return `
+    <div class="event">
+
+      <div class="eventDate">
+        📅 ${formatDate(event.date)}
+        ${event.time ? " • " + event.time : ""}
+      </div>
+
+      <h4>${escapeHTML(event.title)}</h4>
+
+      ${
+        event.place
+        ? `<p>📍 ${escapeHTML(event.place)}</p>`
+        : ""
+      }
+
+      ${
+        event.description
+        ? `<p style="margin-top:6px">
+             ${escapeHTML(event.description)}
+           </p>`
+        : ""
+      }
+
+      ${
+        !admin
+        ? `
+          <div class="eventActions">
+            <button class="btn green" onclick="respondEvent(${event.id},'yes')">
+              ✅ Będę
+            </button>
+
+            <button class="btn orange" onclick="respondEvent(${event.id},'maybe')">
+              ❓ Nie wiem
+            </button>
+
+            <button class="btn danger" onclick="respondEvent(${event.id},'no')">
+              ❌ Nie będę
+            </button>
+          </div>
+        `
+        : `
+          <div class="eventActions">
+            <button class="btn danger" onclick="deleteEvent(${event.id})">
+              🗑️ Usuń
+            </button>
+          </div>
+        `
+      }
+
+    </div>
+  `;
+
+}
+
+
+function renderEvents(){
+
+  const box = document.getElementById("eventsList");
+
+  if(!events.length){
+
+    box.innerHTML = `
+      <div class="card">
+        <div class="empty">
+          <div class="emptyIcon">📅</div>
+          Brak zaplanowanych zbiórek.
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  const sorted = [...events].sort((a,b)=>
+    (a.date + a.time).localeCompare(b.date + b.time)
+  );
+
+  box.innerHTML = sorted
+    .map(event=>eventHTML(event,false))
+    .join("");
+
+}
+
+
+function addEvent(){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  const title =
+    document.getElementById("eventTitle").value.trim();
+
+  const date =
+    document.getElementById("eventDate").value;
+
+  const time =
+    document.getElementById("eventTime").value;
+
+  const place =
+    document.getElementById("eventPlace").value.trim();
+
+  const description =
+    document.getElementById("eventDescription").value.trim();
+
+  if(!title || !date){
+
+    showToast("Podaj nazwę i datę zbiórki.");
+    return;
+
+  }
+
+  const event = {
+    id:Date.now(),
+    title,
+    date,
+    time,
+    place,
+    description
+  };
+
+  events.push(event);
+
+  saveData("mdp_events",events);
+
+  document.getElementById("eventTitle").value = "";
+  document.getElementById("eventDate").value = "";
+  document.getElementById("eventTime").value = "";
+  document.getElementById("eventPlace").value = "";
+  document.getElementById("eventDescription").value = "";
+
+  renderAll();
+
+  showToast("Zbiórka została dodana.");
+
+}
+
+
+function deleteEvent(id){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  if(!confirm("Na pewno usunąć tę zbiórkę?")){
+    return;
+  }
+
+  events = events.filter(event=>event.id !== id);
+
+  saveData("mdp_events",events);
+
+  renderAll();
+
+  showToast("Zbiórka została usunięta.");
+
+}
+
+
+function respondEvent(id,response){
+
+  const names = {
+    yes:"Będę",
+    maybe:"Nie wiem",
+    no:"Nie będę"
+  };
+
+  localStorage.setItem(
+    "event_response_" + id + "_" + currentUser,
+    response
+  );
+
+  showToast(
+    "Twoja odpowiedź: " + names[response]
+  );
+
+}
+
+
+/* =========================
+   NEWS
+========================= */
+
+function newsHTML(item,admin=false){
+
+  return `
+    <div class="announcement">
+
+      <div class="announcementTop">
+
+        <h4>${escapeHTML(item.title)}</h4>
+
+        <small>${escapeHTML(item.date || "")}</small>
+
+      </div>
+
+      <p>${escapeHTML(item.content)}</p>
+
+      ${
+        admin
+        ? `
+          <div class="eventActions">
+
+            <button
+              class="btn danger"
+              onclick="deleteNews(${item.id})"
+            >
+              🗑️ Usuń
+            </button>
+
+          </div>
+        `
+        : ""
+      }
+
+    </div>
+  `;
+
+}
+
+
+function renderNews(){
+
+  const box = document.getElementById("newsList");
+
+  if(!news.length){
+
+    box.innerHTML = `
+      <div class="card">
+        <div class="empty">
+          <div class="emptyIcon">📢</div>
+          Brak ogłoszeń.
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  box.innerHTML = [...news]
+    .reverse()
+    .map(item=>newsHTML(item,false))
+    .join("");
+
+}
+
+
+function renderHomeNews(){
+
+  const box = document.getElementById("homeAnnouncements");
+
+  if(!news.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        Brak ogłoszeń.
+      </div>
+    `;
+
+    return;
+  }
+
+  box.innerHTML = [...news]
+    .reverse()
+    .slice(0,3)
+    .map(item=>newsHTML(item,false))
+    .join("");
+
+}
+
+
+function addNews(){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  const title =
+    document.getElementById("newsTitle").value.trim();
+
+  const content =
+    document.getElementById("newsContent").value.trim();
+
+  if(!title || !content){
+
+    showToast("Uzupełnij tytuł i treść.");
+    return;
+
+  }
+
+  news.push({
+
+    id:Date.now(),
+    title,
+    content,
+    date:new Date().toLocaleDateString("pl-PL")
+
+  });
+
+  saveData("mdp_news",news);
+
+  document.getElementById("newsTitle").value = "";
+  document.getElementById("newsContent").value = "";
+
+  renderAll();
+
+  showToast("Ogłoszenie zostało dodane.");
+
+}
+
+
+function deleteNews(id){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  if(!confirm("Na pewno usunąć to ogłoszenie?")){
+    return;
+  }
+
+  news = news.filter(item=>item.id !== id);
+
+  saveData("mdp_news",news);
+
+  renderAll();
+
+  showToast("Ogłoszenie zostało usunięte.");
+
+}
+
+
+/* =========================
+   MEMBERS
+========================= */
+
+function memberHTML(member,admin=false){
+
+  const initials =
+    member.name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0,2)
+      .map(x=>x[0])
+      .join("")
+      .toUpperCase();
+
+  return `
+    <div class="member">
+
+      <div class="avatar">
+        ${escapeHTML(initials || "?")}
+      </div>
+
+      <div class="memberInfo">
+
+        <strong>${escapeHTML(member.name)}</strong>
+
+        <span>
+          ${escapeHTML(member.function || "Członek MDP")}
+          ${member.year ? " • od " + escapeHTML(member.year) : ""}
+        </span>
+
+      </div>
+
+      ${
+        admin
+        ? `
+          <button
+            class="btn danger"
+            onclick="deleteMember(${member.id})"
+          >
+            🗑️
+          </button>
+        `
+        : ""
+      }
+
+    </div>
+  `;
+
+}
+
+
+function renderMembers(){
+
+  const box = document.getElementById("membersList");
+
+  if(!members.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        Brak członków.
+      </div>
+    `;
+
+    return;
+  }
+
+  box.innerHTML = members
+    .map(member=>memberHTML(member,false))
+    .join("");
+
+}
+
+
+function addMember(){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  const name =
+    document.getElementById("memberName").value.trim();
+
+  const year =
+    document.getElementById("memberYear").value.trim();
+
+  const func =
+    document.getElementById("memberFunction").value;
+
+  if(!name){
+
+    showToast("Podaj imię i nazwisko.");
+    return;
+
+  }
+
+  members.push({
+
+    id:Date.now(),
+    name,
+    year,
+    function:func
+
+  });
+
+  saveData("mdp_members",members);
+
+  document.getElementById("memberName").value = "";
+  document.getElementById("memberYear").value = "";
+
+  renderAll();
+
+  showToast("Członek został dodany.");
+
+}
+
+
+function deleteMember(id){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  if(!confirm("Na pewno usunąć tego członka?")){
+    return;
+  }
+
+  members = members.filter(member=>member.id !== id);
+
+  saveData("mdp_members",members);
+
+  renderAll();
+
+  showToast("Członek został usunięty.");
+
+}
+
+
+/* =========================
+   ADMIN
+========================= */
+
+function renderAdmin(){
+
+  document.getElementById("adminEvents").innerHTML =
+    events.length
+    ? events.map(event=>eventHTML(event,true)).join("")
+    : `<div class="empty">Brak zbiórek.</div>`;
+
+
+  document.getElementById("adminNews").innerHTML =
+    news.length
+    ? [...news]
+        .reverse()
+        .map(item=>newsHTML(item,true))
+        .join("")
+    : `<div class="empty">Brak ogłoszeń.</div>`;
+
+
+  document.getElementById("adminMembers").innerHTML =
+    members.length
+    ? members.map(member=>memberHTML(member,true)).join("")
+    : `<div class="empty">Brak członków.</div>`;
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetAllData(){
+
+  if(currentRole !== "admin"){
+    return;
+  }
+
+  const answer =
+    confirm(
+      "UWAGA!\n\nCzy na pewno chcesz wyczyścić wszystkie dane aplikacji zapisane na tym urządzeniu?"
+    );
+
+  if(!answer){
+    return;
+  }
+
+  localStorage.removeItem("mdp_members");
+  localStorage.removeItem("mdp_events");
+  localStorage.removeItem("mdp_news");
+
+  members = [...defaultMembers];
+  events = [...defaultEvents];
+  news = [...defaultNews];
+
+  saveData("mdp_members",members);
+  saveData("mdp_events",events);
+  saveData("mdp_news",news);
+
+  renderAll();
+
+  showToast("Dane zostały wyczyszczone.");
+
+}
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+let toastTimer;
+
+function showToast(message){
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent = message;
+
+  toast.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(()=>{
+    toast.classList.remove("show");
+  },2500);
+
+}
+
+
+/* =========================
+   PWA
+========================= */
+
+if("serviceWorker" in navigator){
+
+  window.addEventListener("load", async()=>{
+
+    try{
+
+      await navigator.serviceWorker.register(
+        "./sw.js",
+        {
+          scope:"./"
+        }
+      );
+
+    }catch(error){
+
+      console.log(
+        "Service Worker error:",
+        error
+      );
+
+    }
+
+  });
 
 }
 
 
 /* =========================
    START
-   ========================= */
+========================= */
 
-registerSW();
-
-load().catch(
-()=>{}
-);
+checkSession();
 
 </script>
 
