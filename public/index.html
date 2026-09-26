@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#d71920">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="/manifest.webmanifest">
 <title>MDP WIESIÓŁKA</title>
 
@@ -409,7 +411,7 @@ display:grid;
 place-items:center
 }
 
-/* NOWY KALENDARZ */
+/* KALENDARZ */
 
 .calendar-wrap{
 background:linear-gradient(145deg,#171a20,#0f1115);
@@ -579,6 +581,49 @@ background:#d71920
 
 .legend-dot.today{
 box-shadow:0 0 0 3px #d7192033
+}
+
+/* CZŁONKOWIE */
+
+.member-card{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:14px;
+margin-top:10px;
+background:linear-gradient(145deg,#191c23,#13161b);
+border:1px solid #303641;
+border-radius:14px
+}
+
+.member-left{
+display:flex;
+align-items:center;
+gap:12px;
+min-width:0
+}
+
+.member-avatar{
+width:42px;
+height:42px;
+border-radius:50%;
+background:linear-gradient(145deg,#d71920,#79090e);
+display:grid;
+place-items:center;
+font-size:19px;
+flex-shrink:0
+}
+
+.member-name{
+font-weight:900;
+font-size:14px
+}
+
+.member-role{
+font-size:11px;
+color:#858c97;
+margin-top:3px
 }
 
 /* FORMULARZE */
@@ -776,6 +821,10 @@ width:36px;
 height:36px
 }
 
+.member-card{
+padding:11px
+}
+
 }
 
 </style>
@@ -808,6 +857,7 @@ Imię i nazwisko
 <input
 id="loginName"
 placeholder="np. Jan Kowalski"
+autocomplete="name"
 >
 
 <label>
@@ -955,7 +1005,7 @@ class="tab"
 <div class="q">
 🔔
 <b id="qUnread">0</b>
-<span>nieprzeczytane</span>
+<span>informacje</span>
 </div>
 
 </div>
@@ -1150,7 +1200,7 @@ class="tab hidden"
 </h2>
 
 <p class="muted">
-Odpowiedz na każdą zbiórkę. Administrator może ją usunąć.
+Odpowiedz na każdą zbiórkę.
 </p>
 
 <div id="eventsList">
@@ -1198,6 +1248,10 @@ class="tab hidden"
 <h2>
 👥 Członkowie MDP
 </h2>
+
+<p class="muted">
+Lista członków drużyny.
+</p>
 
 <div id="membersList">
 </div>
@@ -1339,6 +1393,22 @@ OPUBLIKUJ INFORMACJĘ
 <div class="card wide">
 
 <h2>
+👥 Zarządzanie członkami
+</h2>
+
+<p class="muted">
+Tutaj opiekun może usuwać członków z listy MDP.
+</p>
+
+<div id="adminMembers">
+</div>
+
+</div>
+
+
+<div class="card wide">
+
+<h2>
 🗑️ Zarządzanie treścią
 </h2>
 
@@ -1372,10 +1442,7 @@ class="toast hidden"
 let user=null;
 let events=[];
 let anns=[];
-
-const members=[
-"Adrian Starek"
-];
+let members=[];
 
 
 /* KALENDARZ */
@@ -1423,6 +1490,27 @@ if(
 )
 return alert("Nieprawidłowy kod dostępu.");
 
+try{
+
+/*
+  Jeśli loguje się zwykły członek,
+  automatycznie dodajemy go do MDP.
+*/
+
+if(role==="member"){
+
+await api(
+"/api/members",
+{
+method:"POST",
+body:JSON.stringify({
+name:n
+})
+}
+);
+
+}
+
 user={
 name:n,
 role:role
@@ -1458,6 +1546,16 @@ setTimeout(
 enablePush,
 700
 );
+
+}catch(e){
+
+console.error(e);
+
+alert(
+"Nie udało się zalogować. Sprawdź połączenie z serwerem."
+);
+
+}
 
 }
 
@@ -1529,6 +1627,8 @@ return e.responses?.[user.name] || null;
 
 async function setResp(id,status){
 
+try{
+
 await api(
 "/api/events/"+id+"/response",
 {
@@ -1568,6 +1668,12 @@ toast(
 "? Może będę",
 "Twój status został zapisany."
 );
+
+}
+
+}catch(e){
+
+alert("Nie udało się zapisać odpowiedzi.");
 
 }
 
@@ -1618,8 +1724,9 @@ async function load(){
 
 let d=await api("/api/data");
 
-events=d.events;
-anns=d.announcements;
+events=d.events || [];
+anns=d.announcements || [];
+members=d.members || [];
 
 render();
 
@@ -1634,6 +1741,9 @@ events.sort(
 (a,b)=>
 new Date(a.date)-new Date(b.date)
 );
+
+
+/* NAJBLIŻSZA */
 
 let next=
 events.find(
@@ -1731,6 +1841,12 @@ nextInfo.textContent=
 
 nextActions.innerHTML=
 buttons(next);
+
+}else{
+
+nextTitle.textContent="Brak zbiórek";
+nextInfo.textContent="Brak zaplanowanych zbiórek.";
+nextActions.innerHTML="";
 
 }
 
@@ -1839,32 +1955,114 @@ ${a.text}
 
 /* CZŁONKOWIE */
 
+if(members.length){
+
 membersList.innerHTML=
 members
 .map(n=>`
 
-<div
-class="event"
-style="display:flex;justify-content:space-between"
->
+<div class="member-card">
 
-<span>
-👤 ${n}
-</span>
+<div class="member-left">
 
-<span class="muted">
+<div class="member-avatar">
+👤
+</div>
+
+<div>
+
+<div class="member-name">
+${n}
+</div>
+
+<div class="member-role">
 Członek MDP
-</span>
+</div>
+
+</div>
+
+</div>
 
 </div>
 
 `)
 .join("");
 
+}else{
+
+membersList.innerHTML=`
+
+<div class="notice">
+
+<div>👥</div>
+
+<div>
+
+<b>Brak członków</b>
+
+<span>
+Pierwszy członek pojawi się tutaj po zalogowaniu.
+</span>
+
+</div>
+
+</div>
+
+`;
+
+}
+
 
 /* ADMIN */
 
 if(user.role==="admin"){
+
+/* CZŁONKOWIE */
+
+adminMembers.innerHTML=
+members.length
+?
+members
+.map(n=>`
+
+<div class="member-card">
+
+<div class="member-left">
+
+<div class="member-avatar">
+👤
+</div>
+
+<div>
+
+<div class="member-name">
+${n}
+</div>
+
+<div class="member-role">
+Członek MDP
+</div>
+
+</div>
+
+</div>
+
+<button
+class="danger small"
+onclick='delMember(${JSON.stringify(n)})'
+>
+Usuń
+</button>
+
+</div>
+
+`)
+.join("")
+:
+"<p class='muted'>Brak członków.</p>";
+
+
+/* TREŚĆ */
 
 adminContent.innerHTML=
 
@@ -2262,6 +2460,8 @@ async function addEvent(ev){
 
 ev.preventDefault();
 
+try{
+
 await api(
 "/api/events",
 {
@@ -2289,6 +2489,12 @@ toast(
 "Członkowie zobaczą ją od razu."
 );
 
+}catch(e){
+
+alert("Nie udało się dodać zbiórki.");
+
+}
+
 }
 
 
@@ -2297,6 +2503,8 @@ toast(
 async function addAnn(ev){
 
 ev.preventDefault();
+
+try{
 
 await api(
 "/api/announcements",
@@ -2317,8 +2525,14 @@ await load();
 
 toast(
 "Opublikowano informację",
-"Powiadomienie push zostanie wysłane do zapisanych urządzeń."
+"Powiadomienie push zostanie wysłane."
 );
+
+}catch(e){
+
+alert("Nie udało się opublikować informacji.");
+
+}
 
 }
 
@@ -2331,6 +2545,8 @@ if(
 !confirm("Usunąć tę zbiórkę?")
 )
 return;
+
+try{
 
 await api(
 "/api/events/"+id,
@@ -2346,6 +2562,12 @@ toast(
 ""
 );
 
+}catch(e){
+
+alert("Nie udało się usunąć zbiórki.");
+
+}
+
 }
 
 
@@ -2357,6 +2579,8 @@ if(
 !confirm("Usunąć tę informację?")
 )
 return;
+
+try{
 
 await api(
 "/api/announcements/"+id,
@@ -2371,6 +2595,48 @@ toast(
 "Usunięto informację",
 ""
 );
+
+}catch(e){
+
+alert("Nie udało się usunąć informacji.");
+
+}
+
+}
+
+
+/* USUWANIE CZŁONKA */
+
+async function delMember(name){
+
+if(
+!confirm(
+`Usunąć "${name}" z listy członków MDP?`
+)
+)
+return;
+
+try{
+
+await api(
+"/api/members/"+encodeURIComponent(name),
+{
+method:"DELETE"
+}
+);
+
+await load();
+
+toast(
+"Usunięto członka",
+name
+);
+
+}catch(e){
+
+alert("Nie udało się usunąć członka.");
+
+}
 
 }
 
