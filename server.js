@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
+const webpush = require("web-push");
 
 const app = express();
 
@@ -8,6 +9,30 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
+
+/* =========================
+   WEB PUSH
+========================= */
+
+if (
+  process.env.VAPID_EMAIL &&
+  process.env.VAPID_PUBLIC_KEY &&
+  process.env.VAPID_PRIVATE_KEY
+) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+
+  console.log("Web Push: VAPID aktywny.");
+} else {
+  console.log("Web Push: brak konfiguracji VAPID.");
+}
+
+/* =========================
+   BAZA DANYCH
+========================= */
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -32,7 +57,9 @@ const CODES = {
 
 async function initDatabase() {
   if (!process.env.DATABASE_URL) {
-    console.log("Brak DATABASE_URL - baza nie jest jeszcze podłączona.");
+    console.log(
+      "Brak DATABASE_URL - baza nie jest jeszcze podłączona."
+    );
     return;
   }
 
@@ -67,6 +94,14 @@ async function initDatabase() {
       member_name TEXT NOT NULL,
       status TEXT NOT NULL CHECK (status IN ('yes', 'maybe', 'no')),
       UNIQUE(event_id, member_name)
+    );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      endpoint TEXT NOT NULL UNIQUE,
+      subscription JSONB NOT NULL,
+      role TEXT DEFAULT 'member',
+      created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
 
@@ -161,7 +196,8 @@ function auth(req, res, next) {
 function staff(req, res, next) {
   if (!["guardian", "admin"].includes(req.role)) {
     return res.status(403).json({
-      error: "Tylko opiekun lub administrator może wykonać tę operację."
+      error:
+        "Tylko opiekun lub administrator może wykonać tę operację."
     });
   }
 
@@ -171,12 +207,216 @@ function staff(req, res, next) {
 function admin(req, res, next) {
   if (req.role !== "admin") {
     return res.status(403).json({
-      error: "Tylko administrator może wykonać tę operację."
+      error:
+        "Tylko administrator może wykonać tę operację."
     });
   }
 
   next();
 }
+
+/* =========================
+   PUSH - WYSYŁANIE
+========================= */
+
+async function sendPushNotification(title, body) {
+  if (
+    !process.env.VAPID_EMAIL ||
+    !process.env.VAPID_PUBLIC_KEY ||
+    !process.env.VAPID_PRIVATE_KEY
+  ) {
+    console.log(
+      "Push pominięty - brak konfiguracji VAPID."
+    );
+    return;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    console.log(
+      "Push pominięty - brak bazy danych."
+    );
+    return;
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT id, endpoint, subscription FROM push_subscriptions"
+    );
+
+    for (const row of result.rows) {
+      try {
+        await webpush.sendNotification(
+          row.subscription,
+          JSON.stringify({
+            title,
+            body,
+            icon: "/icon-192-2.png",
+            badge: "/icon-192-2.png"
+          })
+        );
+      } catch (error) {
+        console.error(
+          "Błąd wysyłania push:",
+          error.statusCode || error.message
+        );
+
+        if (
+          error.statusCode === 404 ||
+          error.statusCode === 410
+        ) {
+          await pool.query(
+            "DELETE FROM push_subscriptions WHERE id = $1",
+            [row.id]
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error(
+      "Błąd pobierania subskrypcji push:",
+      error
+    );
+  }
+}
+
+/* =========================
+   KLUCZ PUBLICZNY PUSH
+========================= */
+
+app.get("/api/push/public-key", (req, res) => {
+  if (!process.env.VAPID_PUBLIC_KEY) {
+    return res.status(503).json({
+      error: "Push nie jest skonfigurowany."
+    });
+  }
+
+  res.json({
+    publicKey: process.env.VAPID_PUBLIC_KEY
+  });
+});
+
+/* =========================
+   REJESTRACJA PUSH
+========================= */
+
+app.post(
+  "/api/push/subscribe",
+  auth,
+  async (req, res) => {
+    try {
+      const { subscription } = req.body || {};
+
+      if (
+        !subscription ||
+        !subscription.endpoint ||
+        !subscription.keys
+      ) {
+        return res.status(400).json({
+          error: "Nieprawidłowa subskrypcja push."
+        });
+      }
+
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({
+          error:
+            "Baza danych nie jest jeszcze podłączona."
+        });
+      }
+
+      await pool.query(
+        `
+        INSERT INTO push_subscriptions
+        (endpoint, subscription, role)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (endpoint)
+        DO UPDATE SET
+          subscription = EXCLUDED.subscription,
+          role = EXCLUDED.role
+        `,
+        [
+          subscription.endpoint,
+          JSON.stringify(subscription),
+          req.role
+        ]
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error:
+          "Nie udało się zapisać powiadomień push."
+      });
+    }
+  }
+);
+
+/* =========================
+   WYREJESTROWANIE PUSH
+========================= */
+
+app.post(
+  "/api/push/unsubscribe",
+  auth,
+  async (req, res) => {
+    try {
+      const { endpoint } = req.body || {};
+
+      if (!endpoint) {
+        return res.status(400).json({
+          error: "Brak endpointu."
+        });
+      }
+
+      await pool.query(
+        "DELETE FROM push_subscriptions WHERE endpoint = $1",
+        [endpoint]
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error:
+          "Nie udało się wyłączyć powiadomień."
+      });
+    }
+  }
+);
+
+/* =========================
+   TEST PUSH
+========================= */
+
+app.post(
+  "/api/push/test",
+  auth,
+  async (req, res) => {
+    try {
+      await sendPushNotification(
+        "MDP Wiesiółka 🚒",
+        "Powiadomienia push działają!"
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error:
+          "Nie udało się wysłać powiadomienia."
+      });
+    }
+  }
+);
 
 /* =========================
    HEALTH CHECK
@@ -196,341 +436,3 @@ app.get("/api/health", async (req, res) => {
     res.json({
       ok: true,
       database: true
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      database: false
-    });
-  }
-});
-
-/* =========================
-   POBIERANIE DANYCH
-========================= */
-
-app.get("/api/data", auth, async (req, res) => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      return res.status(503).json({
-        error: "Baza danych nie jest jeszcze podłączona."
-      });
-    }
-
-    const events = await pool.query(`
-      SELECT *
-      FROM events
-      ORDER BY event_date ASC, event_time ASC
-    `);
-
-    const news = await pool.query(`
-      SELECT *
-      FROM news
-      ORDER BY created_at DESC
-    `);
-
-    const members = await pool.query(`
-      SELECT *
-      FROM members
-      ORDER BY name ASC
-    `);
-
-    res.json({
-      events: events.rows,
-      news: news.rows,
-      members: members.rows
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się pobrać danych."
-    });
-  }
-});
-
-/* =========================
-   ZBIÓRKI
-========================= */
-
-app.post("/api/events", auth, staff, async (req, res) => {
-  try {
-    const {
-      title,
-      event_date,
-      event_time,
-      place,
-      description = ""
-    } = req.body;
-
-    if (!title || !event_date || !event_time || !place) {
-      return res.status(400).json({
-        error: "Uzupełnij wszystkie wymagane pola."
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO events
-      (title, event_date, event_time, place, description)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-      `,
-      [
-        title,
-        event_date,
-        event_time,
-        place,
-        description
-      ]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się dodać zbiórki."
-    });
-  }
-});
-
-app.delete("/api/events/:id", auth, staff, async (req, res) => {
-  try {
-    await pool.query(
-      "DELETE FROM events WHERE id = $1",
-      [req.params.id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć zbiórki."
-    });
-  }
-});
-
-/* =========================
-   OGŁOSZENIA
-========================= */
-
-app.post("/api/news", auth, staff, async (req, res) => {
-  try {
-    const { title, body } = req.body;
-
-    if (!title || !body) {
-      return res.status(400).json({
-        error: "Uzupełnij tytuł i treść."
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO news (title, body)
-      VALUES ($1, $2)
-      RETURNING *
-      `,
-      [title, body]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się dodać ogłoszenia."
-    });
-  }
-});
-
-app.delete("/api/news/:id", auth, staff, async (req, res) => {
-  try {
-    await pool.query(
-      "DELETE FROM news WHERE id = $1",
-      [req.params.id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć ogłoszenia."
-    });
-  }
-});
-
-/* =========================
-   CZŁONKOWIE
-========================= */
-
-app.post("/api/members", auth, staff, async (req, res) => {
-  try {
-    const {
-      name,
-      role = "Członek MDP"
-    } = req.body;
-
-    if (!name) {
-      return res.status(400).json({
-        error: "Podaj imię i nazwisko."
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO members (name, role)
-      VALUES ($1, $2)
-      RETURNING *
-      `,
-      [name, role]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się dodać członka."
-    });
-  }
-});
-
-app.delete("/api/members/:id", auth, staff, async (req, res) => {
-  try {
-    await pool.query(
-      "DELETE FROM members WHERE id = $1",
-      [req.params.id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć członka."
-    });
-  }
-});
-
-/* =========================
-   OBECNOŚĆ
-========================= */
-
-app.post("/api/attendance", auth, async (req, res) => {
-  try {
-    const {
-      event_id,
-      member_name,
-      status
-    } = req.body;
-
-    if (
-      !event_id ||
-      !member_name ||
-      !["yes", "maybe", "no"].includes(status)
-    ) {
-      return res.status(400).json({
-        error: "Nieprawidłowe dane."
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO attendance
-      (event_id, member_name, status)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (event_id, member_name)
-      DO UPDATE SET status = EXCLUDED.status
-      RETURNING *
-      `,
-      [
-        event_id,
-        member_name,
-        status
-      ]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Nie udało się zapisać obecności."
-    });
-  }
-});
-
-/* =========================
-   PODGLĄD OBECNOŚCI
-========================= */
-
-app.get(
-  "/api/attendance/:eventId",
-  auth,
-  staff,
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        `
-        SELECT *
-        FROM attendance
-        WHERE event_id = $1
-        ORDER BY member_name
-        `,
-        [req.params.eventId]
-      );
-
-      res.json(result.rows);
-    } catch (error) {
-      console.error(error);
-
-      res.status(500).json({
-        error: "Nie udało się pobrać obecności."
-      });
-    }
-  }
-);
-
-/* =========================
-   APLIKACJA WWW
-========================= */
-
-app.get("/{*splat}", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "public", "index.html")
-  );
-});
-
-/* =========================
-   START
-========================= */
-
-async function startServer() {
-  try {
-    await initDatabase();
-
-    app.listen(PORT, () => {
-      console.log(
-        `MDP Wiesiółka działa na porcie ${PORT}`
-      );
-    });
-  } catch (error) {
-    console.error(
-      "Błąd uruchamiania serwera:",
-      error
-    );
-
-    process.exit(1);
-  }
-}
-
-startServer();
