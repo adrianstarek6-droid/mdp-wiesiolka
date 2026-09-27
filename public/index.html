@@ -1,1403 +1,2309 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0d">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/manifest.json">
-<title>MDP Wiesiółka</title>
-
-<style>
-*{box-sizing:border-box}
-
-:root{
- --bg:#08090b;
- --panel:#111317;
- --panel2:#17191e;
- --line:#24272d;
- --text:#f5f5f5;
- --muted:#969ba5;
- --red:#e21b23;
- --red2:#ff3038;
-}
-
-html{background:var(--bg)}
-
-body{
- margin:0;
- background:
- radial-gradient(circle at 50% -10%,rgba(226,27,35,.18),transparent 38%),
- var(--bg);
- color:var(--text);
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
- min-height:100vh;
-}
-
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-
-.hidden{display:none!important}
-
-.wrap{
- width:min(760px,100%);
- margin:auto;
- padding:0 16px 105px;
-}
-
-/* LOGIN */
-
-.login{
- min-height:100vh;
- min-height:100dvh;
- display:flex;
- align-items:center;
- justify-content:center;
- padding:22px;
-}
-
-.loginbox{
- width:min(450px,100%);
- padding:30px 22px 24px;
- background:rgba(17,19,23,.94);
- border:1px solid var(--line);
- border-radius:28px;
- box-shadow:0 25px 80px rgba(0,0,0,.5);
-}
-
-.logo{
- width:72px;
- height:72px;
- border-radius:22px;
- display:grid;
- place-items:center;
- background:linear-gradient(145deg,#ef252d,#a90e14);
- font-size:36px;
- box-shadow:0 12px 35px rgba(226,27,35,.28);
- margin-bottom:20px;
-}
-
-.logoText{
- font-size:30px;
- font-weight:900;
- letter-spacing:-1px;
-}
-
-.red{color:var(--red2)}
-
-.muted{color:var(--muted)}
-
-.loginbox p{
- line-height:1.5;
-}
-
-.role{
- display:grid;
- grid-template-columns:1fr 1fr 1fr;
- gap:8px;
- margin:22px 0 12px;
-}
-
-.role button{
- min-height:52px;
-}
-
-.btn{
- border:0;
- border-radius:13px;
- padding:13px 16px;
- background:var(--red);
- color:white;
- font-weight:800;
- transition:.18s;
-}
-
-.btn:active{
- transform:scale(.97);
-}
-
-.btn.dark{
- background:#25282e;
-}
-
-.btn.full{
- width:100%;
- margin-top:4px;
-}
-
-input,textarea,select{
- width:100%;
- padding:14px;
- border-radius:13px;
- border:1px solid var(--line);
- background:#0d0f12;
- color:white;
- outline:none;
- margin:6px 0 10px;
-}
-
-input:focus,textarea:focus{
- border-color:var(--red);
-}
-
-textarea{
- min-height:100px;
- resize:vertical;
-}
-
-/* HEADER */
-
-.top{
- padding:25px 0 18px;
- display:flex;
- align-items:center;
- justify-content:space-between;
- gap:15px;
-}
-
-.brand{
- display:flex;
- align-items:center;
- gap:12px;
-}
-
-.brandIcon{
- width:46px;
- height:46px;
- display:grid;
- place-items:center;
- background:linear-gradient(145deg,#e9232b,#a70e14);
- border-radius:15px;
- font-size:24px;
- box-shadow:0 8px 25px rgba(226,27,35,.2);
-}
-
-.brandTitle{
- font-size:20px;
- font-weight:900;
-}
-
-.brandSub{
- font-size:12px;
- color:var(--muted);
- margin-top:2px;
-}
-
-.userBadge{
- padding:8px 11px;
- border-radius:20px;
- background:#17191e;
- border:1px solid var(--line);
- font-size:11px;
- color:#c7cad0;
-}
-
-/* HERO */
-
-.hero{
- position:relative;
- overflow:hidden;
- background:
- linear-gradient(135deg,rgba(226,27,35,.18),rgba(17,19,23,.95) 65%),
- #111317;
- border:1px solid #2c2f35;
- border-radius:24px;
- padding:23px;
- margin-bottom:14px;
-}
-
-.hero:after{
- content:"🚒";
- position:absolute;
- right:-8px;
- bottom:-20px;
- font-size:105px;
- opacity:.07;
- transform:rotate(-8deg);
-}
-
-.hero h1{
- margin:0 0 7px;
- font-size:27px;
- letter-spacing:-1px;
-}
-
-.hero p{
- margin:0;
- color:#aeb2ba;
- font-size:14px;
-}
-
-/* CARDS */
-
-.card{
- background:rgba(17,19,23,.92);
- border:1px solid var(--line);
- border-radius:20px;
- padding:18px;
- margin:12px 0;
-}
-
-.cardHead{
- display:flex;
- align-items:center;
- justify-content:space-between;
- gap:10px;
- margin-bottom:13px;
-}
-
-.card h2{
- font-size:17px;
- margin:0;
-}
-
-.card h3{
- margin:0 0 9px;
- font-size:17px;
-}
-
-.nextCard{
- border-color:#3a2022;
- background:
- linear-gradient(145deg,rgba(226,27,35,.09),rgba(17,19,23,.96));
-}
-
-.nextDate{
- display:inline-flex;
- padding:7px 10px;
- border-radius:9px;
- background:rgba(226,27,35,.13);
- color:#ff5b61;
- font-size:12px;
- font-weight:800;
- margin-bottom:10px;
-}
-
-.bigEvent{
- font-size:22px;
- font-weight:900;
- margin-bottom:9px;
-}
-
-.infoLine{
- color:#b8bcc4;
- font-size:13px;
- margin:7px 0;
-}
-
-.infoLine span{
- margin-right:7px;
-}
-
-/* ITEMS */
-
-.item{
- padding:14px 0;
- border-top:1px solid var(--line);
-}
-
-.item:first-child{
- border-top:0;
- padding-top:0;
-}
-
-.itemTitle{
- font-weight:800;
- font-size:15px;
-}
-
-.item p{
- color:#aeb2ba;
- font-size:13px;
- line-height:1.5;
- margin:7px 0 0;
-}
-
-.badge{
- display:inline-flex;
- padding:6px 9px;
- border-radius:8px;
- background:#24272d;
- color:#d6d8dd;
- font-size:11px;
- font-weight:700;
-}
-
-.event{
- padding:18px;
- background:#111317;
- border:1px solid var(--line);
- border-radius:20px;
- margin:12px 0;
-}
-
-.eventTop{
- display:flex;
- justify-content:space-between;
- gap:12px;
- align-items:flex-start;
-}
-
-.eventTitle{
- font-size:18px;
- font-weight:900;
-}
-
-.eventDesc{
- color:#aeb2ba;
- line-height:1.5;
- font-size:13px;
- margin:12px 0;
-}
-
-.actions{
- display:flex;
- gap:7px;
- flex-wrap:wrap;
-}
-
-.actions .btn{
- font-size:12px;
- padding:10px 12px;
-}
-
-/* MEMBERS */
-
-.member{
- display:flex;
- align-items:center;
- gap:12px;
- padding:13px 0;
- border-top:1px solid var(--line);
-}
-
-.member:first-child{
- border-top:0;
-}
-
-.avatar{
- width:43px;
- height:43px;
- flex:none;
- display:grid;
- place-items:center;
- border-radius:14px;
- background:#24272d;
- font-weight:900;
- color:#ddd;
-}
-
-.memberName{
- font-weight:800;
- font-size:14px;
-}
-
-.memberRole{
- color:var(--muted);
- font-size:12px;
- margin-top:3px;
-}
-
-/* MANAGEMENT */
-
-.manageTitle{
- margin:25px 0 10px;
-}
-
-.formCard{
- padding:18px;
-}
-
-.formCard h3{
- font-size:16px;
-}
-
-.formCard .btn{
- margin-top:3px;
-}
-
-/* NAV */
-
-nav{
- position:fixed;
- z-index:20;
- left:50%;
- bottom:10px;
- transform:translateX(-50%);
- width:min(720px,calc(100% - 20px));
- height:70px;
- padding:6px;
- display:flex;
- align-items:center;
- justify-content:space-around;
- background:rgba(18,20,24,.94);
- backdrop-filter:blur(18px);
- -webkit-backdrop-filter:blur(18px);
- border:1px solid #30333a;
- border-radius:23px;
- box-shadow:0 12px 45px rgba(0,0,0,.55);
-}
-
-nav button{
- flex:1;
- height:58px;
- background:transparent;
- border:0;
- color:#777c86;
- border-radius:17px;
- font-size:10px;
- line-height:1.5;
- transition:.18s;
-}
-
-nav button.active{
- color:white;
- background:#25282e;
-}
-
-.navIcon{
- font-size:20px;
- display:block;
- line-height:23px;
-}
-
-/* EMPTY */
-
-.empty{
- text-align:center;
- padding:30px 15px;
- color:#777c86;
- font-size:13px;
-}
-
-/* RESPONSIVE */
-
-@media(max-width:520px){
- .role{
-  grid-template-columns:1fr;
- }
- .loginbox{
-  padding:26px 18px 20px;
- }
- .hero h1{
-  font-size:24px;
- }
- .userBadge{
-  display:none;
- }
- nav{
-  height:68px;
- }
-}
-
-@media(min-width:600px){
- .wrap{
-  padding-left:20px;
-  padding-right:20px;
- }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <meta name="theme-color" content="#111111">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
+
+  <link rel="manifest" href="/manifest.json">
+
+  <title>MDP Wiesiółka</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg: #090909;
+      --card: #151515;
+      --card2: #1b1b1b;
+      --border: #292929;
+      --text: #ffffff;
+      --muted: #9d9d9d;
+      --red: #e51b23;
+      --red-dark: #a90f15;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top right, rgba(229,27,35,.13), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(229,27,35,.07), transparent 35%),
+        var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      padding-bottom: 90px;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* =========================
+       LOGIN
+    ========================= */
+
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 430px;
+    }
+
+    .logo-box {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 16px;
+      border-radius: 28px;
+      background: linear-gradient(145deg, #242424, #101010);
+      border: 1px solid #353535;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    }
+
+    .logo-box h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .logo-box p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .login-card {
+      background: rgba(21,21,21,.92);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.5);
+      backdrop-filter: blur(15px);
+    }
+
+    .role-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .role-btn {
+      border: 1px solid var(--border);
+      background: #101010;
+      color: #aaa;
+      border-radius: 14px;
+      padding: 12px 5px;
+      font-size: 12px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .role-btn.active {
+      background: var(--red);
+      color: white;
+      border-color: var(--red);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      color: #bbb;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 7px;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #0e0e0e;
+      color: white;
+      border-radius: 14px;
+      padding: 14px;
+      outline: none;
+      transition: .2s;
+    }
+
+    .input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(229,27,35,.12);
+    }
+
+    textarea.input {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      border: none;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: white;
+      border-radius: 14px;
+      padding: 14px;
+      font-weight: 800;
+      box-shadow: 0 10px 25px rgba(229,27,35,.2);
+      transition: transform .15s, opacity .15s;
+    }
+
+    .primary-btn:active {
+      transform: scale(.98);
+    }
+
+    .login-error {
+      margin-top: 12px;
+      color: #ff6b6b;
+      text-align: center;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    /* =========================
+       APP
+    ========================= */
+
+    #app {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9,9,9,.88);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      backdrop-filter: blur(18px);
+      padding:
+        calc(12px + env(safe-area-inset-top))
+        16px
+        12px;
+    }
+
+    .topbar-inner {
+      max-width: 1000px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, var(--red), #8c0e13);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      box-shadow: 0 7px 20px rgba(229,27,35,.25);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .brand-text span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .logout-btn {
+      border: 1px solid var(--border);
+      background: #151515;
+      color: #ddd;
+      padding: 9px 12px;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px 16px;
+    }
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero {
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 23px;
+      margin-bottom: 18px;
+      background:
+        linear-gradient(135deg, rgba(229,27,35,.18), rgba(255,255,255,.02)),
+        #121212;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "🚒";
+      position: absolute;
+      right: 16px;
+      bottom: -8px;
+      font-size: 90px;
+      opacity: .08;
+      transform: rotate(-8deg);
+    }
+
+    .hero small {
+      color: #ff858a;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .hero h2 {
+      font-size: 28px;
+      line-height: 1.08;
+      margin-top: 7px;
+      max-width: 600px;
+      letter-spacing: -.8px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 9px;
+      max-width: 650px;
+      line-height: 1.5;
+    }
+
+    /* =========================
+       NAV
+    ========================= */
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 20px;
+      scrollbar-width: none;
+    }
+
+    .nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-btn {
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      background: #111;
+      color: #999;
+      border-radius: 13px;
+      padding: 11px 15px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .nav-btn.active {
+      color: white;
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    /* =========================
+       SECTIONS
+    ========================= */
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -.4px;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .count {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    /* =========================
+       STATS
+    ========================= */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      padding: 16px;
+    }
+
+    .stat-icon {
+      font-size: 19px;
+      margin-bottom: 9px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 22px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 11px;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* =========================
+       CARDS
+    ========================= */
+
+    .grid {
+      display: grid;
+      gap: 11px;
+    }
+
+    .event-card,
+    .news-card,
+    .member-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .event-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .date-box {
+      width: 55px;
+      min-width: 55px;
+      height: 62px;
+      border-radius: 14px;
+      background: rgba(229,27,35,.13);
+      border: 1px solid rgba(229,27,35,.25);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .date-box strong {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .date-box span {
+      color: #ff858a;
+      font-size: 9px;
+      margin-top: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .event-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .event-info h3,
+    .news-card h3,
+    .member-card h3 {
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .description {
+      color: #c5c5c5;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-top: 12px;
+      white-space: pre-wrap;
+    }
+
+    .news-date {
+      color: #777;
+      font-size: 10px;
+      margin-bottom: 6px;
+    }
+
+    .news-body {
+      color: #c3c3c3;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 43px;
+      height: 43px;
+      border-radius: 14px;
+      background: #242424;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #ddd;
+      flex: 0 0 43px;
+    }
+
+    .member-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .member-info h3 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .member-role {
+      color: #999;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    /* =========================
+       ACTIONS
+    ========================= */
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #202020;
+      color: #eee;
+      border-radius: 11px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn.red {
+      background: rgba(229,27,35,.12);
+      border-color: rgba(229,27,35,.3);
+      color: #ff7379;
+    }
+
+    .btn.green {
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.25);
+      color: #68e495;
+    }
+
+    .btn.yellow {
+      background: rgba(245,158,11,.12);
+      border-color: rgba(245,158,11,.25);
+      color: #ffc45c;
+    }
+
+    .btn.blue {
+      background: rgba(59,130,246,.12);
+      border-color: rgba(59,130,246,.25);
+      color: #72a8ff;
+    }
+
+    .btn:active {
+      transform: scale(.98);
+    }
+
+    /* =========================
+       FORMS
+    ========================= */
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 19px;
+      padding: 17px;
+      margin-bottom: 12px;
+    }
+
+    .form-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* =========================
+       ATTENDANCE
+    ========================= */
+
+    .attendance-box {
+      border-top: 1px solid var(--border);
+      margin-top: 14px;
+      padding-top: 14px;
+    }
+
+    .attendance-title {
+      font-size: 12px;
+      color: #aaa;
+      font-weight: 800;
+      margin-bottom: 9px;
+    }
+
+    .attendance-buttons {
+      display: flex;
+      gap: 7px;
+    }
+
+    .attendance-buttons .btn {
+      flex: 1;
+      text-align: center;
+    }
+
+    .attendance-list {
+      margin-top: 12px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .attendance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #101010;
+      border: 1px solid #242424;
+      border-radius: 11px;
+      padding: 9px 11px;
+      font-size: 12px;
+    }
+
+    .status {
+      font-weight: 800;
+    }
+
+    .status.yes {
+      color: var(--green);
+    }
+
+    .status.maybe {
+      color: var(--yellow);
+    }
+
+    .status.no {
+      color: #ff6666;
+    }
+
+    /* =========================
+       EMPTY / LOADING
+    ========================= */
+
+    .empty {
+      border: 1px dashed #303030;
+      border-radius: 17px;
+      padding: 25px 16px;
+      text-align: center;
+      color: #777;
+      font-size: 13px;
+      background: rgba(255,255,255,.01);
+    }
+
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 30px 10px;
+      font-size: 13px;
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      width: calc(100% - 32px);
+      max-width: 440px;
+      padding: 13px 16px;
+      border-radius: 14px;
+      background: #222;
+      border: 1px solid #353535;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: .25s;
+      box-shadow: 0 15px 40px rgba(0,0,0,.5);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #toast.error {
+      border-color: rgba(229,27,35,.5);
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      text-align: center;
+      color: #555;
+      font-size: 10px;
+      padding: 25px 10px 10px;
+    }
+
+    /* =========================
+       DESKTOP
+    ========================= */
+
+    @media (min-width: 700px) {
+      .container {
+        padding-top: 28px;
+      }
+
+      .cards-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .grid.events-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero {
+        padding: 30px;
+      }
+
+      .hero h2 {
+        font-size: 34px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .stats {
+        gap: 7px;
+      }
+
+      .stat {
+        padding: 12px;
+      }
+
+      .stat strong {
+        font-size: 19px;
+      }
+
+      .stat span {
+        font-size: 10px;
+      }
+
+      .two {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
+  <!-- =========================
+       LOGIN
+  ========================= -->
 
-<div id="login" class="login">
- <div class="loginbox">
+  <section id="loginScreen">
+    <div class="login-wrap">
 
-  <div class="logo">🚒</div>
+      <div class="logo-box">
+        <div class="logo">🚒</div>
+        <h1>MDP Wiesiółka</h1>
+        <p>Mobilna aplikacja Młodzieżowej Drużyny Pożarniczej</p>
+      </div>
 
-  <div class="logoText">
-   MDP <span class="red">Wiesiółka</span>
-  </div>
+      <div class="login-card">
 
-  <p class="muted">
-   Oficjalna aplikacja Młodzieżowej Drużyny Pożarniczej.
-  </p>
+        <div class="role-buttons">
+          <button class="role-btn active" data-role="member" onclick="selectRole('member')">
+            👨‍🚒 MDP
+          </button>
 
-  <div class="role">
-   <button class="btn" onclick="setRole('member')">👤<br>Członek</button>
-   <button class="btn dark" onclick="setRole('guardian')">🧑‍🚒<br>Opiekun</button>
-   <button class="btn dark" onclick="setRole('admin')">🛠️<br>Admin</button>
-  </div>
+          <button class="role-btn" data-role="guardian" onclick="selectRole('guardian')">
+            🛡️ Opiekun
+          </button>
 
-  <input id="code" type="password" placeholder="Kod dostępu">
+          <button class="role-btn" data-role="admin" onclick="selectRole('admin')">
+            ⚙️ Admin
+          </button>
+        </div>
 
-  <button class="btn full" onclick="login()">
-   Zaloguj się
-  </button>
+        <div class="field">
+          <label for="loginCode">Kod dostępu</label>
+          <input
+            id="loginCode"
+            class="input"
+            type="password"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Wpisz kod"
+            onkeydown="if(event.key === 'Enter') login()"
+          >
+        </div>
 
-  <p id="loginMsg" class="red"></p>
+        <button class="primary-btn" onclick="login()">
+          Zaloguj się
+        </button>
 
- </div>
-</div>
-
-
-<!-- APP -->
-
-<div id="app" class="hidden">
-
- <div class="wrap">
-
-  <header class="top">
-
-   <div class="brand">
-
-    <div class="brandIcon">🚒</div>
-
-    <div>
-     <div class="brandTitle">
-      MDP <span class="red">Wiesiółka</span>
-     </div>
-     <div class="brandSub">
-      Młodzieżowa Drużyna Pożarnicza
-     </div>
+        <div id="loginError" class="login-error"></div>
+      </div>
     </div>
+  </section>
 
-   </div>
+  <!-- =========================
+       APP
+  ========================= -->
 
-   <div id="userBadge" class="userBadge"></div>
+  <main id="app" class="hidden">
 
-  </header>
+    <header class="topbar">
+      <div class="topbar-inner">
 
+        <div class="brand">
+          <div class="brand-icon">🚒</div>
 
-  <!-- START -->
+          <div class="brand-text">
+            <strong>MDP Wiesiółka</strong>
+            <span id="roleLabel">Członek MDP</span>
+          </div>
+        </div>
 
-  <section id="home">
+        <button class="logout-btn" onclick="logout()">
+          Wyloguj
+        </button>
 
-   <div class="hero">
-    <h1>Witaj w MDP 👋</h1>
-    <p>
-     Wszystko, co najważniejsze dla naszej drużyny — w jednym miejscu.
-    </p>
-   </div>
+      </div>
+    </header>
 
+    <div class="container">
 
-   <div class="card nextCard">
+      <!-- HERO -->
 
-    <div class="cardHead">
-     <h2>📅 Najbliższa zbiórka</h2>
-     <span class="badge">PLAN</span>
+      <section class="hero">
+        <small>OSP Wiesiółka</small>
+        <h2>Witaj w aplikacji MDP 👋</h2>
+        <p>
+          Wszystkie najważniejsze informacje, zbiórki,
+          ogłoszenia i obecności w jednym miejscu.
+        </p>
+      </section>
+
+      <!-- NAV -->
+
+      <nav class="nav">
+        <button class="nav-btn active" onclick="showSection('home', this)">
+          🏠 Start
+        </button>
+
+        <button class="nav-btn" onclick="showSection('events', this)">
+          📅 Zbiórki
+        </button>
+
+        <button class="nav-btn" onclick="showSection('news', this)">
+          📢 Ogłoszenia
+        </button>
+
+        <button class="nav-btn" onclick="showSection('members', this)">
+          👥 Członkowie
+        </button>
+
+        <button
+          id="staffNav"
+          class="nav-btn hidden"
+          onclick="showSection('management', this)"
+        >
+          ⚙️ Zarządzanie
+        </button>
+      </nav>
+
+      <!-- =========================
+           START
+      ========================= -->
+
+      <section id="section-home" class="page-section">
+
+        <div class="stats">
+
+          <div class="stat">
+            <div class="stat-icon">📅</div>
+            <strong id="statEvents">0</strong>
+            <span>zbiórek</span>
+          </div>
+
+          <div class="stat">
+            <div class="stat-icon">📢</div>
+            <strong id="statNews">0</strong>
+            <span>ogłoszeń</span>
+          </div>
+
+          <div class="stat">
+            <div class="stat-icon">👥</div>
+            <strong id="statMembers">0</strong>
+            <span>członków</span>
+          </div>
+
+        </div>
+
+        <section class="section">
+
+          <div class="section-header">
+            <div>
+              <div class="section-title">Najbliższa zbiórka</div>
+              <div class="section-subtitle">
+                Sprawdź termin i zaznacz obecność
+              </div>
+            </div>
+          </div>
+
+          <div id="homeNextEvent">
+            <div class="loading">Ładowanie...</div>
+          </div>
+
+        </section>
+
+        <section class="section">
+
+          <div class="section-header">
+            <div>
+              <div class="section-title">Najnowsze ogłoszenia</div>
+              <div class="section-subtitle">
+                Najważniejsze informacje dla MDP
+              </div>
+            </div>
+          </div>
+
+          <div id="homeNews" class="grid"></div>
+
+        </section>
+
+      </section>
+
+      <!-- =========================
+           EVENTS
+      ========================= -->
+
+      <section id="section-events" class="page-section hidden">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title">Zbiórki MDP</div>
+            <div class="section-subtitle">
+              Terminy spotkań i wydarzeń
+            </div>
+          </div>
+
+          <div id="eventsCount" class="count">0</div>
+        </div>
+
+        <div id="eventsList" class="grid events-grid">
+          <div class="loading">Ładowanie...</div>
+        </div>
+
+      </section>
+
+      <!-- =========================
+           NEWS
+      ========================= -->
+
+      <section id="section-news" class="page-section hidden">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title">Ogłoszenia</div>
+            <div class="section-subtitle">
+              Informacje od opiekunów i administratora
+            </div>
+          </div>
+
+          <div id="newsCount" class="count">0</div>
+        </div>
+
+        <div id="newsList" class="grid">
+          <div class="loading">Ładowanie...</div>
+        </div>
+
+      </section>
+
+      <!-- =========================
+           MEMBERS
+      ========================= -->
+
+      <section id="section-members" class="page-section hidden">
+
+        <div class="section-header">
+          <div>
+            <div class="section-title">Członkowie MDP</div>
+            <div class="section-subtitle">
+              Lista osób należących do drużyny
+            </div>
+          </div>
+
+          <div id="membersCount" class="count">0</div>
+        </div>
+
+        <div id="membersList" class="grid">
+          <div class="loading">Ładowanie...</div>
+        </div>
+
+      </section>
+
+      <!-- =========================
+           MANAGEMENT
+      ========================= -->
+
+      <section id="section-management" class="page-section hidden">
+
+        <div class="section">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Zarządzanie</div>
+              <div class="section-subtitle">
+                Funkcje dostępne dla opiekunów i administratora
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD EVENT -->
+
+        <div class="form-card">
+
+          <div class="form-title">
+            📅 Dodaj zbiórkę
+          </div>
+
+          <div class="field">
+            <label>Tytuł</label>
+            <input
+              id="eventTitle"
+              class="input"
+              placeholder="np. Zbiórka MDP"
+            >
+          </div>
+
+          <div class="two">
+
+            <div class="field">
+              <label>Data</label>
+              <input id="eventDate" class="input" type="date">
+            </div>
+
+            <div class="field">
+              <label>Godzina</label>
+              <input id="eventTime" class="input" type="time">
+            </div>
+
+          </div>
+
+          <div class="field">
+            <label>Miejsce</label>
+            <input
+              id="eventPlace"
+              class="input"
+              placeholder="np. Remiza OSP Wiesiółka"
+            >
+          </div>
+
+          <div class="field">
+            <label>Opis</label>
+            <textarea
+              id="eventDescription"
+              class="input"
+              placeholder="Dodatkowe informacje..."
+            ></textarea>
+          </div>
+
+          <button class="primary-btn" onclick="addEvent()">
+            Dodaj zbiórkę
+          </button>
+
+        </div>
+
+        <!-- ADD NEWS -->
+
+        <div class="form-card">
+
+          <div class="form-title">
+            📢 Dodaj ogłoszenie
+          </div>
+
+          <div class="field">
+            <label>Tytuł</label>
+            <input
+              id="newsTitle"
+              class="input"
+              placeholder="Tytuł ogłoszenia"
+            >
+          </div>
+
+          <div class="field">
+            <label>Treść</label>
+            <textarea
+              id="newsBody"
+              class="input"
+              placeholder="Treść ogłoszenia..."
+            ></textarea>
+          </div>
+
+          <button class="primary-btn" onclick="addNews()">
+            Dodaj ogłoszenie
+          </button>
+
+        </div>
+
+        <!-- ADD MEMBER -->
+
+        <div class="form-card">
+
+          <div class="form-title">
+            👥 Dodaj członka
+          </div>
+
+          <div class="field">
+            <label>Imię i nazwisko</label>
+            <input
+              id="memberName"
+              class="input"
+              placeholder="np. Jan Kowalski"
+            >
+          </div>
+
+          <div class="field">
+            <label>Rola</label>
+            <input
+              id="memberRole"
+              class="input"
+              value="Członek MDP"
+              placeholder="Rola"
+            >
+          </div>
+
+          <button class="primary-btn" onclick="addMember()">
+            Dodaj członka
+          </button>
+
+        </div>
+
+      </section>
+
+      <footer>
+        MDP Wiesiółka • OSP Wiesiółka
+      </footer>
+
     </div>
-
-    <div id="next"></div>
-
-   </div>
-
-
-   <div class="card">
-
-    <div class="cardHead">
-     <h2>📢 Najnowsze ogłoszenia</h2>
-    </div>
-
-    <div id="latest"></div>
-
-   </div>
-
-  </section>
-
-
-  <!-- EVENTS -->
-
-  <section id="events" class="hidden">
-
-   <div class="hero">
-    <h1>📅 Zbiórki</h1>
-    <p>Sprawdź terminy i zaznacz swoją obecność.</p>
-   </div>
-
-   <div id="eventList"></div>
-
-  </section>
-
-
-  <!-- NEWS -->
-
-  <section id="news" class="hidden">
-
-   <div class="hero">
-    <h1>📢 Ogłoszenia</h1>
-    <p>Najważniejsze informacje dla członków MDP.</p>
-   </div>
-
-   <div id="newsList"></div>
-
-  </section>
-
-
-  <!-- MEMBERS -->
-
-  <section id="members" class="hidden">
-
-   <div class="hero">
-    <h1>👥 Nasza drużyna</h1>
-    <p>Członkowie i osoby związane z MDP.</p>
-   </div>
-
-   <div class="card">
-
-    <div id="memberList"></div>
-
-   </div>
-
-  </section>
-
-
-  <!-- PROFILE -->
-
-  <section id="profile" class="hidden">
-
-   <div class="hero">
-    <h1>👤 Mój profil</h1>
-    <p>Twoje konto w aplikacji MDP.</p>
-   </div>
-
-   <div class="card">
-
-    <div id="profileText"></div>
-
-    <br>
-
-    <button class="btn dark full" onclick="logout()">
-     Wyloguj się
-    </button>
-
-   </div>
-
-  </section>
-
-
-  <!-- MANAGEMENT -->
-
-  <section id="manage" class="hidden">
-
-   <div class="hero">
-    <h1>🛠️ Zarządzanie</h1>
-    <p>Panel dla opiekunów i administratorów.</p>
-   </div>
-
-
-   <div class="card formCard">
-
-    <h3>📅 Dodaj zbiórkę</h3>
-
-    <input id="etitle" placeholder="Nazwa zbiórki">
-
-    <input id="edate" type="date">
-
-    <input id="etime" type="time">
-
-    <input id="eplace" placeholder="Miejsce">
-
-    <textarea id="edesc" placeholder="Opis zbiórki"></textarea>
-
-    <button class="btn full" onclick="addEvent()">
-     + Dodaj zbiórkę
-    </button>
-
-   </div>
-
-
-   <div class="card formCard">
-
-    <h3>📢 Dodaj ogłoszenie</h3>
-
-    <input id="ntitle" placeholder="Tytuł ogłoszenia">
-
-    <textarea id="nbody" placeholder="Treść ogłoszenia"></textarea>
-
-    <button class="btn full" onclick="addNews()">
-     + Dodaj ogłoszenie
-    </button>
-
-   </div>
-
-
-   <div class="card formCard">
-
-    <h3>👤 Dodaj członka</h3>
-
-    <input id="mname" placeholder="Imię i nazwisko">
-
-    <button class="btn full" onclick="addMember()">
-     + Dodaj członka
-    </button>
-
-   </div>
-
-  </section>
-
- </div>
-
-
- <!-- NAV -->
-
- <nav>
-
-  <button onclick="show('home')" id="n-home">
-   <span class="navIcon">🏠</span>
-   Start
-  </button>
-
-  <button onclick="show('events')" id="n-events">
-   <span class="navIcon">📅</span>
-   Zbiórki
-  </button>
-
-  <button onclick="show('news')" id="n-news">
-   <span class="navIcon">📢</span>
-   Ogłoszenia
-  </button>
-
-  <button onclick="show('members')" id="n-members">
-   <span class="navIcon">👥</span>
-   Osoby
-  </button>
-
-  <button onclick="show('profile')" id="n-profile">
-   <span class="navIcon">👤</span>
-   Profil
-  </button>
-
-  <button id="n-manage" class="hidden" onclick="show('manage')">
-   <span class="navIcon">🛠️</span>
-   Panel
-  </button>
-
- </nav>
-
-</div>
-
-
-<script>
-
-let role=null;
-let code=null;
-
-let data={
- events:[],
- news:[],
- members:[]
-};
-
-const $=id=>document.getElementById(id);
-
-
-/* ROLE */
-
-function setRole(r){
-
- role=r;
-
- const names={
-  member:"Członek MDP",
-  guardian:"Opiekun MDP",
-  admin:"Administrator"
- };
-
- $("loginMsg").textContent="Wybrano: "+names[r];
-
- document.querySelectorAll(".role .btn").forEach(x=>{
-  x.classList.add("dark");
- });
-
- event.currentTarget?.classList.remove("dark");
-
- $("code").focus();
-}
-
-
-/* LOGIN */
-
-async function login(){
-
- code=$("code").value;
-
- if(!role){
-  $("loginMsg").textContent="Najpierw wybierz rodzaj konta.";
-  return;
- }
-
- if(!code){
-  $("loginMsg").textContent="Wpisz kod dostępu.";
-  return;
- }
-
- try{
-
-  const r=await fetch("/api/login",{
-   method:"POST",
-   headers:{
-    "Content-Type":"application/json"
-   },
-   body:JSON.stringify({
-    role,
-    code
-   })
-  });
-
-  const j=await r.json();
-
-  if(!r.ok) throw Error(j.error);
-
-  localStorage.setItem("mdpRole",role);
-  localStorage.setItem("mdpCode",code);
-
-  start();
-
- }catch(e){
-
-  $("loginMsg").textContent=e.message;
-
- }
-
-}
-
-
-/* HEADERS */
-
-function headers(){
-
- return {
-  "Content-Type":"application/json",
-  "x-role":role,
-  "x-code":code
- };
-
-}
-
-
-/* START */
-
-async function start(){
-
- $("login").classList.add("hidden");
- $("app").classList.remove("hidden");
-
- const names={
-  member:"Członek MDP",
-  guardian:"Opiekun MDP",
-  admin:"Administrator"
- };
-
- $("userBadge").textContent=names[role];
-
- $("profileText").innerHTML=
- `
- <p><b>Rola:</b> ${names[role]}</p>
- <p class="muted">
- Twoje dane są zapisane na serwerze aplikacji.
- </p>
- `;
-
- if(role!=="member"){
-  $("n-manage").classList.remove("hidden");
- }
-
- await load();
-
- show("home");
-
-}
-
-
-/* LOAD */
-
-async function load(){
-
- try{
-
-  const r=await fetch("/api/data",{
-   headers:headers()
-  });
-
-  data=await r.json();
-
-  render();
-
- }catch(e){
-
-  console.error(e);
-
- }
-
-}
-
-
-/* RENDER */
-
-function render(){
-
- /* NEXT */
-
- const next=data.events[0];
-
- if(next){
-
-  $("next").innerHTML=`
-
-   <div class="nextDate">
-    📅 ${esc(next.event_date)} · ${esc(next.event_time)}
-   </div>
-
-   <div class="bigEvent">
-    ${esc(next.title)}
-   </div>
-
-   <div class="infoLine">
-    <span>📍</span>${esc(next.place)}
-   </div>
-
-   ${
-    next.description
-    ?
-    `<div class="infoLine"><span>ℹ️</span>${esc(next.description)}</div>`
-    :
-    ""
-   }
-
-  `;
-
- }else{
-
-  $("next").innerHTML=
-  `<div class="empty">Brak zaplanowanych zbiórek.</div>`;
-
- }
-
-
- /* LATEST NEWS */
-
- $("latest").innerHTML=
- data.news.slice(0,3).map(n=>`
-
-  <div class="item">
-
-   <div class="itemTitle">
-    ${esc(n.title)}
-   </div>
-
-   <p>
-    ${esc(n.body)}
-   </p>
-
-  </div>
-
- `).join("")
- ||
- `<div class="empty">Brak ogłoszeń.</div>`;
-
-
- /* EVENTS */
-
- $("eventList").innerHTML=
- data.events.map(e=>`
-
-  <div class="event">
-
-   <div class="eventTop">
-
-    <div class="eventTitle">
-     ${esc(e.title)}
-    </div>
-
-    <span class="badge">
-     ${esc(e.event_date)}
-    </span>
-
-   </div>
-
-   <div class="infoLine">
-    <span>🕐</span>${esc(e.event_time)}
-   </div>
-
-   <div class="infoLine">
-    <span>📍</span>${esc(e.place)}
-   </div>
-
-   ${
-    e.description
-    ?
-    `<div class="eventDesc">${esc(e.description)}</div>`
-    :
-    ""
-   }
-
-   <div class="actions">
-
-    <button class="btn" onclick="att(${e.id},'yes')">
-     ✅ Będę
-    </button>
-
-    <button class="btn dark" onclick="att(${e.id},'maybe')">
-     ❓ Nie wiem
-    </button>
-
-    <button class="btn dark" onclick="att(${e.id},'no')">
-     ❌ Nie będę
-    </button>
-
-    ${
-     role!=="member"
-     ?
-     `<button class="btn dark" onclick="delEvent(${e.id})">
-      Usuń
-     </button>`
-     :
-     ""
+  </main>
+
+  <!-- TOAST -->
+
+  <div id="toast"></div>
+
+  <script>
+    /* =========================
+       STATE
+    ========================= */
+
+    let currentRole = "member";
+    let authCode = "";
+    let appData = {
+      events: [],
+      news: [],
+      members: []
+    };
+
+    /* =========================
+       ELEMENTS
+    ========================= */
+
+    const loginScreen = document.getElementById("loginScreen");
+    const app = document.getElementById("app");
+    const loginCode = document.getElementById("loginCode");
+    const loginError = document.getElementById("loginError");
+
+    /* =========================
+       ROLE
+    ========================= */
+
+    function selectRole(role) {
+      currentRole = role;
+
+      document.querySelectorAll(".role-btn").forEach(btn => {
+        btn.classList.toggle(
+          "active",
+          btn.dataset.role === role
+        );
+      });
+
+      loginError.textContent = "";
+      loginCode.focus();
     }
 
-   </div>
-
-  </div>
-
- `).join("")
- ||
- `<div class="card empty">Brak zbiórek.</div>`;
-
-
- /* NEWS */
-
- $("newsList").innerHTML=
- data.news.map(n=>`
-
-  <div class="card">
-
-   <h3>
-    ${esc(n.title)}
-   </h3>
-
-   <p class="muted">
-    ${esc(n.body)}
-   </p>
-
-   ${
-    role!=="member"
-    ?
-    `<button class="btn dark" onclick="delNews(${n.id})">
-     Usuń ogłoszenie
-    </button>`
-    :
-    ""
-   }
-
-  </div>
-
- `).join("")
- ||
- `<div class="card empty">Brak ogłoszeń.</div>`;
-
-
- /* MEMBERS */
-
- $("memberList").innerHTML=
- data.members.map(m=>`
-
-  <div class="member">
-
-   <div class="avatar">
-    ${esc((m.name||"?").charAt(0).toUpperCase())}
-   </div>
-
-   <div style="flex:1">
-
-    <div class="memberName">
-     ${esc(m.name)}
-    </div>
-
-    <div class="memberRole">
-     ${esc(m.role)}
-    </div>
-
-   </div>
-
-   ${
-    role!=="member"
-    ?
-    `<button class="btn dark" onclick="delMember(${m.id})">
-     Usuń
-    </button>`
-    :
-    ""
-   }
-
-  </div>
-
- `).join("")
- ||
- `<div class="empty">Lista członków jest pusta.</div>`;
-
-}
-
-
-/* ESC */
-
-function esc(s){
-
- return String(s??"").replace(
-  /[&<>"']/g,
-  c=>({
-   "&":"&amp;",
-   "<":"&lt;",
-   ">":"&gt;",
-   '"':"&quot;",
-   "'":"&#039;"
-  }[c])
- );
-
-}
-
-
-/* ATTENDANCE */
-
-async function att(id,status){
-
- const name=prompt("Podaj swoje imię i nazwisko:");
-
- if(!name)return;
-
- await fetch("/api/attendance",{
-  method:"POST",
-  headers:headers(),
-  body:JSON.stringify({
-   event_id:id,
-   member_name:name,
-   status
-  })
- });
-
- alert("Obecność zapisana.");
-
- await load();
-
-}
-
-
-/* ADD EVENT */
-
-async function addEvent(){
-
- const body={
-  title:$("etitle").value,
-  event_date:$("edate").value,
-  event_time:$("etime").value,
-  place:$("eplace").value,
-  description:$("edesc").value
- };
-
- const r=await fetch("/api/events",{
-  method:"POST",
-  headers:headers(),
-  body:JSON.stringify(body)
- });
-
- if(!r.ok){
-
-  return alert((await r.json()).error);
-
- }
-
- ["etitle","edate","etime","eplace","edesc"]
- .forEach(x=>$(x).value="");
-
- await load();
-
- show("events");
-
-}
-
-
-/* ADD NEWS */
-
-async function addNews(){
-
- const r=await fetch("/api/news",{
-  method:"POST",
-  headers:headers(),
-  body:JSON.stringify({
-   title:$("ntitle").value,
-   body:$("nbody").value
-  })
- });
-
- if(!r.ok){
-
-  return alert((await r.json()).error);
-
- }
-
- $("ntitle").value="";
- $("nbody").value="";
-
- await load();
-
- show("news");
-
-}
-
-
-/* ADD MEMBER */
-
-async function addMember(){
-
- const r=await fetch("/api/members",{
-  method:"POST",
-  headers:headers(),
-  body:JSON.stringify({
-   name:$("mname").value
-  })
- });
-
- if(!r.ok){
-
-  return alert((await r.json()).error);
-
- }
-
- $("mname").value="";
-
- await load();
-
- show("members");
-
-}
-
-
-/* DELETE */
-
-async function delEvent(id){
-
- if(confirm("Usunąć zbiórkę?")){
-
-  await fetch(
-   "/api/events/"+id,
-   {
-    method:"DELETE",
-    headers:headers()
-   }
-  );
-
-  await load();
-
- }
-
-}
-
-
-async function delNews(id){
-
- if(confirm("Usunąć ogłoszenie?")){
-
-  await fetch(
-   "/api/news/"+id,
-   {
-    method:"DELETE",
-    headers:headers()
-   }
-  );
-
-  await load();
-
- }
-
-}
-
-
-async function delMember(id){
-
- if(confirm("Usunąć członka?")){
-
-  await fetch(
-   "/api/members/"+id,
-   {
-    method:"DELETE",
-    headers:headers()
-   }
-  );
-
-  await load();
-
- }
-
-}
-
-
-/* NAVIGATION */
-
-function show(id){
-
- [
-  "home",
-  "events",
-  "news",
-  "members",
-  "profile",
-  "manage"
- ].forEach(x=>{
-  $(x).classList.add("hidden");
- });
-
- $(id).classList.remove("hidden");
-
-
- document.querySelectorAll("nav button")
- .forEach(x=>x.classList.remove("active"));
-
- const nav=document.getElementById("n-"+id);
-
- if(nav)nav.classList.add("active");
-
- window.scrollTo({
-  top:0,
-  behavior:"smooth"
- });
-
-}
-
-
-/* LOGOUT */
-
-function logout(){
-
- localStorage.removeItem("mdpRole");
- localStorage.removeItem("mdpCode");
-
- location.reload();
-
-}
-
-
-/* AUTO LOGIN */
-
-window.addEventListener("load",()=>{
-
- const r=localStorage.getItem("mdpRole");
- const c=localStorage.getItem("mdpCode");
-
- if(r&&c){
-
-  role=r;
-  code=c;
-
-  start();
-
- }
-
- if("serviceWorker" in navigator){
-
-  navigator.serviceWorker
-   .register("/sw.js")
-   .catch(()=>{});
-
- }
-
-});
-
-</script>
+    /* =========================
+       LOGIN
+    ========================= */
+
+    async function login() {
+      const code = loginCode.value.trim();
+
+      if (!code) {
+        loginError.textContent = "Wpisz kod dostępu.";
+        return;
+      }
+
+      loginError.textContent = "";
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            role: currentRole,
+            code
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się zalogować."
+          );
+        }
+
+        authCode = code;
+
+        localStorage.setItem(
+          "mdpRole",
+          currentRole
+        );
+
+        localStorage.setItem(
+          "mdpCode",
+          code
+        );
+
+        showApp();
+        await loadData();
+
+      } catch (error) {
+        loginError.textContent =
+          error.message || "Błąd logowania.";
+      }
+    }
+
+    /* =========================
+       SHOW APP
+    ========================= */
+
+    function showApp() {
+      loginScreen.classList.add("hidden");
+      app.classList.remove("hidden");
+
+      const roleNames = {
+        member: "Członek MDP",
+        guardian: "Opiekun MDP",
+        admin: "Administrator"
+      };
+
+      document.getElementById("roleLabel").textContent =
+        roleNames[currentRole] || "Użytkownik";
+
+      const staff = [
+        "guardian",
+        "admin"
+      ].includes(currentRole);
+
+      document
+        .getElementById("staffNav")
+        .classList.toggle("hidden", !staff);
+    }
+
+    /* =========================
+       LOGOUT
+    ========================= */
+
+    function logout() {
+      localStorage.removeItem("mdpRole");
+      localStorage.removeItem("mdpCode");
+
+      authCode = "";
+      loginCode.value = "";
+
+      app.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+
+      selectRole("member");
+    }
+
+    /* =========================
+       AUTH HEADERS
+    ========================= */
+
+    function headers() {
+      return {
+        "Content-Type": "application/json",
+        "x-role": currentRole,
+        "x-code": authCode
+      };
+    }
+
+    /* =========================
+       LOAD DATA
+    ========================= */
+
+    async function loadData() {
+      try {
+        const response = await fetch("/api/data", {
+          headers: headers()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się pobrać danych."
+          );
+        }
+
+        appData = data;
+
+        renderAll();
+
+      } catch (error) {
+        showToast(
+          error.message || "Nie udało się pobrać danych.",
+          true
+        );
+      }
+    }
+
+    /* =========================
+       RENDER ALL
+    ========================= */
+
+    function renderAll() {
+      renderStats();
+      renderHome();
+      renderEvents();
+      renderNews();
+      renderMembers();
+    }
+
+    /* =========================
+       STATS
+    ========================= */
+
+    function renderStats() {
+      document.getElementById("statEvents").textContent =
+        appData.events.length;
+
+      document.getElementById("statNews").textContent =
+        appData.news.length;
+
+      document.getElementById("statMembers").textContent =
+        appData.members.length;
+
+      document.getElementById("eventsCount").textContent =
+        appData.events.length;
+
+      document.getElementById("newsCount").textContent =
+        appData.news.length;
+
+      document.getElementById("membersCount").textContent =
+        appData.members.length;
+    }
+
+    /* =========================
+       HOME
+    ========================= */
+
+    function renderHome() {
+      const eventBox =
+        document.getElementById("homeNextEvent");
+
+      if (!appData.events.length) {
+        eventBox.innerHTML =
+          '<div class="empty">Brak zaplanowanych zbiórek.</div>';
+      } else {
+        eventBox.innerHTML =
+          eventHTML(appData.events[0], true);
+      }
+
+      const newsBox =
+        document.getElementById("homeNews");
+
+      if (!appData.news.length) {
+        newsBox.innerHTML =
+          '<div class="empty">Brak ogłoszeń.</div>';
+      } else {
+        newsBox.innerHTML =
+          appData.news
+            .slice(0, 3)
+            .map(item => newsHTML(item, false))
+            .join("");
+      }
+    }
+
+    /* =========================
+       EVENTS
+    ========================= */
+
+    function renderEvents() {
+      const box =
+        document.getElementById("eventsList");
+
+      if (!appData.events.length) {
+        box.innerHTML =
+          '<div class="empty">Nie ma jeszcze żadnych zbiórek.</div>';
+
+        return;
+      }
+
+      box.innerHTML =
+        appData.events
+          .map(event => eventHTML(event, false))
+          .join("");
+    }
+
+    /* =========================
+       EVENT HTML
+    ========================= */
+
+    function eventHTML(event, compact = false) {
+      const date = parseDate(event.event_date);
+
+      const day = date
+        ? String(date.getDate()).padStart(2, "0")
+        : "--";
+
+      const month = date
+        ? date.toLocaleDateString("pl-PL", {
+            month: "short"
+          }).replace(".", "")
+        : "---";
+
+      return `
+        <article class="event-card">
+
+          <div class="event-top">
+
+            <div class="date-box">
+              <strong>${escapeHTML(day)}</strong>
+              <span>${escapeHTML(month)}</span>
+            </div>
+
+            <div class="event-info">
+              <h3>${escapeHTML(event.title)}</h3>
+
+              <div class="meta">
+                🕐 ${escapeHTML(event.event_time)}
+                <br>
+                📍 ${escapeHTML(event.place)}
+              </div>
+            </div>
+
+          </div>
+
+          ${
+            event.description
+              ? `<div class="description">${escapeHTML(event.description)}</div>`
+              : ""
+          }
+
+          <div class="attendance-box">
+
+            <div class="attendance-title">
+              CZY BĘDZIESZ?
+            </div>
+
+            <div class="attendance-buttons">
+
+              <button
+                class="btn green"
+                onclick="setAttendance(${event.id}, 'yes')"
+              >
+                ✓ Będę
+              </button>
+
+              <button
+                class="btn yellow"
+                onclick="setAttendance(${event.id}, 'maybe')"
+              >
+                ? Może
+              </button>
+
+              <button
+                class="btn red"
+                onclick="setAttendance(${event.id}, 'no')"
+              >
+                ✕ Nie
+              </button>
+
+            </div>
+
+            ${
+              isStaff()
+                ? `
+                  <button
+                    class="btn blue"
+                    style="width:100%;margin-top:8px"
+                    onclick="loadAttendance(${event.id})"
+                  >
+                    👥 Pokaż obecność
+                  </button>
+
+                  <div
+                    id="attendance-${event.id}"
+                    class="attendance-list"
+                  ></div>
+                `
+                : ""
+            }
+
+          </div>
+
+          ${
+            isStaff()
+              ? `
+                <div class="actions">
+                  <button
+                    class="btn red"
+                    onclick="deleteEvent(${event.id})"
+                  >
+                    🗑 Usuń zbiórkę
+                  </button>
+                </div>
+              `
+              : ""
+          }
+
+        </article>
+      `;
+    }
+
+    /* =========================
+       NEWS
+    ========================= */
+
+    function renderNews() {
+      const box =
+        document.getElementById("newsList");
+
+      if (!appData.news.length) {
+        box.innerHTML =
+          '<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>';
+
+        return;
+      }
+
+      box.innerHTML =
+        appData.news
+          .map(item => newsHTML(item, true))
+          .join("");
+    }
+
+    function newsHTML(item, actions) {
+      const date = item.created_at
+        ? new Date(item.created_at).toLocaleDateString("pl-PL")
+        : "";
+
+      return `
+        <article class="news-card">
+
+          <div class="news-date">
+            ${escapeHTML(date)}
+          </div>
+
+          <h3>${escapeHTML(item.title)}</h3>
+
+          <div class="news-body">
+            ${escapeHTML(item.body)}
+          </div>
+
+          ${
+            actions && isStaff()
+              ? `
+                <div class="actions">
+                  <button
+                    class="btn red"
+                    onclick="deleteNews(${item.id})"
+                  >
+                    🗑 Usuń
+                  </button>
+                </div>
+              `
+              : ""
+          }
+
+        </article>
+      `;
+    }
+
+    /* =========================
+       MEMBERS
+    ========================= */
+
+    function renderMembers() {
+      const box =
+        document.getElementById("membersList");
+
+      if (!appData.members.length) {
+        box.innerHTML =
+          '<div class="empty">Lista członków jest jeszcze pusta.</div>';
+
+        return;
+      }
+
+      box.innerHTML =
+        appData.members
+          .map(member => {
+
+            const initials =
+              member.name
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map(x => x[0])
+                .join("")
+                .toUpperCase();
+
+            return `
+              <article class="member-card">
+
+                <div class="member-row">
+
+                  <div class="avatar">
+                    ${escapeHTML(initials)}
+                  </div>
+
+                  <div class="member-info">
+                    <h3>${escapeHTML(member.name)}</h3>
+
+                    <div class="member-role">
+                      ${escapeHTML(member.role || "Członek MDP")}
+                    </div>
+                  </div>
+
+                </div>
+
+                ${
+                  isStaff()
+                    ? `
+                      <div class="actions">
+                        <button
+                          class="btn red"
+                          onclick="deleteMember(${member.id})"
+                        >
+                          🗑 Usuń
+                        </button>
+                      </div>
+                    `
+                    : ""
+                }
+
+              </article>
+            `;
+          })
+          .join("");
+    }
+
+    /* =========================
+       ADD EVENT
+    ========================= */
+
+    async function addEvent() {
+      const title =
+        document.getElementById("eventTitle").value.trim();
+
+      const event_date =
+        document.getElementById("eventDate").value;
+
+      const event_time =
+        document.getElementById("eventTime").value;
+
+      const place =
+        document.getElementById("eventPlace").value.trim();
+
+      const description =
+        document.getElementById("eventDescription").value.trim();
+
+      if (!title || !event_date || !event_time || !place) {
+        showToast(
+          "Uzupełnij wszystkie wymagane pola.",
+          true
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/events", {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            title,
+            event_date,
+            event_time,
+            place,
+            description
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się dodać zbiórki."
+          );
+        }
+
+        document.getElementById("eventTitle").value = "";
+        document.getElementById("eventDate").value = "";
+        document.getElementById("eventTime").value = "";
+        document.getElementById("eventPlace").value = "";
+        document.getElementById("eventDescription").value = "";
+
+        showToast("Zbiórka została dodana.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       DELETE EVENT
+    ========================= */
+
+    async function deleteEvent(id) {
+      if (!confirm("Na pewno usunąć tę zbiórkę?")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/events/${id}`,
+          {
+            method: "DELETE",
+            headers: headers()
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się usunąć zbiórki."
+          );
+        }
+
+        showToast("Zbiórka została usunięta.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       ADD NEWS
+    ========================= */
+
+    async function addNews() {
+      const title =
+        document.getElementById("newsTitle").value.trim();
+
+      const body =
+        document.getElementById("newsBody").value.trim();
+
+      if (!title || !body) {
+        showToast(
+          "Uzupełnij tytuł i treść.",
+          true
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/news", {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            title,
+            body
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się dodać ogłoszenia."
+          );
+        }
+
+        document.getElementById("newsTitle").value = "";
+        document.getElementById("newsBody").value = "";
+
+        showToast("Ogłoszenie zostało dodane.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       DELETE NEWS
+    ========================= */
+
+    async function deleteNews(id) {
+      if (!confirm("Na pewno usunąć to ogłoszenie?")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/news/${id}`,
+          {
+            method: "DELETE",
+            headers: headers()
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się usunąć ogłoszenia."
+          );
+        }
+
+        showToast("Ogłoszenie zostało usunięte.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       ADD MEMBER
+    ========================= */
+
+    async function addMember() {
+      const name =
+        document.getElementById("memberName").value.trim();
+
+      const role =
+        document.getElementById("memberRole").value.trim() ||
+        "Członek MDP";
+
+      if (!name) {
+        showToast(
+          "Podaj imię i nazwisko.",
+          true
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/members", {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            name,
+            role
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się dodać członka."
+          );
+        }
+
+        document.getElementById("memberName").value = "";
+
+        showToast("Członek został dodany.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       DELETE MEMBER
+    ========================= */
+
+    async function deleteMember(id) {
+      if (!confirm("Na pewno usunąć tego członka?")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/members/${id}`,
+          {
+            method: "DELETE",
+            headers: headers()
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się usunąć członka."
+          );
+        }
+
+        showToast("Członek został usunięty.");
+
+        await loadData();
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       ATTENDANCE
+    ========================= */
+
+    async function setAttendance(eventId, status) {
+
+      const memberName = prompt(
+        "Podaj swoje imię i nazwisko:"
+      );
+
+      if (!memberName) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          "/api/attendance",
+          {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify({
+              event_id: eventId,
+              member_name: memberName.trim(),
+              status
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się zapisać obecności."
+          );
+        }
+
+        const messages = {
+          yes: "Zapisano: będę.",
+          maybe: "Zapisano: może będę.",
+          no: "Zapisano: nie będę."
+        };
+
+        showToast(messages[status]);
+
+        if (isStaff()) {
+          await loadAttendance(eventId);
+        }
+
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    }
+
+    /* =========================
+       LOAD ATTENDANCE
+    ========================= */
+
+    async function loadAttendance(eventId) {
+      const box =
+        document.getElementById(
+          `attendance-${eventId}`
+        );
+
+      if (!box) {
+        return;
+      }
+
+      box.innerHTML =
+        '<div class="loading">Ładowanie obecności...</div>';
+
+      try {
+        const response = await fetch(
+          `/api/attendance/${eventId}`,
+          {
+            headers: headers()
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Nie udało się pobrać obecności."
+          );
+        }
+
+        if (!data.length) {
+          box.innerHTML =
+            '<div class="empty">Nikt jeszcze nie zaznaczył obecności.</div>';
+
+          return;
+        }
+
+        const labels = {
+          yes: "Będzie",
+          maybe: "Może",
+          no: "Nie będzie"
+        };
+
+        box.innerHTML =
+          data.map(item => `
+            <div class="attendance-item">
+
+              <span>
+                ${escapeHTML(item.member_name)}
+              </span>
+
+              <span class="status ${escapeHTML(item.status)}">
+                ${labels[item.status] || item.status}
+              </span>
+
+            </div>
+          `).join("");
+
+      } catch (error) {
+        box.innerHTML =
+          `<div class="empty">${escapeHTML(error.message)}</div>`;
+      }
+    }
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    function showSection(section, button) {
+
+      document.querySelectorAll(".page-section")
+        .forEach(item => {
+          item.classList.add("hidden");
+        });
+
+      const target =
+        document.getElementById(
+          `section-${section}`
+        );
+
+      if (target) {
+        target.classList.remove("hidden");
+      }
+
+      document.querySelectorAll(".nav-btn")
+        .forEach(item => {
+          item.classList.remove("active");
+        });
+
+      if (button) {
+        button.classList.add("active");
+      }
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    /* =========================
+       STAFF
+    ========================= */
+
+    function isStaff() {
+      return [
+        "guardian",
+        "admin"
+      ].includes(currentRole);
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    let toastTimer = null;
+
+    function showToast(message, error = false) {
+      const toast =
+        document.getElementById("toast");
+
+      toast.textContent = message;
+      toast.classList.toggle("error", error);
+      toast.classList.add("show");
+
+      clearTimeout(toastTimer);
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2800);
+    }
+
+    /* =========================
+       DATE
+    ========================= */
+
+    function parseDate(value) {
+      if (!value) {
+        return null;
+      }
+
+      const parts = value.split("-");
+
+      if (parts.length !== 3) {
+        return null;
+      }
+
+      const year = Number(parts[0]);
+      const month = Number(parts[1]) - 1;
+      const day = Number(parts[2]);
+
+      const date =
+        new Date(year, month, day);
+
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+
+      return date;
+    }
+
+    /* =========================
+       SECURITY
+    ========================= */
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    /* =========================
+       AUTO LOGIN
+    ========================= */
+
+    async function restoreSession() {
+      const savedRole =
+        localStorage.getItem("mdpRole");
+
+      const savedCode =
+        localStorage.getItem("mdpCode");
+
+      if (!savedRole || !savedCode) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          "/api/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              role: savedRole,
+              code: savedCode
+            })
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Sesja wygasła.");
+        }
+
+        currentRole = savedRole;
+        authCode = savedCode;
+
+        selectRole(savedRole);
+        showApp();
+
+        await loadData();
+
+      } catch {
+        localStorage.removeItem("mdpRole");
+        localStorage.removeItem("mdpCode");
+      }
+    }
+
+    /* =========================
+       SERVICE WORKER / PWA
+    ========================= */
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(() => {
+            console.log("Service Worker aktywny.");
+          })
+          .catch(error => {
+            console.log(
+              "Service Worker nie został zarejestrowany:",
+              error
+            );
+          });
+      });
+    }
+
+    /* =========================
+       START
+    ========================= */
+
+    restoreSession();
+
+  </script>
 
 </body>
-</html>
+</html> 
