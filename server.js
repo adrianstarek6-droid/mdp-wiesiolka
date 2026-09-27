@@ -39,17 +39,13 @@ const pool = new Pool({
 ========================================================= */
 
 const CODES = {
-  guardian:
-    String(
-      process.env.GUARDIAN_CODE ||
-      "9982018"
-    ),
+  guardian: String(
+    process.env.GUARDIAN_CODE || "9982018"
+  ),
 
-  admin:
-    String(
-      process.env.ADMIN_CODE ||
-      "0000"
-    )
+  admin: String(
+    process.env.ADMIN_CODE || "0000"
+  )
 };
 
 /* =========================================================
@@ -68,13 +64,9 @@ if (pushEnabled) {
     process.env.VAPID_PRIVATE_KEY
   );
 
-  console.log(
-    "Web Push: VAPID aktywny."
-  );
+  console.log("Web Push: VAPID aktywny.");
 } else {
-  console.log(
-    "Web Push: brak konfiguracji VAPID."
-  );
+  console.log("Web Push: brak konfiguracji VAPID.");
 }
 
 /* =========================================================
@@ -82,33 +74,20 @@ if (pushEnabled) {
 ========================================================= */
 
 function clean(value) {
-  return String(
-    value ?? ""
-  ).trim();
+  return String(value ?? "").trim();
 }
 
 function hashCode(code) {
-  const salt =
-    crypto
-      .randomBytes(16)
-      .toString("hex");
+  const salt = crypto.randomBytes(16).toString("hex");
 
-  const hash =
-    crypto
-      .scryptSync(
-        String(code),
-        salt,
-        64
-      )
-      .toString("hex");
+  const hash = crypto
+    .scryptSync(String(code), salt, 64)
+    .toString("hex");
 
   return `${salt}:${hash}`;
 }
 
-function verifyCode(
-  code,
-  storedHash
-) {
+function verifyCode(code, storedHash) {
   try {
     if (
       !storedHash ||
@@ -117,44 +96,23 @@ function verifyCode(
       return false;
     }
 
-    const parts =
-      storedHash.split(":");
+    const parts = storedHash.split(":");
 
     const salt = parts[0];
     const originalHash = parts[1];
 
-    const hash =
-      crypto
-        .scryptSync(
-          String(code),
-          salt,
-          64
-        )
-        .toString("hex");
+    const hash = crypto
+      .scryptSync(String(code), salt, 64)
+      .toString("hex");
 
-    const a =
-      Buffer.from(
-        hash,
-        "hex"
-      );
+    const a = Buffer.from(hash, "hex");
+    const b = Buffer.from(originalHash, "hex");
 
-    const b =
-      Buffer.from(
-        originalHash,
-        "hex"
-      );
-
-    if (
-      a.length !==
-      b.length
-    ) {
+    if (a.length !== b.length) {
       return false;
     }
 
-    return crypto.timingSafeEqual(
-      a,
-      b
-    );
+    return crypto.timingSafeEqual(a, b);
   } catch {
     return false;
   }
@@ -166,10 +124,7 @@ function verifyCode(
 
 async function initDatabase() {
   if (!process.env.DATABASE_URL) {
-    console.log(
-      "Brak DATABASE_URL."
-    );
-
+    console.log("Brak DATABASE_URL.");
     return;
   }
 
@@ -203,7 +158,9 @@ async function initDatabase() {
       event_id INTEGER NOT NULL
         REFERENCES events(id)
         ON DELETE CASCADE,
+
       member_name TEXT NOT NULL,
+
       status TEXT NOT NULL
         CHECK (
           status IN (
@@ -212,6 +169,7 @@ async function initDatabase() {
             'no'
           )
         ),
+
       UNIQUE(
         event_id,
         member_name
@@ -227,10 +185,6 @@ async function initDatabase() {
     );
   `);
 
-  /* =======================================================
-     MEMBER COLUMNS
-  ======================================================= */
-
   await pool.query(`
     ALTER TABLE members
     ADD COLUMN IF NOT EXISTS first_name TEXT;
@@ -244,10 +198,6 @@ async function initDatabase() {
     ALTER TABLE members
     ADD COLUMN IF NOT EXISTS photo TEXT;
   `);
-
-  /* =======================================================
-     MIGRATE OLD MEMBERS
-  ======================================================= */
 
   await pool.query(`
     UPDATE members
@@ -280,45 +230,28 @@ async function initDatabase() {
     WHERE first_name IS NULL;
   `);
 
-  console.log(
-    "Baza danych gotowa."
-  );
+  console.log("Baza danych gotowa.");
 }
 
 /* =========================================================
    AUTH
 ========================================================= */
 
-async function auth(
-  req,
-  res,
-  next
-) {
+async function auth(req, res, next) {
   try {
-    let role =
-      clean(
-        req.headers["x-role"]
-      ).toLowerCase();
+    let role = clean(
+      req.headers["x-role"]
+    ).toLowerCase();
 
-    const code =
-      clean(
-        req.headers["x-code"]
-      );
+    const code = clean(
+      req.headers["x-code"]
+    );
 
-    /*
-      Obsługa różnych nazw roli,
-      żeby frontend nie rozwalił logowania.
-    */
-
-    if (
-      role === "opiekun"
-    ) {
+    if (role === "opiekun") {
       role = "guardian";
     }
 
-    if (
-      role === "administrator"
-    ) {
+    if (role === "administrator") {
       role = "admin";
     }
 
@@ -337,15 +270,13 @@ async function auth(
       ].includes(role)
     ) {
       return res.status(401).json({
-        error:
-          "Brak uprawnień."
+        error: "Brak uprawnień."
       });
     }
 
     if (!code) {
       return res.status(401).json({
-        error:
-          "Brak kodu dostępu."
+        error: "Brak kodu dostępu."
       });
     }
 
@@ -362,8 +293,7 @@ async function auth(
         String(CODES[role])
       ) {
         return res.status(401).json({
-          error:
-            "Nieprawidłowy kod."
+          error: "Nieprawidłowy kod."
         });
       }
 
@@ -376,17 +306,12 @@ async function auth(
        CZŁONEK
     ===================================================== */
 
-    const memberId =
-      Number(
-        req.headers[
-          "x-member-id"
-        ]
-      );
+    const memberId = Number(
+      req.headers["x-member-id"]
+    );
 
     if (
-      !Number.isInteger(
-        memberId
-      ) ||
+      !Number.isInteger(memberId) ||
       memberId <= 0
     ) {
       return res.status(401).json({
@@ -395,27 +320,23 @@ async function auth(
       });
     }
 
-    const result =
-      await pool.query(
-        `
-        SELECT *
-        FROM members
-        WHERE id = $1
-        `,
-        [memberId]
-      );
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM members
+      WHERE id = $1
+      `,
+      [memberId]
+    );
 
-    if (
-      result.rows.length === 0
-    ) {
+    if (result.rows.length === 0) {
       return res.status(401).json({
         error:
           "Nie znaleziono konta członka."
       });
     }
 
-    const member =
-      result.rows[0];
+    const member = result.rows[0];
 
     if (
       !verifyCode(
@@ -424,16 +345,13 @@ async function auth(
       )
     ) {
       return res.status(401).json({
-        error:
-          "Nieprawidłowy kod."
+        error: "Nieprawidłowy kod."
       });
     }
 
     req.role = "member";
-    req.memberId =
-      member.id;
-    req.member =
-      member;
+    req.memberId = member.id;
+    req.member = member;
 
     next();
 
@@ -454,11 +372,7 @@ async function auth(
    STAFF
 ========================================================= */
 
-function staff(
-  req,
-  res,
-  next
-) {
+function staff(req, res, next) {
   if (
     req.role !== "guardian" &&
     req.role !== "admin"
@@ -476,14 +390,8 @@ function staff(
    ADMIN ONLY
 ========================================================= */
 
-function admin(
-  req,
-  res,
-  next
-) {
-  if (
-    req.role !== "admin"
-  ) {
+function admin(req, res, next) {
+  if (req.role !== "admin") {
     return res.status(403).json({
       error:
         "Tylko administrator może wykonać tę operację."
@@ -499,30 +407,21 @@ function admin(
 
 app.post(
   "/api/login",
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      let role =
-        clean(
-          req.body?.role
-        ).toLowerCase();
+      let role = clean(
+        req.body?.role
+      ).toLowerCase();
 
-      const code =
-        clean(
-          req.body?.code
-        );
+      const code = clean(
+        req.body?.code
+      );
 
-      if (
-        role === "opiekun"
-      ) {
+      if (role === "opiekun") {
         role = "guardian";
       }
 
-      if (
-        role === "administrator"
-      ) {
+      if (role === "administrator") {
         role = "admin";
       }
 
@@ -573,7 +472,9 @@ app.post(
 
         return res.json({
           ok: true,
-          role: role,
+
+          role,
+
           memberId: null,
 
           firstName:
@@ -589,15 +490,13 @@ app.post(
          CZŁONEK
       =================================================== */
 
-      const firstName =
-        clean(
-          req.body?.firstName
-        );
+      const firstName = clean(
+        req.body?.firstName
+      );
 
-      const lastName =
-        clean(
-          req.body?.lastName
-        );
+      const lastName = clean(
+        req.body?.lastName
+      );
 
       if (
         !firstName ||
@@ -609,55 +508,40 @@ app.post(
         });
       }
 
-      const result =
-        await pool.query(
-          `
-          SELECT
-            id,
-            first_name,
-            last_name,
-            role,
-            photo,
-            code_hash
-          FROM members
+      const result = await pool.query(
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo,
+          code_hash
+        FROM members
+        WHERE
+          LOWER(TRIM(first_name))
+          =
+          LOWER(TRIM($1))
+        AND
+          LOWER(TRIM(last_name))
+          =
+          LOWER(TRIM($2))
+        LIMIT 1
+        `,
+        [
+          firstName,
+          lastName
+        ]
+      );
 
-          WHERE
-            LOWER(
-              TRIM(first_name)
-            )
-            =
-            LOWER(
-              TRIM($1)
-            )
-
-          AND
-            LOWER(
-              TRIM(last_name)
-            )
-            =
-            LOWER(
-              TRIM($2)
-            )
-
-          LIMIT 1
-          `,
-          [
-            firstName,
-            lastName
-          ]
-        );
-
-      if (
-        result.rows.length === 0
-      ) {
+      if (result.rows.length === 0) {
         return res.status(401).json({
           error:
             "Nie znaleziono członka o podanym imieniu i nazwisku."
         });
       }
 
-      const member =
-        result.rows[0];
+      const member = result.rows[0];
 
       if (
         !verifyCode(
@@ -674,8 +558,7 @@ app.post(
       return res.json({
         ok: true,
 
-        role:
-          "member",
+        role: "member",
 
         memberId:
           member.id,
@@ -725,50 +608,46 @@ app.post(
 app.get(
   "/api/data",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const [
         events,
         news,
         members
-      ] =
-        await Promise.all([
-          pool.query(`
-            SELECT *
-            FROM events
-            ORDER BY
-              event_date ASC,
-              event_time ASC,
-              id DESC
-          `),
+      ] = await Promise.all([
+        pool.query(`
+          SELECT *
+          FROM events
+          ORDER BY
+            event_date ASC,
+            event_time ASC,
+            id DESC
+        `),
 
-          pool.query(`
-            SELECT *
-            FROM news
-            ORDER BY
-              created_at DESC,
-              id DESC
-          `),
+        pool.query(`
+          SELECT *
+          FROM news
+          ORDER BY
+            created_at DESC,
+            id DESC
+        `),
 
-          pool.query(`
-            SELECT
-              id,
-              first_name,
-              last_name,
-              name,
-              role,
-              photo,
-              created_at
-            FROM members
-            ORDER BY
-              first_name ASC,
-              last_name ASC,
-              id ASC
-          `)
-        ]);
+        pool.query(`
+          SELECT
+            id,
+            first_name,
+            last_name,
+            name,
+            role,
+            photo,
+            created_at
+          FROM members
+          ORDER BY
+            first_name ASC,
+            last_name ASC,
+            id ASC
+        `)
+      ]);
 
       res.json({
         events:
@@ -802,26 +681,19 @@ app.get(
 app.get(
   "/api/profile",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      if (
-        req.role !== "member"
-      ) {
+      if (req.role !== "member") {
         return res.json({
           role:
             req.role,
 
           first_name:
-            req.role ===
-            "guardian"
+            req.role === "guardian"
               ? "Opiekun"
               : "Administrator",
 
-          last_name:
-            ""
+          last_name: ""
         });
       }
 
@@ -835,19 +707,13 @@ app.get(
             role,
             photo,
             created_at
-
           FROM members
-
           WHERE id = $1
           `,
-          [
-            req.memberId
-          ]
+          [req.memberId]
         );
 
-      if (
-        result.rows.length === 0
-      ) {
+      if (result.rows.length === 0) {
         return res.status(404).json({
           error:
             "Nie znaleziono profilu."
@@ -879,14 +745,9 @@ app.get(
 app.put(
   "/api/profile",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      if (
-        req.role !== "member"
-      ) {
+      if (req.role !== "member") {
         return res.status(403).json({
           error:
             "Ta funkcja dotyczy członka MDP."
@@ -920,11 +781,8 @@ app.put(
         await pool.query(
           `
           UPDATE members
-
           SET photo = $1
-
           WHERE id = $2
-
           RETURNING
             id,
             first_name,
@@ -967,15 +825,11 @@ async function sendPushNotification(
   title,
   body
 ) {
-  if (
-    !pushEnabled
-  ) {
+  if (!pushEnabled) {
     return;
   }
 
-  if (
-    !process.env.DATABASE_URL
-  ) {
+  if (!process.env.DATABASE_URL) {
     return;
   }
 
@@ -985,7 +839,6 @@ async function sendPushNotification(
         SELECT
           id,
           subscription
-
         FROM push_subscriptions
       `);
 
@@ -1016,19 +869,15 @@ async function sendPushNotification(
         );
 
         if (
-          error.statusCode ===
-            404 ||
-          error.statusCode ===
-            410
+          error.statusCode === 404 ||
+          error.statusCode === 410
         ) {
           await pool.query(
             `
             DELETE FROM push_subscriptions
             WHERE id = $1
             `,
-            [
-              row.id
-            ]
+            [row.id]
           );
         }
       }
@@ -1048,13 +897,8 @@ async function sendPushNotification(
 
 app.get(
   "/api/push/public-key",
-  (
-    req,
-    res
-  ) => {
-    if (
-      !pushEnabled
-    ) {
+  (req, res) => {
+    if (!pushEnabled) {
       return res.status(503).json({
         error:
           "Powiadomienia push nie są skonfigurowane."
@@ -1075,14 +919,9 @@ app.get(
 app.post(
   "/api/push/subscribe",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      if (
-        !pushEnabled
-      ) {
+      if (!pushEnabled) {
         return res.status(503).json({
           error:
             "Push nie jest skonfigurowany."
@@ -1107,27 +946,21 @@ app.post(
         `
         INSERT INTO
           push_subscriptions
-          (
-            endpoint,
-            subscription,
-            role
-          )
-
-        VALUES
-          (
-            $1,
-            $2,
-            $3
-          )
-
-        ON CONFLICT (
-          endpoint
+        (
+          endpoint,
+          subscription,
+          role
         )
-
+        VALUES
+        (
+          $1,
+          $2,
+          $3
+        )
+        ON CONFLICT (endpoint)
         DO UPDATE SET
           subscription =
             EXCLUDED.subscription,
-
           role =
             EXCLUDED.role
         `,
@@ -1167,10 +1000,7 @@ app.post(
 app.post(
   "/api/push/unsubscribe",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const endpoint =
         clean(
@@ -1188,12 +1018,9 @@ app.post(
         `
         DELETE FROM
           push_subscriptions
-
         WHERE endpoint = $1
         `,
-        [
-          endpoint
-        ]
+        [endpoint]
       );
 
       res.json({
@@ -1222,10 +1049,7 @@ app.post(
   "/api/push/test",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       await sendPushNotification(
         "MDP Wiesiółka 🚒",
@@ -1258,17 +1082,8 @@ app.post(
   "/api/events",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      /*
-        Obsługujemy zarówno
-        nazwy używane przez backend,
-        jak i typowe nazwy z formularza.
-      */
-
       const title =
         clean(
           req.body?.title ||
@@ -1342,7 +1157,6 @@ app.post(
             place,
             description
           )
-
           VALUES
           (
             $1,
@@ -1351,7 +1165,6 @@ app.post(
             $4,
             $5
           )
-
           RETURNING *
           `,
           [
@@ -1366,20 +1179,13 @@ app.post(
       const event =
         result.rows[0];
 
-      /*
-        Push nie może zablokować
-        zapisania zbiórki.
-      */
-
       try {
         await sendPushNotification(
           "📅 Nowa zbiórka MDP",
 
           `${event.title} — ${event.event_date} o ${event.event_time}`
         );
-      } catch (
-        pushError
-      ) {
+      } catch (pushError) {
         console.error(
           "Błąd push:",
           pushError
@@ -1413,10 +1219,7 @@ app.delete(
   "/api/events/:id",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const id =
         Number(
@@ -1440,14 +1243,11 @@ app.delete(
           WHERE id = $1
           RETURNING id
           `,
-          [
-            id
-          ]
+          [id]
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
         return res.status(404).json({
           error:
@@ -1481,10 +1281,7 @@ app.post(
   "/api/news",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const title =
         clean(
@@ -1530,13 +1327,11 @@ app.post(
             title,
             body
           )
-
           VALUES
           (
             $1,
             $2
           )
-
           RETURNING *
           `,
           [
@@ -1553,9 +1348,7 @@ app.post(
           "📢 Nowe ogłoszenie MDP",
           news.title
         );
-      } catch (
-        pushError
-      ) {
+      } catch (pushError) {
         console.error(
           "Błąd push:",
           pushError
@@ -1589,10 +1382,7 @@ app.delete(
   "/api/news/:id",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const id =
         Number(
@@ -1616,14 +1406,11 @@ app.delete(
           WHERE id = $1
           RETURNING id
           `,
-          [
-            id
-          ]
+          [id]
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
         return res.status(404).json({
           error:
@@ -1657,10 +1444,7 @@ app.post(
   "/api/members",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const firstName =
         clean(
@@ -1700,19 +1484,14 @@ app.post(
         });
       }
 
-      if (
-        code.length < 4
-      ) {
+      if (code.length < 4) {
         return res.status(400).json({
           error:
             "Kod dostępu musi mieć co najmniej 4 znaki."
         });
       }
 
-      if (
-        photo.length >
-        1500000
-      ) {
+      if (photo.length > 1500000) {
         return res.status(400).json({
           error:
             "Zdjęcie jest za duże."
@@ -1723,27 +1502,15 @@ app.post(
         await pool.query(
           `
           SELECT id
-
           FROM members
-
           WHERE
-            LOWER(
-              TRIM(first_name)
-            )
+            LOWER(TRIM(first_name))
             =
-            LOWER(
-              TRIM($1)
-            )
-
+            LOWER(TRIM($1))
           AND
-            LOWER(
-              TRIM(last_name)
-            )
+            LOWER(TRIM(last_name))
             =
-            LOWER(
-              TRIM($2)
-            )
-
+            LOWER(TRIM($2))
           LIMIT 1
           `,
           [
@@ -1752,9 +1519,7 @@ app.post(
           ]
         );
 
-      if (
-        existing.rows.length
-      ) {
+      if (existing.rows.length) {
         return res.status(409).json({
           error:
             "Członek o takim imieniu i nazwisku już istnieje."
@@ -1765,9 +1530,7 @@ app.post(
         `${firstName} ${lastName}`;
 
       const codeHash =
-        hashCode(
-          code
-        );
+        hashCode(code);
 
       const result =
         await pool.query(
@@ -1781,7 +1544,6 @@ app.post(
             code_hash,
             photo
           )
-
           VALUES
           (
             $1,
@@ -1791,7 +1553,6 @@ app.post(
             $5,
             $6
           )
-
           RETURNING
             id,
             first_name,
@@ -1839,10 +1600,7 @@ app.put(
   "/api/members/:id",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const id =
         Number(
@@ -1866,14 +1624,11 @@ app.put(
           FROM members
           WHERE id = $1
           `,
-          [
-            id
-          ]
+          [id]
         );
 
       if (
-        current.rows.length ===
-        0
+        current.rows.length === 0
       ) {
         return res.status(404).json({
           error:
@@ -1909,8 +1664,7 @@ app.put(
         typeof req.body?.photo ===
         "string"
           ? req.body.photo
-          : member.photo ||
-            "";
+          : member.photo || "";
 
       if (
         !firstName ||
@@ -1922,10 +1676,7 @@ app.put(
         });
       }
 
-      if (
-        photo.length >
-        1500000
-      ) {
+      if (photo.length > 1500000) {
         return res.status(400).json({
           error:
             "Zdjęcie jest za duże."
@@ -1941,9 +1692,7 @@ app.put(
         );
 
       if (newCode) {
-        if (
-          newCode.length < 4
-        ) {
+        if (newCode.length < 4) {
           return res.status(400).json({
             error:
               "Kod dostępu musi mieć co najmniej 4 znaki."
@@ -1951,9 +1700,7 @@ app.put(
         }
 
         codeHash =
-          hashCode(
-            newCode
-          );
+          hashCode(newCode);
       }
 
       const name =
@@ -1963,7 +1710,6 @@ app.put(
         await pool.query(
           `
           UPDATE members
-
           SET
             name = $1,
             first_name = $2,
@@ -1971,9 +1717,7 @@ app.put(
             role = $4,
             code_hash = $5,
             photo = $6
-
           WHERE id = $7
-
           RETURNING
             id,
             first_name,
@@ -2022,10 +1766,7 @@ app.delete(
   "/api/members/:id",
   auth,
   staff,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const id =
         Number(
@@ -2046,19 +1787,14 @@ app.delete(
         await pool.query(
           `
           DELETE FROM members
-
           WHERE id = $1
-
           RETURNING id
           `,
-          [
-            id
-          ]
+          [id]
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
         return res.status(404).json({
           error:
@@ -2072,7 +1808,7 @@ app.delete(
 
     } catch (error) {
       console.error(
-        "DELETE /api/members/:id:",
+        "DELETE /api/members:",
         error
       );
 
@@ -2088,215 +1824,295 @@ app.delete(
    ATTENDANCE SAVE
 ========================================================= */
 
-app.post(
-  "/api/attendance",
-  auth,
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const eventId =
+/*
+  Ta funkcja obsługuje oba warianty:
+
+  POST /api/attendance
+
+  oraz
+
+  POST /api/attendance/:eventId
+
+  Dzięki temu nowy index.html będzie działał
+  nawet jeśli wysyła ID zbiórki w adresie.
+*/
+
+async function saveAttendance(
+  req,
+  res,
+  eventIdFromUrl = null
+) {
+  try {
+    const eventId =
+      Number(
+        eventIdFromUrl ??
+        req.body?.event_id ??
+        req.body?.eventId
+      );
+
+    const status =
+      clean(
+        req.body?.status
+      );
+
+    /* ==========================================
+       SPRAWDZENIE ID ZBIÓRKI
+    ========================================== */
+
+    if (
+      !Number.isInteger(eventId) ||
+      eventId <= 0
+    ) {
+      return res.status(400).json({
+        error:
+          "Nieprawidłowe ID zbiórki."
+      });
+    }
+
+    /* ==========================================
+       SPRAWDZENIE STATUSU
+    ========================================== */
+
+    if (
+      ![
+        "yes",
+        "maybe",
+        "no"
+      ].includes(status)
+    ) {
+      return res.status(400).json({
+        error:
+          "Nieprawidłowy status."
+      });
+    }
+
+    /* ==========================================
+       SPRAWDZENIE, CZY ZBIÓRKA ISTNIEJE
+    ========================================== */
+
+    const eventResult =
+      await pool.query(
+        `
+        SELECT id
+        FROM events
+        WHERE id = $1
+        `,
+        [eventId]
+      );
+
+    if (
+      eventResult.rows.length === 0
+    ) {
+      return res.status(404).json({
+        error:
+          "Nie znaleziono zbiórki."
+      });
+    }
+
+    /* ==========================================
+       USTALENIE CZŁONKA
+    ========================================== */
+
+    let memberName = "";
+
+    /* ==========================================
+       CZŁONEK MDP
+    ========================================== */
+
+    if (
+      req.role === "member"
+    ) {
+      memberName =
+        `${req.member.first_name} ${req.member.last_name}`;
+    }
+
+    /* ==========================================
+       OPIEKUN / ADMIN
+    ========================================== */
+
+    if (
+      req.role === "guardian" ||
+      req.role === "admin"
+    ) {
+      const memberId =
         Number(
-          req.body?.event_id
+          req.body?.member_id ??
+          req.body?.memberId
         );
 
-      const status =
-        clean(
-          req.body?.status
-        );
-
-      let memberName =
-        "";
-
       if (
-        !Number.isInteger(
-          eventId
-        ) ||
-        eventId <= 0
+        Number.isInteger(memberId) &&
+        memberId > 0
       ) {
-        return res.status(400).json({
-          error:
-            "Nieprawidłowe ID zbiórki."
-        });
-      }
-
-      if (
-        ![
-          "yes",
-          "maybe",
-          "no"
-        ].includes(
-          status
-        )
-      ) {
-        return res.status(400).json({
-          error:
-            "Nieprawidłowy status."
-        });
-      }
-
-      /* CZŁONEK */
-
-      if (
-        req.role ===
-        "member"
-      ) {
-        memberName =
-          `${req.member.first_name} ${req.member.last_name}`;
-      }
-
-      /* OPIEKUN / ADMIN */
-
-      if (
-        req.role ===
-          "guardian" ||
-        req.role ===
-          "admin"
-      ) {
-        const memberId =
-          Number(
-            req.body?.member_id
+        const memberResult =
+          await pool.query(
+            `
+            SELECT
+              first_name,
+              last_name
+            FROM members
+            WHERE id = $1
+            `,
+            [memberId]
           );
 
         if (
-          Number.isInteger(
-            memberId
-          ) &&
-          memberId > 0
+          memberResult.rows.length === 0
         ) {
-          const result =
-            await pool.query(
-              `
-              SELECT
-                first_name,
-                last_name
-
-              FROM members
-
-              WHERE id = $1
-              `,
-              [
-                memberId
-              ]
-            );
-
-          if (
-            result.rows.length ===
-            0
-          ) {
-            return res.status(404).json({
-              error:
-                "Nie znaleziono członka."
-            });
-          }
-
-          memberName =
-            `${result.rows[0].first_name} ${result.rows[0].last_name}`;
-        } else {
-          memberName =
-            clean(
-              req.body?.member_name
-            );
+          return res.status(404).json({
+            error:
+              "Nie znaleziono członka."
+          });
         }
-      }
 
-      if (!memberName) {
-        return res.status(400).json({
-          error:
-            "Nie znaleziono członka."
-        });
-      }
+        memberName =
+          `${memberResult.rows[0].first_name} ${memberResult.rows[0].last_name}`;
 
-      const existing =
-        await pool.query(
-          `
-          SELECT id
-
-          FROM attendance
-
-          WHERE
-            event_id = $1
-            AND member_name = $2
-
-          LIMIT 1
-          `,
-          [
-            eventId,
-            memberName
-          ]
-        );
-
-      if (
-        existing.rows.length
-      ) {
-        const result =
-          await pool.query(
-            `
-            UPDATE attendance
-
-            SET status = $1
-
-            WHERE id = $2
-
-            RETURNING *
-            `,
-            [
-              status,
-              existing.rows[0].id
-            ]
+      } else {
+        memberName =
+          clean(
+            req.body?.member_name ||
+            req.body?.memberName
           );
-
-        return res.json({
-          ok: true,
-          attendance:
-            result.rows[0]
-        });
       }
+    }
 
+    /* ==========================================
+       BRAK CZŁONKA
+    ========================================== */
+
+    if (!memberName) {
+      return res.status(400).json({
+        error:
+          "Nie znaleziono członka."
+      });
+    }
+
+    /* ==========================================
+       SPRAWDZENIE, CZY JUŻ ODPOWIADAŁ
+    ========================================== */
+
+    const existing =
+      await pool.query(
+        `
+        SELECT id
+        FROM attendance
+        WHERE
+          event_id = $1
+          AND member_name = $2
+        LIMIT 1
+        `,
+        [
+          eventId,
+          memberName
+        ]
+      );
+
+    /* ==========================================
+       AKTUALIZACJA ISTNIEJĄCEJ ODPOWIEDZI
+    ========================================== */
+
+    if (
+      existing.rows.length > 0
+    ) {
       const result =
         await pool.query(
           `
-          INSERT INTO attendance
-          (
-            event_id,
-            member_name,
-            status
-          )
-
-          VALUES
-          (
-            $1,
-            $2,
-            $3
-          )
-
+          UPDATE attendance
+          SET status = $1
+          WHERE id = $2
           RETURNING *
           `,
           [
-            eventId,
-            memberName,
-            status
+            status,
+            existing.rows[0].id
           ]
         );
 
-      res.status(201).json({
+      return res.json({
         ok: true,
+
         attendance:
           result.rows[0]
       });
+    }
 
-    } catch (error) {
-      console.error(
-        "POST /api/attendance:",
-        error
+    /* ==========================================
+       NOWA ODPOWIEDŹ
+    ========================================== */
+
+    const result =
+      await pool.query(
+        `
+        INSERT INTO attendance
+        (
+          event_id,
+          member_name,
+          status
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3
+        )
+        RETURNING *
+        `,
+        [
+          eventId,
+          memberName,
+          status
+        ]
       );
 
-      res.status(500).json({
-        error:
-          "Nie udało się zapisać obecności."
-      });
-    }
+    return res.status(201).json({
+      ok: true,
+
+      attendance:
+        result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(
+      "SAVE ATTENDANCE ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        "Nie udało się zapisać obecności."
+    });
+  }
+}
+
+/* =========================================================
+   POST /api/attendance
+========================================================= */
+
+app.post(
+  "/api/attendance",
+  auth,
+  async (req, res) => {
+    await saveAttendance(
+      req,
+      res
+    );
+  }
+);
+
+/* =========================================================
+   POST /api/attendance/:eventId
+========================================================= */
+
+app.post(
+  "/api/attendance/:eventId",
+  auth,
+  async (req, res) => {
+    await saveAttendance(
+      req,
+      res,
+      req.params.eventId
+    );
   }
 );
 
@@ -2307,10 +2123,7 @@ app.post(
 app.get(
   "/api/attendance/:eventId",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const eventId =
         Number(
@@ -2318,9 +2131,7 @@ app.get(
         );
 
       if (
-        !Number.isInteger(
-          eventId
-        ) ||
+        !Number.isInteger(eventId) ||
         eventId <= 0
       ) {
         return res.status(400).json({
@@ -2333,17 +2144,11 @@ app.get(
         await pool.query(
           `
           SELECT *
-
           FROM attendance
-
           WHERE event_id = $1
-
-          ORDER BY
-            member_name ASC
+          ORDER BY member_name ASC
           `,
-          [
-            eventId
-          ]
+          [eventId]
         );
 
       res.json(
@@ -2371,10 +2176,7 @@ app.get(
 app.get(
   "/api/member-stats/:memberId",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const memberId =
         Number(
@@ -2382,9 +2184,7 @@ app.get(
         );
 
       if (
-        !Number.isInteger(
-          memberId
-        ) ||
+        !Number.isInteger(memberId) ||
         memberId <= 0
       ) {
         return res.status(400).json({
@@ -2394,10 +2194,8 @@ app.get(
       }
 
       if (
-        req.role ===
-          "member" &&
-        req.memberId !==
-          memberId
+        req.role === "member" &&
+        req.memberId !== memberId
       ) {
         return res.status(403).json({
           error:
@@ -2412,14 +2210,11 @@ app.get(
           FROM members
           WHERE id = $1
           `,
-          [
-            memberId
-          ]
+          [memberId]
         );
 
       if (
-        memberResult.rows.length ===
-        0
+        memberResult.rows.length === 0
       ) {
         return res.status(404).json({
           error:
@@ -2510,8 +2305,7 @@ app.get(
           percentage:
             total
               ? Math.round(
-                  (yes / total) *
-                    100
+                  (yes / total) * 100
                 )
               : 0
         }
@@ -2538,69 +2332,55 @@ app.get(
 app.get(
   "/api/stats",
   auth,
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
       const [
         members,
         events,
         news,
         attendance
-      ] =
-        await Promise.all([
-          pool.query(
-            `
-            SELECT
-              COUNT(*)::int AS count
-            FROM members
-            `
-          ),
+      ] = await Promise.all([
+        pool.query(`
+          SELECT
+            COUNT(*)::int AS count
+          FROM members
+        `),
 
-          pool.query(
-            `
-            SELECT
-              COUNT(*)::int AS count
-            FROM events
-            `
-          ),
+        pool.query(`
+          SELECT
+            COUNT(*)::int AS count
+          FROM events
+        `),
 
-          pool.query(
-            `
-            SELECT
-              COUNT(*)::int AS count
-            FROM news
-            `
-          ),
+        pool.query(`
+          SELECT
+            COUNT(*)::int AS count
+          FROM news
+        `),
 
-          pool.query(`
-            SELECT
+        pool.query(`
+          SELECT
 
-              COUNT(*)::int
-                AS total,
+            COUNT(*)::int AS total,
 
-              COUNT(*)
-                FILTER (
-                  WHERE status = 'yes'
-                )::int
-                AS yes,
+            COUNT(*)
+              FILTER (
+                WHERE status = 'yes'
+              )::int AS yes,
 
-              COUNT(*)
-                FILTER (
-                  WHERE status = 'maybe'
-                )::int
-                AS maybe,
+            COUNT(*)
+              FILTER (
+                WHERE status = 'maybe'
+              )::int AS maybe,
 
-              COUNT(*)
-                FILTER (
-                  WHERE status = 'no'
-                )::int
-                AS no
+            COUNT(*)
+              FILTER (
+                WHERE status = 'no'
+              )::int AS no
 
-            FROM attendance
-          `)
-        ]);
+          FROM attendance
+        `)
+      ]);
 
       const row =
         attendance.rows[0];
@@ -2649,8 +2429,7 @@ app.get(
           percentage:
             total
               ? Math.round(
-                  (yes / total) *
-                    100
+                  (yes / total) * 100
                 )
               : 0
         }
@@ -2676,13 +2455,9 @@ app.get(
 
 app.get(
   "/api/health",
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
     try {
-      let database =
-        false;
+      let database = false;
 
       if (
         process.env.DATABASE_URL
@@ -2691,8 +2466,7 @@ app.get(
           "SELECT 1"
         );
 
-        database =
-          true;
+        database = true;
       }
 
       res.json({
@@ -2713,8 +2487,7 @@ app.get(
       res.status(500).json({
         ok: false,
 
-        database:
-          false,
+        database: false,
 
         push:
           pushEnabled
@@ -2728,14 +2501,9 @@ app.get(
 ========================================================= */
 
 app.use(
-  (
-    req,
-    res,
-    next
-  ) => {
+  (req, res, next) => {
     if (
-      req.method !==
-      "GET"
+      req.method !== "GET"
     ) {
       return next();
     }
@@ -2766,10 +2534,7 @@ app.use(
 ========================================================= */
 
 app.use(
-  (
-    req,
-    res
-  ) => {
+  (req, res) => {
     res.status(404).json({
       error:
         "Nie znaleziono."
@@ -2782,12 +2547,7 @@ app.use(
 ========================================================= */
 
 app.use(
-  (
-    error,
-    req,
-    res,
-    next
-  ) => {
+  (error, req, res, next) => {
     console.error(
       "SERVER ERROR:",
       error
@@ -2796,9 +2556,7 @@ app.use(
     if (
       res.headersSent
     ) {
-      return next(
-        error
-      );
+      return next(error);
     }
 
     res.status(500).json({
