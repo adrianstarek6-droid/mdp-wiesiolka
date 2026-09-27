@@ -42,21 +42,11 @@ const hashCode = code =>
     .digest('hex');
 
 const normRole = role => {
-  const r = String(role || '')
-    .toLowerCase()
-    .trim();
+  const r = String(role || '').toLowerCase().trim();
 
-  if (['opiekun', 'guardian'].includes(r)) {
-    return 'guardian';
-  }
-
-  if (['admin', 'administrator'].includes(r)) {
-    return 'admin';
-  }
-
-  if (['member', 'czlonek', 'członek'].includes(r)) {
-    return 'member';
-  }
+  if (['opiekun', 'guardian'].includes(r)) return 'guardian';
+  if (['admin', 'administrator'].includes(r)) return 'admin';
+  if (['member', 'czlonek', 'członek'].includes(r)) return 'member';
 
   return r;
 };
@@ -95,17 +85,7 @@ async function auth(req, res, next) {
 
     if (role === 'member' && memberId && code) {
       const r = await pool.query(
-        `
-        SELECT
-          id,
-          first_name,
-          last_name,
-          role,
-          photo,
-          code_hash
-        FROM members
-        WHERE id=$1
-        `,
+        'SELECT id,first_name,last_name,role,photo,code_hash FROM members WHERE id=$1',
         [memberId]
       );
 
@@ -144,11 +124,6 @@ function staff(req, res, next) {
       });
 }
 
-
-/* =========================================================
-   BAZA DANYCH
-========================================================= */
-
 async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS events (
@@ -181,9 +156,7 @@ async function initDb() {
 
     CREATE TABLE IF NOT EXISTS attendance (
       id SERIAL PRIMARY KEY,
-      event_id INTEGER NOT NULL
-        REFERENCES events(id)
-        ON DELETE CASCADE,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
       member_name TEXT NOT NULL,
       status TEXT NOT NULL
         CHECK (status IN ('yes','maybe','no')),
@@ -209,9 +182,7 @@ async function initDb() {
 
     CREATE TABLE IF NOT EXISTS member_reports (
       id SERIAL PRIMARY KEY,
-      member_id INTEGER
-        REFERENCES members(id)
-        ON DELETE CASCADE,
+      member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
       member_name TEXT NOT NULL,
       report_type TEXT NOT NULL,
       body TEXT NOT NULL,
@@ -245,40 +216,30 @@ async function initDb() {
     );
   `);
 
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS first_name TEXT
-  `);
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS first_name TEXT'
+  );
 
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS last_name TEXT
-  `);
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS last_name TEXT'
+  );
 
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS code_hash TEXT
-  `);
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS code_hash TEXT'
+  );
 
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS photo TEXT
-  `);
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
+  );
 
-  const c = await pool.query(`
-    SELECT COUNT(*)::int AS count
-    FROM newspaper_groups
-  `);
+  const c = await pool.query(
+    'SELECT COUNT(*)::int AS count FROM newspaper_groups'
+  );
 
   if (c.rows[0].count === 0) {
     await seedNewspaperGroups();
   }
 }
-
-
-/* =========================================================
-   DOMYŚLNE GRUPY GAZET
-========================================================= */
 
 async function seedNewspaperGroups() {
   const groups = [
@@ -293,11 +254,7 @@ async function seedNewspaperGroups() {
       'Wysoka',
       '3 bloki — Sportowa, Parkowa, Robotnicza',
       '#36b86b',
-      [
-        'Sportowa',
-        'Parkowa',
-        'Robotnicza'
-      ],
+      ['Sportowa', 'Parkowa', 'Robotnicza'],
       85
     ],
     [
@@ -327,21 +284,8 @@ async function seedNewspaperGroups() {
     await pool.query(
       `
       INSERT INTO newspaper_groups
-      (
-        name,
-        region,
-        color,
-        streets,
-        copies
-      )
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        $4::jsonb,
-        $5
-      )
+      (name,region,color,streets,copies)
+      VALUES($1,$2,$3,$4::jsonb,$5)
       `,
       [
         g[0],
@@ -366,10 +310,7 @@ function groupJson(row, members = []) {
       : [],
 
     copies: Number(row.copies || 0),
-
-    delivered: Number(
-      row.delivered || 0
-    ),
+    delivered: Number(row.delivered || 0),
 
     started: !!row.started,
     done: !!row.done,
@@ -388,21 +329,17 @@ function groupJson(row, members = []) {
 
 async function getGroups() {
   const [g, m] = await Promise.all([
-    pool.query(`
-      SELECT *
-      FROM newspaper_groups
-      ORDER BY id
-    `),
+    pool.query(
+      'SELECT * FROM newspaper_groups ORDER BY id'
+    ),
 
-    pool.query(`
-      SELECT
-        id,
-        first_name,
-        last_name,
-        name
+    pool.query(
+      `
+      SELECT id,first_name,last_name,name
       FROM members
       ORDER BY first_name,last_name,id
-    `)
+      `
+    )
   ]);
 
   const members = m.rows;
@@ -442,26 +379,14 @@ async function getGroups() {
   });
 }
 
-
-/* =========================================================
-   POWIADOMIENIA PUSH
-========================================================= */
-
 async function sendPushToAll(payload) {
-  if (
-    !VAPID_PUBLIC_KEY ||
-    !VAPID_PRIVATE_KEY
-  ) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     return;
   }
 
-  const r = await pool.query(`
-    SELECT
-      id,
-      endpoint,
-      subscription
-    FROM push_subscriptions
-  `);
+  const r = await pool.query(
+    'SELECT id,endpoint,subscription FROM push_subscriptions'
+  );
 
   for (const s of r.rows) {
     try {
@@ -470,15 +395,9 @@ async function sendPushToAll(payload) {
         JSON.stringify(payload)
       );
     } catch (e) {
-      if (
-        e.statusCode === 404 ||
-        e.statusCode === 410
-      ) {
+      if (e.statusCode === 404 || e.statusCode === 410) {
         await pool.query(
-          `
-          DELETE FROM push_subscriptions
-          WHERE id=$1
-          `,
+          'DELETE FROM push_subscriptions WHERE id=$1',
           [s.id]
         );
       }
@@ -487,9 +406,9 @@ async function sendPushToAll(payload) {
 }
 
 
-/* =========================================================
-   LOGOWANIE
-========================================================= */
+// =========================
+// LOGIN
+// =========================
 
 app.post('/api/login', async (req, res) => {
   try {
@@ -501,19 +420,13 @@ app.post('/api/login', async (req, res) => {
       ''
     );
 
-    if (
-      role === 'admin' &&
-      code === ADMIN_CODE
-    ) {
+    if (role === 'admin' && code === ADMIN_CODE) {
       return res.json({
         role: 'admin'
       });
     }
 
-    if (
-      role === 'guardian' &&
-      code === GUARDIAN_CODE
-    ) {
+    if (role === 'guardian' && code === GUARDIAN_CODE) {
       return res.json({
         role: 'guardian'
       });
@@ -522,12 +435,7 @@ app.post('/api/login', async (req, res) => {
     if (role === 'member') {
       const r = await pool.query(
         `
-        SELECT
-          id,
-          first_name,
-          last_name,
-          role,
-          photo
+        SELECT id,first_name,last_name,role,photo
         FROM members
         WHERE code_hash=$1
         ORDER BY id
@@ -574,9 +482,9 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-/* =========================================================
-   DANE
-========================================================= */
+// =========================
+// DATA / STATS
+// =========================
 
 app.get('/api/data', auth, async (req, res) => {
   try {
@@ -643,28 +551,24 @@ app.get('/api/data', auth, async (req, res) => {
   }
 });
 
-
-/* =========================================================
-   STATYSTYKI
-========================================================= */
-
 app.get('/api/stats', auth, async (req, res) => {
   try {
-    const [m, e, n] = await Promise.all([
-      pool.query(`
-        SELECT COUNT(*)::int c
-        FROM members
-      `),
+    const [
+      m,
+      e,
+      n
+    ] = await Promise.all([
+      pool.query(
+        'SELECT COUNT(*)::int c FROM members'
+      ),
 
-      pool.query(`
-        SELECT COUNT(*)::int c
-        FROM events
-      `),
+      pool.query(
+        'SELECT COUNT(*)::int c FROM events'
+      ),
 
-      pool.query(`
-        SELECT COUNT(*)::int c
-        FROM news
-      `)
+      pool.query(
+        'SELECT COUNT(*)::int c FROM news'
+      )
     ]);
 
     res.json({
@@ -681,86 +585,67 @@ app.get('/api/stats', auth, async (req, res) => {
 });
 
 
-/* =========================================================
-   ZBIÓRKI
-========================================================= */
+// =========================
+// EVENTS
+// =========================
 
-app.post(
-  '/api/events',
-  auth,
-  staff,
-  async (req, res) => {
-    try {
-      const b = req.body;
+app.post('/api/events', auth, staff, async (req, res) => {
+  try {
+    const b = req.body;
 
-      const title = String(
-        b.title ||
-        b.name ||
-        ''
-      ).trim();
+    const title = String(
+      b.title ||
+      b.name ||
+      ''
+    ).trim();
 
-      if (!title) {
-        return res.status(400).json({
-          error: 'Podaj nazwę zbiórki.'
-        });
-      }
-
-      const r = await pool.query(
-        `
-        INSERT INTO events
-        (
-          title,
-          event_date,
-          event_time,
-          place,
-          description
-        )
-        VALUES
-        ($1,$2,$3,$4,$5)
-        RETURNING *
-        `,
-        [
-          title,
-          b.event_date ||
-            b.date ||
-            null,
-
-          b.event_time ||
-            b.time ||
-            null,
-
-          b.place ||
-            b.location ||
-            b.address ||
-            '',
-
-          b.description ||
-            b.desc ||
-            b.text ||
-            ''
-        ]
-      );
-
-      try {
-        await sendPushToAll({
-          title: 'Nowa zbiórka MDP',
-          body: title
-        });
-      } catch (e) {
-        console.error(e);
-      }
-
-      res.json(r.rows[0]);
-
-    } catch (e) {
-      console.error(e);
-
-      res.status(500).json({
-        error: 'Nie udało się dodać zbiórki.'
+    if (!title) {
+      return res.status(400).json({
+        error: 'Podaj nazwę zbiórki.'
       });
     }
+
+    const r = await pool.query(
+      `
+      INSERT INTO events
+      (title,event_date,event_time,place,description)
+      VALUES($1,$2,$3,$4,$5)
+      RETURNING *
+      `,
+      [
+        title,
+        b.event_date || b.date || null,
+        b.event_time || b.time || null,
+        b.place ||
+          b.location ||
+          b.address ||
+          '',
+        b.description ||
+          b.desc ||
+          b.text ||
+          ''
+      ]
+    );
+
+    try {
+      await sendPushToAll({
+        title: 'Nowa zbiórka MDP',
+        body: title
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się dodać zbiórki.'
+    });
   }
-);
+});
 
 app.delete(
   '/api/events/:id',
@@ -769,10 +654,7 @@ app.delete(
   async (req, res) => {
     try {
       await pool.query(
-        `
-        DELETE FROM events
-        WHERE id=$1
-        `,
+        'DELETE FROM events WHERE id=$1',
         [req.params.id]
       );
 
@@ -789,66 +671,61 @@ app.delete(
 );
 
 
-/* =========================================================
-   OGŁOSZENIA
-========================================================= */
+// =========================
+// NEWS
+// =========================
 
-app.post(
-  '/api/news',
-  auth,
-  staff,
-  async (req, res) => {
-    try {
-      const b = req.body;
+app.post('/api/news', auth, staff, async (req, res) => {
+  try {
+    const b = req.body;
 
-      const title = String(
-        b.title ||
-        b.name ||
-        ''
-      ).trim();
+    const title = String(
+      b.title ||
+      b.name ||
+      ''
+    ).trim();
 
-      if (!title) {
-        return res.status(400).json({
-          error: 'Podaj tytuł ogłoszenia.'
-        });
-      }
-
-      const r = await pool.query(
-        `
-        INSERT INTO news(title,body)
-        VALUES($1,$2)
-        RETURNING *
-        `,
-        [
-          title,
-          b.body ||
-            b.content ||
-            b.description ||
-            b.text ||
-            ''
-        ]
-      );
-
-      try {
-        await sendPushToAll({
-          title: 'Nowe ogłoszenie MDP',
-          body: title
-        });
-      } catch (e) {
-        console.error(e);
-      }
-
-      res.json(r.rows[0]);
-
-    } catch (e) {
-      console.error(e);
-
-      res.status(500).json({
-        error: 'Nie udało się dodać ogłoszenia.'
+    if (!title) {
+      return res.status(400).json({
+        error: 'Podaj tytuł ogłoszenia.'
       });
     }
+
+    const r = await pool.query(
+      `
+      INSERT INTO news(title,body)
+      VALUES($1,$2)
+      RETURNING *
+      `,
+      [
+        title,
+        b.body ||
+          b.content ||
+          b.description ||
+          b.text ||
+          ''
+      ]
+    );
+
+    try {
+      await sendPushToAll({
+        title: 'Nowe ogłoszenie MDP',
+        body: title
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się dodać ogłoszenia.'
+    });
   }
-);
+});
 
 app.delete(
   '/api/news/:id',
@@ -857,10 +734,7 @@ app.delete(
   async (req, res) => {
     try {
       await pool.query(
-        `
-        DELETE FROM news
-        WHERE id=$1
-        `,
+        'DELETE FROM news WHERE id=$1',
         [req.params.id]
       );
 
@@ -877,9 +751,9 @@ app.delete(
 );
 
 
-/* =========================================================
-   PILNE KOMUNIKATY
-========================================================= */
+// =========================
+// PILNE KOMUNIKATY
+// =========================
 
 app.post(
   '/api/urgent-messages',
@@ -899,28 +773,24 @@ app.post(
 
       if (!title || !body) {
         return res.status(400).json({
-          error:
-            'Podaj tytuł i treść komunikatu.'
+          error: 'Podaj tytuł i treść komunikatu.'
         });
       }
 
-      await pool.query(`
+      // Stary pilny komunikat przestaje być aktywny.
+      await pool.query(
+        `
         UPDATE urgent_messages
         SET active=FALSE
         WHERE active=TRUE
-      `);
+        `
+      );
 
       const r = await pool.query(
         `
         INSERT INTO urgent_messages
-        (
-          title,
-          body,
-          active,
-          created_by_role
-        )
-        VALUES
-        ($1,$2,TRUE,$3)
+        (title,body,active,created_by_role)
+        VALUES($1,$2,TRUE,$3)
         RETURNING *
         `,
         [
@@ -945,8 +815,7 @@ app.post(
       console.error(e);
 
       res.status(500).json({
-        error:
-          'Nie udało się dodać pilnego komunikatu.'
+        error: 'Nie udało się dodać pilnego komunikatu.'
       });
     }
   }
@@ -960,29 +829,34 @@ app.get(
       const r = await pool.query(
         req.role === 'admin' ||
         req.role === 'guardian'
+
           ? `
             SELECT *
             FROM urgent_messages
             ORDER BY created_at DESC,id DESC
-          `
+            `
+
           : `
             SELECT *
             FROM urgent_messages
             WHERE active=TRUE
             ORDER BY created_at DESC,id DESC
-          `
+            `
       );
 
       res.json(r.rows);
 
     } catch (e) {
       res.status(500).json({
-        error:
-          'Nie udało się pobrać komunikatów.'
+        error: 'Nie udało się pobrać komunikatów.'
       });
     }
   }
 );
+
+
+// ⭐ NAJWAŻNIEJSZA ZMIANA ⭐
+// Teraz pilny komunikat jest naprawdę usuwany z PostgreSQL.
 
 app.delete(
   '/api/urgent-messages/:id',
@@ -990,32 +864,40 @@ app.delete(
   staff,
   async (req, res) => {
     try {
-      await pool.query(
+      const result = await pool.query(
         `
-        UPDATE urgent_messages
-        SET active=FALSE
+        DELETE FROM urgent_messages
         WHERE id=$1
+        RETURNING id
         `,
         [req.params.id]
       );
 
+      if (!result.rows[0]) {
+        return res.status(404).json({
+          error: 'Nie znaleziono pilnego komunikatu.'
+        });
+      }
+
       res.json({
-        ok: true
+        ok: true,
+        deleted: true
       });
 
     } catch (e) {
+      console.error(e);
+
       res.status(500).json({
-        error:
-          'Nie udało się ukryć komunikatu.'
+        error: 'Nie udało się usunąć pilnego komunikatu.'
       });
     }
   }
 );
 
 
-/* =========================================================
-   ZGŁOSZENIA OD CZŁONKÓW
-========================================================= */
+// =========================
+// ZGŁOSZENIA OD CZŁONKÓW
+// =========================
 
 app.post(
   '/api/member-reports',
@@ -1030,17 +912,18 @@ app.post(
       }
 
       const type = String(
-        req.body.type || 'Inne'
+        req.body.type ||
+        'Inne'
       ).trim();
 
       const body = String(
-        req.body.body || ''
+        req.body.body ||
+        ''
       ).trim();
 
       if (!body) {
         return res.status(400).json({
-          error:
-            'Napisz treść zgłoszenia.'
+          error: 'Napisz treść zgłoszenia.'
         });
       }
 
@@ -1052,14 +935,8 @@ app.post(
       const r = await pool.query(
         `
         INSERT INTO member_reports
-        (
-          member_id,
-          member_name,
-          report_type,
-          body
-        )
-        VALUES
-        ($1,$2,$3,$4)
+        (member_id,member_name,report_type,body)
+        VALUES($1,$2,$3,$4)
         RETURNING *
         `,
         [
@@ -1072,10 +949,8 @@ app.post(
 
       try {
         await sendPushToAll({
-          title:
-            'Nowe zgłoszenie od członka',
-          body:
-            `${memberName}: ${type}`
+          title: 'Nowe zgłoszenie od członka',
+          body: `${memberName}: ${type}`
         });
       } catch (e) {
         console.error(e);
@@ -1087,8 +962,7 @@ app.post(
       console.error(e);
 
       res.status(500).json({
-        error:
-          'Nie udało się wysłać zgłoszenia.'
+        error: 'Nie udało się wysłać zgłoszenia.'
       });
     }
   }
@@ -1117,8 +991,7 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error:
-          'Nie udało się pobrać zgłoszeń.'
+        error: 'Nie udało się pobrać zgłoszeń.'
       });
     }
   }
@@ -1181,9 +1054,9 @@ app.put(
 );
 
 
-/* =========================================================
-   CZŁONKOWIE
-========================================================= */
+// =========================
+// MEMBERS
+// =========================
 
 app.post(
   '/api/members',
@@ -1204,7 +1077,8 @@ app.post(
       ).trim();
 
       const code = String(
-        req.body.code || ''
+        req.body.code ||
+        ''
       ).trim();
 
       if (!first || !last || !code) {
@@ -1217,15 +1091,8 @@ app.post(
       const r = await pool.query(
         `
         INSERT INTO members
-        (
-          first_name,
-          last_name,
-          name,
-          role,
-          code_hash
-        )
-        VALUES
-        ($1,$2,$3,$4,$5)
+        (first_name,last_name,name,role,code_hash)
+        VALUES($1,$2,$3,$4,$5)
         RETURNING
           id,
           first_name,
@@ -1334,10 +1201,7 @@ app.delete(
   async (req, res) => {
     try {
       await pool.query(
-        `
-        DELETE FROM members
-        WHERE id=$1
-        `,
+        'DELETE FROM members WHERE id=$1',
         [req.params.id]
       );
 
@@ -1355,9 +1219,9 @@ app.delete(
 );
 
 
-/* =========================================================
-   PROFIL
-========================================================= */
+// =========================
+// PROFILE
+// =========================
 
 app.get(
   '/api/profile',
@@ -1390,8 +1254,7 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error:
-          'Błąd profilu.'
+        error: 'Błąd profilu.'
       });
     }
   }
@@ -1404,8 +1267,7 @@ app.put(
     try {
       if (req.role !== 'member') {
         return res.status(403).json({
-          error:
-            'Brak uprawnień.'
+          error: 'Brak uprawnień.'
         });
       }
 
@@ -1441,9 +1303,9 @@ app.put(
 );
 
 
-/* =========================================================
-   OBECNOŚĆ
-========================================================= */
+// =========================
+// ATTENDANCE
+// =========================
 
 async function saveAttendance(
   req,
@@ -1485,11 +1347,7 @@ async function saveAttendance(
     }
 
     const ev = await pool.query(
-      `
-      SELECT id
-      FROM events
-      WHERE id=$1
-      `,
+      'SELECT id FROM events WHERE id=$1',
       [eventId]
     );
 
@@ -1506,12 +1364,11 @@ async function saveAttendance(
       memberName =
         `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim();
+
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT
-          first_name,
-          last_name
+        SELECT first_name,last_name
         FROM members
         WHERE id=$1
         `,
@@ -1523,6 +1380,7 @@ async function saveAttendance(
           `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
             .trim();
       }
+
     } else {
       memberName = String(
         req.body.member_name || ''
@@ -1539,18 +1397,9 @@ async function saveAttendance(
     await pool.query(
       `
       INSERT INTO attendance
-      (
-        event_id,
-        member_name,
-        status
-      )
-      VALUES
-      ($1,$2,$3)
-      ON CONFLICT
-      (
-        event_id,
-        member_name
-      )
+      (event_id,member_name,status)
+      VALUES($1,$2,$3)
+      ON CONFLICT(event_id,member_name)
       DO UPDATE SET
         status=EXCLUDED.status
       `,
@@ -1698,19 +1547,20 @@ app.get(
           yes: s.yes,
           no: s.no,
           maybe: s.maybe,
+
           attended: s.yes,
           absent: s.no,
+
           confirmed,
           total,
 
-          percentage:
-            confirmed
-              ? Math.round(
-                  s.yes /
-                    confirmed *
-                    100
-                )
-              : 0
+          percentage: confirmed
+            ? Math.round(
+                s.yes /
+                  confirmed *
+                  100
+              )
+            : 0
         }
       });
 
@@ -1726,9 +1576,9 @@ app.get(
 );
 
 
-/* =========================================================
-   ECHO ŁAZ / GAZETY
-========================================================= */
+// =========================
+// GAZETY
+// =========================
 
 app.get(
   '/api/newspaper-groups',
@@ -1738,6 +1588,7 @@ app.get(
       res.json(
         await getGroups()
       );
+
     } catch (e) {
       console.error(e);
 
@@ -1796,7 +1647,8 @@ app.post(
 
       const names = m.rows
         .map(x =>
-          `${x.first_name || ''} ${x.last_name || ''}`.trim()
+          `${x.first_name || ''} ${x.last_name || ''}`
+            .trim()
         )
         .filter(Boolean);
 
@@ -1817,8 +1669,7 @@ app.post(
           member_ids,
           member_names
         )
-        VALUES
-        (
+        VALUES(
           $1,
           $2,
           $3,
@@ -1929,24 +1780,23 @@ app.put(
             ? !!old.done
             : !!req.body.done;
 
-        const r =
-          await pool.query(
-            `
-            UPDATE newspaper_groups
-            SET
-              delivered=$1,
-              started=$2,
-              done=$3
-            WHERE id=$4
-            RETURNING *
-            `,
-            [
-              delivered,
-              started,
-              done,
-              req.params.id
-            ]
-          );
+        const r = await pool.query(
+          `
+          UPDATE newspaper_groups
+          SET
+            delivered=$1,
+            started=$2,
+            done=$3
+          WHERE id=$4
+          RETURNING *
+          `,
+          [
+            delivered,
+            started,
+            done,
+            req.params.id
+          ]
+        );
 
         return res.json(
           (
@@ -1956,9 +1806,7 @@ app.put(
               x.id ===
               Number(req.params.id)
           ) ||
-            groupJson(
-              r.rows[0]
-            )
+          groupJson(r.rows[0])
         );
       }
 
@@ -1992,24 +1840,22 @@ app.put(
         : { rows: [] };
 
       const names =
-        Array.isArray(
-          req.body.memberIds
-        )
+        Array.isArray(req.body.memberIds)
           ? m.rows
               .map(x =>
-                `${x.first_name || ''} ${x.last_name || ''}`.trim()
+                `${x.first_name || ''} ${x.last_name || ''}`
+                  .trim()
               )
               .filter(Boolean)
           : oldNames;
 
-      const copies =
-        Math.max(
-          0,
-          Number(
-            req.body.copies ??
-              old.copies
-          )
-        );
+      const copies = Math.max(
+        0,
+        Number(
+          req.body.copies ??
+            old.copies
+        )
+      );
 
       const delivered =
         Math.min(
@@ -2023,67 +1869,66 @@ app.put(
           )
         );
 
-      const r =
-        await pool.query(
-          `
-          UPDATE newspaper_groups
-          SET
-            name=$1,
-            region=$2,
-            color=$3,
-            streets=$4::jsonb,
-            copies=$5,
-            delivered=$6,
-            started=$7,
-            done=$8,
-            member_ids=$9::jsonb,
-            member_names=$10::jsonb
-          WHERE id=$11
-          RETURNING *
-          `,
-          [
-            req.body.name ??
-              old.name,
+      const r = await pool.query(
+        `
+        UPDATE newspaper_groups
+        SET
+          name=$1,
+          region=$2,
+          color=$3,
+          streets=$4::jsonb,
+          copies=$5,
+          delivered=$6,
+          started=$7,
+          done=$8,
+          member_ids=$9::jsonb,
+          member_names=$10::jsonb
+        WHERE id=$11
+        RETURNING *
+        `,
+        [
+          req.body.name ??
+            old.name,
 
-            req.body.region ??
-              old.region,
+          req.body.region ??
+            old.region,
 
-            req.body.color ??
-              old.color,
+          req.body.color ??
+            old.color,
 
-            JSON.stringify(
-              Array.isArray(
-                req.body.streets
-              )
-                ? req.body.streets
-                : (
-                    Array.isArray(
-                      old.streets
-                    )
-                      ? old.streets
-                      : []
+          JSON.stringify(
+            Array.isArray(
+              req.body.streets
+            )
+              ? req.body.streets
+              : (
+                  Array.isArray(
+                    old.streets
                   )
-            ),
+                    ? old.streets
+                    : []
+                )
+          ),
 
-            copies,
-            delivered,
+          copies,
+          delivered,
 
-            !!(
-              req.body.started ??
-              old.started
-            ),
+          !!(
+            req.body.started ??
+            old.started
+          ),
 
-            !!(
-              req.body.done ??
-              old.done
-            ),
+          !!(
+            req.body.done ??
+            old.done
+          ),
 
-            JSON.stringify(ids),
-            JSON.stringify(names),
+          JSON.stringify(ids),
+          JSON.stringify(names),
 
-            req.params.id
-          ]
-        );
+          req.params.id
+        ]
+      );
 
       res.json(
         groupJson(
@@ -2102,11 +1947,6 @@ app.put(
     }
   }
 );
-
-
-/* =========================================================
-   POSTĘP GAZET
-========================================================= */
 
 app.post(
   '/api/newspaper-groups/:id/start',
@@ -2221,24 +2061,23 @@ async function updateGroupProgress(
         ? !!g.done
         : !!req.body.done;
 
-    const u =
-      await pool.query(
-        `
-        UPDATE newspaper_groups
-        SET
-          delivered=$1,
-          started=$2,
-          done=$3
-        WHERE id=$4
-        RETURNING *
-        `,
-        [
-          delivered,
-          started,
-          done,
-          id
-        ]
-      );
+    const u = await pool.query(
+      `
+      UPDATE newspaper_groups
+      SET
+        delivered=$1,
+        started=$2,
+        done=$3
+      WHERE id=$4
+      RETURNING *
+      `,
+      [
+        delivered,
+        started,
+        done,
+        id
+      ]
+    );
 
     res.json(
       (
@@ -2247,9 +2086,7 @@ async function updateGroupProgress(
         x =>
           x.id === Number(id)
       ) ||
-        groupJson(
-          u.rows[0]
-        )
+      groupJson(u.rows[0])
     );
 
   } catch (e) {
@@ -2262,11 +2099,6 @@ async function updateGroupProgress(
   }
 }
 
-
-/* =========================================================
-   USUWANIE GRUPY
-========================================================= */
-
 app.delete(
   '/api/newspaper-groups/:id',
   auth,
@@ -2274,10 +2106,7 @@ app.delete(
   async (req, res) => {
     try {
       await pool.query(
-        `
-        DELETE FROM newspaper_groups
-        WHERE id=$1
-        `,
+        'DELETE FROM newspaper_groups WHERE id=$1',
         [req.params.id]
       );
 
@@ -2294,20 +2123,15 @@ app.delete(
   }
 );
 
-
-/* =========================================================
-   RESET GRUP
-========================================================= */
-
 app.post(
   '/api/newspaper-groups/reset',
   auth,
   staff,
   async (req, res) => {
     try {
-      await pool.query(`
-        DELETE FROM newspaper_groups
-      `);
+      await pool.query(
+        'DELETE FROM newspaper_groups'
+      );
 
       await seedNewspaperGroups();
 
@@ -2327,9 +2151,9 @@ app.post(
 );
 
 
-/* =========================================================
-   HISTORIA GAZET
-========================================================= */
+// =========================
+// HISTORIA GAZET
+// =========================
 
 app.get(
   '/api/newspaper-history',
@@ -2345,9 +2169,7 @@ app.get(
           saved_at,
           groups
         FROM newspaper_history
-        ORDER BY
-          month_key DESC,
-          id DESC
+        ORDER BY month_key DESC,id DESC
       `);
 
       res.json(r.rows);
@@ -2362,11 +2184,6 @@ app.get(
     }
   }
 );
-
-
-/* =========================================================
-   NOWY MIESIĄC GAZET
-========================================================= */
 
 app.post(
   '/api/newspaper-groups/new-month',
@@ -2389,9 +2206,7 @@ app.post(
           FOR UPDATE
         `);
 
-      if (
-        !groupsResult.rows.length
-      ) {
+      if (!groupsResult.rows.length) {
         await client.query(
           'ROLLBACK'
         );
@@ -2425,53 +2240,43 @@ app.post(
         ).format(now);
 
       const snapshot =
-        groupsResult.rows.map(
-          g => ({
-            id: g.id,
-            name: g.name,
-            region: g.region,
-            color: g.color,
+        groupsResult.rows.map(g => ({
+          id: g.id,
+          name: g.name,
+          region: g.region,
+          color: g.color,
 
-            streets:
-              Array.isArray(
-                g.streets
-              )
-                ? g.streets
-                : [],
+          streets:
+            Array.isArray(g.streets)
+              ? g.streets
+              : [],
 
-            copies:
-              Number(
-                g.copies || 0
-              ),
+          copies:
+            Number(g.copies || 0),
 
-            delivered:
-              Number(
-                g.delivered || 0
-              ),
+          delivered:
+            Number(g.delivered || 0),
 
-            started:
-              !!g.started,
+          started:
+            !!g.started,
 
-            done:
-              !!g.done,
+          done:
+            !!g.done,
 
-            memberIds:
-              Array.isArray(
-                g.member_ids
-              )
-                ? g.member_ids.map(
-                    Number
-                  )
-                : [],
+          memberIds:
+            Array.isArray(
+              g.member_ids
+            )
+              ? g.member_ids.map(Number)
+              : [],
 
-            memberNames:
-              Array.isArray(
-                g.member_names
-              )
-                ? g.member_names
-                : []
-          })
-        );
+          memberNames:
+            Array.isArray(
+              g.member_names
+            )
+              ? g.member_names
+              : []
+        }));
 
       const exists =
         await client.query(
@@ -2488,17 +2293,8 @@ app.post(
         await client.query(
           `
           INSERT INTO newspaper_history
-          (
-            month_key,
-            month_label,
-            groups
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            $3::jsonb
-          )
+          (month_key,month_label,groups)
+          VALUES($1,$2,$3::jsonb)
           `,
           [
             monthKey,
@@ -2547,9 +2343,9 @@ app.post(
 );
 
 
-/* =========================================================
-   PUSH
-========================================================= */
+// =========================
+// PUSH
+// =========================
 
 app.post(
   '/api/push/subscribe',
@@ -2568,15 +2364,8 @@ app.post(
       await pool.query(
         `
         INSERT INTO push_subscriptions
-        (
-          endpoint,
-          subscription
-        )
-        VALUES
-        (
-          $1,
-          $2::jsonb
-        )
+        (endpoint,subscription)
+        VALUES($1,$2::jsonb)
         ON CONFLICT(endpoint)
         DO UPDATE SET
           subscription=EXCLUDED.subscription
@@ -2677,9 +2466,9 @@ app.post(
 );
 
 
-/* =========================================================
-   HEALTH CHECK
-========================================================= */
+// =========================
+// HEALTH
+// =========================
 
 app.get(
   '/api/health',
@@ -2704,9 +2493,9 @@ app.get(
 );
 
 
-/* =========================================================
-   API 404
-========================================================= */
+// =========================
+// API 404
+// =========================
 
 app.use(
   '/api',
@@ -2718,10 +2507,9 @@ app.use(
 );
 
 
-/* =========================================================
-   PWA / SPA FALLBACK
-   Ważne: NIE używamy app.get('*')
-   ========================================================= */
+// =========================
+// SPA FALLBACK
+// =========================
 
 app.use(
   (req, res) =>
@@ -2735,19 +2523,18 @@ app.use(
 );
 
 
-/* =========================================================
-   START SERWERA
-========================================================= */
+// =========================
+// START
+// =========================
 
 initDb()
   .then(() => {
     app.listen(
       PORT,
-      () => {
+      () =>
         console.log(
           `MDP Wiesiółka działa na porcie ${PORT}`
-        );
-      }
+        )
     );
   })
   .catch(err => {
