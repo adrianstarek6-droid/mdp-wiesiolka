@@ -4541,7 +4541,240 @@
 
     restoreSession();
 
-  </script>
+<script>
+/* =========================
+   PRAWDZIWE POWIADOMIENIA PUSH
+========================= */
+
+async function enablePushNotifications() {
+  try {
+    if (!("serviceWorker" in navigator)) {
+      alert("Twoja przeglądarka nie obsługuje powiadomień push.");
+      return;
+    }
+
+    if (!("PushManager" in window)) {
+      alert("Powiadomienia push nie są obsługiwane na tym urządzeniu.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      alert("Powiadomienia nie zostały włączone.");
+      return;
+    }
+
+    const registration =
+      await navigator.serviceWorker.ready;
+
+    const response = await fetch(
+      "/api/push/public-key"
+    );
+
+    if (!response.ok) {
+      throw new Error("Nie udało się pobrać klucza push.");
+    }
+
+    const data = await response.json();
+
+    const applicationServerKey =
+      urlBase64ToUint8Array(data.publicKey);
+
+    let subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription =
+        await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+    }
+
+    const authCode =
+      localStorage.getItem("mdpCode") || "";
+
+    const role =
+      localStorage.getItem("mdpRole") || "member";
+
+    const saveResponse = await fetch(
+      "/api/push/subscribe",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-role": role,
+          "x-code": authCode
+        },
+        body: JSON.stringify({
+          subscription
+        })
+      }
+    );
+
+    if (!saveResponse.ok) {
+      throw new Error(
+        "Nie udało się zapisać subskrypcji."
+      );
+    }
+
+    localStorage.setItem(
+      "mdpPushEnabled",
+      "true"
+    );
+
+    updatePushButton();
+
+    alert(
+      "🔔 Powiadomienia push zostały włączone!"
+    );
+
+  } catch (error) {
+    console.error(
+      "Błąd powiadomień push:",
+      error
+    );
+
+    alert(
+      "Nie udało się włączyć powiadomień. Sprawdź konsolę."
+    );
+  }
+}
+
+
+/* =========================
+   ZAMIANA KLUCZA VAPID
+========================= */
+
+function urlBase64ToUint8Array(base64String) {
+  const padding =
+    "=".repeat(
+      (4 - (base64String.length % 4)) % 4
+    );
+
+  const base64 =
+    (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+  const rawData =
+    atob(base64);
+
+  return Uint8Array.from(
+    [...rawData].map(
+      char => char.charCodeAt(0)
+    )
+  );
+}
+
+
+/* =========================
+   PRZYCISK PUSH
+========================= */
+
+function createPushButton() {
+
+  if (
+    document.getElementById(
+      "enablePushButton"
+    )
+  ) {
+    return;
+  }
+
+  const button =
+    document.createElement("button");
+
+  button.id =
+    "enablePushButton";
+
+  button.className =
+    "primary-btn";
+
+  button.style.margin =
+    "12px 0";
+
+  button.innerHTML =
+    "🔔 Włącz powiadomienia";
+
+  button.onclick =
+    enablePushNotifications;
+
+  const target =
+    document.querySelector(
+      ".app-content"
+    ) ||
+    document.querySelector(
+      "main"
+    ) ||
+    document.body;
+
+  target.prepend(button);
+
+  updatePushButton();
+}
+
+
+/* =========================
+   STATUS PRZYCISKU
+========================= */
+
+async function updatePushButton() {
+
+  const button =
+    document.getElementById(
+      "enablePushButton"
+    );
+
+  if (!button) return;
+
+  try {
+
+    const registration =
+      await navigator.serviceWorker.ready;
+
+    const subscription =
+      await registration.pushManager
+        .getSubscription();
+
+    if (subscription) {
+
+      button.innerHTML =
+        "🔔 Powiadomienia są włączone";
+
+      button.disabled = true;
+
+      button.style.opacity =
+        "0.65";
+
+    }
+
+  } catch (error) {
+    console.log(
+      "Nie można sprawdzić statusu push:",
+      error
+    );
+  }
+}
+
+
+/* =========================
+   START
+========================= */
+
+window.addEventListener(
+  "load",
+  () => {
+
+    setTimeout(
+      createPushButton,
+      1000
+    );
+
+  }
+);
+</script>
 
 </body>
   </html>
