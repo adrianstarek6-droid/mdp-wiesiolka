@@ -1,4 +1,3 @@
-
 {
   "name": "MDP OSP Wiesiółka",
   "short_name": "MDP Wiesiółka",
@@ -6,7 +5,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#111111",
+  "background_color": "#090909",
   "theme_color": "#d71920",
   "orientation": "portrait",
   "icons": [
