@@ -26,7 +26,7 @@
       --bg: #090909;
       --card: #151515;
       --border: #292929;
-      --text: #ffffff;
+      --text: #fff;
       --muted: #9d9d9d;
       --red: #e51b23;
       --red-dark: #a90f15;
@@ -205,6 +205,14 @@
       text-align: center;
       font-size: 13px;
       min-height: 18px;
+    }
+
+    .login-info {
+      color: #777;
+      font-size: 11px;
+      text-align: center;
+      line-height: 1.5;
+      margin-top: 13px;
     }
 
     /* APP */
@@ -531,17 +539,18 @@
     }
 
     .avatar {
-      width: 43px;
-      height: 43px;
-      border-radius: 14px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
       background: #242424;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
       color: #ddd;
-      flex: 0 0 43px;
+      flex: 0 0 50px;
       overflow: hidden;
+      border: 1px solid #303030;
     }
 
     .avatar img {
@@ -551,9 +560,9 @@
     }
 
     .profile-avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 28px;
+      width: 110px;
+      height: 110px;
+      border-radius: 30px;
       background: #242424;
       display: flex;
       align-items: center;
@@ -587,6 +596,27 @@
       color: #999;
       font-size: 11px;
       margin-top: 3px;
+    }
+
+    .member-stats {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .mini-stat {
+      border: 1px solid #282828;
+      background: #101010;
+      border-radius: 10px;
+      padding: 7px 9px;
+      color: #aaa;
+      font-size: 10px;
+    }
+
+    .mini-stat strong {
+      color: white;
+      font-size: 12px;
     }
 
     /* ACTIONS */
@@ -656,6 +686,26 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+    }
+
+    .photo-preview {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: #242424;
+      border: 1px solid #303030;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-top: 10px;
+      font-size: 25px;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* ATTENDANCE */
@@ -811,6 +861,54 @@
       font-size: 13px;
     }
 
+    /* MODAL */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #151515;
+      border: 1px solid #303030;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 30px 90px rgba(0,0,0,.6);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .modal-header h2 {
+      font-size: 19px;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: #202020;
+      color: #ddd;
+      font-size: 18px;
+    }
+
     /* TOAST */
 
     #toast {
@@ -830,7 +928,7 @@
       font-weight: 700;
       opacity: 0;
       pointer-events: none;
-      z-index: 100;
+      z-index: 300;
       transition: .25s;
       box-shadow: 0 15px 40px rgba(0,0,0,.5);
     }
@@ -946,8 +1044,43 @@
 
         </div>
 
+        <!-- POLA CZŁONKA -->
+
+        <div id="memberLoginFields">
+
+          <div class="field">
+            <label for="loginFirstName">Imię</label>
+
+            <input
+              id="loginFirstName"
+              class="input"
+              type="text"
+              autocomplete="given-name"
+              placeholder="Wpisz imię"
+              onkeydown="if(event.key === 'Enter') login()"
+            >
+          </div>
+
+          <div class="field">
+            <label for="loginLastName">Nazwisko</label>
+
+            <input
+              id="loginLastName"
+              class="input"
+              type="text"
+              autocomplete="family-name"
+              placeholder="Wpisz nazwisko"
+              onkeydown="if(event.key === 'Enter') login()"
+            >
+          </div>
+
+        </div>
+
         <div class="field">
-          <label for="loginCode">Kod dostępu</label>
+
+          <label for="loginCode">
+            Kod dostępu
+          </label>
 
           <input
             id="loginCode"
@@ -955,22 +1088,26 @@
             type="password"
             inputmode="numeric"
             autocomplete="off"
-            placeholder="Wpisz kod"
+            placeholder="Wpisz indywidualny kod"
             onkeydown="if(event.key === 'Enter') login()"
           >
+
         </div>
 
         <button
           class="primary-btn"
+          id="loginButton"
           onclick="login()"
         >
           Zaloguj się
         </button>
 
-        <div
-          id="loginError"
-          class="login-error"
-        ></div>
+        <div id="loginError" class="login-error"></div>
+
+        <div class="login-info">
+          Członek MDP loguje się swoim imieniem,
+          nazwiskiem i indywidualnym kodem dostępu.
+        </div>
 
       </div>
     </div>
@@ -1023,11 +1160,11 @@
 
         <small>OSP Wiesiółka</small>
 
-        <h2>
+        <h2 id="heroTitle">
           Witaj w aplikacji MDP 👋
         </h2>
 
-        <p>
+        <p id="heroText">
           Wszystkie najważniejsze informacje,
           zbiórki, ogłoszenia i obecności
           w jednym miejscu.
@@ -1129,7 +1266,6 @@
           <div class="section-header">
 
             <div>
-
               <div class="section-title">
                 Najbliższa zbiórka
               </div>
@@ -1137,7 +1273,6 @@
               <div class="section-subtitle">
                 Sprawdź termin i zaznacz obecność
               </div>
-
             </div>
 
           </div>
@@ -1156,7 +1291,6 @@
           <div class="section-header">
 
             <div>
-
               <div class="section-title">
                 Najnowsze ogłoszenia
               </div>
@@ -1164,7 +1298,6 @@
               <div class="section-subtitle">
                 Najważniejsze informacje dla MDP
               </div>
-
             </div>
 
           </div>
@@ -1189,7 +1322,6 @@
         <div class="section-header">
 
           <div>
-
             <div class="section-title">
               Zbiórki MDP
             </div>
@@ -1197,7 +1329,6 @@
             <div class="section-subtitle">
               Terminy spotkań i wydarzeń
             </div>
-
           </div>
 
           <div
@@ -1231,7 +1362,6 @@
         <div class="section-header">
 
           <div>
-
             <div class="section-title">
               Ogłoszenia
             </div>
@@ -1239,7 +1369,6 @@
             <div class="section-subtitle">
               Informacje od opiekunów i administratora
             </div>
-
           </div>
 
           <div
@@ -1273,7 +1402,6 @@
         <div class="section-header">
 
           <div>
-
             <div class="section-title">
               Członkowie MDP
             </div>
@@ -1281,7 +1409,6 @@
             <div class="section-subtitle">
               Lista osób należących do drużyny
             </div>
-
           </div>
 
           <div
@@ -1315,7 +1442,6 @@
         <div class="section-header">
 
           <div>
-
             <div class="section-title">
               👤 Mój profil
             </div>
@@ -1323,7 +1449,6 @@
             <div class="section-subtitle">
               Twoje dane w aplikacji MDP Wiesiółka
             </div>
-
           </div>
 
         </div>
@@ -1382,8 +1507,7 @@
             <input
               id="profileFirstName"
               class="input"
-              placeholder="Twoje imię"
-              autocomplete="given-name"
+              readonly
             >
 
           </div>
@@ -1396,8 +1520,7 @@
             <input
               id="profileLastName"
               class="input"
-              placeholder="Twoje nazwisko"
-              autocomplete="family-name"
+              readonly
             >
 
           </div>
@@ -1405,7 +1528,7 @@
 
           <div class="field">
 
-            <label>Rola</label>
+            <label>Rola / funkcja</label>
 
             <input
               id="profileRole"
@@ -1416,12 +1539,18 @@
           </div>
 
 
-          <button
-            class="primary-btn"
-            onclick="saveProfile()"
+          <div
+            id="profileCodeInfo"
+            style="
+              color:#777;
+              font-size:11px;
+              line-height:1.5;
+              margin-top:8px;
+            "
           >
-            💾 Zapisz profil
-          </button>
+            Kod dostępu jest przechowywany bezpiecznie
+            na serwerze i nie jest wyświetlany w profilu.
+          </div>
 
         </div>
 
@@ -1429,19 +1558,16 @@
         <div class="form-card">
 
           <div class="form-title">
-            ℹ️ Informacje
+            📊 Moja obecność
           </div>
 
           <div
-            style="
-              color:#aaa;
-              font-size:13px;
-              line-height:1.6;
-            "
+            id="myStats"
+            class="grid"
           >
-            Profil zapisuje się na tym urządzeniu.
-            Zdjęcie i dane profilu nie są wysyłane
-            do serwera.
+            <div class="loading">
+              Ładowanie statystyk...
+            </div>
           </div>
 
         </div>
@@ -1459,7 +1585,6 @@
         <div class="section-header">
 
           <div>
-
             <div class="section-title">
               🔔 Powiadomienia
             </div>
@@ -1467,7 +1592,6 @@
             <div class="section-subtitle">
               Najważniejsze informacje dla Ciebie
             </div>
-
           </div>
 
           <div
@@ -1479,8 +1603,6 @@
 
         </div>
 
-
-        <!-- PUSH -->
 
         <div class="push-box">
 
@@ -1546,15 +1668,13 @@
           <div class="section-header">
 
             <div>
-
               <div class="section-title">
                 Zarządzanie
               </div>
 
               <div class="section-subtitle">
-                Funkcje dostępne dla opiekunów i administratora
+                Dodawanie i edycja danych MDP
               </div>
-
             </div>
 
           </div>
@@ -1698,17 +1818,17 @@
         <div class="form-card">
 
           <div class="form-title">
-            👥 Dodaj członka
+            👥 Dodaj członka MDP
           </div>
 
           <div class="field">
 
-            <label>Imię i nazwisko</label>
+            <label>Imię</label>
 
             <input
-              id="memberName"
+              id="memberFirstName"
               class="input"
-              placeholder="np. Jan Kowalski"
+              placeholder="np. Jan"
             >
 
           </div>
@@ -1716,14 +1836,65 @@
 
           <div class="field">
 
-            <label>Rola</label>
+            <label>Nazwisko</label>
+
+            <input
+              id="memberLastName"
+              class="input"
+              placeholder="np. Kowalski"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Indywidualny kod dostępu</label>
+
+            <input
+              id="memberCode"
+              class="input"
+              type="password"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="np. 482731"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Rola / funkcja</label>
 
             <input
               id="memberRole"
               class="input"
               value="Członek MDP"
-              placeholder="Rola"
+              placeholder="np. Członek MDP"
             >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Zdjęcie profilowe (opcjonalnie)</label>
+
+            <input
+              id="memberPhoto"
+              class="input"
+              type="file"
+              accept="image/*"
+              onchange="previewMemberPhoto(event)"
+            >
+
+            <div
+              id="memberPhotoPreview"
+              class="photo-preview"
+            >
+              👤
+            </div>
 
           </div>
 
@@ -1732,8 +1903,28 @@
             class="primary-btn"
             onclick="addMember()"
           >
-            Dodaj członka
+            ➕ Dodaj członka
           </button>
+
+        </div>
+
+
+        <!-- MEMBERS MANAGEMENT -->
+
+        <div class="form-card">
+
+          <div class="form-title">
+            ⚙️ Zarządzaj członkami
+          </div>
+
+          <div
+            id="managementMembersList"
+            class="grid"
+          >
+            <div class="loading">
+              Ładowanie...
+            </div>
+          </div>
 
         </div>
 
@@ -1749,19 +1940,149 @@
   </main>
 
 
+  <!-- EDIT MEMBER MODAL -->
+
+  <div
+    id="editMemberModal"
+    class="modal hidden"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <h2>✏️ Edytuj członka</h2>
+
+        <button
+          class="close-btn"
+          onclick="closeEditMember()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <input
+        id="editMemberId"
+        type="hidden"
+      >
+
+
+      <div class="field">
+
+        <label>Imię</label>
+
+        <input
+          id="editMemberFirstName"
+          class="input"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Nazwisko</label>
+
+        <input
+          id="editMemberLastName"
+          class="input"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Nowy kod dostępu</label>
+
+        <input
+          id="editMemberCode"
+          class="input"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Zostaw puste, aby nie zmieniać"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Rola / funkcja</label>
+
+        <input
+          id="editMemberRole"
+          class="input"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Nowe zdjęcie</label>
+
+        <input
+          id="editMemberPhoto"
+          class="input"
+          type="file"
+          accept="image/*"
+          onchange="previewEditMemberPhoto(event)"
+        >
+
+      </div>
+
+
+      <div
+        id="editMemberPhotoPreview"
+        class="photo-preview"
+      >
+        👤
+      </div>
+
+
+      <div class="actions">
+
+        <button
+          class="btn"
+          style="flex:1"
+          onclick="closeEditMember()"
+        >
+          Anuluj
+        </button>
+
+        <button
+          class="btn blue"
+          style="flex:1"
+          onclick="saveEditedMember()"
+        >
+          💾 Zapisz
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
   <!-- TOAST -->
 
   <div id="toast"></div>
 
 
-  <!-- =========================
-       MAIN JAVASCRIPT
-  ========================= -->
-
   <script>
+
+    /* =========================
+       GLOBALNE
+    ========================= */
 
     let currentRole = "member";
     let authCode = "";
+    let currentMember = null;
 
     let appData = {
       events: [],
@@ -1771,8 +2092,6 @@
 
     let notifications = [];
 
-
-    /* ELEMENTS */
 
     const loginScreen =
       document.getElementById("loginScreen");
@@ -1787,7 +2106,9 @@
       document.getElementById("loginError");
 
 
-    /* ROLE */
+    /* =========================
+       ROLE
+    ========================= */
 
     function selectRole(role) {
 
@@ -1804,19 +2125,62 @@
 
         });
 
-      loginError.textContent = "";
 
-      loginCode.focus();
+      const memberFields =
+        document.getElementById(
+          "memberLoginFields"
+        );
+
+
+      const info =
+        document.querySelector(
+          ".login-info"
+        );
+
+
+      if (role === "member") {
+
+        memberFields.classList.remove(
+          "hidden"
+        );
+
+        info.textContent =
+          "Członek MDP loguje się swoim imieniem, nazwiskiem i indywidualnym kodem dostępu.";
+
+        document.getElementById(
+          "loginFirstName"
+        ).focus();
+
+      } else {
+
+        memberFields.classList.add(
+          "hidden"
+        );
+
+        info.textContent =
+          role === "admin"
+            ? "Logowanie administratora odbywa się za pomocą kodu administratora."
+            : "Logowanie opiekuna odbywa się za pomocą kodu opiekuna.";
+
+        loginCode.focus();
+
+      }
+
+
+      loginError.textContent = "";
 
     }
 
 
-    /* LOGIN */
+    /* =========================
+       LOGIN
+    ========================= */
 
     async function login() {
 
       const code =
         loginCode.value.trim();
+
 
       if (!code) {
 
@@ -1824,27 +2188,89 @@
           "Wpisz kod dostępu.";
 
         return;
+
       }
 
+
+      let firstName = "";
+      let lastName = "";
+
+
+      if (currentRole === "member") {
+
+        firstName =
+          document
+            .getElementById(
+              "loginFirstName"
+            )
+            .value
+            .trim();
+
+
+        lastName =
+          document
+            .getElementById(
+              "loginLastName"
+            )
+            .value
+            .trim();
+
+
+        if (!firstName || !lastName) {
+
+          loginError.textContent =
+            "Wpisz imię i nazwisko.";
+
+          return;
+
+        }
+
+      }
+
+
       loginError.textContent = "";
+
+
+      const button =
+        document.getElementById(
+          "loginButton"
+        );
+
+
+      button.disabled = true;
+      button.textContent = "Logowanie...";
+
 
       try {
 
         const response =
-          await fetch("/api/login", {
+          await fetch(
+            "/api/login",
+            {
 
-            method: "POST",
+              method: "POST",
 
-            headers: {
-              "Content-Type": "application/json"
-            },
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
 
-            body: JSON.stringify({
-              role: currentRole,
-              code
-            })
+              body:
+                JSON.stringify({
 
-          });
+                  role:
+                    currentRole,
+
+                  code,
+
+                  firstName,
+
+                  lastName
+
+                })
+
+            }
+          );
 
 
         const data =
@@ -1863,15 +2289,52 @@
 
         authCode = code;
 
+
         localStorage.setItem(
           "mdpRole",
           currentRole
         );
 
+
         localStorage.setItem(
           "mdpCode",
           code
         );
+
+
+        if (
+          currentRole === "member" &&
+          data.member
+        ) {
+
+          currentMember =
+            data.member;
+
+
+          localStorage.setItem(
+            "mdpMemberId",
+            String(data.member.id)
+          );
+
+
+          localStorage.setItem(
+            "mdpMember",
+            JSON.stringify(data.member)
+          );
+
+        } else {
+
+          currentMember = null;
+
+          localStorage.removeItem(
+            "mdpMemberId"
+          );
+
+          localStorage.removeItem(
+            "mdpMember"
+          );
+
+        }
 
 
         showApp();
@@ -1885,27 +2348,41 @@
           error.message ||
           "Błąd logowania.";
 
+      } finally {
+
+        button.disabled = false;
+        button.textContent = "Zaloguj się";
+
       }
 
     }
 
 
-    /* SHOW APP */
+    /* =========================
+       SHOW APP
+    ========================= */
 
     function showApp() {
 
-      loginScreen.classList.add("hidden");
+      loginScreen.classList.add(
+        "hidden"
+      );
 
-      app.classList.remove("hidden");
+      app.classList.remove(
+        "hidden"
+      );
 
 
       const roleNames = {
 
-        member: "Członek MDP",
+        member:
+          "Członek MDP",
 
-        guardian: "Opiekun MDP",
+        guardian:
+          "Opiekun MDP",
 
-        admin: "Administrator"
+        admin:
+          "Administrator"
 
       };
 
@@ -1913,14 +2390,16 @@
       document
         .getElementById("roleLabel")
         .textContent =
-          roleNames[currentRole] ||
-          "Użytkownik";
+          currentMember
+            ? `${currentMember.first_name} ${currentMember.last_name}`
+            : (
+                roleNames[currentRole] ||
+                "Użytkownik"
+              );
 
 
-      const staff = [
-        "guardian",
-        "admin"
-      ].includes(currentRole);
+      const staff =
+        isStaff();
 
 
       document
@@ -1931,38 +2410,94 @@
         );
 
 
-      renderProfile();
+      const heroTitle =
+        document.getElementById(
+          "heroTitle"
+        );
 
+
+      if (
+        currentRole === "member" &&
+        currentMember
+      ) {
+
+        heroTitle.textContent =
+          `Witaj, ${currentMember.first_name}! 👋`;
+
+      } else {
+
+        heroTitle.textContent =
+          "Witaj w aplikacji MDP 👋";
+
+      }
+
+
+      renderProfile();
       updatePushButton();
 
     }
 
 
-    /* LOGOUT */
+    /* =========================
+       LOGOUT
+    ========================= */
 
     function logout() {
 
-      localStorage.removeItem("mdpRole");
-      localStorage.removeItem("mdpCode");
+      localStorage.removeItem(
+        "mdpRole"
+      );
 
+      localStorage.removeItem(
+        "mdpCode"
+      );
+
+      localStorage.removeItem(
+        "mdpMemberId"
+      );
+
+      localStorage.removeItem(
+        "mdpMember"
+      );
+
+
+      currentRole = "member";
       authCode = "";
+      currentMember = null;
+
 
       loginCode.value = "";
 
-      app.classList.add("hidden");
+      document.getElementById(
+        "loginFirstName"
+      ).value = "";
 
-      loginScreen.classList.remove("hidden");
+      document.getElementById(
+        "loginLastName"
+      ).value = "";
+
+
+      app.classList.add(
+        "hidden"
+      );
+
+      loginScreen.classList.remove(
+        "hidden"
+      );
+
 
       selectRole("member");
 
     }
 
 
-    /* AUTH */
+    /* =========================
+       AUTH HEADERS
+    ========================= */
 
     function headers() {
 
-      return {
+      const result = {
 
         "Content-Type":
           "application/json",
@@ -1975,10 +2510,26 @@
 
       };
 
+
+      if (
+        currentRole === "member" &&
+        currentMember
+      ) {
+
+        result["x-member-id"] =
+          String(currentMember.id);
+
+      }
+
+
+      return result;
+
     }
 
 
-    /* LOAD DATA */
+    /* =========================
+       LOAD DATA
+    ========================= */
 
     async function loadData() {
 
@@ -1988,7 +2539,8 @@
           await fetch(
             "/api/data",
             {
-              headers: headers()
+              headers:
+                headers()
             }
           );
 
@@ -2007,7 +2559,25 @@
         }
 
 
-        appData = data;
+        appData = {
+
+          events:
+            Array.isArray(data.events)
+              ? data.events
+              : [],
+
+          news:
+            Array.isArray(data.news)
+              ? data.news
+              : [],
+
+          members:
+            Array.isArray(data.members)
+              ? data.members
+              : []
+
+        };
+
 
         renderAll();
 
@@ -2025,7 +2595,9 @@
     }
 
 
-    /* RENDER ALL */
+    /* =========================
+       RENDER ALL
+    ========================= */
 
     function renderAll() {
 
@@ -2034,6 +2606,7 @@
       renderEvents();
       renderNews();
       renderMembers();
+      renderManagementMembers();
       createNotifications();
       renderProfile();
       updatePushButton();
@@ -2041,7 +2614,9 @@
     }
 
 
-    /* STATS */
+    /* =========================
+       STATS
+    ========================= */
 
     function renderStats() {
 
@@ -2083,7 +2658,9 @@
     }
 
 
-    /* HOME */
+    /* =========================
+       HOME
+    ========================= */
 
     function renderHome() {
 
@@ -2139,7 +2716,9 @@
     }
 
 
-    /* EVENTS */
+    /* =========================
+       EVENTS
+    ========================= */
 
     function renderEvents() {
 
@@ -2172,8 +2751,6 @@
 
     }
 
-
-    /* EVENT HTML */
 
     function eventHTML(
       event,
@@ -2236,12 +2813,12 @@
               <div class="meta">
 
                 🕐
-                ${escapeHTML(event.event_time)}
+                ${escapeHTML(event.event_time || "")}
 
                 <br>
 
                 📍
-                ${escapeHTML(event.place)}
+                ${escapeHTML(event.place || "")}
 
               </div>
 
@@ -2342,7 +2919,9 @@
     }
 
 
-    /* NEWS */
+    /* =========================
+       NEWS
+    ========================= */
 
     function renderNews() {
 
@@ -2434,7 +3013,69 @@
     }
 
 
-    /* MEMBERS */
+    /* =========================
+       MEMBERS
+    ========================= */
+
+    function memberDisplayName(member) {
+
+      if (
+        member.first_name ||
+        member.last_name
+      ) {
+
+        return (
+          `${member.first_name || ""} ${member.last_name || ""}`
+            .trim()
+        );
+
+      }
+
+
+      return member.name || "Członek MDP";
+
+    }
+
+
+    function memberInitials(member) {
+
+      const name =
+        memberDisplayName(member);
+
+
+      return name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(
+          x => x[0]
+        )
+        .join("")
+        .toUpperCase();
+
+    }
+
+
+    function avatarHTML(member) {
+
+      if (member.photo) {
+
+        return `
+          <img
+            src="${escapeHTML(member.photo)}"
+            alt="Zdjęcie profilowe"
+          >
+        `;
+
+      }
+
+
+      return escapeHTML(
+        memberInitials(member)
+      );
+
+    }
+
 
     function renderMembers() {
 
@@ -2458,18 +3099,6 @@
         appData.members
           .map(member => {
 
-            const initials =
-              member.name
-                .trim()
-                .split(/\s+/)
-                .slice(0, 2)
-                .map(
-                  x => x[0]
-                )
-                .join("")
-                .toUpperCase();
-
-
             return `
 
               <article class="member-card">
@@ -2477,14 +3106,16 @@
                 <div class="member-row">
 
                   <div class="avatar">
-                    ${escapeHTML(initials)}
+                    ${avatarHTML(member)}
                   </div>
 
 
                   <div class="member-info">
 
                     <h3>
-                      ${escapeHTML(member.name)}
+                      ${escapeHTML(
+                        memberDisplayName(member)
+                      )}
                     </h3>
 
 
@@ -2504,6 +3135,13 @@
                   isStaff()
                     ? `
                       <div class="actions">
+
+                        <button
+                          class="btn blue"
+                          onclick="openEditMember(${member.id})"
+                        >
+                          ✏️ Edytuj
+                        </button>
 
                         <button
                           class="btn red"
@@ -2527,110 +3165,200 @@
     }
 
 
-    /* PROFILE */
+    /* =========================
+       MANAGEMENT MEMBERS
+    ========================= */
 
-    function getProfile() {
+    function renderManagementMembers() {
 
-      try {
-
-        return JSON.parse(
-          localStorage.getItem(
-            "mdpProfile"
-          ) || "{}"
+      const box =
+        document.getElementById(
+          "managementMembersList"
         );
 
-      } catch {
 
-        return {};
-
+      if (!box) {
+        return;
       }
 
-    }
 
+      if (!isStaff()) {
 
-    function saveProfile() {
-
-      const firstName =
-        document
-          .getElementById(
-            "profileFirstName"
-          )
-          .value
-          .trim();
-
-
-      const lastName =
-        document
-          .getElementById(
-            "profileLastName"
-          )
-          .value
-          .trim();
-
-
-      if (!firstName || !lastName) {
-
-        showToast(
-          "Wpisz imię i nazwisko.",
-          true
-        );
+        box.innerHTML = "";
 
         return;
 
       }
 
 
-      const oldProfile =
-        getProfile();
+      if (!appData.members.length) {
+
+        box.innerHTML =
+          '<div class="empty">Nie ma jeszcze żadnych członków.</div>';
+
+        return;
+
+      }
 
 
-      const profile = {
+      box.innerHTML =
+        appData.members
+          .map(member => `
 
-        firstName,
-        lastName,
-        role: currentRole,
-        photo: oldProfile.photo || ""
+            <div
+              class="attendance-item"
+              style="
+                padding:12px;
+                align-items:center;
+              "
+            >
 
-      };
+              <div
+                style="
+                  display:flex;
+                  align-items:center;
+                  gap:10px;
+                  min-width:0;
+                "
+              >
+
+                <div class="avatar">
+                  ${avatarHTML(member)}
+                </div>
+
+                <div style="min-width:0">
+
+                  <strong
+                    style="
+                      display:block;
+                      overflow:hidden;
+                      text-overflow:ellipsis;
+                      white-space:nowrap;
+                    "
+                  >
+                    ${escapeHTML(
+                      memberDisplayName(member)
+                    )}
+                  </strong>
+
+                  <span
+                    style="
+                      display:block;
+                      color:#777;
+                      font-size:10px;
+                      margin-top:2px;
+                    "
+                  >
+                    ${escapeHTML(
+                      member.role ||
+                      "Członek MDP"
+                    )}
+                  </span>
+
+                </div>
+
+              </div>
 
 
-      localStorage.setItem(
-        "mdpProfile",
-        JSON.stringify(profile)
-      );
+              <button
+                class="btn blue"
+                onclick="openEditMember(${member.id})"
+              >
+                Edytuj
+              </button>
+
+            </div>
+
+          `)
+          .join("");
+
+    }
 
 
-      renderProfile();
+    /* =========================
+       PROFILE
+    ========================= */
+
+    async function loadProfile() {
+
+      if (
+        currentRole !== "member" ||
+        !currentMember
+      ) {
+
+        renderProfile();
+
+        return;
+
+      }
 
 
-      showToast(
-        "Profil został zapisany."
-      );
+      try {
+
+        const response =
+          await fetch(
+            "/api/profile",
+            {
+              headers:
+                headers()
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Nie udało się pobrać profilu."
+          );
+
+        }
+
+
+        currentMember = data;
+
+
+        localStorage.setItem(
+          "mdpMember",
+          JSON.stringify(data)
+        );
+
+
+        localStorage.setItem(
+          "mdpMemberId",
+          String(data.id)
+        );
+
+
+        renderProfile();
+
+
+        loadMemberStats(
+          data.id
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message,
+          true
+        );
+
+      }
 
     }
 
 
     function renderProfile() {
 
-      const profile =
-        getProfile();
-
-
       const firstName =
         document.getElementById(
           "profileFirstName"
-        );
-
-
-      const lastName =
-        document.getElementById(
-          "profileLastName"
-        );
-
-
-      const role =
-        document.getElementById(
-          "profileRole"
         );
 
 
@@ -2639,76 +3367,133 @@
       }
 
 
-      firstName.value =
-        profile.firstName || "";
-
-
-      lastName.value =
-        profile.lastName || "";
-
-
-      const roles = {
-
-        member:
-          "Członek MDP",
-
-        guardian:
-          "Opiekun MDP",
-
-        admin:
-          "Administrator"
-
-      };
-
-
-      role.value =
-        roles[currentRole] ||
-        "Użytkownik";
-
-
-      const avatar =
-        document.getElementById(
-          "profileAvatar"
-        );
-
-
-      if (profile.photo) {
-
-        avatar.innerHTML = `
-          <img
-            src="${profile.photo}"
-            alt="Zdjęcie profilowe"
-          >
-        `;
-
-      } else if (
-        profile.firstName &&
-        profile.lastName
+      if (
+        currentRole === "member" &&
+        currentMember
       ) {
 
-        const initials =
-          (
-            profile.firstName[0] +
-            profile.lastName[0]
-          ).toUpperCase();
+        const first =
+          currentMember.first_name || "";
+
+        const last =
+          currentMember.last_name || "";
+
+        const role =
+          currentMember.role ||
+          "Członek MDP";
 
 
-        avatar.textContent =
-          initials;
+        firstName.value =
+          first;
+
+
+        document.getElementById(
+          "profileLastName"
+        ).value =
+          last;
+
+
+        document.getElementById(
+          "profileRole"
+        ).value =
+          role;
+
+
+        const avatar =
+          document.getElementById(
+            "profileAvatar"
+          );
+
+
+        if (currentMember.photo) {
+
+          avatar.innerHTML = `
+            <img
+              src="${escapeHTML(currentMember.photo)}"
+              alt="Zdjęcie profilowe"
+            >
+          `;
+
+        } else if (
+          first &&
+          last
+        ) {
+
+          avatar.textContent =
+            (
+              first[0] +
+              last[0]
+            ).toUpperCase();
+
+        } else {
+
+          avatar.textContent =
+            "👤";
+
+        }
+
+
+        loadMemberStats(
+          currentMember.id
+        );
 
       } else {
 
-        avatar.textContent =
-          "👤";
+        const roles = {
+
+          guardian:
+            "Opiekun MDP",
+
+          admin:
+            "Administrator"
+
+        };
+
+
+        firstName.value =
+          roles[currentRole] ||
+          "Użytkownik";
+
+
+        document.getElementById(
+          "profileLastName"
+        ).value =
+          "";
+
+
+        document.getElementById(
+          "profileRole"
+        ).value =
+          roles[currentRole] ||
+          "Użytkownik";
+
+
+        document.getElementById(
+          "profileAvatar"
+        ).textContent =
+          currentRole === "admin"
+            ? "⚙️"
+            : "🛡️";
+
+
+        document.getElementById(
+          "myStats"
+        ).innerHTML = `
+          <div class="empty">
+            Statystyki obecności są dostępne dla członków MDP.
+          </div>
+        `;
 
       }
 
     }
 
 
-    /* PROFILE PHOTO */
+    /* =========================
+       PROFILE PHOTO
+    ========================= */
 
-    function changeProfilePhoto(event) {
+    async function changeProfilePhoto(event) {
 
       const file =
         event.target.files[0];
@@ -2726,15 +3511,20 @@
           true
         );
 
+        event.target.value = "";
+
         return;
 
       }
 
 
-      if (file.size > 2 * 1024 * 1024) {
+      if (
+        file.size >
+        1.5 * 1024 * 1024
+      ) {
 
         showToast(
-          "Zdjęcie jest za duże. Maksymalnie 2 MB.",
+          "Zdjęcie jest za duże. Maksymalnie około 1,5 MB.",
           true
         );
 
@@ -2745,43 +3535,235 @@
       }
 
 
-      const reader =
-        new FileReader();
+      if (
+        currentRole !== "member" ||
+        !currentMember
+      ) {
+
+        showToast(
+          "Tylko członek MDP może zmienić swoje zdjęcie.",
+          true
+        );
+
+        return;
+
+      }
 
 
-      reader.onload =
-        function() {
+      try {
 
-          const profile =
-            getProfile();
-
-
-          profile.photo =
-            reader.result;
+        const photo =
+          await fileToDataURL(file);
 
 
-          localStorage.setItem(
-            "mdpProfile",
-            JSON.stringify(profile)
+        const response =
+          await fetch(
+            "/api/profile",
+            {
+
+              method: "PUT",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify({
+                  photo
+                })
+
+            }
           );
 
 
-          renderProfile();
+        const data =
+          await response.json();
 
 
-          showToast(
-            "Zdjęcie profilowe ustawione."
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Nie udało się zapisać zdjęcia."
           );
 
-        };
+        }
 
 
-      reader.readAsDataURL(file);
+        currentMember =
+          data;
+
+
+        localStorage.setItem(
+          "mdpMember",
+          JSON.stringify(data)
+        );
+
+
+        renderProfile();
+
+
+        event.target.value = "";
+
+
+        showToast(
+          "Zdjęcie profilowe zostało zapisane."
+        );
+
+
+      } catch (error) {
+
+        showToast(
+          error.message,
+          true
+        );
+
+      }
 
     }
 
 
-    /* NOTIFICATIONS */
+    function fileToDataURL(file) {
+
+      return new Promise(
+        (resolve, reject) => {
+
+          const reader =
+            new FileReader();
+
+
+          reader.onload =
+            () => resolve(
+              reader.result
+            );
+
+
+          reader.onerror =
+            reject;
+
+
+          reader.readAsDataURL(
+            file
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =========================
+       MEMBER STATS
+    ========================= */
+
+    async function loadMemberStats(
+      memberId
+    ) {
+
+      const box =
+        document.getElementById(
+          "myStats"
+        );
+
+
+      if (!box) {
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            `/api/member-stats/${memberId}`,
+            {
+              headers:
+                headers()
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Nie udało się pobrać statystyk."
+          );
+
+        }
+
+
+        const yes =
+          Number(data.yes || 0);
+
+        const maybe =
+          Number(data.maybe || 0);
+
+        const no =
+          Number(data.no || 0);
+
+        const total =
+          Number(data.total || 0);
+
+        const percentage =
+          Number(data.percentage || 0);
+
+
+        box.innerHTML = `
+
+          <div
+            class="member-stats"
+            style="margin-top:0"
+          >
+
+            <div class="mini-stat">
+              <strong>${yes}</strong>
+              • Będę
+            </div>
+
+            <div class="mini-stat">
+              <strong>${maybe}</strong>
+              • Może
+            </div>
+
+            <div class="mini-stat">
+              <strong>${no}</strong>
+              • Nie
+            </div>
+
+            <div class="mini-stat">
+              <strong>${total}</strong>
+              • odpowiedzi
+            </div>
+
+            <div class="mini-stat">
+              <strong>${percentage}%</strong>
+              • obecność
+            </div>
+
+          </div>
+
+        `;
+
+      } catch (error) {
+
+        box.innerHTML = `
+          <div class="empty">
+            Nie udało się pobrać statystyk.
+          </div>
+        `;
+
+      }
+
+    }
+
+
+    /* =========================
+       NOTIFICATIONS
+    ========================= */
 
     function createNotifications() {
 
@@ -3068,14 +4050,18 @@
 
 
           return date
-            ? date.toLocaleDateString("pl-PL")
+            ? date.toLocaleDateString(
+                "pl-PL"
+              )
             : "";
 
         }
 
 
         return new Date(value)
-          .toLocaleDateString("pl-PL");
+          .toLocaleDateString(
+            "pl-PL"
+          );
 
       } catch {
 
@@ -3134,7 +4120,9 @@
     }
 
 
-    /* ADD EVENT */
+    /* =========================
+       ADD EVENT
+    ========================= */
 
     async function addEvent() {
 
@@ -3228,21 +4216,17 @@
           "eventTitle"
         ).value = "";
 
-
         document.getElementById(
           "eventDate"
         ).value = "";
-
 
         document.getElementById(
           "eventTime"
         ).value = "";
 
-
         document.getElementById(
           "eventPlace"
         ).value = "";
-
 
         document.getElementById(
           "eventDescription"
@@ -3269,7 +4253,9 @@
     }
 
 
-    /* DELETE EVENT */
+    /* =========================
+       DELETE EVENT
+    ========================= */
 
     async function deleteEvent(id) {
 
@@ -3334,7 +4320,9 @@
     }
 
 
-    /* ADD NEWS */
+    /* =========================
+       ADD NEWS
+    ========================= */
 
     async function addNews() {
 
@@ -3402,7 +4390,6 @@
           "newsTitle"
         ).value = "";
 
-
         document.getElementById(
           "newsBody"
         ).value = "";
@@ -3428,7 +4415,9 @@
     }
 
 
-    /* DELETE NEWS */
+    /* =========================
+       DELETE NEWS
+    ========================= */
 
     async function deleteNews(id) {
 
@@ -3493,13 +4482,27 @@
     }
 
 
-    /* ADD MEMBER */
+    /* =========================
+       ADD MEMBER
+    ========================= */
 
     async function addMember() {
 
-      const name =
+      const firstName =
         document.getElementById(
-          "memberName"
+          "memberFirstName"
+        ).value.trim();
+
+
+      const lastName =
+        document.getElementById(
+          "memberLastName"
+        ).value.trim();
+
+
+      const code =
+        document.getElementById(
+          "memberCode"
         ).value.trim();
 
 
@@ -3510,10 +4513,32 @@
         "Członek MDP";
 
 
-      if (!name) {
+      const photoInput =
+        document.getElementById(
+          "memberPhoto"
+        );
+
+
+      if (
+        !firstName ||
+        !lastName ||
+        !code
+      ) {
 
         showToast(
-          "Podaj imię i nazwisko.",
+          "Podaj imię, nazwisko i kod dostępu.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (code.length < 4) {
+
+        showToast(
+          "Kod powinien mieć co najmniej 4 znaki.",
           true
         );
 
@@ -3523,6 +4548,45 @@
 
 
       try {
+
+        let photo = "";
+
+
+        if (
+          photoInput.files &&
+          photoInput.files[0]
+        ) {
+
+          const file =
+            photoInput.files[0];
+
+
+          if (!file.type.startsWith("image/")) {
+
+            throw new Error(
+              "Zdjęcie musi być plikiem graficznym."
+            );
+
+          }
+
+
+          if (
+            file.size >
+            1.5 * 1024 * 1024
+          ) {
+
+            throw new Error(
+              "Zdjęcie jest za duże. Maksymalnie około 1,5 MB."
+            );
+
+          }
+
+
+          photo =
+            await fileToDataURL(file);
+
+        }
+
 
         const response =
           await fetch(
@@ -3536,8 +4600,13 @@
 
               body:
                 JSON.stringify({
-                  name,
-                  role
+
+                  firstName,
+                  lastName,
+                  code,
+                  role,
+                  photo
+
                 })
 
             }
@@ -3559,8 +4628,29 @@
 
 
         document.getElementById(
-          "memberName"
+          "memberFirstName"
         ).value = "";
+
+        document.getElementById(
+          "memberLastName"
+        ).value = "";
+
+        document.getElementById(
+          "memberCode"
+        ).value = "";
+
+        document.getElementById(
+          "memberRole"
+        ).value =
+          "Członek MDP";
+
+        photoInput.value = "";
+
+
+        document.getElementById(
+          "memberPhotoPreview"
+        ).innerHTML =
+          "👤";
 
 
         showToast(
@@ -3583,13 +4673,446 @@
     }
 
 
-    /* DELETE MEMBER */
+    /* =========================
+       EDIT MEMBER
+    ========================= */
+
+    function openEditMember(id) {
+
+      const member =
+        appData.members.find(
+          item =>
+            Number(item.id) ===
+            Number(id)
+        );
+
+
+      if (!member) {
+
+        showToast(
+          "Nie znaleziono członka.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      document.getElementById(
+        "editMemberId"
+      ).value =
+        member.id;
+
+
+      document.getElementById(
+        "editMemberFirstName"
+      ).value =
+        member.first_name ||
+        "";
+
+
+      document.getElementById(
+        "editMemberLastName"
+      ).value =
+        member.last_name ||
+        "";
+
+
+      document.getElementById(
+        "editMemberCode"
+      ).value =
+        "";
+
+
+      document.getElementById(
+        "editMemberRole"
+      ).value =
+        member.role ||
+        "Członek MDP";
+
+
+      const preview =
+        document.getElementById(
+          "editMemberPhotoPreview"
+        );
+
+
+      if (member.photo) {
+
+        preview.innerHTML = `
+          <img
+            src="${escapeHTML(member.photo)}"
+            alt="Zdjęcie"
+          >
+        `;
+
+      } else {
+
+        preview.textContent =
+          memberInitials(member);
+
+      }
+
+
+      document.getElementById(
+        "editMemberPhoto"
+      ).value = "";
+
+
+      document
+        .getElementById(
+          "editMemberModal"
+        )
+        .classList.remove(
+          "hidden"
+        );
+
+    }
+
+
+    function closeEditMember() {
+
+      document
+        .getElementById(
+          "editMemberModal"
+        )
+        .classList.add(
+          "hidden"
+        );
+
+    }
+
+
+    async function saveEditedMember() {
+
+      const id =
+        document.getElementById(
+          "editMemberId"
+        ).value;
+
+
+      const firstName =
+        document.getElementById(
+          "editMemberFirstName"
+        ).value.trim();
+
+
+      const lastName =
+        document.getElementById(
+          "editMemberLastName"
+        ).value.trim();
+
+
+      const code =
+        document.getElementById(
+          "editMemberCode"
+        ).value.trim();
+
+
+      const role =
+        document.getElementById(
+          "editMemberRole"
+        ).value.trim() ||
+        "Członek MDP";
+
+
+      const photoInput =
+        document.getElementById(
+          "editMemberPhoto"
+        );
+
+
+      if (
+        !firstName ||
+        !lastName
+      ) {
+
+        showToast(
+          "Imię i nazwisko są wymagane.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        code &&
+        code.length < 4
+      ) {
+
+        showToast(
+          "Kod powinien mieć co najmniej 4 znaki.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        const member =
+          appData.members.find(
+            item =>
+              Number(item.id) ===
+              Number(id)
+          );
+
+
+        let photo =
+          member?.photo ||
+          "";
+
+
+        if (
+          photoInput.files &&
+          photoInput.files[0]
+        ) {
+
+          const file =
+            photoInput.files[0];
+
+
+          if (!file.type.startsWith("image/")) {
+
+            throw new Error(
+              "Zdjęcie musi być plikiem graficznym."
+            );
+
+          }
+
+
+          if (
+            file.size >
+            1.5 * 1024 * 1024
+          ) {
+
+            throw new Error(
+              "Zdjęcie jest za duże. Maksymalnie około 1,5 MB."
+            );
+
+          }
+
+
+          photo =
+            await fileToDataURL(file);
+
+        }
+
+
+        const body = {
+
+          firstName,
+          lastName,
+          role,
+          photo
+
+        };
+
+
+        if (code) {
+
+          body.code =
+            code;
+
+        }
+
+
+        const response =
+          await fetch(
+            `/api/members/${id}`,
+            {
+
+              method: "PUT",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify(body)
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Nie udało się edytować członka."
+          );
+
+        }
+
+
+        closeEditMember();
+
+
+        showToast(
+          "Dane członka zostały zapisane."
+        );
+
+
+        await loadData();
+
+
+      } catch (error) {
+
+        showToast(
+          error.message,
+          true
+        );
+
+      }
+
+    }
+
+
+    function previewMemberPhoto(event) {
+
+      const file =
+        event.target.files[0];
+
+
+      const preview =
+        document.getElementById(
+          "memberPhotoPreview"
+        );
+
+
+      if (!file) {
+
+        preview.innerHTML =
+          "👤";
+
+        return;
+
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        showToast(
+          "Wybierz zdjęcie.",
+          true
+        );
+
+        event.target.value = "";
+
+        preview.innerHTML =
+          "👤";
+
+        return;
+
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        () => {
+
+          preview.innerHTML = `
+            <img
+              src="${reader.result}"
+              alt="Podgląd"
+            >
+          `;
+
+        };
+
+
+      reader.readAsDataURL(file);
+
+    }
+
+
+    function previewEditMemberPhoto(event) {
+
+      const file =
+        event.target.files[0];
+
+
+      const preview =
+        document.getElementById(
+          "editMemberPhotoPreview"
+        );
+
+
+      if (!file) {
+        return;
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        showToast(
+          "Wybierz zdjęcie.",
+          true
+        );
+
+        event.target.value = "";
+
+        return;
+
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        () => {
+
+          preview.innerHTML = `
+            <img
+              src="${reader.result}"
+              alt="Podgląd"
+            >
+          `;
+
+        };
+
+
+      reader.readAsDataURL(file);
+
+    }
+
+
+    /* =========================
+       DELETE MEMBER
+    ========================= */
 
     async function deleteMember(id) {
 
+      const member =
+        appData.members.find(
+          item =>
+            Number(item.id) ===
+            Number(id)
+        );
+
+
+      const name =
+        member
+          ? memberDisplayName(member)
+          : "tego członka";
+
+
       if (
         !confirm(
-          "Na pewno usunąć tego członka?"
+          `Na pewno usunąć ${name}?`
         )
       ) {
 
@@ -3648,21 +5171,27 @@
     }
 
 
-    /* ATTENDANCE */
+    /* =========================
+       ATTENDANCE
+    ========================= */
 
     async function setAttendance(
       eventId,
       status
     ) {
 
-      const memberName =
-        prompt(
-          "Podaj swoje imię i nazwisko:"
+      if (
+        currentRole === "member" &&
+        !currentMember
+      ) {
+
+        showToast(
+          "Nie znaleziono Twojego profilu.",
+          true
         );
 
-
-      if (!memberName) {
         return;
+
       }
 
 
@@ -3680,10 +5209,12 @@
 
               body:
                 JSON.stringify({
-                  event_id: eventId,
-                  member_name:
-                    memberName.trim(),
+
+                  event_id:
+                    eventId,
+
                   status
+
                 })
 
             }
@@ -3732,6 +5263,18 @@
         }
 
 
+        if (
+          currentRole === "member" &&
+          currentMember
+        ) {
+
+          await loadMemberStats(
+            currentMember.id
+          );
+
+        }
+
+
       } catch (error) {
 
         showToast(
@@ -3744,7 +5287,9 @@
     }
 
 
-    /* LOAD ATTENDANCE */
+    /* =========================
+       LOAD ATTENDANCE
+    ========================= */
 
     async function loadAttendance(
       eventId
@@ -3857,7 +5402,9 @@
     }
 
 
-    /* NAVIGATION */
+    /* =========================
+       NAVIGATION
+    ========================= */
 
     function showSection(
       section,
@@ -3934,14 +5481,25 @@
         section === "profile"
       ) {
 
-        renderProfile();
+        loadProfile();
+
+      }
+
+
+      if (
+        section === "management"
+      ) {
+
+        renderManagementMembers();
 
       }
 
     }
 
 
-    /* STAFF */
+    /* =========================
+       STAFF
+    ========================= */
 
     function isStaff() {
 
@@ -3955,7 +5513,9 @@
     }
 
 
-    /* TOAST */
+    /* =========================
+       TOAST
+    ========================= */
 
     let toastTimer = null;
 
@@ -4003,7 +5563,9 @@
     }
 
 
-    /* DATE */
+    /* =========================
+       DATE
+    ========================= */
 
     function parseDate(value) {
 
@@ -4013,7 +5575,7 @@
 
 
       const parts =
-        value.split("-");
+        String(value).split("-");
 
 
       if (
@@ -4061,7 +5623,9 @@
     }
 
 
-    /* SECURITY */
+    /* =========================
+       SECURITY
+    ========================= */
 
     function escapeHTML(value) {
 
@@ -4078,7 +5642,9 @@
     }
 
 
-    /* AUTO LOGIN */
+    /* =========================
+       AUTO LOGIN
+    ========================= */
 
     async function restoreSession() {
 
@@ -4094,10 +5660,18 @@
         );
 
 
+      const savedMemberId =
+        localStorage.getItem(
+          "mdpMemberId"
+        );
+
+
       if (
         !savedRole ||
         !savedCode
       ) {
+
+        selectRole("member");
 
         return;
 
@@ -4105,6 +5679,33 @@
 
 
       try {
+
+        let savedMember = null;
+
+
+        if (
+          savedRole === "member" &&
+          savedMemberId
+        ) {
+
+          try {
+
+            savedMember =
+              JSON.parse(
+                localStorage.getItem(
+                  "mdpMember"
+                ) || "null"
+              );
+
+          } catch {
+
+            savedMember =
+              null;
+
+          }
+
+        }
+
 
         const response =
           await fetch(
@@ -4120,20 +5721,35 @@
 
               body:
                 JSON.stringify({
+
                   role:
                     savedRole,
 
                   code:
-                    savedCode
+                    savedCode,
+
+                  firstName:
+                    savedMember?.first_name ||
+                    "",
+
+                  lastName:
+                    savedMember?.last_name ||
+                    ""
+
                 })
 
             }
           );
 
 
+        const data =
+          await response.json();
+
+
         if (!response.ok) {
 
           throw new Error(
+            data.error ||
             "Sesja wygasła."
           );
 
@@ -4146,6 +5762,33 @@
 
         authCode =
           savedCode;
+
+
+        if (
+          savedRole === "member" &&
+          data.member
+        ) {
+
+          currentMember =
+            data.member;
+
+
+          localStorage.setItem(
+            "mdpMemberId",
+            String(data.member.id)
+          );
+
+
+          localStorage.setItem(
+            "mdpMember",
+            JSON.stringify(data.member)
+          );
+
+        } else {
+
+          currentMember = null;
+
+        }
 
 
         selectRole(
@@ -4169,13 +5812,29 @@
           "mdpCode"
         );
 
+        localStorage.removeItem(
+          "mdpMemberId"
+        );
+
+        localStorage.removeItem(
+          "mdpMember"
+        );
+
+
+        currentRole = "member";
+        authCode = "";
+        currentMember = null;
+
+
+        selectRole("member");
+
       }
 
     }
 
 
     /* =========================
-       PRAWDZIWE POWIADOMIENIA PUSH
+       PUSH
     ========================= */
 
     function urlBase64ToUint8Array(
@@ -4200,7 +5859,8 @@
 
       return Uint8Array.from(
         [...rawData].map(
-          char => char.charCodeAt(0)
+          char =>
+            char.charCodeAt(0)
         )
       );
 
@@ -4294,9 +5954,7 @@
           await response.json();
 
 
-        if (
-          !data.publicKey
-        ) {
+        if (!data.publicKey) {
 
           throw new Error(
             "Serwer nie zwrócił klucza VAPID."
@@ -4312,43 +5970,24 @@
 
 
         let subscription =
-          await registration.pushManager
+          await registration
+            .pushManager
             .getSubscription();
 
 
         if (!subscription) {
 
           subscription =
-            await registration.pushManager.subscribe({
+            await registration
+              .pushManager
+              .subscribe({
 
-              userVisibleOnly: true,
+                userVisibleOnly:
+                  true,
 
-              applicationServerKey
+                applicationServerKey
 
-            });
-
-        }
-
-
-        const authCode =
-          localStorage.getItem(
-            "mdpCode"
-          ) || "";
-
-
-        const role =
-          localStorage.getItem(
-            "mdpRole"
-          ) || "member";
-
-
-        if (
-          !authCode
-        ) {
-
-          throw new Error(
-            "Najpierw zaloguj się do aplikacji."
-          );
+              });
 
         }
 
@@ -4360,18 +5999,8 @@
 
               method: "POST",
 
-              headers: {
-
-                "Content-Type":
-                  "application/json",
-
-                "x-role":
-                  role,
-
-                "x-code":
-                  authCode
-
-              },
+              headers:
+                headers(),
 
               body:
                 JSON.stringify({
@@ -4452,7 +6081,8 @@
           button.textContent =
             "🔔 Push niedostępny";
 
-          button.disabled = true;
+          button.disabled =
+            true;
 
           return;
 
@@ -4464,18 +6094,18 @@
 
 
         const subscription =
-          await registration.pushManager
+          await registration
+            .pushManager
             .getSubscription();
 
 
-        if (
-          subscription
-        ) {
+        if (subscription) {
 
           button.textContent =
             "✓ Powiadomienia są włączone";
 
-          button.disabled = true;
+          button.disabled =
+            true;
 
           button.style.opacity =
             ".6";
@@ -4505,7 +6135,9 @@
     }
 
 
-    /* SERVICE WORKER */
+    /* =========================
+       SERVICE WORKER
+    ========================= */
 
     if (
       "serviceWorker" in navigator
@@ -4544,11 +6176,15 @@
     }
 
 
-    /* START */
+    /* =========================
+       START
+    ========================= */
+
+    selectRole("member");
 
     restoreSession();
 
   </script>
 
 </body>
-  </html>    
+  </html>
