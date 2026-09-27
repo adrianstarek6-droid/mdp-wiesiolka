@@ -363,8 +363,6 @@ async function initDb() {
     'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
   );
 
-  // Zabezpieczenie historii przed wielokrotnym
-  // tworzeniem tego samego miesiąca.
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS
     newspaper_history_month_key_unique
@@ -467,8 +465,6 @@ async function getGroups() {
     let ids = normalizeIds(row.member_ids);
     let names = normalizeNames(row.member_names);
 
-    // Kompatybilność ze starymi zapisami,
-    // w których mogły być zapisane tylko nazwiska.
     if (!ids.length && names.length) {
       ids = members
         .filter(x => {
@@ -1876,13 +1872,6 @@ app.put(
       const oldNames =
         normalizeNames(old.member_names);
 
-
-      // --------------------------------------------------
-      // CZŁONEK MDP
-      // Może zmieniać tylko postęp swojej grupy.
-      // Nie może zmienić ulic, członków ani nazwy.
-      // --------------------------------------------------
-
       if (req.role === 'member') {
         if (
           !oldIds.includes(
@@ -1955,11 +1944,6 @@ app.put(
         );
       }
 
-
-      // --------------------------------------------------
-      // OPIEKUN / ADMIN
-      // --------------------------------------------------
-
       if (!isStaff(req)) {
         return res.status(403).json({
           error:
@@ -1967,8 +1951,6 @@ app.put(
         });
       }
 
-      // Jeżeli memberIds nie zostało wysłane,
-      // ZACHOWUJEMY stare przypisanie.
       const ids =
         req.body.memberIds !== undefined
           ? normalizeIds(req.body.memberIds)
@@ -1989,10 +1971,6 @@ app.put(
           )
         : { rows: [] };
 
-      // Jeżeli memberIds zostało wysłane,
-      // aktualizujemy nazwy.
-      // Jeżeli nie zostało wysłane,
-      // pozostawiamy stare nazwy.
       const names =
         req.body.memberIds !== undefined
           ? m.rows
@@ -2314,9 +2292,24 @@ app.delete(
 
 // ======================================================
 // RESET PLANU GAZET
-// UWAGA:
-// To jest pełny reset planu.
-// NIE używaj tego do rozpoczęcia nowego miesiąca.
+//
+// WAŻNE:
+// TEN ENDPOINT NIE USUWA JUŻ GRUP.
+//
+// Zachowuje:
+// - grupy
+// - nazwy
+// - regiony
+// - ulice
+// - kolory
+// - liczbę gazet
+// - memberIds
+// - memberNames
+//
+// Resetuje tylko:
+// - delivered
+// - started
+// - done
 // ======================================================
 
 app.post(
@@ -2324,24 +2317,50 @@ app.post(
   auth,
   staff,
   async (req, res) => {
+    const client = await pool.connect();
+
     try {
-      await pool.query(
-        'DELETE FROM newspaper_groups'
-      );
+      await client.query('BEGIN');
 
-      await seedNewspaperGroups();
+      await client.query(`
+        UPDATE newspaper_groups
+        SET
+          delivered = 0,
+          started = FALSE,
+          done = FALSE
+      `);
 
-      res.json(
-        await getGroups()
-      );
+      const result = await client.query(`
+        SELECT *
+        FROM newspaper_groups
+        ORDER BY id
+      `);
+
+      await client.query('COMMIT');
+
+      res.json({
+        ok: true,
+        reset: true,
+        groups: result.rows.map(groupSnapshot)
+      });
 
     } catch (e) {
-      console.error(e);
+      await client
+        .query('ROLLBACK')
+        .catch(() => {});
+
+      console.error(
+        'Błąd resetu gazet:',
+        e
+      );
 
       res.status(500).json({
         error:
-          'Nie udało się przywrócić planu gazet.'
+          'Nie udało się zresetować miesiąca.'
       });
+
+    } finally {
+      client.release();
     }
   }
 );
@@ -2620,93 +2639,7 @@ app.post(
 
 
 // ======================================================
-// RESET TYLKO MIESIĄCA
-//
-// WAŻNE:
-// NIE USUWA:
-// - grup
-// - ulic
-// - nazw grup
-// - regionów
-// - liczby egzemplarzy
-// - przypisanych członków
-//
-// ZERUJE TYLKO:
-// - delivered
-// - started
-// - done
-// ======================================================
-
-app.post(
-  '/api/newspaper-groups/reset-month',
-  auth,
-  staff,
-  async (req, res) => {
-    const client =
-      await pool.connect();
-
-    try {
-      await client.query(
-        'BEGIN'
-      );
-
-      await client.query(`
-        UPDATE newspaper_groups
-        SET
-          delivered=0,
-          started=FALSE,
-          done=FALSE
-      `);
-
-      const groupsResult =
-        await client.query(`
-          SELECT *
-          FROM newspaper_groups
-          ORDER BY id
-        `);
-
-      await client.query(
-        'COMMIT'
-      );
-
-      res.json({
-        ok: true,
-        reset: true,
-        groups:
-          await getGroups()
-      });
-
-    } catch (e) {
-      await client
-        .query('ROLLBACK')
-        .catch(() => {});
-
-      console.error(e);
-
-      res.status(500).json({
-        error:
-          'Nie udało się zresetować miesiąca.'
-      });
-
-    } finally {
-      client.release();
-    }
-  }
-);
-
-
-// ======================================================
 // ZAPISZ + ZRESETUJ MIESIĄC
-//
-// TO JEST GŁÓWNA FUNKCJA „NOWY MIESIĄC”
-//
-// 1. blokuje grupy
-// 2. zapisuje poprzedni stan do historii
-// 3. NIE usuwa grup
-// 4. NIE usuwa członków
-// 5. NIE usuwa ulic
-// 6. NIE zmienia przypisań
-// 7. zeruje tylko postęp
 // ======================================================
 
 app.post(
@@ -2727,9 +2660,6 @@ app.post(
           client
         );
 
-      // KLUCZOWE:
-      // aktualizujemy tylko pola miesięczne.
-      // Żadne inne dane grupy nie są ruszane.
       await client.query(`
         UPDATE newspaper_groups
         SET
@@ -2737,13 +2667,6 @@ app.post(
           started=FALSE,
           done=FALSE
       `);
-
-      const newGroupsResult =
-        await client.query(`
-          SELECT *
-          FROM newspaper_groups
-          ORDER BY id
-        `);
 
       await client.query(
         'COMMIT'
@@ -2794,10 +2717,6 @@ app.post(
 
 // ======================================================
 // KOMPATYBILNOŚĆ — NOWY MIESIĄC
-//
-// Stary endpoint zostaje, żeby stary HTML nadal działał.
-// Robi dokładnie to samo co:
-// „zapisz + zresetuj”.
 // ======================================================
 
 app.post(
@@ -2869,7 +2788,7 @@ app.post(
 
 
 // ======================================================
-// DODATKOWE — INFORMACJA O AKTUALNYM MIESIĄCU
+// AKTUALNY MIESIĄC
 // ======================================================
 
 app.get(
