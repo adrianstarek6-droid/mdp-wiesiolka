@@ -39,9 +39,9 @@ const CODES = {
 ========================= */
 
 const pushEnabled =
-  !!process.env.VAPID_EMAIL &&
-  !!process.env.VAPID_PUBLIC_KEY &&
-  !!process.env.VAPID_PRIVATE_KEY;
+  Boolean(process.env.VAPID_EMAIL) &&
+  Boolean(process.env.VAPID_PUBLIC_KEY) &&
+  Boolean(process.env.VAPID_PRIVATE_KEY);
 
 if (pushEnabled) {
   webpush.setVapidDetails(
@@ -52,11 +52,11 @@ if (pushEnabled) {
 
   console.log("Web Push: VAPID aktywny.");
 } else {
-  console.log("Web Push: VAPID nie jest skonfigurowany.");
+  console.log("Web Push: brak konfiguracji VAPID.");
 }
 
 /* =========================
-   DATABASE INITIALIZATION
+   DATABASE INIT
 ========================= */
 
 async function initDatabase() {
@@ -111,6 +111,49 @@ async function initDatabase() {
   `);
 
   console.log("Baza danych gotowa.");
+
+  /* =========================
+     STARTOWE DANE
+  ========================= */
+
+  const eventsCount = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM events"
+  );
+
+  if (eventsCount.rows[0].count === 0) {
+    await pool.query(
+      `
+      INSERT INTO events
+      (title, event_date, event_time, place, description)
+      VALUES ($1, $2, $3, $4, $5)
+      `,
+      [
+        "Najbliższa zbiórka MDP",
+        "2026-10-03",
+        "17:00",
+        "Remiza OSP Wiesiółka",
+        "Pierwsza zbiórka w aplikacji."
+      ]
+    );
+  }
+
+  const newsCount = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM news"
+  );
+
+  if (newsCount.rows[0].count === 0) {
+    await pool.query(
+      `
+      INSERT INTO news
+      (title, body)
+      VALUES ($1, $2)
+      `,
+      [
+        "Witamy w aplikacji MDP!",
+        "Tutaj będą pojawiać się najważniejsze informacje dla MDP Wiesiółka."
+      ]
+    );
+  }
 }
 
 /* =========================
@@ -127,7 +170,7 @@ function auth(req, res, next) {
     });
   }
 
-  if (code !== CODES[role]) {
+  if (String(code || "") !== String(CODES[role])) {
     return res.status(401).json({
       error: "Nieprawidłowy kod."
     });
@@ -140,7 +183,8 @@ function auth(req, res, next) {
 function staff(req, res, next) {
   if (!["guardian", "admin"].includes(req.role)) {
     return res.status(403).json({
-      error: "Tylko opiekun lub administrator może wykonać tę operację."
+      error:
+        "Tylko opiekun lub administrator może wykonać tę operację."
     });
   }
 
@@ -183,7 +227,7 @@ app.post("/api/login", (req, res) => {
 });
 
 /* =========================
-   GET ALL DATA
+   GET DATA
 ========================= */
 
 app.get("/api/data", auth, async (req, res) => {
@@ -229,7 +273,7 @@ app.get("/api/data", auth, async (req, res) => {
 });
 
 /* =========================
-   PUSH SEND
+   PUSH - SEND
 ========================= */
 
 async function sendPushNotification(title, body) {
@@ -243,38 +287,44 @@ async function sendPushNotification(title, body) {
     return;
   }
 
-  const result = await pool.query(`
-    SELECT id, subscription
-    FROM push_subscriptions
-  `);
+  try {
+    const result = await pool.query(`
+      SELECT id, subscription
+      FROM push_subscriptions
+    `);
 
-  for (const row of result.rows) {
-    try {
-      await webpush.sendNotification(
-        row.subscription,
-        JSON.stringify({
-          title,
-          body,
-          icon: "/icon-192-2.png",
-          badge: "/icon-192-2.png"
-        })
-      );
-    } catch (error) {
-      console.error(
-        "Push error:",
-        error.statusCode || error.message
-      );
-
-      if (
-        error.statusCode === 404 ||
-        error.statusCode === 410
-      ) {
-        await pool.query(
-          "DELETE FROM push_subscriptions WHERE id = $1",
-          [row.id]
+    for (const row of result.rows) {
+      try {
+        await webpush.sendNotification(
+          row.subscription,
+          JSON.stringify({
+            title,
+            body,
+            icon: "/icon-192-2.png",
+            badge: "/icon-192-2.png"
+          })
         );
+
+        console.log("Push wysłany.");
+      } catch (error) {
+        console.error(
+          "Błąd push:",
+          error.statusCode || error.message
+        );
+
+        if (
+          error.statusCode === 404 ||
+          error.statusCode === 410
+        ) {
+          await pool.query(
+            "DELETE FROM push_subscriptions WHERE id = $1",
+            [row.id]
+          );
+        }
       }
     }
+  } catch (error) {
+    console.error("Błąd pobierania subskrypcji:", error);
   }
 }
 
@@ -306,6 +356,12 @@ app.post("/api/push/subscribe", auth, async (req, res) => {
       });
     }
 
+    if (!pushEnabled) {
+      return res.status(503).json({
+        error: "Push nie jest skonfigurowany."
+      });
+    }
+
     const { subscription } = req.body || {};
 
     if (
@@ -314,7 +370,7 @@ app.post("/api/push/subscribe", auth, async (req, res) => {
       !subscription.keys
     ) {
       return res.status(400).json({
-        error: "Nieprawidłowa subskrypcja."
+        error: "Nieprawidłowa subskrypcja push."
       });
     }
 
@@ -339,7 +395,10 @@ app.post("/api/push/subscribe", auth, async (req, res) => {
       ok: true
     });
   } catch (error) {
-    console.error("POST /api/push/subscribe:", error);
+    console.error(
+      "POST /api/push/subscribe:",
+      error
+    );
 
     res.status(500).json({
       error: "Nie udało się zapisać subskrypcji."
@@ -361,16 +420,21 @@ app.post("/api/push/unsubscribe", auth, async (req, res) => {
       });
     }
 
-    await pool.query(
-      "DELETE FROM push_subscriptions WHERE endpoint = $1",
-      [endpoint]
-    );
+    if (process.env.DATABASE_URL) {
+      await pool.query(
+        "DELETE FROM push_subscriptions WHERE endpoint = $1",
+        [endpoint]
+      );
+    }
 
     res.json({
       ok: true
     });
   } catch (error) {
-    console.error("POST /api/push/unsubscribe:", error);
+    console.error(
+      "POST /api/push/unsubscribe:",
+      error
+    );
 
     res.status(500).json({
       error: "Nie udało się wyłączyć powiadomień."
@@ -393,7 +457,10 @@ app.post("/api/push/test", auth, async (req, res) => {
       ok: true
     });
   } catch (error) {
-    console.error("POST /api/push/test:", error);
+    console.error(
+      "POST /api/push/test:",
+      error
+    );
 
     res.status(500).json({
       error: "Nie udało się wysłać powiadomienia."
@@ -402,7 +469,7 @@ app.post("/api/push/test", auth, async (req, res) => {
 });
 
 /* =========================
-   EVENTS
+   EVENTS - ADD
 ========================= */
 
 app.post("/api/events", auth, staff, async (req, res) => {
@@ -422,7 +489,7 @@ app.post("/api/events", auth, staff, async (req, res) => {
       !place
     ) {
       return res.status(400).json({
-        error: "Uzupełnij wszystkie wymagane pola."
+        error: "Uzupełnij wymagane pola."
       });
     }
 
@@ -454,7 +521,10 @@ app.post("/api/events", auth, staff, async (req, res) => {
       event
     });
   } catch (error) {
-    console.error("POST /api/events:", error);
+    console.error(
+      "POST /api/events:",
+      error
+    );
 
     res.status(500).json({
       error: "Nie udało się dodać zbiórki."
@@ -462,35 +532,47 @@ app.post("/api/events", auth, staff, async (req, res) => {
   }
 });
 
-app.delete("/api/events/:id", auth, staff, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+/* =========================
+   EVENTS - DELETE
+========================= */
 
-    if (!Number.isInteger(id)) {
-      return res.status(400).json({
-        error: "Nieprawidłowe ID."
+app.delete(
+  "/api/events/:id",
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      if (!Number.isInteger(id)) {
+        return res.status(400).json({
+          error: "Nieprawidłowe ID."
+        });
+      }
+
+      await pool.query(
+        "DELETE FROM events WHERE id = $1",
+        [id]
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(
+        "DELETE /api/events:",
+        error
+      );
+
+      res.status(500).json({
+        error: "Nie udało się usunąć zbiórki."
       });
     }
-
-    await pool.query(
-      "DELETE FROM events WHERE id = $1",
-      [id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error("DELETE /api/events:", error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć zbiórki."
-    });
   }
-});
+);
 
 /* =========================
-   NEWS
+   NEWS - ADD
 ========================= */
 
 app.post("/api/news", auth, staff, async (req, res) => {
@@ -528,7 +610,10 @@ app.post("/api/news", auth, staff, async (req, res) => {
       news
     });
   } catch (error) {
-    console.error("POST /api/news:", error);
+    console.error(
+      "POST /api/news:",
+      error
+    );
 
     res.status(500).json({
       error: "Nie udało się dodać ogłoszenia."
@@ -536,150 +621,194 @@ app.post("/api/news", auth, staff, async (req, res) => {
   }
 });
 
-app.delete("/api/news/:id", auth, staff, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (!Number.isInteger(id)) {
-      return res.status(400).json({
-        error: "Nieprawidłowe ID."
-      });
-    }
-
-    await pool.query(
-      "DELETE FROM news WHERE id = $1",
-      [id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error("DELETE /api/news:", error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć ogłoszenia."
-    });
-  }
-});
-
 /* =========================
-   MEMBERS
+   NEWS - DELETE
 ========================= */
 
-app.post("/api/members", auth, staff, async (req, res) => {
-  try {
-    const { name, role } = req.body || {};
+app.delete(
+  "/api/news/:id",
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
 
-    if (!name) {
-      return res.status(400).json({
-        error: "Podaj imię i nazwisko."
+      if (!Number.isInteger(id)) {
+        return res.status(400).json({
+          error: "Nieprawidłowe ID."
+        });
+      }
+
+      await pool.query(
+        "DELETE FROM news WHERE id = $1",
+        [id]
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(
+        "DELETE /api/news:",
+        error
+      );
+
+      res.status(500).json({
+        error: "Nie udało się usunąć ogłoszenia."
       });
     }
-
-    const result = await pool.query(
-      `
-      INSERT INTO members
-      (name, role)
-      VALUES ($1, $2)
-      RETURNING *
-      `,
-      [
-        String(name).trim(),
-        String(role || "Członek MDP").trim()
-      ]
-    );
-
-    res.json({
-      ok: true,
-      member: result.rows[0]
-    });
-  } catch (error) {
-    console.error("POST /api/members:", error);
-
-    res.status(500).json({
-      error: "Nie udało się dodać członka."
-    });
   }
-});
-
-app.delete("/api/members/:id", auth, staff, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (!Number.isInteger(id)) {
-      return res.status(400).json({
-        error: "Nieprawidłowe ID."
-      });
-    }
-
-    await pool.query(
-      "DELETE FROM members WHERE id = $1",
-      [id]
-    );
-
-    res.json({
-      ok: true
-    });
-  } catch (error) {
-    console.error("DELETE /api/members:", error);
-
-    res.status(500).json({
-      error: "Nie udało się usunąć członka."
-    });
-  }
-});
+);
 
 /* =========================
-   ATTENDANCE
+   MEMBERS - ADD
 ========================= */
 
-app.post("/api/attendance", auth, async (req, res) => {
-  try {
-    const {
-      event_id,
-      member_name,
-      status
-    } = req.body || {};
+app.post(
+  "/api/members",
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const { name, role } = req.body || {};
 
-    if (
-      !event_id ||
-      !member_name ||
-      !["yes", "maybe", "no"].includes(status)
-    ) {
-      return res.status(400).json({
-        error: "Nieprawidłowe dane obecności."
+      if (!name) {
+        return res.status(400).json({
+          error: "Podaj imię i nazwisko."
+        });
+      }
+
+      const result = await pool.query(
+        `
+        INSERT INTO members
+        (name, role)
+        VALUES ($1, $2)
+        RETURNING *
+        `,
+        [
+          String(name).trim(),
+          String(role || "Członek MDP").trim()
+        ]
+      );
+
+      res.json({
+        ok: true,
+        member: result.rows[0]
+      });
+    } catch (error) {
+      console.error(
+        "POST /api/members:",
+        error
+      );
+
+      res.status(500).json({
+        error: "Nie udało się dodać członka."
       });
     }
+  }
+);
 
-    const result = await pool.query(
-      `
-      INSERT INTO attendance
-      (event_id, member_name, status)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (event_id, member_name)
-      DO UPDATE SET status = EXCLUDED.status
-      RETURNING *
-      `,
-      [
-        Number(event_id),
-        String(member_name).trim(),
+/* =========================
+   MEMBERS - DELETE
+========================= */
+
+app.delete(
+  "/api/members/:id",
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      if (!Number.isInteger(id)) {
+        return res.status(400).json({
+          error: "Nieprawidłowe ID."
+        });
+      }
+
+      await pool.query(
+        "DELETE FROM members WHERE id = $1",
+        [id]
+      );
+
+      res.json({
+        ok: true
+      });
+    } catch (error) {
+      console.error(
+        "DELETE /api/members:",
+        error
+      );
+
+      res.status(500).json({
+        error: "Nie udało się usunąć członka."
+      });
+    }
+  }
+);
+
+/* =========================
+   ATTENDANCE - SAVE
+========================= */
+
+app.post(
+  "/api/attendance",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        event_id,
+        member_name,
         status
-      ]
-    );
+      } = req.body || {};
 
-    res.json({
-      ok: true,
-      attendance: result.rows[0]
-    });
-  } catch (error) {
-    console.error("POST /api/attendance:", error);
+      if (
+        !event_id ||
+        !member_name ||
+        !["yes", "maybe", "no"].includes(status)
+      ) {
+        return res.status(400).json({
+          error: "Nieprawidłowe dane obecności."
+        });
+      }
 
-    res.status(500).json({
-      error: "Nie udało się zapisać obecności."
-    });
+      const result = await pool.query(
+        `
+        INSERT INTO attendance
+        (event_id, member_name, status)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (event_id, member_name)
+        DO UPDATE SET
+          status = EXCLUDED.status
+        RETURNING *
+        `,
+        [
+          Number(event_id),
+          String(member_name).trim(),
+          status
+        ]
+      );
+
+      res.json({
+        ok: true,
+        attendance: result.rows[0]
+      });
+    } catch (error) {
+      console.error(
+        "POST /api/attendance:",
+        error
+      );
+
+      res.status(500).json({
+        error: "Nie udało się zapisać obecności."
+      });
+    }
   }
-});
+);
+
+/* =========================
+   ATTENDANCE - GET
+========================= */
 
 app.get(
   "/api/attendance/:eventId",
@@ -706,7 +835,10 @@ app.get(
 
       res.json(result.rows);
     } catch (error) {
-      console.error("GET /api/attendance:", error);
+      console.error(
+        "GET /api/attendance:",
+        error
+      );
 
       res.status(500).json({
         error: "Nie udało się pobrać obecności."
@@ -716,28 +848,28 @@ app.get(
 );
 
 /* =========================
-   HEALTH CHECK
+   HEALTH
 ========================= */
 
 app.get("/api/health", async (req, res) => {
   try {
-    if (!process.env.DATABASE_URL) {
-      return res.json({
-        ok: true,
-        database: false,
-        push: pushEnabled
-      });
-    }
+    let database = false;
 
-    await pool.query("SELECT 1");
+    if (process.env.DATABASE_URL) {
+      await pool.query("SELECT 1");
+      database = true;
+    }
 
     res.json({
       ok: true,
-      database: true,
+      database,
       push: pushEnabled
     });
   } catch (error) {
-    console.error("Health check:", error);
+    console.error(
+      "Health check:",
+      error
+    );
 
     res.status(500).json({
       ok: false,
@@ -749,16 +881,53 @@ app.get("/api/health", async (req, res) => {
 
 /* =========================
    FRONTEND FALLBACK
+   Express 5 compatible
 ========================= */
 
-app.get("*", (req, res) => {
+app.use((req, res, next) => {
+  if (req.method !== "GET") {
+    return next();
+  }
+
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({
+      error: "Nie znaleziono endpointu."
+    });
+  }
+
   res.sendFile(
     path.join(__dirname, "public", "index.html")
   );
 });
 
 /* =========================
-   START SERVER
+   404
+========================= */
+
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Nie znaleziono."
+  });
+});
+
+/* =========================
+   ERROR HANDLER
+========================= */
+
+app.use((error, req, res, next) => {
+  console.error("SERVER ERROR:", error);
+
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  res.status(500).json({
+    error: "Wystąpił błąd serwera."
+  });
+});
+
+/* =========================
+   START
 ========================= */
 
 async function startServer() {
@@ -772,7 +941,7 @@ async function startServer() {
     });
   } catch (error) {
     console.error(
-      "Nie udało się uruchomić serwera:",
+      "Błąd uruchamiania serwera:",
       error
     );
 
