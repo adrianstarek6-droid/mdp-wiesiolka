@@ -1,1972 +1,1424 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-  <meta name="theme-color" content="#111111">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
-
-  <link rel="manifest" href="/manifest.json">
-
-  <title>MDP Wiesiółka</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    :root {
-      --bg: #090909;
-      --card: #151515;
-      --border: #292929;
-      --text: #fff;
-      --muted: #9d9d9d;
-      --red: #e51b23;
-      --red-dark: #a90f15;
-      --green: #22c55e;
-      --yellow: #f59e0b;
-      --blue: #3b82f6;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg);
-    }
-
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top right, rgba(229,27,35,.13), transparent 30%),
-        radial-gradient(circle at bottom left, rgba(229,27,35,.07), transparent 35%),
-        var(--bg);
-      color: var(--text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding-bottom: 90px;
-    }
-
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    /* LOGIN */
-
-    #loginScreen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-wrap {
-      width: 100%;
-      max-width: 430px;
-    }
-
-    .logo-box {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .logo {
-      width: 92px;
-      height: 92px;
-      margin: 0 auto 16px;
-      border-radius: 28px;
-      background: linear-gradient(145deg, #242424, #101010);
-      border: 1px solid #353535;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 42px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.45);
-    }
-
-    .logo-box h1 {
-      font-size: 30px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-
-    .logo-box p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 14px;
-    }
-
-    .login-card {
-      background: rgba(21,21,21,.92);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 22px;
-      box-shadow: 0 25px 70px rgba(0,0,0,.5);
-      backdrop-filter: blur(15px);
-    }
-
-    .role-buttons {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .role-btn {
-      border: 1px solid var(--border);
-      background: #101010;
-      color: #aaa;
-      border-radius: 14px;
-      padding: 12px 5px;
-      font-size: 12px;
-      font-weight: 700;
-      transition: .2s;
-    }
-
-    .role-btn.active {
-      background: var(--red);
-      color: white;
-      border-color: var(--red);
-    }
-
-    .field {
-      margin-bottom: 14px;
-    }
-
-    .field label {
-      display: block;
-      color: #bbb;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 7px;
-    }
-
-    .input {
-      width: 100%;
-      border: 1px solid var(--border);
-      background: #0e0e0e;
-      color: white;
-      border-radius: 14px;
-      padding: 14px;
-      outline: none;
-      transition: .2s;
-    }
-
-    .input:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px rgba(229,27,35,.12);
-    }
-
-    textarea.input {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .primary-btn {
-      width: 100%;
-      border: none;
-      background: linear-gradient(135deg, var(--red), var(--red-dark));
-      color: white;
-      border-radius: 14px;
-      padding: 14px;
-      font-weight: 800;
-      box-shadow: 0 10px 25px rgba(229,27,35,.2);
-      transition: transform .15s, opacity .15s;
-    }
-
-    .primary-btn:active {
-      transform: scale(.98);
-    }
-
-    .primary-btn:disabled {
-      cursor: default;
-      opacity: .55;
-    }
-
-    .login-error {
-      margin-top: 12px;
-      color: #ff6b6b;
-      text-align: center;
-      font-size: 13px;
-      min-height: 18px;
-    }
-
-    .login-info {
-      color: #777;
-      font-size: 11px;
-      text-align: center;
-      line-height: 1.5;
-      margin-top: 13px;
-    }
-
-    /* APP */
-
-    #app {
-      min-height: 100vh;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(9,9,9,.88);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      backdrop-filter: blur(18px);
-      padding:
-        calc(12px + env(safe-area-inset-top))
-        16px
-        12px;
-    }
-
-    .topbar-inner {
-      max-width: 1000px;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      min-width: 0;
-    }
-
-    .brand-icon {
-      width: 42px;
-      height: 42px;
-      flex: 0 0 42px;
-      border-radius: 13px;
-      background: linear-gradient(145deg, var(--red), #8c0e13);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 21px;
-      box-shadow: 0 7px 20px rgba(229,27,35,.25);
-    }
-
-    .brand-text {
-      min-width: 0;
-    }
-
-    .brand-text strong {
-      display: block;
-      font-size: 15px;
-    }
-
-    .brand-text span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
-    .logout-btn {
-      border: 1px solid var(--border);
-      background: #151515;
-      color: #ddd;
-      padding: 9px 12px;
-      border-radius: 11px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1000px;
-      margin: auto;
-      padding: 20px 16px;
-    }
-
-    /* HERO */
-
-    .hero {
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 23px;
-      margin-bottom: 18px;
-      background:
-        linear-gradient(135deg, rgba(229,27,35,.18), rgba(255,255,255,.02)),
-        #121212;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hero::after {
-      content: "🚒";
-      position: absolute;
-      right: 16px;
-      bottom: -8px;
-      font-size: 90px;
-      opacity: .08;
-      transform: rotate(-8deg);
-    }
-
-    .hero small {
-      color: #ff858a;
-      font-weight: 800;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-    }
-
-    .hero h2 {
-      font-size: 28px;
-      line-height: 1.08;
-      margin-top: 7px;
-      max-width: 600px;
-      letter-spacing: -.8px;
-    }
-
-    .hero p {
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 9px;
-      max-width: 650px;
-      line-height: 1.5;
-    }
-
-    /* NAV */
-
-    .nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      margin-bottom: 20px;
-      scrollbar-width: none;
-    }
-
-    .nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .nav-btn {
-      white-space: nowrap;
-      border: 1px solid var(--border);
-      background: #111;
-      color: #999;
-      border-radius: 13px;
-      padding: 11px 15px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .nav-btn.active {
-      color: white;
-      background: var(--red);
-      border-color: var(--red);
-    }
-
-    /* SECTIONS */
-
-    .page-section {
-      width: 100%;
-    }
-
-    .section {
-      margin-bottom: 25px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -.4px;
-    }
-
-    .section-subtitle {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 3px;
-    }
-
-    .count {
-      color: #aaa;
-      font-size: 12px;
-    }
-
-    /* STATS */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 22px;
-    }
-
-    .stat {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      padding: 16px;
-    }
-
-    .stat-icon {
-      font-size: 19px;
-      margin-bottom: 9px;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 22px;
-    }
-
-    .stat span {
-      color: var(--muted);
-      font-size: 11px;
-      display: block;
-      margin-top: 2px;
-    }
-
-    /* CARDS */
-
-    .grid {
-      display: grid;
-      gap: 11px;
-    }
-
-    .event-card,
-    .news-card,
-    .member-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-    }
-
-    .event-top {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .date-box {
-      width: 55px;
-      min-width: 55px;
-      height: 62px;
-      border-radius: 14px;
-      background: rgba(229,27,35,.13);
-      border: 1px solid rgba(229,27,35,.25);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .date-box strong {
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    .date-box span {
-      color: #ff858a;
-      font-size: 9px;
-      margin-top: 4px;
-      text-transform: uppercase;
-      font-weight: 800;
-    }
-
-    .event-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .event-info h3,
-    .news-card h3,
-    .member-card h3 {
-      font-size: 16px;
-      line-height: 1.25;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 6px;
-      line-height: 1.5;
-    }
-
-    .description {
-      color: #c5c5c5;
-      font-size: 13px;
-      line-height: 1.55;
-      margin-top: 12px;
-      white-space: pre-wrap;
-    }
-
-    .news-date {
-      color: #777;
-      font-size: 10px;
-      margin-bottom: 6px;
-    }
-
-    .news-body {
-      color: #c3c3c3;
-      font-size: 13px;
-      line-height: 1.55;
-      margin-top: 8px;
-      white-space: pre-wrap;
-    }
-
-    .member-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 15px;
-      background: #242424;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      color: #ddd;
-      flex: 0 0 50px;
-      overflow: hidden;
-      border: 1px solid #303030;
-    }
-
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-avatar {
-      width: 110px;
-      height: 110px;
-      border-radius: 30px;
-      background: #242424;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      font-weight: 800;
-      color: #ddd;
-      overflow: hidden;
-      margin: auto;
-      border: 1px solid var(--border);
-    }
-
-    .profile-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .member-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .member-info h3 {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .member-role {
-      color: #999;
-      font-size: 11px;
-      margin-top: 3px;
-    }
-
-    .member-stats {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-
-    .mini-stat {
-      border: 1px solid #282828;
-      background: #101010;
-      border-radius: 10px;
-      padding: 7px 9px;
-      color: #aaa;
-      font-size: 10px;
-    }
-
-    .mini-stat strong {
-      color: white;
-      font-size: 12px;
-    }
-
-    /* ACTIONS */
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 13px;
-    }
-
-    .btn {
-      border: 1px solid var(--border);
-      background: #202020;
-      color: #eee;
-      border-radius: 11px;
-      padding: 10px 12px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .btn.red {
-      background: rgba(229,27,35,.12);
-      border-color: rgba(229,27,35,.3);
-      color: #ff7379;
-    }
-
-    .btn.green {
-      background: rgba(34,197,94,.12);
-      border-color: rgba(34,197,94,.25);
-      color: #68e495;
-    }
-
-    .btn.yellow {
-      background: rgba(245,158,11,.12);
-      border-color: rgba(245,158,11,.25);
-      color: #ffc45c;
-    }
-
-    .btn.blue {
-      background: rgba(59,130,246,.12);
-      border-color: rgba(59,130,246,.25);
-      color: #72a8ff;
-    }
-
-    .btn:active {
-      transform: scale(.98);
-    }
-
-    /* FORMS */
-
-    .form-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 19px;
-      padding: 17px;
-      margin-bottom: 12px;
-    }
-
-    .form-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 14px;
-    }
-
-    .two {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .photo-preview {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
-      background: #242424;
-      border: 1px solid #303030;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin-top: 10px;
-      font-size: 25px;
-    }
-
-    .photo-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* ATTENDANCE */
-
-    .attendance-box {
-      border-top: 1px solid var(--border);
-      margin-top: 14px;
-      padding-top: 14px;
-    }
-
-    .attendance-title {
-      font-size: 12px;
-      color: #aaa;
-      font-weight: 800;
-      margin-bottom: 9px;
-    }
-
-    .attendance-buttons {
-      display: flex;
-      gap: 7px;
-    }
-
-    .attendance-buttons .btn {
-      flex: 1;
-      text-align: center;
-    }
-
-    .attendance-list {
-      margin-top: 12px;
-      display: grid;
-      gap: 7px;
-    }
-
-    .attendance-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #101010;
-      border: 1px solid #242424;
-      border-radius: 11px;
-      padding: 9px 11px;
-      font-size: 12px;
-    }
-
-    .status {
-      font-weight: 800;
-    }
-
-    .status.yes {
-      color: var(--green);
-    }
-
-    .status.maybe {
-      color: var(--yellow);
-    }
-
-    .status.no {
-      color: #ff6666;
-    }
-
-    /* NOTIFICATIONS */
-
-    #notificationBadge {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      min-width: 19px;
-      height: 19px;
-      margin-left: 5px;
-      padding: 0 5px;
-      border-radius: 10px;
-      background: var(--red);
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      vertical-align: middle;
-    }
-
-    .notification-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-      transition: .2s;
-    }
-
-    .notification-card.unread {
-      border-color: rgba(229,27,35,.45);
-      background:
-        linear-gradient(
-          135deg,
-          rgba(229,27,35,.09),
-          transparent
-        ),
-        var(--card);
-    }
-
-    .notification-icon {
-      width: 42px;
-      height: 42px;
-      min-width: 42px;
-      border-radius: 14px;
-      background: #242424;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .push-box {
-      background:
-        linear-gradient(
-          135deg,
-          rgba(59,130,246,.12),
-          rgba(229,27,35,.08)
-        ),
-        var(--card);
-      border: 1px solid var(--border);
-      border-radius: 19px;
-      padding: 17px;
-      margin-bottom: 14px;
-    }
-
-    .push-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 7px;
-    }
-
-    .push-text {
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.5;
-      margin-bottom: 13px;
-    }
-
-    /* EMPTY */
-
-    .empty {
-      border: 1px dashed #303030;
-      border-radius: 17px;
-      padding: 25px 16px;
-      text-align: center;
-      color: #777;
-      font-size: 13px;
-      background: rgba(255,255,255,.01);
-    }
-
-    .loading {
-      text-align: center;
-      color: #888;
-      padding: 30px 10px;
-      font-size: 13px;
-    }
-
-    /* MODAL */
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.75);
-      backdrop-filter: blur(8px);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .modal-card {
-      width: 100%;
-      max-width: 480px;
-      max-height: 90vh;
-      overflow-y: auto;
-      background: #151515;
-      border: 1px solid #303030;
-      border-radius: 22px;
-      padding: 20px;
-      box-shadow: 0 30px 90px rgba(0,0,0,.6);
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .modal-header h2 {
-      font-size: 19px;
-    }
-
-    .close-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 11px;
-      border: 1px solid var(--border);
-      background: #202020;
-      color: #ddd;
-      font-size: 18px;
-    }
-
-    /* TOAST */
-
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%) translateY(20px);
-      width: calc(100% - 32px);
-      max-width: 440px;
-      padding: 13px 16px;
-      border-radius: 14px;
-      background: #222;
-      border: 1px solid #353535;
-      color: white;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 700;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 300;
-      transition: .25s;
-      box-shadow: 0 15px 40px rgba(0,0,0,.5);
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #toast.error {
-      border-color: rgba(229,27,35,.5);
-    }
-
-    /* FOOTER */
-
-    footer {
-      text-align: center;
-      color: #555;
-      font-size: 10px;
-      padding: 25px 10px 10px;
-    }
-
-    @media (min-width: 700px) {
-      .container {
-        padding-top: 28px;
-      }
-
-      .cards-2 {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .grid.events-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .hero {
-        padding: 30px;
-      }
-
-      .hero h2 {
-        font-size: 34px;
-      }
-    }
-
-    @media (max-width: 430px) {
-      .stats {
-        gap: 7px;
-      }
-
-      .stat {
-        padding: 12px;
-      }
-
-      .stat strong {
-        font-size: 19px;
-      }
-
-      .stat span {
-        font-size: 10px;
-      }
-
-      .two {
-        grid-template-columns: 1fr;
-      }
-
-      .attendance-buttons {
-        flex-direction: column;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
+
+<link rel="manifest" href="/manifest.json">
+
+<title>MDP Wiesiółka</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+:root{
+  --bg:#090909;
+  --card:#151515;
+  --border:#292929;
+  --text:#fff;
+  --muted:#9d9d9d;
+  --red:#e51b23;
+  --red-dark:#a90f15;
+  --green:#22c55e;
+  --yellow:#f59e0b;
+  --blue:#3b82f6;
+}
+
+html{
+  scroll-behavior:smooth;
+  background:var(--bg);
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top right,rgba(229,27,35,.13),transparent 30%),
+    radial-gradient(circle at bottom left,rgba(229,27,35,.07),transparent 35%),
+    var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  padding-bottom:90px;
+}
+
+button,input,textarea,select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* ================= LOGIN ================= */
+
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.login-wrap{
+  width:100%;
+  max-width:430px;
+}
+
+.logo-box{
+  text-align:center;
+  margin-bottom:24px;
+}
+
+.logo{
+  width:92px;
+  height:92px;
+  margin:0 auto 16px;
+  border-radius:28px;
+  background:linear-gradient(145deg,#242424,#101010);
+  border:1px solid #353535;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);
+}
+
+.logo-box h1{
+  font-size:30px;
+  font-weight:800;
+  letter-spacing:-1px;
+}
+
+.logo-box p{
+  color:var(--muted);
+  margin-top:6px;
+  font-size:14px;
+}
+
+.login-card{
+  background:rgba(21,21,21,.92);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:22px;
+  box-shadow:0 25px 70px rgba(0,0,0,.5);
+  backdrop-filter:blur(15px);
+}
+
+.role-buttons{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:18px;
+}
+
+.role-btn{
+  border:1px solid var(--border);
+  background:#101010;
+  color:#aaa;
+  border-radius:14px;
+  padding:12px 5px;
+  font-size:12px;
+  font-weight:700;
+  transition:.2s;
+}
+
+.role-btn.active{
+  background:var(--red);
+  color:#fff;
+  border-color:var(--red);
+}
+
+.field{
+  margin-bottom:14px;
+}
+
+.field label{
+  display:block;
+  color:#bbb;
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:7px;
+}
+
+.input{
+  width:100%;
+  border:1px solid var(--border);
+  background:#0e0e0e;
+  color:#fff;
+  border-radius:14px;
+  padding:14px;
+  outline:none;
+  transition:.2s;
+}
+
+.input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(229,27,35,.12);
+}
+
+textarea.input{
+  resize:vertical;
+  min-height:100px;
+}
+
+.primary-btn{
+  width:100%;
+  border:none;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  color:#fff;
+  border-radius:14px;
+  padding:14px;
+  font-weight:800;
+  box-shadow:0 10px 25px rgba(229,27,35,.2);
+  transition:.15s;
+}
+
+.primary-btn:active{
+  transform:scale(.98);
+}
+
+.primary-btn:disabled{
+  cursor:default;
+  opacity:.55;
+}
+
+.login-error{
+  margin-top:12px;
+  color:#ff6b6b;
+  text-align:center;
+  font-size:13px;
+  min-height:18px;
+}
+
+/* ================= APP ================= */
+
+#app{
+  min-height:100vh;
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(9,9,9,.88);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(18px);
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    16px
+    12px;
+}
+
+.topbar-inner{
+  max-width:1000px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+}
+
+.brand-icon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:13px;
+  background:linear-gradient(145deg,var(--red),#8c0e13);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:21px;
+  box-shadow:0 7px 20px rgba(229,27,35,.25);
+}
+
+.brand-text{
+  min-width:0;
+}
+
+.brand-text strong{
+  display:block;
+  font-size:15px;
+}
+
+.brand-text span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+}
+
+.logout-btn{
+  border:1px solid var(--border);
+  background:#151515;
+  color:#ddd;
+  padding:9px 12px;
+  border-radius:11px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.container{
+  width:100%;
+  max-width:1000px;
+  margin:auto;
+  padding:20px 16px;
+}
+
+/* ================= HERO ================= */
+
+.hero{
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:23px;
+  margin-bottom:18px;
+  background:
+    linear-gradient(135deg,rgba(229,27,35,.18),rgba(255,255,255,.02)),
+    #121212;
+  overflow:hidden;
+  position:relative;
+}
+
+.hero::after{
+  content:"🚒";
+  position:absolute;
+  right:16px;
+  bottom:-8px;
+  font-size:90px;
+  opacity:.08;
+  transform:rotate(-8deg);
+}
+
+.hero small{
+  color:#ff858a;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+
+.hero h2{
+  font-size:28px;
+  line-height:1.08;
+  margin-top:7px;
+  max-width:600px;
+  letter-spacing:-.8px;
+}
+
+.hero p{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:9px;
+  max-width:650px;
+  line-height:1.5;
+}
+
+/* ================= NAV ================= */
+
+.nav{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  margin-bottom:20px;
+  scrollbar-width:none;
+}
+
+.nav::-webkit-scrollbar{
+  display:none;
+}
+
+.nav-btn{
+  white-space:nowrap;
+  border:1px solid var(--border);
+  background:#111;
+  color:#999;
+  border-radius:13px;
+  padding:11px 15px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.nav-btn.active{
+  color:#fff;
+  background:var(--red);
+  border-color:var(--red);
+}
+
+/* ================= SECTIONS ================= */
+
+.page-section{
+  width:100%;
+}
+
+.section{
+  margin-bottom:25px;
+}
+
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.section-title{
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-.4px;
+}
+
+.section-subtitle{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px;
+}
+
+.count{
+  color:#aaa;
+  font-size:12px;
+}
+
+/* ================= STATS ================= */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:22px;
+}
+
+.stat{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:16px;
+}
+
+.stat-icon{
+  font-size:19px;
+  margin-bottom:9px;
+}
+
+.stat strong{
+  display:block;
+  font-size:22px;
+}
+
+.stat span{
+  color:var(--muted);
+  font-size:11px;
+  display:block;
+  margin-top:2px;
+}
+
+/* ================= CARDS ================= */
+
+.grid{
+  display:grid;
+  gap:11px;
+}
+
+.event-card,
+.news-card,
+.member-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+}
+
+.event-top{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.date-box{
+  width:55px;
+  min-width:55px;
+  height:62px;
+  border-radius:14px;
+  background:rgba(229,27,35,.13);
+  border:1px solid rgba(229,27,35,.25);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.date-box strong{
+  font-size:20px;
+  line-height:1;
+}
+
+.date-box span{
+  color:#ff858a;
+  font-size:9px;
+  margin-top:4px;
+  text-transform:uppercase;
+  font-weight:800;
+}
+
+.event-info{
+  flex:1;
+  min-width:0;
+}
+
+.event-info h3,
+.news-card h3,
+.member-card h3{
+  font-size:16px;
+  line-height:1.25;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:6px;
+  line-height:1.5;
+}
+
+.description{
+  color:#c5c5c5;
+  font-size:13px;
+  line-height:1.55;
+  margin-top:12px;
+  white-space:pre-wrap;
+}
+
+.news-date{
+  color:#777;
+  font-size:10px;
+  margin-bottom:6px;
+}
+
+.news-body{
+  color:#c3c3c3;
+  font-size:13px;
+  line-height:1.55;
+  margin-top:8px;
+  white-space:pre-wrap;
+}
+
+/* ================= MEMBERS ================= */
+
+.member-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.avatar{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  background:#242424;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  color:#ddd;
+  flex:0 0 48px;
+  overflow:hidden;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.profile-avatar{
+  width:110px;
+  height:110px;
+  border-radius:30px;
+  background:#242424;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+  font-weight:800;
+  color:#ddd;
+  overflow:hidden;
+  margin:auto;
+  border:1px solid var(--border);
+}
+
+.profile-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.member-info{
+  flex:1;
+  min-width:0;
+}
+
+.member-info h3{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.member-role{
+  color:#999;
+  font-size:11px;
+  margin-top:3px;
+}
+
+/* ================= ACTIONS ================= */
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:13px;
+}
+
+.btn{
+  border:1px solid var(--border);
+  background:#202020;
+  color:#eee;
+  border-radius:11px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.btn.red{
+  background:rgba(229,27,35,.12);
+  border-color:rgba(229,27,35,.3);
+  color:#ff7379;
+}
+
+.btn.green{
+  background:rgba(34,197,94,.12);
+  border-color:rgba(34,197,94,.25);
+  color:#68e495;
+}
+
+.btn.yellow{
+  background:rgba(245,158,11,.12);
+  border-color:rgba(245,158,11,.25);
+  color:#ffc45c;
+}
+
+.btn.blue{
+  background:rgba(59,130,246,.12);
+  border-color:rgba(59,130,246,.25);
+  color:#72a8ff;
+}
+
+/* ================= FORMS ================= */
+
+.form-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:19px;
+  padding:17px;
+  margin-bottom:12px;
+}
+
+.form-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:14px;
+}
+
+.two{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+/* ================= ATTENDANCE ================= */
+
+.attendance-box{
+  border-top:1px solid var(--border);
+  margin-top:14px;
+  padding-top:14px;
+}
+
+.attendance-title{
+  font-size:12px;
+  color:#aaa;
+  font-weight:800;
+  margin-bottom:9px;
+}
+
+.attendance-buttons{
+  display:flex;
+  gap:7px;
+}
+
+.attendance-buttons .btn{
+  flex:1;
+  text-align:center;
+}
+
+.attendance-list{
+  margin-top:12px;
+  display:grid;
+  gap:7px;
+}
+
+.attendance-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  background:#101010;
+  border:1px solid #242424;
+  border-radius:11px;
+  padding:9px 11px;
+  font-size:12px;
+}
+
+.status{
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.status.yes{
+  color:var(--green);
+}
+
+.status.maybe{
+  color:var(--yellow);
+}
+
+.status.no{
+  color:#ff6666;
+}
+
+/* ================= PROFILE ================= */
+
+.profile-stat{
+  background:#101010;
+  border:1px solid #242424;
+  border-radius:14px;
+  padding:12px;
+  margin-top:10px;
+  text-align:center;
+}
+
+.profile-stat strong{
+  display:block;
+  font-size:20px;
+}
+
+.profile-stat span{
+  display:block;
+  color:#888;
+  font-size:11px;
+  margin-top:3px;
+}
+
+/* ================= NOTIFICATIONS ================= */
+
+#notificationBadge{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  min-width:19px;
+  height:19px;
+  margin-left:5px;
+  padding:0 5px;
+  border-radius:10px;
+  background:var(--red);
+  color:#fff;
+  font-size:10px;
+  font-weight:800;
+  vertical-align:middle;
+}
+
+.notification-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+}
+
+.notification-card.unread{
+  border-color:rgba(229,27,35,.45);
+  background:
+    linear-gradient(135deg,rgba(229,27,35,.09),transparent),
+    var(--card);
+}
+
+.notification-icon{
+  width:42px;
+  height:42px;
+  min-width:42px;
+  border-radius:14px;
+  background:#242424;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+
+.push-box{
+  background:
+    linear-gradient(135deg,rgba(59,130,246,.12),rgba(229,27,35,.08)),
+    var(--card);
+  border:1px solid var(--border);
+  border-radius:19px;
+  padding:17px;
+  margin-bottom:14px;
+}
+
+.push-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+
+.push-text{
+  color:#aaa;
+  font-size:12px;
+  line-height:1.5;
+  margin-bottom:13px;
+}
+
+/* ================= EMPTY ================= */
+
+.empty{
+  border:1px dashed #303030;
+  border-radius:17px;
+  padding:25px 16px;
+  text-align:center;
+  color:#777;
+  font-size:13px;
+  background:rgba(255,255,255,.01);
+}
+
+.loading{
+  text-align:center;
+  color:#888;
+  padding:30px 10px;
+  font-size:13px;
+}
+
+/* ================= TOAST ================= */
+
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%) translateY(20px);
+  width:calc(100% - 32px);
+  max-width:440px;
+  padding:13px 16px;
+  border-radius:14px;
+  background:#222;
+  border:1px solid #353535;
+  color:#fff;
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  z-index:100;
+  transition:.25s;
+  box-shadow:0 15px 40px rgba(0,0,0,.5);
+}
+
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+#toast.error{
+  border-color:rgba(229,27,35,.5);
+}
+
+footer{
+  text-align:center;
+  color:#555;
+  font-size:10px;
+  padding:25px 10px 10px;
+}
+
+@media(min-width:700px){
+
+  .container{
+    padding-top:28px;
+  }
+
+  .cards-2{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .events-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .hero{
+    padding:30px;
+  }
+
+  .hero h2{
+    font-size:34px;
+  }
+
+}
+
+@media(max-width:430px){
+
+  .stats{
+    gap:7px;
+  }
+
+  .stat{
+    padding:12px;
+  }
+
+  .stat strong{
+    font-size:19px;
+  }
+
+  .stat span{
+    font-size:10px;
+  }
+
+  .two{
+    grid-template-columns:1fr;
+  }
+
+  .attendance-buttons{
+    flex-direction:column;
+  }
+
+}
+</style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 
-  <section id="loginScreen">
-    <div class="login-wrap">
+<section id="loginScreen">
 
-      <div class="logo-box">
-        <div class="logo">🚒</div>
-        <h1>MDP Wiesiółka</h1>
-        <p>Mobilna aplikacja Młodzieżowej Drużyny Pożarniczej</p>
+  <div class="login-wrap">
+
+    <div class="logo-box">
+
+      <div class="logo">
+        🚒
       </div>
 
-      <div class="login-card">
+      <h1>MDP Wiesiółka</h1>
 
-        <div class="role-buttons">
+      <p>
+        Mobilna aplikacja Młodzieżowej Drużyny Pożarniczej
+      </p>
 
-          <button
-            class="role-btn active"
-            data-role="member"
-            onclick="selectRole('member')"
+    </div>
+
+    <div class="login-card">
+
+      <div class="role-buttons">
+
+        <button
+          class="role-btn active"
+          data-role="member"
+          onclick="selectRole('member')"
+        >
+          👨‍🚒 MDP
+        </button>
+
+        <button
+          class="role-btn"
+          data-role="guardian"
+          onclick="selectRole('guardian')"
+        >
+          🛡️ Opiekun
+        </button>
+
+        <button
+          class="role-btn"
+          data-role="admin"
+          onclick="selectRole('admin')"
+        >
+          ⚙️ Admin
+        </button>
+
+      </div>
+
+      <div id="memberLoginFields">
+
+        <div class="field">
+
+          <label>Imię</label>
+
+          <input
+            id="loginFirstName"
+            class="input"
+            type="text"
+            autocomplete="given-name"
+            placeholder="np. Jan"
           >
-            👨‍🚒 MDP
-          </button>
-
-          <button
-            class="role-btn"
-            data-role="guardian"
-            onclick="selectRole('guardian')"
-          >
-            🛡️ Opiekun
-          </button>
-
-          <button
-            class="role-btn"
-            data-role="admin"
-            onclick="selectRole('admin')"
-          >
-            ⚙️ Admin
-          </button>
-
-        </div>
-
-        <!-- POLA CZŁONKA -->
-
-        <div id="memberLoginFields">
-
-          <div class="field">
-            <label for="loginFirstName">Imię</label>
-
-            <input
-              id="loginFirstName"
-              class="input"
-              type="text"
-              autocomplete="given-name"
-              placeholder="Wpisz imię"
-              onkeydown="if(event.key === 'Enter') login()"
-            >
-          </div>
-
-          <div class="field">
-            <label for="loginLastName">Nazwisko</label>
-
-            <input
-              id="loginLastName"
-              class="input"
-              type="text"
-              autocomplete="family-name"
-              placeholder="Wpisz nazwisko"
-              onkeydown="if(event.key === 'Enter') login()"
-            >
-          </div>
 
         </div>
 
         <div class="field">
 
-          <label for="loginCode">
-            Kod dostępu
-          </label>
+          <label>Nazwisko</label>
 
           <input
-            id="loginCode"
+            id="loginLastName"
             class="input"
-            type="password"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="Wpisz indywidualny kod"
-            onkeydown="if(event.key === 'Enter') login()"
+            type="text"
+            autocomplete="family-name"
+            placeholder="np. Kowalski"
           >
 
         </div>
 
-        <button
-          class="primary-btn"
-          id="loginButton"
-          onclick="login()"
+      </div>
+
+      <div class="field">
+
+        <label id="loginCodeLabel">
+          Indywidualny kod dostępu
+        </label>
+
+        <input
+          id="loginCode"
+          class="input"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Wpisz swój kod"
+          onkeydown="if(event.key==='Enter') login()"
         >
-          Zaloguj się
-        </button>
-
-        <div id="loginError" class="login-error"></div>
-
-        <div class="login-info">
-          Członek MDP loguje się swoim imieniem,
-          nazwiskiem i indywidualnym kodem dostępu.
-        </div>
 
       </div>
+
+      <button
+        class="primary-btn"
+        id="loginButton"
+        onclick="login()"
+      >
+        Zaloguj się
+      </button>
+
+      <div
+        id="loginError"
+        class="login-error"
+      ></div>
+
     </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= APP ================= -->
+
+<main id="app" class="hidden">
+
+<header class="topbar">
+
+  <div class="topbar-inner">
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        🚒
+      </div>
+
+      <div class="brand-text">
+
+        <strong>MDP Wiesiółka</strong>
+
+        <span id="roleLabel">
+          Członek MDP
+        </span>
+
+      </div>
+
+    </div>
+
+    <button
+      class="logout-btn"
+      onclick="logout()"
+    >
+      Wyloguj
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="container">
+
+  <!-- ================= HERO ================= -->
+
+  <section class="hero">
+
+    <small>OSP Wiesiółka</small>
+
+    <h2 id="welcomeTitle">
+      Witaj w aplikacji MDP 👋
+    </h2>
+
+    <p>
+      Wszystkie najważniejsze informacje,
+      zbiórki, ogłoszenia i obecności
+      w jednym miejscu.
+    </p>
+
   </section>
 
 
-  <!-- APP -->
+  <!-- ================= NAV ================= -->
 
-  <main id="app" class="hidden">
+  <nav class="nav">
 
-    <header class="topbar">
+    <button
+      class="nav-btn active"
+      onclick="showSection('home',this)"
+    >
+      🏠 Start
+    </button>
 
-      <div class="topbar-inner">
+    <button
+      class="nav-btn"
+      onclick="showSection('events',this)"
+    >
+      📅 Zbiórki
+    </button>
 
-        <div class="brand">
+    <button
+      class="nav-btn"
+      onclick="showSection('news',this)"
+    >
+      📢 Ogłoszenia
+    </button>
 
-          <div class="brand-icon">
-            🚒
-          </div>
+    <button
+      class="nav-btn"
+      onclick="showSection('members',this)"
+    >
+      👥 Członkowie
+    </button>
 
-          <div class="brand-text">
+    <button
+      id="staffNav"
+      class="nav-btn hidden"
+      onclick="showSection('management',this)"
+    >
+      ⚙️ Zarządzanie
+    </button>
 
-            <strong>MDP Wiesiółka</strong>
+    <button
+      class="nav-btn"
+      onclick="showSection('profile',this)"
+    >
+      👤 Profil
+    </button>
 
-            <span id="roleLabel">
-              Członek MDP
-            </span>
+    <button
+      class="nav-btn"
+      onclick="showSection('notifications',this)"
+    >
+      🔔 Powiadomienia
+      <span id="notificationBadge"></span>
+    </button>
 
-          </div>
+  </nav>
 
-        </div>
 
-        <button
-          class="logout-btn"
-          onclick="logout()"
-        >
-          Wyloguj
-        </button>
+  <!-- ================= HOME ================= -->
 
+  <section
+    id="section-home"
+    class="page-section"
+  >
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="stat-icon">📅</div>
+        <strong id="statEvents">0</strong>
+        <span>zbiórek</span>
       </div>
 
-    </header>
-
-
-    <div class="container">
-
-      <!-- HERO -->
-
-      <section class="hero">
-
-        <small>OSP Wiesiółka</small>
-
-        <h2 id="heroTitle">
-          Witaj w aplikacji MDP 👋
-        </h2>
-
-        <p id="heroText">
-          Wszystkie najważniejsze informacje,
-          zbiórki, ogłoszenia i obecności
-          w jednym miejscu.
-        </p>
-
-      </section>
-
-
-      <!-- NAV -->
-
-      <nav class="nav">
-
-        <button
-          class="nav-btn active"
-          onclick="showSection('home', this)"
-        >
-          🏠 Start
-        </button>
-
-        <button
-          class="nav-btn"
-          onclick="showSection('events', this)"
-        >
-          📅 Zbiórki
-        </button>
-
-        <button
-          class="nav-btn"
-          onclick="showSection('news', this)"
-        >
-          📢 Ogłoszenia
-        </button>
-
-        <button
-          class="nav-btn"
-          onclick="showSection('members', this)"
-        >
-          👥 Członkowie
-        </button>
-
-        <button
-          id="staffNav"
-          class="nav-btn hidden"
-          onclick="showSection('management', this)"
-        >
-          ⚙️ Zarządzanie
-        </button>
-
-        <button
-          class="nav-btn"
-          onclick="showSection('profile', this)"
-        >
-          👤 Profil
-        </button>
-
-        <button
-          class="nav-btn"
-          onclick="showSection('notifications', this)"
-        >
-          🔔 Powiadomienia
-          <span id="notificationBadge"></span>
-        </button>
-
-      </nav>
-
-
-      <!-- HOME -->
-
-      <section
-        id="section-home"
-        class="page-section"
-      >
-
-        <div class="stats">
-
-          <div class="stat">
-            <div class="stat-icon">📅</div>
-            <strong id="statEvents">0</strong>
-            <span>zbiórek</span>
-          </div>
-
-          <div class="stat">
-            <div class="stat-icon">📢</div>
-            <strong id="statNews">0</strong>
-            <span>ogłoszeń</span>
-          </div>
-
-          <div class="stat">
-            <div class="stat-icon">👥</div>
-            <strong id="statMembers">0</strong>
-            <span>członków</span>
-          </div>
-
-        </div>
-
-
-        <section class="section">
-
-          <div class="section-header">
-
-            <div>
-              <div class="section-title">
-                Najbliższa zbiórka
-              </div>
-
-              <div class="section-subtitle">
-                Sprawdź termin i zaznacz obecność
-              </div>
-            </div>
-
-          </div>
-
-          <div id="homeNextEvent">
-            <div class="loading">
-              Ładowanie...
-            </div>
-          </div>
-
-        </section>
-
-
-        <section class="section">
-
-          <div class="section-header">
-
-            <div>
-              <div class="section-title">
-                Najnowsze ogłoszenia
-              </div>
-
-              <div class="section-subtitle">
-                Najważniejsze informacje dla MDP
-              </div>
-            </div>
-
-          </div>
-
-          <div
-            id="homeNews"
-            class="grid"
-          ></div>
-
-        </section>
-
-      </section>
-
-
-      <!-- EVENTS -->
-
-      <section
-        id="section-events"
-        class="page-section hidden"
-      >
-
-        <div class="section-header">
-
-          <div>
-            <div class="section-title">
-              Zbiórki MDP
-            </div>
-
-            <div class="section-subtitle">
-              Terminy spotkań i wydarzeń
-            </div>
-          </div>
-
-          <div
-            id="eventsCount"
-            class="count"
-          >
-            0
-          </div>
-
-        </div>
-
-        <div
-          id="eventsList"
-          class="grid events-grid"
-        >
-          <div class="loading">
-            Ładowanie...
-          </div>
-        </div>
-
-      </section>
-
-
-      <!-- NEWS -->
-
-      <section
-        id="section-news"
-        class="page-section hidden"
-      >
-
-        <div class="section-header">
-
-          <div>
-            <div class="section-title">
-              Ogłoszenia
-            </div>
-
-            <div class="section-subtitle">
-              Informacje od opiekunów i administratora
-            </div>
-          </div>
-
-          <div
-            id="newsCount"
-            class="count"
-          >
-            0
-          </div>
-
-        </div>
-
-        <div
-          id="newsList"
-          class="grid"
-        >
-          <div class="loading">
-            Ładowanie...
-          </div>
-        </div>
-
-      </section>
-
-
-      <!-- MEMBERS -->
-
-      <section
-        id="section-members"
-        class="page-section hidden"
-      >
-
-        <div class="section-header">
-
-          <div>
-            <div class="section-title">
-              Członkowie MDP
-            </div>
-
-            <div class="section-subtitle">
-              Lista osób należących do drużyny
-            </div>
-          </div>
-
-          <div
-            id="membersCount"
-            class="count"
-          >
-            0
-          </div>
-
-        </div>
-
-        <div
-          id="membersList"
-          class="grid"
-        >
-          <div class="loading">
-            Ładowanie...
-          </div>
-        </div>
-
-      </section>
-
-
-      <!-- PROFILE -->
-
-      <section
-        id="section-profile"
-        class="page-section hidden"
-      >
-
-        <div class="section-header">
-
-          <div>
-            <div class="section-title">
-              👤 Mój profil
-            </div>
-
-            <div class="section-subtitle">
-              Twoje dane w aplikacji MDP Wiesiółka
-            </div>
-          </div>
-
-        </div>
-
-
-        <div class="form-card">
-
-          <div
-            style="
-              text-align:center;
-              margin-bottom:22px;
-            "
-          >
-
-            <div
-              id="profileAvatar"
-              class="profile-avatar"
-            >
-              👤
-            </div>
-
-            <div
-              style="
-                margin-top:12px;
-                color:#777;
-                font-size:11px;
-              "
-            >
-              Twoje zdjęcie profilowe
-            </div>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Zdjęcie profilowe
-            </label>
-
-            <input
-              id="profilePhoto"
-              class="input"
-              type="file"
-              accept="image/*"
-              onchange="changeProfilePhoto(event)"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Imię</label>
-
-            <input
-              id="profileFirstName"
-              class="input"
-              readonly
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Nazwisko</label>
-
-            <input
-              id="profileLastName"
-              class="input"
-              readonly
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Rola / funkcja</label>
-
-            <input
-              id="profileRole"
-              class="input"
-              readonly
-            >
-
-          </div>
-
-
-          <div
-            id="profileCodeInfo"
-            style="
-              color:#777;
-              font-size:11px;
-              line-height:1.5;
-              margin-top:8px;
-            "
-          >
-            Kod dostępu jest przechowywany bezpiecznie
-            na serwerze i nie jest wyświetlany w profilu.
-          </div>
-
-        </div>
-
-
-        <div class="form-card">
-
-          <div class="form-title">
-            📊 Moja obecność
-          </div>
-
-          <div
-            id="myStats"
-            class="grid"
-          >
-            <div class="loading">
-              Ładowanie statystyk...
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
-
-      <!-- NOTIFICATIONS -->
-
-      <section
-        id="section-notifications"
-        class="page-section hidden"
-      >
-
-        <div class="section-header">
-
-          <div>
-            <div class="section-title">
-              🔔 Powiadomienia
-            </div>
-
-            <div class="section-subtitle">
-              Najważniejsze informacje dla Ciebie
-            </div>
-          </div>
-
-          <div
-            id="notificationCount"
-            class="count"
-          >
-            0 nowych
-          </div>
-
-        </div>
-
-
-        <div class="push-box">
-
-          <div class="push-title">
-            🔔 Powiadomienia na telefon
-          </div>
-
-          <div class="push-text">
-            Włącz powiadomienia, aby otrzymywać
-            informacje o nowych zbiórkach i ogłoszeniach
-            nawet wtedy, gdy aplikacja jest zamknięta.
-          </div>
-
-          <button
-            id="enablePushButton"
-            class="primary-btn"
-            onclick="enablePushNotifications()"
-          >
-            🔔 Włącz powiadomienia
-          </button>
-
-        </div>
-
-
-        <div
-          class="actions"
-          style="margin-bottom:14px"
-        >
-
-          <button
-            class="btn blue"
-            onclick="markAllNotificationsRead()"
-          >
-            ✓ Oznacz wszystkie jako przeczytane
-          </button>
-
-        </div>
-
-
-        <div
-          id="notificationsList"
-          class="grid"
-        >
-
-          <div class="empty">
-            🔔 Brak powiadomień.
-          </div>
-
-        </div>
-
-      </section>
-
-
-      <!-- MANAGEMENT -->
-
-      <section
-        id="section-management"
-        class="page-section hidden"
-      >
-
-        <div class="section">
-
-          <div class="section-header">
-
-            <div>
-              <div class="section-title">
-                Zarządzanie
-              </div>
-
-              <div class="section-subtitle">
-                Dodawanie i edycja danych MDP
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ADD EVENT -->
-
-        <div class="form-card">
-
-          <div class="form-title">
-            📅 Dodaj zbiórkę
-          </div>
-
-          <div class="field">
-
-            <label>Tytuł</label>
-
-            <input
-              id="eventTitle"
-              class="input"
-              placeholder="np. Zbiórka MDP"
-            >
-
-          </div>
-
-
-          <div class="two">
-
-            <div class="field">
-
-              <label>Data</label>
-
-              <input
-                id="eventDate"
-                class="input"
-                type="date"
-              >
-
-            </div>
-
-
-            <div class="field">
-
-              <label>Godzina</label>
-
-              <input
-                id="eventTime"
-                class="input"
-                type="time"
-              >
-
-            </div>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Miejsce</label>
-
-            <input
-              id="eventPlace"
-              class="input"
-              placeholder="np. Remiza OSP Wiesiółka"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Opis</label>
-
-            <textarea
-              id="eventDescription"
-              class="input"
-              placeholder="Dodatkowe informacje..."
-            ></textarea>
-
-          </div>
-
-
-          <button
-            class="primary-btn"
-            onclick="addEvent()"
-          >
-            Dodaj zbiórkę
-          </button>
-
-        </div>
-
-
-        <!-- ADD NEWS -->
-
-        <div class="form-card">
-
-          <div class="form-title">
-            📢 Dodaj ogłoszenie
-          </div>
-
-          <div class="field">
-
-            <label>Tytuł</label>
-
-            <input
-              id="newsTitle"
-              class="input"
-              placeholder="Tytuł ogłoszenia"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Treść</label>
-
-            <textarea
-              id="newsBody"
-              class="input"
-              placeholder="Treść ogłoszenia..."
-            ></textarea>
-
-          </div>
-
-
-          <button
-            class="primary-btn"
-            onclick="addNews()"
-          >
-            Dodaj ogłoszenie
-          </button>
-
-        </div>
-
-
-        <!-- ADD MEMBER -->
-
-        <div class="form-card">
-
-          <div class="form-title">
-            👥 Dodaj członka MDP
-          </div>
-
-          <div class="field">
-
-            <label>Imię</label>
-
-            <input
-              id="memberFirstName"
-              class="input"
-              placeholder="np. Jan"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Nazwisko</label>
-
-            <input
-              id="memberLastName"
-              class="input"
-              placeholder="np. Kowalski"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Indywidualny kod dostępu</label>
-
-            <input
-              id="memberCode"
-              class="input"
-              type="password"
-              inputmode="numeric"
-              autocomplete="off"
-              placeholder="np. 482731"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Rola / funkcja</label>
-
-            <input
-              id="memberRole"
-              class="input"
-              value="Członek MDP"
-              placeholder="np. Członek MDP"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>Zdjęcie profilowe (opcjonalnie)</label>
-
-            <input
-              id="memberPhoto"
-              class="input"
-              type="file"
-              accept="image/*"
-              onchange="previewMemberPhoto(event)"
-            >
-
-            <div
-              id="memberPhotoPreview"
-              class="photo-preview"
-            >
-              👤
-            </div>
-
-          </div>
-
-
-          <button
-            class="primary-btn"
-            onclick="addMember()"
-          >
-            ➕ Dodaj członka
-          </button>
-
-        </div>
-
-
-        <!-- MEMBERS MANAGEMENT -->
-
-        <div class="form-card">
-
-          <div class="form-title">
-            ⚙️ Zarządzaj członkami
-          </div>
-
-          <div
-            id="managementMembersList"
-            class="grid"
-          >
-            <div class="loading">
-              Ładowanie...
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
-
-      <footer>
-        MDP Wiesiółka • OSP Wiesiółka
-      </footer>
+      <div class="stat">
+        <div class="stat-icon">📢</div>
+        <strong id="statNews">0</strong>
+        <span>ogłoszeń</span>
+      </div>
+
+      <div class="stat">
+        <div class="stat-icon">👥</div>
+        <strong id="statMembers">0</strong>
+        <span>członków</span>
+      </div>
 
     </div>
 
-  </main>
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <div>
+
+          <div class="section-title">
+            Najbliższa zbiórka
+          </div>
+
+          <div class="section-subtitle">
+            Sprawdź termin i zaznacz obecność
+          </div>
+
+        </div>
+
+      </div>
+
+      <div id="homeNextEvent">
+        <div class="loading">
+          Ładowanie...
+        </div>
+      </div>
+
+    </section>
 
 
-  <!-- EDIT MEMBER MODAL -->
+    <section class="section">
 
-  <div
-    id="editMemberModal"
-    class="modal hidden"
+      <div class="section-header">
+
+        <div>
+
+          <div class="section-title">
+            Najnowsze ogłoszenia
+          </div>
+
+          <div class="section-subtitle">
+            Najważniejsze informacje dla MDP
+          </div>
+
+        </div>
+
+      </div>
+
+      <div
+        id="homeNews"
+        class="grid"
+      ></div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ================= EVENTS ================= -->
+
+  <section
+    id="section-events"
+    class="page-section hidden"
   >
 
-    <div class="modal-card">
+    <div class="section-header">
 
-      <div class="modal-header">
+      <div>
 
-        <h2>✏️ Edytuj członka</h2>
+        <div class="section-title">
+          Zbiórki MDP
+        </div>
 
-        <button
-          class="close-btn"
-          onclick="closeEditMember()"
+        <div class="section-subtitle">
+          Terminy spotkań i wydarzeń
+        </div>
+
+      </div>
+
+      <div
+        id="eventsCount"
+        class="count"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div
+      id="eventsList"
+      class="grid events-grid"
+    ></div>
+
+  </section>
+
+
+  <!-- ================= NEWS ================= -->
+
+  <section
+    id="section-news"
+    class="page-section hidden"
+  >
+
+    <div class="section-header">
+
+      <div>
+
+        <div class="section-title">
+          Ogłoszenia
+        </div>
+
+        <div class="section-subtitle">
+          Informacje od opiekunów i administratora
+        </div>
+
+      </div>
+
+      <div
+        id="newsCount"
+        class="count"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div
+      id="newsList"
+      class="grid"
+    ></div>
+
+  </section>
+
+
+  <!-- ================= MEMBERS ================= -->
+
+  <section
+    id="section-members"
+    class="page-section hidden"
+  >
+
+    <div class="section-header">
+
+      <div>
+
+        <div class="section-title">
+          Członkowie MDP
+        </div>
+
+        <div class="section-subtitle">
+          Lista osób należących do drużyny
+        </div>
+
+      </div>
+
+      <div
+        id="membersCount"
+        class="count"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div
+      id="membersList"
+      class="grid"
+    ></div>
+
+  </section>
+
+
+  <!-- ================= PROFILE ================= -->
+
+  <section
+    id="section-profile"
+    class="page-section hidden"
+  >
+
+    <div class="section-header">
+
+      <div>
+
+        <div class="section-title">
+          👤 Mój profil
+        </div>
+
+        <div class="section-subtitle">
+          Twoje dane w aplikacji MDP Wiesiółka
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="form-card">
+
+      <div style="text-align:center;margin-bottom:22px">
+
+        <div
+          id="profileAvatar"
+          class="profile-avatar"
         >
-          ×
-        </button>
+          👤
+        </div>
+
+        <div
+          id="profileNameUnderAvatar"
+          style="margin-top:12px;font-size:17px;font-weight:800"
+        >
+          —
+        </div>
+
+        <div
+          id="profileRoleUnderAvatar"
+          style="margin-top:4px;color:#777;font-size:11px"
+        >
+          —
+        </div>
 
       </div>
 
 
-      <input
-        id="editMemberId"
-        type="hidden"
-      >
+      <div class="field">
+
+        <label>Zdjęcie profilowe</label>
+
+        <input
+          id="profilePhoto"
+          class="input"
+          type="file"
+          accept="image/*"
+          onchange="changeProfilePhoto(event)"
+        >
+
+      </div>
 
 
       <div class="field">
@@ -1974,8 +1426,9 @@
         <label>Imię</label>
 
         <input
-          id="editMemberFirstName"
+          id="profileFirstName"
           class="input"
+          readonly
         >
 
       </div>
@@ -1986,24 +1439,9 @@
         <label>Nazwisko</label>
 
         <input
-          id="editMemberLastName"
+          id="profileLastName"
           class="input"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>Nowy kod dostępu</label>
-
-        <input
-          id="editMemberCode"
-          class="input"
-          type="password"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="Zostaw puste, aby nie zmieniać"
+          readonly
         >
 
       </div>
@@ -2014,443 +1452,678 @@
         <label>Rola / funkcja</label>
 
         <input
-          id="editMemberRole"
+          id="profileRole"
           class="input"
+          readonly
         >
 
       </div>
 
+
+      <div id="profileStats"></div>
+
+    </div>
+
+
+    <div class="form-card">
+
+      <div class="form-title">
+        ℹ️ Informacje
+      </div>
+
+      <div style="color:#aaa;font-size:13px;line-height:1.6">
+        Imię, nazwisko i rola są przypisane do Twojego
+        konta przez administratora. Możesz zmienić
+        swoje zdjęcie profilowe.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================= NOTIFICATIONS ================= -->
+
+  <section
+    id="section-notifications"
+    class="page-section hidden"
+  >
+
+    <div class="section-header">
+
+      <div>
+
+        <div class="section-title">
+          🔔 Powiadomienia
+        </div>
+
+        <div class="section-subtitle">
+          Najważniejsze informacje dla Ciebie
+        </div>
+
+      </div>
+
+      <div
+        id="notificationCount"
+        class="count"
+      >
+        0 nowych
+      </div>
+
+    </div>
+
+
+    <div class="push-box">
+
+      <div class="push-title">
+        🔔 Powiadomienia na telefon
+      </div>
+
+      <div class="push-text">
+        Włącz powiadomienia, aby otrzymywać informacje
+        o nowych zbiórkach i ogłoszeniach.
+      </div>
+
+      <button
+        id="enablePushButton"
+        class="primary-btn"
+        onclick="enablePushNotifications()"
+      >
+        🔔 Włącz powiadomienia
+      </button>
+
+    </div>
+
+
+    <div
+      class="actions"
+      style="margin-bottom:14px"
+    >
+
+      <button
+        class="btn blue"
+        onclick="markAllNotificationsRead()"
+      >
+        ✓ Oznacz wszystkie jako przeczytane
+      </button>
+
+    </div>
+
+
+    <div
+      id="notificationsList"
+      class="grid"
+    ></div>
+
+  </section>
+
+
+  <!-- ================= MANAGEMENT ================= -->
+
+  <section
+    id="section-management"
+    class="page-section hidden"
+  >
+
+    <div class="section-header">
+
+      <div>
+
+        <div class="section-title">
+          Zarządzanie
+        </div>
+
+        <div class="section-subtitle">
+          Dodawanie i edycja danych MDP
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ADD EVENT -->
+
+    <div class="form-card">
+
+      <div class="form-title">
+        📅 Dodaj zbiórkę
+      </div>
 
       <div class="field">
 
-        <label>Nowe zdjęcie</label>
+        <label>Tytuł</label>
 
         <input
-          id="editMemberPhoto"
+          id="eventTitle"
           class="input"
-          type="file"
-          accept="image/*"
-          onchange="previewEditMemberPhoto(event)"
+          placeholder="np. Zbiórka MDP"
         >
 
       </div>
 
+      <div class="two">
 
-      <div
-        id="editMemberPhotoPreview"
-        class="photo-preview"
-      >
-        👤
+        <div class="field">
+
+          <label>Data</label>
+
+          <input
+            id="eventDate"
+            class="input"
+            type="date"
+          >
+
+        </div>
+
+        <div class="field">
+
+          <label>Godzina</label>
+
+          <input
+            id="eventTime"
+            class="input"
+            type="time"
+          >
+
+        </div>
+
       </div>
 
+      <div class="field">
+
+        <label>Miejsce</label>
+
+        <input
+          id="eventPlace"
+          class="input"
+          placeholder="np. Remiza OSP Wiesiółka"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Opis</label>
+
+        <textarea
+          id="eventDescription"
+          class="input"
+          placeholder="Dodatkowe informacje..."
+        ></textarea>
+
+      </div>
+
+      <button
+        class="primary-btn"
+        onclick="addEvent()"
+      >
+        Dodaj zbiórkę
+      </button>
+
+    </div>
+
+
+    <!-- ADD NEWS -->
+
+    <div class="form-card">
+
+      <div class="form-title">
+        📢 Dodaj ogłoszenie
+      </div>
+
+      <div class="field">
+
+        <label>Tytuł</label>
+
+        <input
+          id="newsTitle"
+          class="input"
+          placeholder="Tytuł ogłoszenia"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Treść</label>
+
+        <textarea
+          id="newsBody"
+          class="input"
+          placeholder="Treść ogłoszenia..."
+        ></textarea>
+
+      </div>
+
+      <button
+        class="primary-btn"
+        onclick="addNews()"
+      >
+        Dodaj ogłoszenie
+      </button>
+
+    </div>
+
+
+    <!-- ADD MEMBER -->
+
+    <div class="form-card">
+
+      <div class="form-title">
+        👥 Dodaj członka MDP
+      </div>
+
+      <div class="field">
+
+        <label>Imię</label>
+
+        <input
+          id="memberFirstName"
+          class="input"
+          placeholder="np. Jan"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Nazwisko</label>
+
+        <input
+          id="memberLastName"
+          class="input"
+          placeholder="np. Kowalski"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Indywidualny kod</label>
+
+        <input
+          id="memberCode"
+          class="input"
+          type="password"
+          inputmode="numeric"
+          placeholder="np. 482731"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Rola / funkcja</label>
+
+        <input
+          id="memberRole"
+          class="input"
+          value="Członek MDP"
+          placeholder="np. Członek MDP"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Zdjęcie profilowe — opcjonalnie</label>
+
+        <input
+          id="memberPhoto"
+          class="input"
+          type="file"
+          accept="image/*"
+        >
+
+      </div>
+
+      <button
+        class="primary-btn"
+        onclick="addMember()"
+      >
+        👤 Utwórz konto członka
+      </button>
+
+      <div style="color:#777;font-size:11px;margin-top:10px;line-height:1.5">
+        Kod jest indywidualny. Po utworzeniu konta przekaż
+        ten kod danemu członkowi.
+      </div>
+
+    </div>
+
+
+    <!-- EDIT MEMBER -->
+
+    <div
+      id="editMemberCard"
+      class="form-card hidden"
+    >
+
+      <div class="form-title">
+        ✏️ Edytuj członka
+      </div>
+
+      <input
+        type="hidden"
+        id="editMemberId"
+      >
+
+      <div class="field">
+
+        <label>Imię</label>
+
+        <input
+          id="editFirstName"
+          class="input"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Nazwisko</label>
+
+        <input
+          id="editLastName"
+          class="input"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Nowy kod — zostaw puste, aby nie zmieniać</label>
+
+        <input
+          id="editCode"
+          class="input"
+          type="password"
+          inputmode="numeric"
+          placeholder="Nowy kod"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Rola / funkcja</label>
+
+        <input
+          id="editRole"
+          class="input"
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Nowe zdjęcie — opcjonalnie</label>
+
+        <input
+          id="editPhoto"
+          class="input"
+          type="file"
+          accept="image/*"
+        >
+
+      </div>
 
       <div class="actions">
 
         <button
-          class="btn"
-          style="flex:1"
-          onclick="closeEditMember()"
+          class="btn green"
+          onclick="saveMemberEdit()"
         >
-          Anuluj
+          ✓ Zapisz zmiany
         </button>
 
         <button
-          class="btn blue"
-          style="flex:1"
-          onclick="saveEditedMember()"
+          class="btn"
+          onclick="cancelMemberEdit()"
         >
-          💾 Zapisz
+          Anuluj
         </button>
 
       </div>
 
     </div>
 
-  </div>
+
+    <!-- MANAGEMENT STATS -->
+
+    <div class="form-card">
+
+      <div class="form-title">
+        📊 Statystyki
+      </div>
+
+      <div id="managementStats">
+        <div class="loading">
+          Ładowanie statystyk...
+        </div>
+      </div>
+
+    </div>
+
+  </section>
 
 
-  <!-- TOAST -->
+  <footer>
+    MDP Wiesiółka • OSP Wiesiółka
+  </footer>
 
-  <div id="toast"></div>
+</div>
 
-
-  <script>
-
-    /* =========================
-       GLOBALNE
-    ========================= */
-
-    let currentRole = "member";
-    let authCode = "";
-    let currentMember = null;
-
-    let appData = {
-      events: [],
-      news: [],
-      members: []
-    };
-
-    let notifications = [];
+</main>
 
 
-    const loginScreen =
-      document.getElementById("loginScreen");
-
-    const app =
-      document.getElementById("app");
-
-    const loginCode =
-      document.getElementById("loginCode");
-
-    const loginError =
-      document.getElementById("loginError");
+<div id="toast"></div>
 
 
-    /* =========================
-       ROLE
-    ========================= */
+<script>
 
-    function selectRole(role) {
+let currentRole = "member";
+let authCode = "";
+let currentMember = null;
 
-      currentRole = role;
+let appData = {
+  events: [],
+  news: [],
+  members: []
+};
 
+let notifications = [];
+let toastTimer = null;
+
+
+/* ================= ELEMENTY ================= */
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const app =
+  document.getElementById("app");
+
+const loginCode =
+  document.getElementById("loginCode");
+
+const loginError =
+  document.getElementById("loginError");
+
+
+/* ================= ROLE ================= */
+
+function selectRole(role){
+
+  currentRole = role;
+
+  document
+    .querySelectorAll(".role-btn")
+    .forEach(btn => {
+
+      btn.classList.toggle(
+        "active",
+        btn.dataset.role === role
+      );
+
+    });
+
+  const memberFields =
+    document.getElementById("memberLoginFields");
+
+  const codeLabel =
+    document.getElementById("loginCodeLabel");
+
+  const codeInput =
+    document.getElementById("loginCode");
+
+  if(role === "member"){
+
+    memberFields.classList.remove("hidden");
+
+    codeLabel.textContent =
+      "Indywidualny kod dostępu";
+
+    codeInput.placeholder =
+      "Wpisz swój kod";
+
+  }else{
+
+    memberFields.classList.add("hidden");
+
+    codeLabel.textContent =
+      role === "admin"
+        ? "Kod administratora"
+        : "Kod opiekuna";
+
+    codeInput.placeholder =
+      "Wpisz kod";
+
+  }
+
+  loginError.textContent = "";
+
+}
+
+
+/* ================= LOGIN ================= */
+
+async function login(){
+
+  const code =
+    loginCode.value.trim();
+
+  if(!code){
+
+    loginError.textContent =
+      "Wpisz kod dostępu.";
+
+    return;
+
+  }
+
+  let firstName = "";
+  let lastName = "";
+
+  if(currentRole === "member"){
+
+    firstName =
       document
-        .querySelectorAll(".role-btn")
-        .forEach(btn => {
+        .getElementById("loginFirstName")
+        .value
+        .trim();
 
-          btn.classList.toggle(
-            "active",
-            btn.dataset.role === role
-          );
+    lastName =
+      document
+        .getElementById("loginLastName")
+        .value
+        .trim();
 
-        });
+    if(!firstName || !lastName){
 
+      loginError.textContent =
+        "Wpisz imię i nazwisko.";
 
-      const memberFields =
-        document.getElementById(
-          "memberLoginFields"
-        );
-
-
-      const info =
-        document.querySelector(
-          ".login-info"
-        );
-
-
-      if (role === "member") {
-
-        memberFields.classList.remove(
-          "hidden"
-        );
-
-        info.textContent =
-          "Członek MDP loguje się swoim imieniem, nazwiskiem i indywidualnym kodem dostępu.";
-
-        document.getElementById(
-          "loginFirstName"
-        ).focus();
-
-      } else {
-
-        memberFields.classList.add(
-          "hidden"
-        );
-
-        info.textContent =
-          role === "admin"
-            ? "Logowanie administratora odbywa się za pomocą kodu administratora."
-            : "Logowanie opiekuna odbywa się za pomocą kodu opiekuna.";
-
-        loginCode.focus();
-
-      }
-
-
-      loginError.textContent = "";
+      return;
 
     }
 
+  }
 
-    /* =========================
-       LOGIN
-    ========================= */
+  loginError.textContent = "";
 
-    async function login() {
+  const button =
+    document.getElementById("loginButton");
 
-      const code =
-        loginCode.value.trim();
+  button.disabled = true;
+  button.textContent = "Logowanie...";
 
+  try{
 
-      if (!code) {
+    const response =
+      await fetch("/api/login",{
 
-        loginError.textContent =
-          "Wpisz kod dostępu.";
+        method:"POST",
 
-        return;
+        headers:{
+          "Content-Type":"application/json"
+        },
 
-      }
-
-
-      let firstName = "";
-      let lastName = "";
-
-
-      if (currentRole === "member") {
-
-        firstName =
-          document
-            .getElementById(
-              "loginFirstName"
-            )
-            .value
-            .trim();
-
-
-        lastName =
-          document
-            .getElementById(
-              "loginLastName"
-            )
-            .value
-            .trim();
-
-
-        if (!firstName || !lastName) {
-
-          loginError.textContent =
-            "Wpisz imię i nazwisko.";
-
-          return;
-
-        }
-
-      }
-
-
-      loginError.textContent = "";
-
-
-      const button =
-        document.getElementById(
-          "loginButton"
-        );
-
-
-      button.disabled = true;
-      button.textContent = "Logowanie...";
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/login",
-            {
-
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body:
-                JSON.stringify({
-
-                  role:
-                    currentRole,
-
-                  code,
-
-                  firstName,
-
-                  lastName
-
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się zalogować."
-          );
-
-        }
-
-
-        authCode = code;
-
-
-        localStorage.setItem(
-          "mdpRole",
-          currentRole
-        );
-
-
-        localStorage.setItem(
-          "mdpCode",
+        body:JSON.stringify({
+          role:currentRole,
+          firstName,
+          lastName,
           code
-        );
+        })
+
+      });
 
 
-        if (
-          currentRole === "member" &&
-          data.member
-        ) {
-
-          currentMember =
-            data.member;
+    const data =
+      await response.json();
 
 
-          localStorage.setItem(
-            "mdpMemberId",
-            String(data.member.id)
-          );
+    if(!response.ok){
 
-
-          localStorage.setItem(
-            "mdpMember",
-            JSON.stringify(data.member)
-          );
-
-        } else {
-
-          currentMember = null;
-
-          localStorage.removeItem(
-            "mdpMemberId"
-          );
-
-          localStorage.removeItem(
-            "mdpMember"
-          );
-
-        }
-
-
-        showApp();
-
-        await loadData();
-
-
-      } catch (error) {
-
-        loginError.textContent =
-          error.message ||
-          "Błąd logowania.";
-
-      } finally {
-
-        button.disabled = false;
-        button.textContent = "Zaloguj się";
-
-      }
+      throw new Error(
+        data.error ||
+        "Nie udało się zalogować."
+      );
 
     }
 
 
-    /* =========================
-       SHOW APP
-    ========================= */
+    authCode = code;
 
-    function showApp() {
+    localStorage.setItem(
+      "mdpRole",
+      currentRole
+    );
 
-      loginScreen.classList.add(
-        "hidden"
+    localStorage.setItem(
+      "mdpCode",
+      code
+    );
+
+
+    if(currentRole === "member" && data.member){
+
+      currentMember = data.member;
+
+      localStorage.setItem(
+        "mdpMemberId",
+        String(data.member.id)
       );
 
-      app.classList.remove(
-        "hidden"
+      localStorage.setItem(
+        "mdpMember",
+        JSON.stringify(data.member)
       );
 
+    }else{
 
-      const roleNames = {
-
-        member:
-          "Członek MDP",
-
-        guardian:
-          "Opiekun MDP",
-
-        admin:
-          "Administrator"
-
-      };
-
-
-      document
-        .getElementById("roleLabel")
-        .textContent =
-          currentMember
-            ? `${currentMember.first_name} ${currentMember.last_name}`
-            : (
-                roleNames[currentRole] ||
-                "Użytkownik"
-              );
-
-
-      const staff =
-        isStaff();
-
-
-      document
-        .getElementById("staffNav")
-        .classList.toggle(
-          "hidden",
-          !staff
-        );
-
-
-      const heroTitle =
-        document.getElementById(
-          "heroTitle"
-        );
-
-
-      if (
-        currentRole === "member" &&
-        currentMember
-      ) {
-
-        heroTitle.textContent =
-          `Witaj, ${currentMember.first_name}! 👋`;
-
-      } else {
-
-        heroTitle.textContent =
-          "Witaj w aplikacji MDP 👋";
-
-      }
-
-
-      renderProfile();
-      updatePushButton();
-
-    }
-
-
-    /* =========================
-       LOGOUT
-    ========================= */
-
-    function logout() {
-
-      localStorage.removeItem(
-        "mdpRole"
-      );
-
-      localStorage.removeItem(
-        "mdpCode"
-      );
+      currentMember = null;
 
       localStorage.removeItem(
         "mdpMemberId"
@@ -2460,415 +2133,638 @@
         "mdpMember"
       );
 
-
-      currentRole = "member";
-      authCode = "";
-      currentMember = null;
-
-
-      loginCode.value = "";
-
-      document.getElementById(
-        "loginFirstName"
-      ).value = "";
-
-      document.getElementById(
-        "loginLastName"
-      ).value = "";
-
-
-      app.classList.add(
-        "hidden"
-      );
-
-      loginScreen.classList.remove(
-        "hidden"
-      );
-
-
-      selectRole("member");
-
     }
 
 
-    /* =========================
-       AUTH HEADERS
-    ========================= */
+    showApp();
 
-    function headers() {
+    await loadData();
 
-      const result = {
+  }catch(error){
 
-        "Content-Type":
-          "application/json",
+    loginError.textContent =
+      error.message ||
+      "Błąd logowania.";
 
-        "x-role":
-          currentRole,
+  }finally{
 
-        "x-code":
-          authCode
+    button.disabled = false;
+    button.textContent = "Zaloguj się";
 
-      };
+  }
 
-
-      if (
-        currentRole === "member" &&
-        currentMember
-      ) {
-
-        result["x-member-id"] =
-          String(currentMember.id);
-
-      }
+}
 
 
-      return result;
+/* ================= SHOW APP ================= */
+
+function showApp(){
+
+  loginScreen.classList.add("hidden");
+
+  app.classList.remove("hidden");
+
+
+  document
+    .getElementById("roleLabel")
+    .textContent =
+      roleName(currentRole);
+
+
+  document
+    .getElementById("staffNav")
+    .classList.toggle(
+      "hidden",
+      !isStaff()
+    );
+
+
+  const welcome =
+    document.getElementById("welcomeTitle");
+
+
+  if(currentMember){
+
+    const first =
+      currentMember.first_name ||
+      currentMember.firstName ||
+      "";
+
+    welcome.textContent =
+      `Witaj, ${first}! 👋`;
+
+  }else{
+
+    welcome.textContent =
+      "Witaj w aplikacji MDP 👋";
+
+  }
+
+
+  renderProfile();
+
+  updatePushButton();
+
+}
+
+
+/* ================= LOGOUT ================= */
+
+function logout(){
+
+  localStorage.removeItem("mdpRole");
+  localStorage.removeItem("mdpCode");
+  localStorage.removeItem("mdpMemberId");
+  localStorage.removeItem("mdpMember");
+
+  authCode = "";
+  currentMember = null;
+
+  loginCode.value = "";
+
+  const first =
+    document.getElementById("loginFirstName");
+
+  const last =
+    document.getElementById("loginLastName");
+
+  if(first) first.value = "";
+  if(last) last.value = "";
+
+  app.classList.add("hidden");
+
+  loginScreen.classList.remove("hidden");
+
+  selectRole("member");
+
+}
+
+
+/* ================= AUTH HEADERS ================= */
+
+function headers(){
+
+  const result = {
+
+    "Content-Type":"application/json",
+
+    "x-role":currentRole,
+
+    "x-code":authCode
+
+  };
+
+
+  if(currentRole === "member"){
+
+    const memberId =
+      localStorage.getItem("mdpMemberId");
+
+    if(memberId){
+
+      result["x-member-id"] =
+        memberId;
 
     }
 
-
-    /* =========================
-       LOAD DATA
-    ========================= */
-
-    async function loadData() {
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/data",
-            {
-              headers:
-                headers()
-            }
-          );
+  }
 
 
-        const data =
-          await response.json();
+  return result;
+
+}
 
 
-        if (!response.ok) {
+/* ================= LOAD DATA ================= */
 
-          throw new Error(
-            data.error ||
-            "Nie udało się pobrać danych."
-          );
+async function loadData(){
 
+  try{
+
+    const response =
+      await fetch(
+        "/api/data",
+        {
+          headers:headers()
         }
+      );
 
 
-        appData = {
-
-          events:
-            Array.isArray(data.events)
-              ? data.events
-              : [],
-
-          news:
-            Array.isArray(data.news)
-              ? data.news
-              : [],
-
-          members:
-            Array.isArray(data.members)
-              ? data.members
-              : []
-
-        };
+    const data =
+      await response.json();
 
 
-        renderAll();
+    if(!response.ok){
 
-
-      } catch (error) {
-
-        showToast(
-          error.message ||
-          "Nie udało się pobrać danych.",
-          true
-        );
-
-      }
+      throw new Error(
+        data.error ||
+        "Nie udało się pobrać danych."
+      );
 
     }
 
 
-    /* =========================
-       RENDER ALL
-    ========================= */
+    appData = data;
 
-    function renderAll() {
+    renderAll();
 
-      renderStats();
-      renderHome();
-      renderEvents();
-      renderNews();
-      renderMembers();
-      renderManagementMembers();
-      createNotifications();
-      renderProfile();
-      updatePushButton();
+  }catch(error){
 
-    }
+    showToast(
+      error.message ||
+      "Nie udało się pobrać danych.",
+      true
+    );
+
+  }
+
+}
 
 
-    /* =========================
-       STATS
-    ========================= */
+/* ================= RENDER ALL ================= */
 
-    function renderStats() {
+function renderAll(){
 
-      document.getElementById(
-        "statEvents"
-      ).textContent =
-        appData.events.length;
+  renderStats();
+  renderHome();
+  renderEvents();
+  renderNews();
+  renderMembers();
+  createNotifications();
+  renderProfile();
 
+  if(isStaff()){
 
-      document.getElementById(
-        "statNews"
-      ).textContent =
-        appData.news.length;
+    loadManagementStats();
 
+  }
 
-      document.getElementById(
-        "statMembers"
-      ).textContent =
-        appData.members.length;
+  updatePushButton();
 
-
-      document.getElementById(
-        "eventsCount"
-      ).textContent =
-        appData.events.length;
+}
 
 
-      document.getElementById(
-        "newsCount"
-      ).textContent =
-        appData.news.length;
+/* ================= STATS ================= */
+
+function renderStats(){
+
+  document.getElementById("statEvents").textContent =
+    appData.events.length;
+
+  document.getElementById("statNews").textContent =
+    appData.news.length;
+
+  document.getElementById("statMembers").textContent =
+    appData.members.length;
+
+  document.getElementById("eventsCount").textContent =
+    appData.events.length;
+
+  document.getElementById("newsCount").textContent =
+    appData.news.length;
+
+  document.getElementById("membersCount").textContent =
+    appData.members.length;
+
+}
 
 
-      document.getElementById(
-        "membersCount"
-      ).textContent =
-        appData.members.length;
+/* ================= HOME ================= */
 
-    }
+function renderHome(){
 
-
-    /* =========================
-       HOME
-    ========================= */
-
-    function renderHome() {
-
-      const eventBox =
-        document.getElementById(
-          "homeNextEvent"
-        );
+  const eventBox =
+    document.getElementById("homeNextEvent");
 
 
-      if (!appData.events.length) {
+  if(!appData.events.length){
 
-        eventBox.innerHTML =
-          '<div class="empty">Brak zaplanowanych zbiórek.</div>';
+    eventBox.innerHTML =
+      '<div class="empty">Brak zaplanowanych zbiórek.</div>';
 
-      } else {
+  }else{
 
-        eventBox.innerHTML =
-          eventHTML(
-            appData.events[0],
-            true
-          );
+    eventBox.innerHTML =
+      eventHTML(appData.events[0]);
 
-      }
+  }
 
 
-      const newsBox =
-        document.getElementById(
-          "homeNews"
-        );
+  const newsBox =
+    document.getElementById("homeNews");
 
 
-      if (!appData.news.length) {
+  if(!appData.news.length){
 
-        newsBox.innerHTML =
-          '<div class="empty">Brak ogłoszeń.</div>';
+    newsBox.innerHTML =
+      '<div class="empty">Brak ogłoszeń.</div>';
 
-      } else {
+  }else{
 
-        newsBox.innerHTML =
-          appData.news
-            .slice(0, 3)
-            .map(
-              item =>
-                newsHTML(
-                  item,
-                  false
-                )
-            )
-            .join("");
+    newsBox.innerHTML =
+      appData.news
+        .slice(0,3)
+        .map(item => newsHTML(item,false))
+        .join("");
 
-      }
+  }
 
-    }
+}
 
 
-    /* =========================
-       EVENTS
-    ========================= */
+/* ================= EVENTS ================= */
 
-    function renderEvents() {
+function renderEvents(){
 
-      const box =
-        document.getElementById(
-          "eventsList"
-        );
+  const box =
+    document.getElementById("eventsList");
 
 
-      if (!appData.events.length) {
+  if(!appData.events.length){
 
-        box.innerHTML =
-          '<div class="empty">Nie ma jeszcze żadnych zbiórek.</div>';
+    box.innerHTML =
+      '<div class="empty">Nie ma jeszcze żadnych zbiórek.</div>';
 
-        return;
+    return;
 
-      }
+  }
 
 
-      box.innerHTML =
-        appData.events
-          .map(
-            event =>
-              eventHTML(
-                event,
-                false
-              )
+  box.innerHTML =
+    appData.events
+      .map(event => eventHTML(event))
+      .join("");
+
+}
+
+
+/* ================= EVENT ================= */
+
+function eventHTML(event){
+
+  const date =
+    parseDate(event.event_date);
+
+
+  const day =
+    date
+      ? String(date.getDate()).padStart(2,"0")
+      : "--";
+
+
+  const month =
+    date
+      ? date
+          .toLocaleDateString(
+            "pl-PL",
+            {month:"short"}
           )
-          .join("");
-
-    }
-
-
-    function eventHTML(
-      event,
-      compact = false
-    ) {
-
-      const date =
-        parseDate(
-          event.event_date
-        );
+          .replace(".","")
+      : "---";
 
 
-      const day =
-        date
-          ? String(
-              date.getDate()
-            ).padStart(2, "0")
-          : "--";
+  return `
+
+    <article class="event-card">
+
+      <div class="event-top">
+
+        <div class="date-box">
+
+          <strong>
+            ${escapeHTML(day)}
+          </strong>
+
+          <span>
+            ${escapeHTML(month)}
+          </span>
+
+        </div>
 
 
-      const month =
-        date
-          ? date
-              .toLocaleDateString(
-                "pl-PL",
-                {
-                  month: "short"
-                }
-              )
-              .replace(".", "")
-          : "---";
+        <div class="event-info">
 
+          <h3>
+            ${escapeHTML(event.title)}
+          </h3>
 
-      return `
+          <div class="meta">
 
-        <article class="event-card">
+            🕐 ${escapeHTML(event.event_time || "")}
 
-          <div class="event-top">
+            <br>
 
-            <div class="date-box">
-
-              <strong>
-                ${escapeHTML(day)}
-              </strong>
-
-              <span>
-                ${escapeHTML(month)}
-              </span>
-
-            </div>
-
-
-            <div class="event-info">
-
-              <h3>
-                ${escapeHTML(event.title)}
-              </h3>
-
-
-              <div class="meta">
-
-                🕐
-                ${escapeHTML(event.event_time || "")}
-
-                <br>
-
-                📍
-                ${escapeHTML(event.place || "")}
-
-              </div>
-
-            </div>
+            📍 ${escapeHTML(event.place || "")}
 
           </div>
 
+        </div>
 
-          ${
-            event.description
-              ? `
-                <div class="description">
-                  ${escapeHTML(event.description)}
-                </div>
-              `
-              : ""
-          }
+      </div>
 
 
-          <div class="attendance-box">
-
-            <div class="attendance-title">
-              CZY BĘDZIESZ?
+      ${
+        event.description
+          ? `
+            <div class="description">
+              ${escapeHTML(event.description)}
             </div>
+          `
+          : ""
+      }
 
 
-            <div class="attendance-buttons">
+      <div class="attendance-box">
 
+        <div class="attendance-title">
+          ${
+            currentRole === "member"
+              ? "CZY BĘDZIESZ?"
+              : "OBECNOŚĆ"
+          }
+        </div>
+
+
+        ${
+          currentRole === "member"
+            ? `
+              <div class="attendance-buttons">
+
+                <button
+                  class="btn green"
+                  onclick="setAttendance(${event.id},'yes')"
+                >
+                  ✓ Będę
+                </button>
+
+                <button
+                  class="btn yellow"
+                  onclick="setAttendance(${event.id},'maybe')"
+                >
+                  ? Może
+                </button>
+
+                <button
+                  class="btn red"
+                  onclick="setAttendance(${event.id},'no')"
+                >
+                  ✕ Nie
+                </button>
+
+              </div>
+            `
+            : `
+              <div style="color:#777;font-size:12px">
+                Lista odpowiedzi członków jest dostępna poniżej.
+              </div>
+            `
+        }
+
+
+        ${
+          isStaff()
+            ? `
               <button
-                class="btn green"
-                onclick="setAttendance(${event.id}, 'yes')"
+                class="btn blue"
+                style="width:100%;margin-top:8px"
+                onclick="loadAttendance(${event.id})"
               >
-                ✓ Będę
+                👥 Pokaż obecność
               </button>
 
+              <div
+                id="attendance-${event.id}"
+                class="attendance-list"
+              ></div>
+            `
+            : ""
+        }
 
-              <button
-                class="btn yellow"
-                onclick="setAttendance(${event.id}, 'maybe')"
-              >
-                ? Może
-              </button>
+      </div>
 
+
+      ${
+        isStaff()
+          ? `
+            <div class="actions">
 
               <button
                 class="btn red"
-                onclick="setAttendance(${event.id}, 'no')"
+                onclick="deleteEvent(${event.id})"
               >
-                ✕ Nie
+                🗑 Usuń zbiórkę
               </button>
+
+            </div>
+          `
+          : ""
+      }
+
+    </article>
+
+  `;
+
+}
+
+
+/* ================= NEWS ================= */
+
+function renderNews(){
+
+  const box =
+    document.getElementById("newsList");
+
+
+  if(!appData.news.length){
+
+    box.innerHTML =
+      '<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>';
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    appData.news
+      .map(item => newsHTML(item,true))
+      .join("");
+
+}
+
+
+function newsHTML(item,actions){
+
+  const date =
+    item.created_at
+      ? new Date(item.created_at)
+          .toLocaleDateString("pl-PL")
+      : "";
+
+
+  return `
+
+    <article class="news-card">
+
+      <div class="news-date">
+        ${escapeHTML(date)}
+      </div>
+
+      <h3>
+        ${escapeHTML(item.title)}
+      </h3>
+
+      <div class="news-body">
+        ${escapeHTML(item.body)}
+      </div>
+
+
+      ${
+        actions && isStaff()
+          ? `
+            <div class="actions">
+
+              <button
+                class="btn red"
+                onclick="deleteNews(${item.id})"
+              >
+                🗑 Usuń
+              </button>
+
+            </div>
+          `
+          : ""
+      }
+
+    </article>
+
+  `;
+
+}
+
+
+/* ================= MEMBERS ================= */
+
+function renderMembers(){
+
+  const box =
+    document.getElementById("membersList");
+
+
+  if(!appData.members.length){
+
+    box.innerHTML =
+      '<div class="empty">Lista członków jest jeszcze pusta.</div>';
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    appData.members
+      .map(member => {
+
+        const first =
+          member.first_name ||
+          member.firstName ||
+          "";
+
+        const last =
+          member.last_name ||
+          member.lastName ||
+          "";
+
+        const name =
+          member.name ||
+          `${first} ${last}`.trim();
+
+
+        const initials =
+          name
+            .trim()
+            .split(/\s+/)
+            .slice(0,2)
+            .map(x => x[0] || "")
+            .join("")
+            .toUpperCase();
+
+
+        const photo =
+          member.photo || "";
+
+
+        return `
+
+          <article class="member-card">
+
+            <div class="member-row">
+
+              <div class="avatar">
+
+                ${
+                  photo
+                    ? `<img src="${escapeHTML(photo)}" alt="Zdjęcie profilowe">`
+                    : escapeHTML(initials || "👤")
+                }
+
+              </div>
+
+
+              <div class="member-info">
+
+                <h3>
+                  ${escapeHTML(name)}
+                </h3>
+
+                <div class="member-role">
+                  ${escapeHTML(
+                    member.role ||
+                    "Członek MDP"
+                  )}
+                </div>
+
+              </div>
 
             </div>
 
@@ -2876,3315 +2772,2966 @@
             ${
               isStaff()
                 ? `
-                  <button
-                    class="btn blue"
-                    style="width:100%;margin-top:8px"
-                    onclick="loadAttendance(${event.id})"
-                  >
-                    👥 Pokaż obecność
-                  </button>
+                  <div class="actions">
 
-                  <div
-                    id="attendance-${event.id}"
-                    class="attendance-list"
-                  ></div>
+                    <button
+                      class="btn blue"
+                      onclick="startMemberEdit(${member.id})"
+                    >
+                      ✏️ Edytuj
+                    </button>
+
+                    <button
+                      class="btn red"
+                      onclick="deleteMember(${member.id})"
+                    >
+                      🗑 Usuń
+                    </button>
+
+                  </div>
                 `
                 : ""
             }
 
-          </div>
+          </article>
 
-
-          ${
-            isStaff()
-              ? `
-                <div class="actions">
-
-                  <button
-                    class="btn red"
-                    onclick="deleteEvent(${event.id})"
-                  >
-                    🗑 Usuń zbiórkę
-                  </button>
-
-                </div>
-              `
-              : ""
-          }
-
-        </article>
-
-      `;
-
-    }
-
-
-    /* =========================
-       NEWS
-    ========================= */
-
-    function renderNews() {
-
-      const box =
-        document.getElementById(
-          "newsList"
-        );
-
-
-      if (!appData.news.length) {
-
-        box.innerHTML =
-          '<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>';
-
-        return;
-
-      }
-
-
-      box.innerHTML =
-        appData.news
-          .map(
-            item =>
-              newsHTML(
-                item,
-                true
-              )
-          )
-          .join("");
-
-    }
-
-
-    function newsHTML(
-      item,
-      actions
-    ) {
-
-      const date =
-        item.created_at
-          ? new Date(
-              item.created_at
-            ).toLocaleDateString(
-              "pl-PL"
-            )
-          : "";
-
-
-      return `
-
-        <article class="news-card">
-
-          <div class="news-date">
-            ${escapeHTML(date)}
-          </div>
-
-
-          <h3>
-            ${escapeHTML(item.title)}
-          </h3>
-
-
-          <div class="news-body">
-            ${escapeHTML(item.body)}
-          </div>
-
-
-          ${
-            actions && isStaff()
-              ? `
-                <div class="actions">
-
-                  <button
-                    class="btn red"
-                    onclick="deleteNews(${item.id})"
-                  >
-                    🗑 Usuń
-                  </button>
-
-                </div>
-              `
-              : ""
-          }
-
-        </article>
-
-      `;
-
-    }
-
-
-    /* =========================
-       MEMBERS
-    ========================= */
-
-    function memberDisplayName(member) {
-
-      if (
-        member.first_name ||
-        member.last_name
-      ) {
-
-        return (
-          `${member.first_name || ""} ${member.last_name || ""}`
-            .trim()
-        );
-
-      }
-
-
-      return member.name || "Członek MDP";
-
-    }
-
-
-    function memberInitials(member) {
-
-      const name =
-        memberDisplayName(member);
-
-
-      return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map(
-          x => x[0]
-        )
-        .join("")
-        .toUpperCase();
-
-    }
-
-
-    function avatarHTML(member) {
-
-      if (member.photo) {
-
-        return `
-          <img
-            src="${escapeHTML(member.photo)}"
-            alt="Zdjęcie profilowe"
-          >
         `;
 
+      })
+      .join("");
+
+}
+
+
+/* ================= PROFILE ================= */
+
+async function renderProfile(){
+
+  const firstInput =
+    document.getElementById("profileFirstName");
+
+  if(!firstInput){
+    return;
+  }
+
+
+  let profile = null;
+
+
+  if(currentRole === "member"){
+
+    try{
+
+      const response =
+        await fetch(
+          "/api/profile",
+          {
+            headers:headers()
+          }
+        );
+
+
+      if(response.ok){
+
+        profile =
+          await response.json();
+
+        currentMember =
+          profile;
+
+        localStorage.setItem(
+          "mdpMember",
+          JSON.stringify(profile)
+        );
+
       }
 
+    }catch(error){
 
-      return escapeHTML(
-        memberInitials(member)
+      console.log(
+        "Nie udało się pobrać profilu:",
+        error
+      );
+
+    }
+
+  }
+
+
+  if(!profile){
+
+    profile =
+      currentMember ||
+      {};
+
+  }
+
+
+  const first =
+    profile.first_name ||
+    profile.firstName ||
+    "";
+
+  const last =
+    profile.last_name ||
+    profile.lastName ||
+    "";
+
+  const role =
+    profile.role ||
+    roleName(currentRole);
+
+  const photo =
+    profile.photo ||
+    "";
+
+
+  firstInput.value =
+    first;
+
+  document
+    .getElementById("profileLastName")
+    .value =
+      last;
+
+  document
+    .getElementById("profileRole")
+    .value =
+      role;
+
+
+  document
+    .getElementById("profileNameUnderAvatar")
+    .textContent =
+      `${first} ${last}`.trim() ||
+      "Użytkownik";
+
+
+  document
+    .getElementById("profileRoleUnderAvatar")
+    .textContent =
+      role;
+
+
+  const avatar =
+    document.getElementById("profileAvatar");
+
+
+  if(photo){
+
+    avatar.innerHTML =
+      `<img src="${escapeHTML(photo)}" alt="Zdjęcie profilowe">`;
+
+  }else if(first || last){
+
+    avatar.textContent =
+      (
+        (first[0] || "") +
+        (last[0] || "")
+      ).toUpperCase();
+
+  }else{
+
+    avatar.textContent =
+      "👤";
+
+  }
+
+
+  if(currentRole === "member"){
+
+    loadMemberStats();
+
+  }
+
+}
+
+
+/* ================= PROFILE PHOTO ================= */
+
+async function changeProfilePhoto(event){
+
+  const file =
+    event.target.files[0];
+
+
+  if(!file){
+    return;
+  }
+
+
+  if(!file.type.startsWith("image/")){
+
+    showToast(
+      "Wybierz plik graficzny.",
+      true
+    );
+
+    event.target.value = "";
+
+    return;
+
+  }
+
+
+  if(file.size > 4 * 1024 * 1024){
+
+    showToast(
+      "Zdjęcie jest za duże. Maksymalnie 4 MB.",
+      true
+    );
+
+    event.target.value = "";
+
+    return;
+
+  }
+
+
+  try{
+
+    showToast(
+      "Przygotowywanie zdjęcia..."
+    );
+
+
+    const photo =
+      await compressImage(file);
+
+
+    const response =
+      await fetch(
+        "/api/profile",
+        {
+
+          method:"PUT",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+            photo
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się zapisać zdjęcia."
       );
 
     }
 
 
-    function renderMembers() {
+    if(currentMember){
 
-      const box =
-        document.getElementById(
-          "membersList"
+      currentMember.photo =
+        photo;
+
+      localStorage.setItem(
+        "mdpMember",
+        JSON.stringify(currentMember)
+      );
+
+    }
+
+
+    await renderProfile();
+
+    await loadData();
+
+
+    showToast(
+      "✓ Zdjęcie profilowe zostało zapisane."
+    );
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się zapisać zdjęcia.",
+      true
+    );
+
+  }finally{
+
+    event.target.value = "";
+
+  }
+
+}
+
+
+/* ================= IMAGE COMPRESS ================= */
+
+function compressImage(file){
+
+  return new Promise((resolve,reject)=>{
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload = () => {
+
+      const img =
+        new Image();
+
+
+      img.onload = () => {
+
+        const maxSize = 700;
+
+        let width =
+          img.width;
+
+        let height =
+          img.height;
+
+
+        if(width > height){
+
+          if(width > maxSize){
+
+            height =
+              Math.round(
+                height *
+                maxSize /
+                width
+              );
+
+            width =
+              maxSize;
+
+          }
+
+        }else{
+
+          if(height > maxSize){
+
+            width =
+              Math.round(
+                width *
+                maxSize /
+                height
+              );
+
+            height =
+              maxSize;
+
+          }
+
+        }
+
+
+        const canvas =
+          document.createElement(
+            "canvas"
+          );
+
+
+        canvas.width =
+          width;
+
+        canvas.height =
+          height;
+
+
+        const ctx =
+          canvas.getContext("2d");
+
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          width,
+          height
         );
 
 
-      if (!appData.members.length) {
+        resolve(
+          canvas.toDataURL(
+            "image/jpeg",
+            .78
+          )
+        );
 
-        box.innerHTML =
-          '<div class="empty">Lista członków jest jeszcze pusta.</div>';
-
-        return;
-
-      }
-
-
-      box.innerHTML =
-        appData.members
-          .map(member => {
-
-            return `
-
-              <article class="member-card">
-
-                <div class="member-row">
-
-                  <div class="avatar">
-                    ${avatarHTML(member)}
-                  </div>
+      };
 
 
-                  <div class="member-info">
-
-                    <h3>
-                      ${escapeHTML(
-                        memberDisplayName(member)
-                      )}
-                    </h3>
+      img.onerror =
+        reject;
 
 
-                    <div class="member-role">
-                      ${escapeHTML(
-                        member.role ||
-                        "Członek MDP"
-                      )}
-                    </div>
+      img.src =
+        reader.result;
 
-                  </div>
+    };
+
+
+    reader.onerror =
+      reject;
+
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
+
+/* ================= MEMBER STATS ================= */
+
+async function loadMemberStats(){
+
+  if(currentRole !== "member"){
+    return;
+  }
+
+
+  const memberId =
+    localStorage.getItem(
+      "mdpMemberId"
+    );
+
+
+  if(!memberId){
+    return;
+  }
+
+
+  const box =
+    document.getElementById(
+      "profileStats"
+    );
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/member-stats/${memberId}`,
+        {
+          headers:headers()
+        }
+      );
+
+
+    if(!response.ok){
+      return;
+    }
+
+
+    const data =
+      await response.json();
+
+
+    box.innerHTML = `
+
+      <div class="profile-stat">
+
+        <strong>
+          ${escapeHTML(data.percentage ?? 0)}%
+        </strong>
+
+        <span>
+          Frekwencja
+        </span>
+
+      </div>
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(3,1fr);
+          gap:8px;
+        "
+      >
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(data.yes ?? 0)}
+          </strong>
+
+          <span>
+            Będę
+          </span>
+
+        </div>
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(data.maybe ?? 0)}
+          </strong>
+
+          <span>
+            Może
+          </span>
+
+        </div>
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(data.no ?? 0)}
+          </strong>
+
+          <span>
+            Nie
+          </span>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }catch(error){
+
+    console.log(
+      "Stats error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* ================= NOTIFICATIONS ================= */
+
+function createNotifications(){
+
+  notifications = [];
+
+
+  if(appData.news?.length){
+
+    appData.news
+      .slice(0,10)
+      .forEach(item => {
+
+        notifications.push({
+
+          id:
+            "news-" +
+            item.id,
+
+          icon:
+            "📢",
+
+          title:
+            item.title,
+
+          body:
+            "Nowe ogłoszenie w aplikacji MDP.",
+
+          date:
+            item.created_at
+
+        });
+
+      });
+
+  }
+
+
+  if(appData.events?.length){
+
+    appData.events
+      .slice(0,10)
+      .forEach(item => {
+
+        notifications.push({
+
+          id:
+            "event-" +
+            item.id,
+
+          icon:
+            "📅",
+
+          title:
+            item.title,
+
+          body:
+            "Zaplanowana zbiórka MDP.",
+
+          date:
+            item.event_date
+
+        });
+
+      });
+
+  }
+
+
+  renderNotifications();
+
+}
+
+
+function getReadNotifications(){
+
+  try{
+
+    return JSON.parse(
+      localStorage.getItem(
+        "mdpReadNotifications"
+      ) || "[]"
+    );
+
+  }catch{
+
+    return [];
+
+  }
+
+}
+
+
+function renderNotifications(){
+
+  const box =
+    document.getElementById(
+      "notificationsList"
+    );
+
+  const badge =
+    document.getElementById(
+      "notificationBadge"
+    );
+
+  const count =
+    document.getElementById(
+      "notificationCount"
+    );
+
+
+  if(!box){
+    return;
+  }
+
+
+  const read =
+    getReadNotifications();
+
+
+  const unread =
+    notifications.filter(
+      item =>
+        !read.includes(item.id)
+    ).length;
+
+
+  count.textContent =
+    unread + " nowych";
+
+
+  if(unread > 0){
+
+    badge.textContent =
+      unread > 9
+        ? "9+"
+        : unread;
+
+    badge.style.display =
+      "inline-flex";
+
+  }else{
+
+    badge.textContent =
+      "";
+
+    badge.style.display =
+      "none";
+
+  }
+
+
+  if(!notifications.length){
+
+    box.innerHTML =
+      '<div class="empty">🔔 Brak powiadomień.</div>';
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    notifications
+      .map(item => {
+
+        const isRead =
+          read.includes(
+            item.id
+          );
+
+
+        const date =
+          item.date
+            ? formatNotificationDate(
+                item.date
+              )
+            : "";
+
+
+        return `
+
+          <article
+            class="notification-card ${isRead ? "" : "unread"}"
+          >
+
+            <div
+              style="
+                display:flex;
+                gap:12px;
+                align-items:flex-start
+              "
+            >
+
+              <div class="notification-icon">
+                ${escapeHTML(item.icon)}
+              </div>
+
+              <div
+                style="
+                  flex:1;
+                  min-width:0
+                "
+              >
+
+                <div class="news-date">
+
+                  ${isRead ? "PRZECZYTANE" : "NOWE"}
+
+                  ${
+                    date
+                      ? " • " +
+                        escapeHTML(date)
+                      : ""
+                  }
 
                 </div>
 
+                <h3>
+                  ${escapeHTML(item.title)}
+                </h3>
+
+                <div class="news-body">
+                  ${escapeHTML(item.body)}
+                </div>
 
                 ${
-                  isStaff()
+                  !isRead
                     ? `
-                      <div class="actions">
-
-                        <button
-                          class="btn blue"
-                          onclick="openEditMember(${member.id})"
-                        >
-                          ✏️ Edytuj
-                        </button>
-
-                        <button
-                          class="btn red"
-                          onclick="deleteMember(${member.id})"
-                        >
-                          🗑 Usuń
-                        </button>
-
-                      </div>
+                      <button
+                        class="btn blue"
+                        style="margin-top:10px"
+                        onclick="markNotificationRead('${escapeHTML(item.id)}')"
+                      >
+                        ✓ Przeczytane
+                      </button>
                     `
                     : ""
                 }
 
-              </article>
-
-            `;
-
-          })
-          .join("");
-
-    }
-
-
-    /* =========================
-       MANAGEMENT MEMBERS
-    ========================= */
-
-    function renderManagementMembers() {
-
-      const box =
-        document.getElementById(
-          "managementMembersList"
-        );
-
-
-      if (!box) {
-        return;
-      }
-
-
-      if (!isStaff()) {
-
-        box.innerHTML = "";
-
-        return;
-
-      }
-
-
-      if (!appData.members.length) {
-
-        box.innerHTML =
-          '<div class="empty">Nie ma jeszcze żadnych członków.</div>';
-
-        return;
-
-      }
-
-
-      box.innerHTML =
-        appData.members
-          .map(member => `
-
-            <div
-              class="attendance-item"
-              style="
-                padding:12px;
-                align-items:center;
-              "
-            >
-
-              <div
-                style="
-                  display:flex;
-                  align-items:center;
-                  gap:10px;
-                  min-width:0;
-                "
-              >
-
-                <div class="avatar">
-                  ${avatarHTML(member)}
-                </div>
-
-                <div style="min-width:0">
-
-                  <strong
-                    style="
-                      display:block;
-                      overflow:hidden;
-                      text-overflow:ellipsis;
-                      white-space:nowrap;
-                    "
-                  >
-                    ${escapeHTML(
-                      memberDisplayName(member)
-                    )}
-                  </strong>
-
-                  <span
-                    style="
-                      display:block;
-                      color:#777;
-                      font-size:10px;
-                      margin-top:2px;
-                    "
-                  >
-                    ${escapeHTML(
-                      member.role ||
-                      "Członek MDP"
-                    )}
-                  </span>
-
-                </div>
-
               </div>
 
-
-              <button
-                class="btn blue"
-                onclick="openEditMember(${member.id})"
-              >
-                Edytuj
-              </button>
-
             </div>
 
-          `)
-          .join("");
-
-    }
-
-
-    /* =========================
-       PROFILE
-    ========================= */
-
-    async function loadProfile() {
-
-      if (
-        currentRole !== "member" ||
-        !currentMember
-      ) {
-
-        renderProfile();
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/profile",
-            {
-              headers:
-                headers()
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się pobrać profilu."
-          );
-
-        }
-
-
-        currentMember = data;
-
-
-        localStorage.setItem(
-          "mdpMember",
-          JSON.stringify(data)
-        );
-
-
-        localStorage.setItem(
-          "mdpMemberId",
-          String(data.id)
-        );
-
-
-        renderProfile();
-
-
-        loadMemberStats(
-          data.id
-        );
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    function renderProfile() {
-
-      const firstName =
-        document.getElementById(
-          "profileFirstName"
-        );
-
-
-      if (!firstName) {
-        return;
-      }
-
-
-      if (
-        currentRole === "member" &&
-        currentMember
-      ) {
-
-        const first =
-          currentMember.first_name || "";
-
-        const last =
-          currentMember.last_name || "";
-
-        const role =
-          currentMember.role ||
-          "Członek MDP";
-
-
-        firstName.value =
-          first;
-
-
-        document.getElementById(
-          "profileLastName"
-        ).value =
-          last;
-
-
-        document.getElementById(
-          "profileRole"
-        ).value =
-          role;
-
-
-        const avatar =
-          document.getElementById(
-            "profileAvatar"
-          );
-
-
-        if (currentMember.photo) {
-
-          avatar.innerHTML = `
-            <img
-              src="${escapeHTML(currentMember.photo)}"
-              alt="Zdjęcie profilowe"
-            >
-          `;
-
-        } else if (
-          first &&
-          last
-        ) {
-
-          avatar.textContent =
-            (
-              first[0] +
-              last[0]
-            ).toUpperCase();
-
-        } else {
-
-          avatar.textContent =
-            "👤";
-
-        }
-
-
-        loadMemberStats(
-          currentMember.id
-        );
-
-      } else {
-
-        const roles = {
-
-          guardian:
-            "Opiekun MDP",
-
-          admin:
-            "Administrator"
-
-        };
-
-
-        firstName.value =
-          roles[currentRole] ||
-          "Użytkownik";
-
-
-        document.getElementById(
-          "profileLastName"
-        ).value =
-          "";
-
-
-        document.getElementById(
-          "profileRole"
-        ).value =
-          roles[currentRole] ||
-          "Użytkownik";
-
-
-        document.getElementById(
-          "profileAvatar"
-        ).textContent =
-          currentRole === "admin"
-            ? "⚙️"
-            : "🛡️";
-
-
-        document.getElementById(
-          "myStats"
-        ).innerHTML = `
-          <div class="empty">
-            Statystyki obecności są dostępne dla członków MDP.
-          </div>
-        `;
-
-      }
-
-    }
-
-
-    /* =========================
-       PROFILE PHOTO
-    ========================= */
-
-    async function changeProfilePhoto(event) {
-
-      const file =
-        event.target.files[0];
-
-
-      if (!file) {
-        return;
-      }
-
-
-      if (!file.type.startsWith("image/")) {
-
-        showToast(
-          "Wybierz plik graficzny.",
-          true
-        );
-
-        event.target.value = "";
-
-        return;
-
-      }
-
-
-      if (
-        file.size >
-        1.5 * 1024 * 1024
-      ) {
-
-        showToast(
-          "Zdjęcie jest za duże. Maksymalnie około 1,5 MB.",
-          true
-        );
-
-        event.target.value = "";
-
-        return;
-
-      }
-
-
-      if (
-        currentRole !== "member" ||
-        !currentMember
-      ) {
-
-        showToast(
-          "Tylko członek MDP może zmienić swoje zdjęcie.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const photo =
-          await fileToDataURL(file);
-
-
-        const response =
-          await fetch(
-            "/api/profile",
-            {
-
-              method: "PUT",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-                  photo
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się zapisać zdjęcia."
-          );
-
-        }
-
-
-        currentMember =
-          data;
-
-
-        localStorage.setItem(
-          "mdpMember",
-          JSON.stringify(data)
-        );
-
-
-        renderProfile();
-
-
-        event.target.value = "";
-
-
-        showToast(
-          "Zdjęcie profilowe zostało zapisane."
-        );
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    function fileToDataURL(file) {
-
-      return new Promise(
-        (resolve, reject) => {
-
-          const reader =
-            new FileReader();
-
-
-          reader.onload =
-            () => resolve(
-              reader.result
-            );
-
-
-          reader.onerror =
-            reject;
-
-
-          reader.readAsDataURL(
-            file
-          );
-
-        }
-      );
-
-    }
-
-
-    /* =========================
-       MEMBER STATS
-    ========================= */
-
-    async function loadMemberStats(
-      memberId
-    ) {
-
-      const box =
-        document.getElementById(
-          "myStats"
-        );
-
-
-      if (!box) {
-        return;
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            `/api/member-stats/${memberId}`,
-            {
-              headers:
-                headers()
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się pobrać statystyk."
-          );
-
-        }
-
-
-        const yes =
-          Number(data.yes || 0);
-
-        const maybe =
-          Number(data.maybe || 0);
-
-        const no =
-          Number(data.no || 0);
-
-        const total =
-          Number(data.total || 0);
-
-        const percentage =
-          Number(data.percentage || 0);
-
-
-        box.innerHTML = `
-
-          <div
-            class="member-stats"
-            style="margin-top:0"
-          >
-
-            <div class="mini-stat">
-              <strong>${yes}</strong>
-              • Będę
-            </div>
-
-            <div class="mini-stat">
-              <strong>${maybe}</strong>
-              • Może
-            </div>
-
-            <div class="mini-stat">
-              <strong>${no}</strong>
-              • Nie
-            </div>
-
-            <div class="mini-stat">
-              <strong>${total}</strong>
-              • odpowiedzi
-            </div>
-
-            <div class="mini-stat">
-              <strong>${percentage}%</strong>
-              • obecność
-            </div>
-
-          </div>
+          </article>
 
         `;
 
-      } catch (error) {
+      })
+      .join("");
 
-        box.innerHTML = `
-          <div class="empty">
-            Nie udało się pobrać statystyk.
-          </div>
-        `;
+}
 
-      }
 
-    }
+function formatNotificationDate(value){
 
+  try{
 
-    /* =========================
-       NOTIFICATIONS
-    ========================= */
-
-    function createNotifications() {
-
-      notifications = [];
-
-
-      if (
-        appData.news &&
-        appData.news.length
-      ) {
-
-        appData.news
-          .slice(0, 10)
-          .forEach(item => {
-
-            notifications.push({
-
-              id:
-                "news-" + item.id,
-
-              icon:
-                "📢",
-
-              title:
-                item.title,
-
-              body:
-                "Nowe ogłoszenie w aplikacji MDP.",
-
-              date:
-                item.created_at
-
-            });
-
-          });
-
-      }
-
-
-      if (
-        appData.events &&
-        appData.events.length
-      ) {
-
-        appData.events
-          .slice(0, 10)
-          .forEach(item => {
-
-            notifications.push({
-
-              id:
-                "event-" + item.id,
-
-              icon:
-                "📅",
-
-              title:
-                item.title,
-
-              body:
-                "Zaplanowana zbiórka MDP.",
-
-              date:
-                item.event_date
-
-            });
-
-          });
-
-      }
-
-
-      renderNotifications();
-
-    }
-
-
-    function getReadNotifications() {
-
-      try {
-
-        return JSON.parse(
-          localStorage.getItem(
-            "mdpReadNotifications"
-          ) || "[]"
-        );
-
-      } catch {
-
-        return [];
-
-      }
-
-    }
-
-
-    function renderNotifications() {
-
-      const box =
-        document.getElementById(
-          "notificationsList"
-        );
-
-
-      const badge =
-        document.getElementById(
-          "notificationBadge"
-        );
-
-
-      const count =
-        document.getElementById(
-          "notificationCount"
-        );
-
-
-      if (!box) {
-        return;
-      }
-
-
-      const read =
-        getReadNotifications();
-
-
-      const unread =
-        notifications.filter(
-          item =>
-            !read.includes(item.id)
-        ).length;
-
-
-      count.textContent =
-        unread + " nowych";
-
-
-      if (unread > 0) {
-
-        badge.textContent =
-          unread > 9
-            ? "9+"
-            : unread;
-
-        badge.style.display =
-          "inline-flex";
-
-      } else {
-
-        badge.textContent =
-          "";
-
-        badge.style.display =
-          "none";
-
-      }
-
-
-      if (!notifications.length) {
-
-        box.innerHTML = `
-          <div class="empty">
-            🔔 Brak powiadomień.
-          </div>
-        `;
-
-        return;
-
-      }
-
-
-      box.innerHTML =
-        notifications
-          .map(item => {
-
-            const isRead =
-              read.includes(item.id);
-
-
-            const date =
-              item.date
-                ? formatNotificationDate(
-                    item.date
-                  )
-                : "";
-
-
-            return `
-
-              <article
-                class="
-                  notification-card
-                  ${isRead ? "" : "unread"}
-                "
-              >
-
-                <div
-                  style="
-                    display:flex;
-                    gap:12px;
-                    align-items:flex-start;
-                  "
-                >
-
-                  <div class="notification-icon">
-                    ${item.icon}
-                  </div>
-
-
-                  <div
-                    style="
-                      flex:1;
-                      min-width:0;
-                    "
-                  >
-
-                    <div class="news-date">
-
-                      ${
-                        isRead
-                          ? "PRZECZYTANE"
-                          : "NOWE"
-                      }
-
-                      ${
-                        date
-                          ? " • " +
-                            escapeHTML(date)
-                          : ""
-                      }
-
-                    </div>
-
-
-                    <h3>
-                      ${escapeHTML(item.title)}
-                    </h3>
-
-
-                    <div class="news-body">
-                      ${escapeHTML(item.body)}
-                    </div>
-
-
-                    ${
-                      !isRead
-                        ? `
-                          <button
-                            class="btn blue"
-                            style="margin-top:10px"
-                            onclick="markNotificationRead('${escapeHTML(item.id)}')"
-                          >
-                            ✓ Przeczytane
-                          </button>
-                        `
-                        : ""
-                    }
-
-                  </div>
-
-                </div>
-
-              </article>
-
-            `;
-
-          })
-          .join("");
-
-    }
-
-
-    function formatNotificationDate(value) {
-
-      try {
-
-        if (
-          /^\d{4}-\d{2}-\d{2}$/.test(
-            String(value)
-          )
-        ) {
-
-          const date =
-            parseDate(value);
-
-
-          return date
-            ? date.toLocaleDateString(
-                "pl-PL"
-              )
-            : "";
-
-        }
-
-
-        return new Date(value)
-          .toLocaleDateString(
-            "pl-PL"
-          );
-
-      } catch {
-
-        return "";
-
-      }
-
-    }
-
-
-    function markNotificationRead(id) {
-
-      const read =
-        getReadNotifications();
-
-
-      if (!read.includes(id)) {
-
-        read.push(id);
-
-      }
-
-
-      localStorage.setItem(
-        "mdpReadNotifications",
-        JSON.stringify(read)
-      );
-
-
-      renderNotifications();
-
-    }
-
-
-    function markAllNotificationsRead() {
-
-      const ids =
-        notifications.map(
-          item => item.id
-        );
-
-
-      localStorage.setItem(
-        "mdpReadNotifications",
-        JSON.stringify(ids)
-      );
-
-
-      renderNotifications();
-
-
-      showToast(
-        "Wszystkie powiadomienia oznaczono jako przeczytane."
-      );
-
-    }
-
-
-    /* =========================
-       ADD EVENT
-    ========================= */
-
-    async function addEvent() {
-
-      const title =
-        document.getElementById(
-          "eventTitle"
-        ).value.trim();
-
-
-      const event_date =
-        document.getElementById(
-          "eventDate"
-        ).value;
-
-
-      const event_time =
-        document.getElementById(
-          "eventTime"
-        ).value;
-
-
-      const place =
-        document.getElementById(
-          "eventPlace"
-        ).value.trim();
-
-
-      const description =
-        document.getElementById(
-          "eventDescription"
-        ).value.trim();
-
-
-      if (
-        !title ||
-        !event_date ||
-        !event_time ||
-        !place
-      ) {
-
-        showToast(
-          "Uzupełnij wszystkie wymagane pola.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/events",
-            {
-
-              method: "POST",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-                  title,
-                  event_date,
-                  event_time,
-                  place,
-                  description
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się dodać zbiórki."
-          );
-
-        }
-
-
-        document.getElementById(
-          "eventTitle"
-        ).value = "";
-
-        document.getElementById(
-          "eventDate"
-        ).value = "";
-
-        document.getElementById(
-          "eventTime"
-        ).value = "";
-
-        document.getElementById(
-          "eventPlace"
-        ).value = "";
-
-        document.getElementById(
-          "eventDescription"
-        ).value = "";
-
-
-        showToast(
-          "Zbiórka została dodana."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       DELETE EVENT
-    ========================= */
-
-    async function deleteEvent(id) {
-
-      if (
-        !confirm(
-          "Na pewno usunąć tę zbiórkę?"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            `/api/events/${id}`,
-            {
-
-              method: "DELETE",
-
-              headers:
-                headers()
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się usunąć zbiórki."
-          );
-
-        }
-
-
-        showToast(
-          "Zbiórka została usunięta."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       ADD NEWS
-    ========================= */
-
-    async function addNews() {
-
-      const title =
-        document.getElementById(
-          "newsTitle"
-        ).value.trim();
-
-
-      const body =
-        document.getElementById(
-          "newsBody"
-        ).value.trim();
-
-
-      if (!title || !body) {
-
-        showToast(
-          "Uzupełnij tytuł i treść.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/news",
-            {
-
-              method: "POST",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-                  title,
-                  body
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się dodać ogłoszenia."
-          );
-
-        }
-
-
-        document.getElementById(
-          "newsTitle"
-        ).value = "";
-
-        document.getElementById(
-          "newsBody"
-        ).value = "";
-
-
-        showToast(
-          "Ogłoszenie zostało dodane."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       DELETE NEWS
-    ========================= */
-
-    async function deleteNews(id) {
-
-      if (
-        !confirm(
-          "Na pewno usunąć to ogłoszenie?"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            `/api/news/${id}`,
-            {
-
-              method: "DELETE",
-
-              headers:
-                headers()
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się usunąć ogłoszenia."
-          );
-
-        }
-
-
-        showToast(
-          "Ogłoszenie zostało usunięte."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       ADD MEMBER
-    ========================= */
-
-    async function addMember() {
-
-      const firstName =
-        document.getElementById(
-          "memberFirstName"
-        ).value.trim();
-
-
-      const lastName =
-        document.getElementById(
-          "memberLastName"
-        ).value.trim();
-
-
-      const code =
-        document.getElementById(
-          "memberCode"
-        ).value.trim();
-
-
-      const role =
-        document.getElementById(
-          "memberRole"
-        ).value.trim() ||
-        "Członek MDP";
-
-
-      const photoInput =
-        document.getElementById(
-          "memberPhoto"
-        );
-
-
-      if (
-        !firstName ||
-        !lastName ||
-        !code
-      ) {
-
-        showToast(
-          "Podaj imię, nazwisko i kod dostępu.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      if (code.length < 4) {
-
-        showToast(
-          "Kod powinien mieć co najmniej 4 znaki.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        let photo = "";
-
-
-        if (
-          photoInput.files &&
-          photoInput.files[0]
-        ) {
-
-          const file =
-            photoInput.files[0];
-
-
-          if (!file.type.startsWith("image/")) {
-
-            throw new Error(
-              "Zdjęcie musi być plikiem graficznym."
-            );
-
-          }
-
-
-          if (
-            file.size >
-            1.5 * 1024 * 1024
-          ) {
-
-            throw new Error(
-              "Zdjęcie jest za duże. Maksymalnie około 1,5 MB."
-            );
-
-          }
-
-
-          photo =
-            await fileToDataURL(file);
-
-        }
-
-
-        const response =
-          await fetch(
-            "/api/members",
-            {
-
-              method: "POST",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-
-                  firstName,
-                  lastName,
-                  code,
-                  role,
-                  photo
-
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się dodać członka."
-          );
-
-        }
-
-
-        document.getElementById(
-          "memberFirstName"
-        ).value = "";
-
-        document.getElementById(
-          "memberLastName"
-        ).value = "";
-
-        document.getElementById(
-          "memberCode"
-        ).value = "";
-
-        document.getElementById(
-          "memberRole"
-        ).value =
-          "Członek MDP";
-
-        photoInput.value = "";
-
-
-        document.getElementById(
-          "memberPhotoPreview"
-        ).innerHTML =
-          "👤";
-
-
-        showToast(
-          "Członek został dodany."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       EDIT MEMBER
-    ========================= */
-
-    function openEditMember(id) {
-
-      const member =
-        appData.members.find(
-          item =>
-            Number(item.id) ===
-            Number(id)
-        );
-
-
-      if (!member) {
-
-        showToast(
-          "Nie znaleziono członka.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      document.getElementById(
-        "editMemberId"
-      ).value =
-        member.id;
-
-
-      document.getElementById(
-        "editMemberFirstName"
-      ).value =
-        member.first_name ||
-        "";
-
-
-      document.getElementById(
-        "editMemberLastName"
-      ).value =
-        member.last_name ||
-        "";
-
-
-      document.getElementById(
-        "editMemberCode"
-      ).value =
-        "";
-
-
-      document.getElementById(
-        "editMemberRole"
-      ).value =
-        member.role ||
-        "Członek MDP";
-
-
-      const preview =
-        document.getElementById(
-          "editMemberPhotoPreview"
-        );
-
-
-      if (member.photo) {
-
-        preview.innerHTML = `
-          <img
-            src="${escapeHTML(member.photo)}"
-            alt="Zdjęcie"
-          >
-        `;
-
-      } else {
-
-        preview.textContent =
-          memberInitials(member);
-
-      }
-
-
-      document.getElementById(
-        "editMemberPhoto"
-      ).value = "";
-
-
-      document
-        .getElementById(
-          "editMemberModal"
-        )
-        .classList.remove(
-          "hidden"
-        );
-
-    }
-
-
-    function closeEditMember() {
-
-      document
-        .getElementById(
-          "editMemberModal"
-        )
-        .classList.add(
-          "hidden"
-        );
-
-    }
-
-
-    async function saveEditedMember() {
-
-      const id =
-        document.getElementById(
-          "editMemberId"
-        ).value;
-
-
-      const firstName =
-        document.getElementById(
-          "editMemberFirstName"
-        ).value.trim();
-
-
-      const lastName =
-        document.getElementById(
-          "editMemberLastName"
-        ).value.trim();
-
-
-      const code =
-        document.getElementById(
-          "editMemberCode"
-        ).value.trim();
-
-
-      const role =
-        document.getElementById(
-          "editMemberRole"
-        ).value.trim() ||
-        "Członek MDP";
-
-
-      const photoInput =
-        document.getElementById(
-          "editMemberPhoto"
-        );
-
-
-      if (
-        !firstName ||
-        !lastName
-      ) {
-
-        showToast(
-          "Imię i nazwisko są wymagane.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      if (
-        code &&
-        code.length < 4
-      ) {
-
-        showToast(
-          "Kod powinien mieć co najmniej 4 znaki.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const member =
-          appData.members.find(
-            item =>
-              Number(item.id) ===
-              Number(id)
-          );
-
-
-        let photo =
-          member?.photo ||
-          "";
-
-
-        if (
-          photoInput.files &&
-          photoInput.files[0]
-        ) {
-
-          const file =
-            photoInput.files[0];
-
-
-          if (!file.type.startsWith("image/")) {
-
-            throw new Error(
-              "Zdjęcie musi być plikiem graficznym."
-            );
-
-          }
-
-
-          if (
-            file.size >
-            1.5 * 1024 * 1024
-          ) {
-
-            throw new Error(
-              "Zdjęcie jest za duże. Maksymalnie około 1,5 MB."
-            );
-
-          }
-
-
-          photo =
-            await fileToDataURL(file);
-
-        }
-
-
-        const body = {
-
-          firstName,
-          lastName,
-          role,
-          photo
-
-        };
-
-
-        if (code) {
-
-          body.code =
-            code;
-
-        }
-
-
-        const response =
-          await fetch(
-            `/api/members/${id}`,
-            {
-
-              method: "PUT",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify(body)
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się edytować członka."
-          );
-
-        }
-
-
-        closeEditMember();
-
-
-        showToast(
-          "Dane członka zostały zapisane."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    function previewMemberPhoto(event) {
-
-      const file =
-        event.target.files[0];
-
-
-      const preview =
-        document.getElementById(
-          "memberPhotoPreview"
-        );
-
-
-      if (!file) {
-
-        preview.innerHTML =
-          "👤";
-
-        return;
-
-      }
-
-
-      if (!file.type.startsWith("image/")) {
-
-        showToast(
-          "Wybierz zdjęcie.",
-          true
-        );
-
-        event.target.value = "";
-
-        preview.innerHTML =
-          "👤";
-
-        return;
-
-      }
-
-
-      const reader =
-        new FileReader();
-
-
-      reader.onload =
-        () => {
-
-          preview.innerHTML = `
-            <img
-              src="${reader.result}"
-              alt="Podgląd"
-            >
-          `;
-
-        };
-
-
-      reader.readAsDataURL(file);
-
-    }
-
-
-    function previewEditMemberPhoto(event) {
-
-      const file =
-        event.target.files[0];
-
-
-      const preview =
-        document.getElementById(
-          "editMemberPhotoPreview"
-        );
-
-
-      if (!file) {
-        return;
-      }
-
-
-      if (!file.type.startsWith("image/")) {
-
-        showToast(
-          "Wybierz zdjęcie.",
-          true
-        );
-
-        event.target.value = "";
-
-        return;
-
-      }
-
-
-      const reader =
-        new FileReader();
-
-
-      reader.onload =
-        () => {
-
-          preview.innerHTML = `
-            <img
-              src="${reader.result}"
-              alt="Podgląd"
-            >
-          `;
-
-        };
-
-
-      reader.readAsDataURL(file);
-
-    }
-
-
-    /* =========================
-       DELETE MEMBER
-    ========================= */
-
-    async function deleteMember(id) {
-
-      const member =
-        appData.members.find(
-          item =>
-            Number(item.id) ===
-            Number(id)
-        );
-
-
-      const name =
-        member
-          ? memberDisplayName(member)
-          : "tego członka";
-
-
-      if (
-        !confirm(
-          `Na pewno usunąć ${name}?`
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            `/api/members/${id}`,
-            {
-
-              method: "DELETE",
-
-              headers:
-                headers()
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się usunąć członka."
-          );
-
-        }
-
-
-        showToast(
-          "Członek został usunięty."
-        );
-
-
-        await loadData();
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       ATTENDANCE
-    ========================= */
-
-    async function setAttendance(
-      eventId,
-      status
-    ) {
-
-      if (
-        currentRole === "member" &&
-        !currentMember
-      ) {
-
-        showToast(
-          "Nie znaleziono Twojego profilu.",
-          true
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/attendance",
-            {
-
-              method: "POST",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-
-                  event_id:
-                    eventId,
-
-                  status
-
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się zapisać obecności."
-          );
-
-        }
-
-
-        const messages = {
-
-          yes:
-            "Zapisano: będę.",
-
-          maybe:
-            "Zapisano: może będę.",
-
-          no:
-            "Zapisano: nie będę."
-
-        };
-
-
-        showToast(
-          messages[status]
-        );
-
-
-        if (isStaff()) {
-
-          await loadAttendance(
-            eventId
-          );
-
-        }
-
-
-        if (
-          currentRole === "member" &&
-          currentMember
-        ) {
-
-          await loadMemberStats(
-            currentMember.id
-          );
-
-        }
-
-
-      } catch (error) {
-
-        showToast(
-          error.message,
-          true
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       LOAD ATTENDANCE
-    ========================= */
-
-    async function loadAttendance(
-      eventId
-    ) {
-
-      const box =
-        document.getElementById(
-          `attendance-${eventId}`
-        );
-
-
-      if (!box) {
-        return;
-      }
-
-
-      box.innerHTML =
-        '<div class="loading">Ładowanie obecności...</div>';
-
-
-      try {
-
-        const response =
-          await fetch(
-            `/api/attendance/${eventId}`,
-            {
-              headers:
-                headers()
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Nie udało się pobrać obecności."
-          );
-
-        }
-
-
-        if (!data.length) {
-
-          box.innerHTML =
-            '<div class="empty">Nikt jeszcze nie zaznaczył obecności.</div>';
-
-          return;
-
-        }
-
-
-        const labels = {
-
-          yes:
-            "Będzie",
-
-          maybe:
-            "Może",
-
-          no:
-            "Nie będzie"
-
-        };
-
-
-        box.innerHTML =
-          data
-            .map(item => `
-
-              <div class="attendance-item">
-
-                <span>
-                  ${escapeHTML(item.member_name)}
-                </span>
-
-                <span
-                  class="
-                    status
-                    ${escapeHTML(item.status)}
-                  "
-                >
-                  ${
-                    labels[item.status] ||
-                    item.status
-                  }
-                </span>
-
-              </div>
-
-            `)
-            .join("");
-
-
-      } catch (error) {
-
-        box.innerHTML =
-          `
-            <div class="empty">
-              ${escapeHTML(error.message)}
-            </div>
-          `;
-
-      }
-
-    }
-
-
-    /* =========================
-       NAVIGATION
-    ========================= */
-
-    function showSection(
-      section,
-      button
-    ) {
-
-      document
-        .querySelectorAll(
-          ".page-section"
-        )
-        .forEach(item => {
-
-          item.classList.add(
-            "hidden"
-          );
-
-        });
-
-
-      const target =
-        document.getElementById(
-          `section-${section}`
-        );
-
-
-      if (target) {
-
-        target.classList.remove(
-          "hidden"
-        );
-
-      }
-
-
-      document
-        .querySelectorAll(
-          ".nav-btn"
-        )
-        .forEach(item => {
-
-          item.classList.remove(
-            "active"
-          );
-
-        });
-
-
-      if (button) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-
-
-      if (
-        section === "notifications"
-      ) {
-
-        renderNotifications();
-        updatePushButton();
-
-      }
-
-
-      if (
-        section === "profile"
-      ) {
-
-        loadProfile();
-
-      }
-
-
-      if (
-        section === "management"
-      ) {
-
-        renderManagementMembers();
-
-      }
-
-    }
-
-
-    /* =========================
-       STAFF
-    ========================= */
-
-    function isStaff() {
-
-      return [
-        "guardian",
-        "admin"
-      ].includes(
-        currentRole
-      );
-
-    }
-
-
-    /* =========================
-       TOAST
-    ========================= */
-
-    let toastTimer = null;
-
-
-    function showToast(
-      message,
-      error = false
-    ) {
-
-      const toast =
-        document.getElementById(
-          "toast"
-        );
-
-
-      toast.textContent =
-        message;
-
-
-      toast.classList.toggle(
-        "error",
-        error
-      );
-
-
-      toast.classList.add(
-        "show"
-      );
-
-
-      clearTimeout(
-        toastTimer
-      );
-
-
-      toastTimer =
-        setTimeout(() => {
-
-          toast.classList.remove(
-            "show"
-          );
-
-        }, 2800);
-
-    }
-
-
-    /* =========================
-       DATE
-    ========================= */
-
-    function parseDate(value) {
-
-      if (!value) {
-        return null;
-      }
-
-
-      const parts =
-        String(value).split("-");
-
-
-      if (
-        parts.length !== 3
-      ) {
-
-        return null;
-
-      }
-
-
-      const year =
-        Number(parts[0]);
-
-
-      const month =
-        Number(parts[1]) - 1;
-
-
-      const day =
-        Number(parts[2]);
-
+    if(
+      /^\d{4}-\d{2}-\d{2}$/.test(
+        String(value)
+      )
+    ){
 
       const date =
-        new Date(
-          year,
-          month,
-          day
-        );
+        parseDate(value);
 
-
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-
-        return null;
-
-      }
-
-
-      return date;
+      return date
+        ? date.toLocaleDateString(
+            "pl-PL"
+          )
+        : "";
 
     }
 
 
-    /* =========================
-       SECURITY
-    ========================= */
+    return new Date(value)
+      .toLocaleDateString(
+        "pl-PL"
+      );
 
-    function escapeHTML(value) {
+  }catch{
 
-      return String(
-        value ?? ""
+    return "";
+
+  }
+
+}
+
+
+function markNotificationRead(id){
+
+  const read =
+    getReadNotifications();
+
+
+  if(!read.includes(id)){
+
+    read.push(id);
+
+  }
+
+
+  localStorage.setItem(
+    "mdpReadNotifications",
+    JSON.stringify(read)
+  );
+
+
+  renderNotifications();
+
+}
+
+
+function markAllNotificationsRead(){
+
+  const ids =
+    notifications.map(
+      item => item.id
+    );
+
+
+  localStorage.setItem(
+    "mdpReadNotifications",
+    JSON.stringify(ids)
+  );
+
+
+  renderNotifications();
+
+
+  showToast(
+    "Wszystkie powiadomienia oznaczono jako przeczytane."
+  );
+
+}
+
+
+/* ================= ADD EVENT ================= */
+
+async function addEvent(){
+
+  const title =
+    document
+      .getElementById("eventTitle")
+      .value
+      .trim();
+
+  const event_date =
+    document
+      .getElementById("eventDate")
+      .value;
+
+  const event_time =
+    document
+      .getElementById("eventTime")
+      .value;
+
+  const place =
+    document
+      .getElementById("eventPlace")
+      .value
+      .trim();
+
+  const description =
+    document
+      .getElementById("eventDescription")
+      .value
+      .trim();
+
+
+  if(
+    !title ||
+    !event_date ||
+    !event_time ||
+    !place
+  ){
+
+    showToast(
+      "Uzupełnij wszystkie wymagane pola.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/events",
+        {
+
+          method:"POST",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+            title,
+            event_date,
+            event_time,
+            place,
+            description
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się dodać zbiórki."
+      );
+
+    }
+
+
+    [
+      "eventTitle",
+      "eventDate",
+      "eventTime",
+      "eventPlace",
+      "eventDescription"
+    ].forEach(id => {
+
+      document.getElementById(
+        id
+      ).value = "";
+
+    });
+
+
+    showToast(
+      "✓ Zbiórka została dodana."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się dodać zbiórki.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= DELETE EVENT ================= */
+
+async function deleteEvent(id){
+
+  if(
+    !confirm(
+      "Na pewno usunąć tę zbiórkę?"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/events/${id}`,
+        {
+
+          method:"DELETE",
+
+          headers:headers()
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się usunąć zbiórki."
+      );
+
+    }
+
+
+    showToast(
+      "✓ Zbiórka została usunięta."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się usunąć zbiórki.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= ADD NEWS ================= */
+
+async function addNews(){
+
+  const title =
+    document
+      .getElementById("newsTitle")
+      .value
+      .trim();
+
+  const body =
+    document
+      .getElementById("newsBody")
+      .value
+      .trim();
+
+
+  if(!title || !body){
+
+    showToast(
+      "Uzupełnij tytuł i treść.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/news",
+        {
+
+          method:"POST",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+            title,
+            body
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się dodać ogłoszenia."
+      );
+
+    }
+
+
+    document
+      .getElementById("newsTitle")
+      .value = "";
+
+    document
+      .getElementById("newsBody")
+      .value = "";
+
+
+    showToast(
+      "✓ Ogłoszenie zostało dodane."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się dodać ogłoszenia.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= DELETE NEWS ================= */
+
+async function deleteNews(id){
+
+  if(
+    !confirm(
+      "Na pewno usunąć to ogłoszenie?"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/news/${id}`,
+        {
+
+          method:"DELETE",
+
+          headers:headers()
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się usunąć ogłoszenia."
+      );
+
+    }
+
+
+    showToast(
+      "✓ Ogłoszenie zostało usunięte."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się usunąć ogłoszenia.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= ADD MEMBER ================= */
+
+async function addMember(){
+
+  const firstName =
+    document
+      .getElementById("memberFirstName")
+      .value
+      .trim();
+
+  const lastName =
+    document
+      .getElementById("memberLastName")
+      .value
+      .trim();
+
+  const code =
+    document
+      .getElementById("memberCode")
+      .value
+      .trim();
+
+  const role =
+    document
+      .getElementById("memberRole")
+      .value
+      .trim() ||
+      "Członek MDP";
+
+
+  if(
+    !firstName ||
+    !lastName ||
+    !code
+  ){
+
+    showToast(
+      "Podaj imię, nazwisko i indywidualny kod.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  let photo = "";
+
+
+  try{
+
+    const file =
+      document
+        .getElementById("memberPhoto")
+        .files[0];
+
+
+    if(file){
+
+      if(
+        !file.type.startsWith(
+          "image/"
+        )
+      ){
+
+        throw new Error(
+          "Zdjęcie musi być plikiem graficznym."
+        );
+
+      }
+
+
+      if(
+        file.size >
+        4 * 1024 * 1024
+      ){
+
+        throw new Error(
+          "Zdjęcie jest za duże. Maksymalnie 4 MB."
+        );
+
+      }
+
+
+      photo =
+        await compressImage(file);
+
+    }
+
+
+    const response =
+      await fetch(
+        "/api/members",
+        {
+
+          method:"POST",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+            firstName,
+            lastName,
+            role,
+            code,
+            photo
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się utworzyć konta."
+      );
+
+    }
+
+
+    document
+      .getElementById(
+        "memberFirstName"
+      )
+      .value = "";
+
+    document
+      .getElementById(
+        "memberLastName"
+      )
+      .value = "";
+
+    document
+      .getElementById(
+        "memberCode"
+      )
+      .value = "";
+
+    document
+      .getElementById(
+        "memberRole"
+      )
+      .value =
+        "Członek MDP";
+
+    document
+      .getElementById(
+        "memberPhoto"
+      )
+      .value = "";
+
+
+    showToast(
+      "✓ Konto członka zostało utworzone."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się utworzyć konta.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= EDIT MEMBER ================= */
+
+function startMemberEdit(id){
+
+  const member =
+    appData.members.find(
+      item =>
+        Number(item.id) ===
+        Number(id)
+    );
+
+
+  if(!member){
+
+    showToast(
+      "Nie znaleziono członka.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  const first =
+    member.first_name ||
+    member.firstName ||
+    "";
+
+  const last =
+    member.last_name ||
+    member.lastName ||
+    "";
+
+
+  document
+    .getElementById(
+      "editMemberId"
+    )
+    .value =
+      member.id;
+
+  document
+    .getElementById(
+      "editFirstName"
+    )
+    .value =
+      first;
+
+  document
+    .getElementById(
+      "editLastName"
+    )
+    .value =
+      last;
+
+  document
+    .getElementById(
+      "editRole"
+    )
+    .value =
+      member.role ||
+      "Członek MDP";
+
+  document
+    .getElementById(
+      "editCode"
+    )
+    .value = "";
+
+  document
+    .getElementById(
+      "editPhoto"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "editMemberCard"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "editMemberCard"
+    )
+    .scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+}
+
+
+function cancelMemberEdit(){
+
+  document
+    .getElementById(
+      "editMemberCard"
+    )
+    .classList.add(
+      "hidden"
+    );
+
+}
+
+
+/* ================= SAVE MEMBER EDIT ================= */
+
+async function saveMemberEdit(){
+
+  const id =
+    document
+      .getElementById(
+        "editMemberId"
+      )
+      .value;
+
+  const firstName =
+    document
+      .getElementById(
+        "editFirstName"
+      )
+      .value
+      .trim();
+
+  const lastName =
+    document
+      .getElementById(
+        "editLastName"
+      )
+      .value
+      .trim();
+
+  const role =
+    document
+      .getElementById(
+        "editRole"
+      )
+      .value
+      .trim() ||
+      "Członek MDP";
+
+  const code =
+    document
+      .getElementById(
+        "editCode"
+      )
+      .value
+      .trim();
+
+
+  if(!firstName || !lastName){
+
+    showToast(
+      "Imię i nazwisko są wymagane.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    let photo;
+
+
+    const file =
+      document
+        .getElementById(
+          "editPhoto"
+        )
+        .files[0];
+
+
+    if(file){
+
+      if(
+        !file.type.startsWith(
+          "image/"
+        )
+      ){
+
+        throw new Error(
+          "Zdjęcie musi być plikiem graficznym."
+        );
+
+      }
+
+
+      if(
+        file.size >
+        4 * 1024 * 1024
+      ){
+
+        throw new Error(
+          "Zdjęcie jest za duże. Maksymalnie 4 MB."
+        );
+
+      }
+
+
+      photo =
+        await compressImage(file);
+
+    }
+
+
+    const payload = {
+
+      firstName,
+
+      lastName,
+
+      role
+
+    };
+
+
+    if(code){
+
+      payload.code =
+        code;
+
+    }
+
+
+    if(photo){
+
+      payload.photo =
+        photo;
+
+    }
+
+
+    const response =
+      await fetch(
+        `/api/members/${id}`,
+        {
+
+          method:"PUT",
+
+          headers:headers(),
+
+          body:JSON.stringify(
+            payload
+          )
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się edytować członka."
+      );
+
+    }
+
+
+    cancelMemberEdit();
+
+
+    showToast(
+      "✓ Dane członka zostały zmienione."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się edytować członka.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= DELETE MEMBER ================= */
+
+async function deleteMember(id){
+
+  const member =
+    appData.members.find(
+      item =>
+        Number(item.id) ===
+        Number(id)
+    );
+
+
+  const name =
+    member
+      ? (
+          member.name ||
+          `${member.first_name || ""} ${member.last_name || ""}`
+        ).trim()
+      : "tego członka";
+
+
+  if(
+    !confirm(
+      `Na pewno usunąć ${name}?`
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/members/${id}`,
+        {
+
+          method:"DELETE",
+
+          headers:headers()
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się usunąć członka."
+      );
+
+    }
+
+
+    showToast(
+      "✓ Członek został usunięty."
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się usunąć członka.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= ATTENDANCE ================= */
+
+async function setAttendance(
+  eventId,
+  status
+){
+
+  if(
+    currentRole === "member" &&
+    !currentMember
+  ){
+
+    showToast(
+      "Nie znaleziono Twojego konta. Zaloguj się ponownie.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  if(currentRole !== "member"){
+
+    showToast(
+      "Tylko członek MDP może zaznaczyć swoją obecność.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/attendance",
+        {
+
+          method:"POST",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+
+            event_id:eventId,
+
+            status
+
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się zapisać obecności."
+      );
+
+    }
+
+
+    const messages = {
+
+      yes:
+        "✓ Zapisano: będę.",
+
+      maybe:
+        "✓ Zapisano: może będę.",
+
+      no:
+        "✓ Zapisano: nie będę."
+
+    };
+
+
+    showToast(
+      messages[status] ||
+      "Obecność została zapisana."
+    );
+
+
+    if(isStaff()){
+
+      await loadAttendance(
+        eventId
+      );
+
+    }
+
+
+    if(currentRole === "member"){
+
+      await loadMemberStats();
+
+    }
+
+  }catch(error){
+
+    showToast(
+      error.message ||
+      "Nie udało się zapisać obecności.",
+      true
+    );
+
+  }
+
+}
+
+
+/* ================= LOAD ATTENDANCE ================= */
+
+async function loadAttendance(
+  eventId
+){
+
+  if(!isStaff()){
+
+    showToast(
+      "Brak uprawnień.",
+      true
+    );
+
+    return;
+
+  }
+
+
+  const box =
+    document.getElementById(
+      `attendance-${eventId}`
+    );
+
+
+  if(!box){
+    return;
+  }
+
+
+  box.innerHTML =
+    '<div class="loading">Ładowanie obecności...</div>';
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/attendance/${eventId}`,
+        {
+          headers:headers()
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się pobrać obecności."
+      );
+
+    }
+
+
+    if(!data.length){
+
+      box.innerHTML =
+        '<div class="empty">Nikt jeszcze nie zaznaczył obecności.</div>';
+
+      return;
+
+    }
+
+
+    const labels = {
+
+      yes:
+        "Będzie",
+
+      maybe:
+        "Może",
+
+      no:
+        "Nie będzie"
+
+    };
+
+
+    box.innerHTML =
+      data
+        .map(item => `
+
+          <div class="attendance-item">
+
+            <span>
+              ${escapeHTML(
+                item.member_name
+              )}
+            </span>
+
+            <span
+              class="status ${escapeHTML(
+                item.status
+              )}"
+            >
+              ${
+                labels[item.status] ||
+                escapeHTML(
+                  item.status
+                )
+              }
+            </span>
+
+          </div>
+
+        `)
+        .join("");
+
+  }catch(error){
+
+    box.innerHTML =
+      `
+        <div class="empty">
+          ${escapeHTML(
+            error.message
+          )}
+        </div>
+      `;
+
+  }
+
+}
+
+
+/* ================= MANAGEMENT STATS ================= */
+
+async function loadManagementStats(){
+
+  if(!isStaff()){
+    return;
+  }
+
+
+  const box =
+    document.getElementById(
+      "managementStats"
+    );
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/stats",
+        {
+          headers:headers()
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Nie udało się pobrać statystyk."
+      );
+
+    }
+
+
+    box.innerHTML = `
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(2,1fr);
+          gap:8px;
+        "
+      >
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(
+              data.members ??
+              appData.members.length
+            )}
+          </strong>
+
+          <span>
+            Członków
+          </span>
+
+        </div>
+
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(
+              data.events ??
+              appData.events.length
+            )}
+          </strong>
+
+          <span>
+            Zbiórek
+          </span>
+
+        </div>
+
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(
+              data.news ??
+              appData.news.length
+            )}
+          </strong>
+
+          <span>
+            Ogłoszeń
+          </span>
+
+        </div>
+
+
+        <div class="profile-stat">
+
+          <strong>
+            ${escapeHTML(
+              data.percentage ??
+              data.attendance_percentage ??
+              0
+            )}%
+          </strong>
+
+          <span>
+            Frekwencja
+          </span>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }catch(error){
+
+    box.innerHTML =
+      `
+        <div class="empty">
+          ${escapeHTML(
+            error.message
+          )}
+        </div>
+      `;
+
+  }
+
+}
+
+
+/* ================= NAVIGATION ================= */
+
+function showSection(
+  section,
+  button
+){
+
+  document
+    .querySelectorAll(
+      ".page-section"
+    )
+    .forEach(item => {
+
+      item.classList.add(
+        "hidden"
+      );
+
+    });
+
+
+  const target =
+    document.getElementById(
+      `section-${section}`
+    );
+
+
+  if(target){
+
+    target.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  document
+    .querySelectorAll(
+      ".nav-btn"
+    )
+    .forEach(item => {
+
+      item.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  if(button){
+
+    button.classList.add(
+      "active"
+    );
+
+  }
+
+
+  window.scrollTo({
+
+    top:0,
+
+    behavior:"smooth"
+
+  });
+
+
+  if(
+    section ===
+    "notifications"
+  ){
+
+    renderNotifications();
+
+    updatePushButton();
+
+  }
+
+
+  if(
+    section ===
+    "profile"
+  ){
+
+    renderProfile();
+
+  }
+
+
+  if(
+    section ===
+    "management" &&
+    isStaff()
+  ){
+
+    loadManagementStats();
+
+  }
+
+}
+
+
+/* ================= STAFF ================= */
+
+function isStaff(){
+
+  return [
+    "guardian",
+    "admin"
+  ].includes(
+    currentRole
+  );
+
+}
+
+
+/* ================= ROLE NAME ================= */
+
+function roleName(role){
+
+  const roles = {
+
+    member:
+      "Członek MDP",
+
+    guardian:
+      "Opiekun MDP",
+
+    admin:
+      "Administrator"
+
+  };
+
+
+  return (
+    roles[role] ||
+    "Użytkownik"
+  );
+
+}
+
+
+/* ================= TOAST ================= */
+
+function showToast(
+  message,
+  error=false
+){
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.toggle(
+    "error",
+    error
+  );
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      2800
+    );
+
+}
+
+
+/* ================= DATE ================= */
+
+function parseDate(value){
+
+  if(!value){
+    return null;
+  }
+
+
+  const parts =
+    String(value)
+      .split("-");
+
+
+  if(parts.length !== 3){
+    return null;
+  }
+
+
+  const date =
+    new Date(
+
+      Number(parts[0]),
+
+      Number(parts[1]) - 1,
+
+      Number(parts[2])
+
+    );
+
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+
+    return null;
+
+  }
+
+
+  return date;
+
+}
+
+
+/* ================= SECURITY ================= */
+
+function escapeHTML(value){
+
+  return String(
+    value ?? ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* ================= RESTORE SESSION ================= */
+
+async function restoreSession(){
+
+  const savedRole =
+    localStorage.getItem(
+      "mdpRole"
+    );
+
+  const savedCode =
+    localStorage.getItem(
+      "mdpCode"
+    );
+
+
+  if(
+    !savedRole ||
+    !savedCode
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    const savedMember =
+      localStorage.getItem(
+        "mdpMember"
+      );
+
+
+    if(savedMember){
+
+      try{
+
+        currentMember =
+          JSON.parse(
+            savedMember
+          );
+
+      }catch{
+
+        currentMember =
+          null;
+
+      }
+
+    }
+
+
+    const response =
+      await fetch(
+        "/api/login",
+        {
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+
+            role:
+              savedRole,
+
+            firstName:
+              currentMember?.first_name ||
+              currentMember?.firstName ||
+              "",
+
+            lastName:
+              currentMember?.last_name ||
+              currentMember?.lastName ||
+              "",
+
+            code:
+              savedCode
+
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "Sesja wygasła."
+      );
+
+    }
+
+
+    currentRole =
+      savedRole;
+
+    authCode =
+      savedCode;
+
+
+    if(
+      savedRole === "member" &&
+      data.member
+    ){
+
+      currentMember =
+        data.member;
+
+
+      localStorage.setItem(
+        "mdpMemberId",
+        String(
+          data.member.id
+        )
+      );
+
+
+      localStorage.setItem(
+        "mdpMember",
+        JSON.stringify(
+          data.member
+        )
+      );
+
+    }
+
+
+    selectRole(
+      savedRole
+    );
+
+    showApp();
+
+    await loadData();
+
+  }catch(error){
+
+    localStorage.removeItem(
+      "mdpRole"
+    );
+
+    localStorage.removeItem(
+      "mdpCode"
+    );
+
+    localStorage.removeItem(
+      "mdpMemberId"
+    );
+
+    localStorage.removeItem(
+      "mdpMember"
+    );
+
+    currentMember =
+      null;
+
+  }
+
+}
+
+
+/* ================= PUSH ================= */
+
+function urlBase64ToUint8Array(
+  base64String
+){
+
+  const padding =
+    "=".repeat(
+      (
+        4 -
+        (
+          base64String.length %
+          4
+        )
+      ) % 4
+    );
+
+
+  const base64 =
+    (
+      base64String +
+      padding
+    )
+
+      .replace(
+        /-/g,
+        "+"
       )
 
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+      .replace(
+        /_/g,
+        "/"
+      );
+
+
+  const rawData =
+    atob(base64);
+
+
+  return Uint8Array.from(
+
+    [...rawData]
+
+      .map(
+        char =>
+          char.charCodeAt(0)
+      )
+
+  );
+
+}
+
+
+async function enablePushNotifications(){
+
+  try{
+
+    if(
+      !("serviceWorker" in navigator)
+    ){
+
+      showToast(
+        "Twoja przeglądarka nie obsługuje powiadomień.",
+        true
+      );
+
+      return;
 
     }
 
 
-    /* =========================
-       AUTO LOGIN
-    ========================= */
-
-    async function restoreSession() {
-
-      const savedRole =
-        localStorage.getItem(
-          "mdpRole"
-        );
-
-
-      const savedCode =
-        localStorage.getItem(
-          "mdpCode"
-        );
-
-
-      const savedMemberId =
-        localStorage.getItem(
-          "mdpMemberId"
-        );
-
-
-      if (
-        !savedRole ||
-        !savedCode
-      ) {
-
-        selectRole("member");
-
-        return;
-
-      }
-
-
-      try {
-
-        let savedMember = null;
-
-
-        if (
-          savedRole === "member" &&
-          savedMemberId
-        ) {
-
-          try {
-
-            savedMember =
-              JSON.parse(
-                localStorage.getItem(
-                  "mdpMember"
-                ) || "null"
-              );
-
-          } catch {
-
-            savedMember =
-              null;
-
-          }
-
-        }
-
-
-        const response =
-          await fetch(
-            "/api/login",
-            {
-
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body:
-                JSON.stringify({
-
-                  role:
-                    savedRole,
-
-                  code:
-                    savedCode,
-
-                  firstName:
-                    savedMember?.first_name ||
-                    "",
-
-                  lastName:
-                    savedMember?.last_name ||
-                    ""
-
-                })
-
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Sesja wygasła."
-          );
-
-        }
-
-
-        currentRole =
-          savedRole;
-
-
-        authCode =
-          savedCode;
-
-
-        if (
-          savedRole === "member" &&
-          data.member
-        ) {
-
-          currentMember =
-            data.member;
-
-
-          localStorage.setItem(
-            "mdpMemberId",
-            String(data.member.id)
-          );
-
-
-          localStorage.setItem(
-            "mdpMember",
-            JSON.stringify(data.member)
-          );
-
-        } else {
-
-          currentMember = null;
-
-        }
-
-
-        selectRole(
-          savedRole
-        );
-
-
-        showApp();
-
-
-        await loadData();
-
-
-      } catch {
-
-        localStorage.removeItem(
-          "mdpRole"
-        );
-
-        localStorage.removeItem(
-          "mdpCode"
-        );
-
-        localStorage.removeItem(
-          "mdpMemberId"
-        );
-
-        localStorage.removeItem(
-          "mdpMember"
-        );
-
-
-        currentRole = "member";
-        authCode = "";
-        currentMember = null;
-
-
-        selectRole("member");
-
-      }
+    if(
+      !("PushManager" in window)
+    ){
+
+      showToast(
+        "To urządzenie nie obsługuje powiadomień push.",
+        true
+      );
+
+      return;
 
     }
 
 
-    /* =========================
-       PUSH
-    ========================= */
+    if(
+      typeof Notification ===
+      "undefined"
+    ){
 
-    function urlBase64ToUint8Array(
-      base64String
-    ) {
+      showToast(
+        "Powiadomienia nie są dostępne.",
+        true
+      );
 
-      const padding =
-        "=".repeat(
-          (4 - (base64String.length % 4)) % 4
-        );
+      return;
 
-
-      const base64 =
-        (base64String + padding)
-          .replace(/-/g, "+")
-          .replace(/_/g, "/");
+    }
 
 
-      const rawData =
-        atob(base64);
+    const permission =
+      await Notification.requestPermission();
 
 
-      return Uint8Array.from(
-        [...rawData].map(
-          char =>
-            char.charCodeAt(0)
-        )
+    if(
+      permission !==
+      "granted"
+    ){
+
+      showToast(
+        "Nie zezwolono na powiadomienia.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    const registration =
+      await navigator
+        .serviceWorker
+        .ready;
+
+
+    const response =
+      await fetch(
+        "/api/push/public-key"
+      );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "Nie udało się pobrać klucza push."
       );
 
     }
 
 
-    async function enablePushNotifications() {
+    const data =
+      await response.json();
 
-      try {
 
-        if (
-          !("serviceWorker" in navigator)
-        ) {
+    if(!data.publicKey){
 
-          showToast(
-            "Twoja przeglądarka nie obsługuje powiadomień.",
-            true
-          );
-
-          return;
-
-        }
-
-
-        if (
-          !("PushManager" in window)
-        ) {
-
-          showToast(
-            "To urządzenie nie obsługuje powiadomień push.",
-            true
-          );
-
-          return;
-
-        }
-
-
-        if (
-          typeof Notification === "undefined"
-        ) {
-
-          showToast(
-            "Powiadomienia nie są dostępne.",
-            true
-          );
-
-          return;
-
-        }
-
-
-        const permission =
-          await Notification.requestPermission();
-
-
-        if (
-          permission !== "granted"
-        ) {
-
-          showToast(
-            "Nie zezwolono na powiadomienia.",
-            true
-          );
-
-          return;
-
-        }
-
-
-        const registration =
-          await navigator.serviceWorker.ready;
-
-
-        const response =
-          await fetch(
-            "/api/push/public-key"
-          );
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            "Nie udało się pobrać klucza push."
-          );
-
-        }
-
-
-        const data =
-          await response.json();
-
-
-        if (!data.publicKey) {
-
-          throw new Error(
-            "Serwer nie zwrócił klucza VAPID."
-          );
-
-        }
-
-
-        const applicationServerKey =
-          urlBase64ToUint8Array(
-            data.publicKey
-          );
-
-
-        let subscription =
-          await registration
-            .pushManager
-            .getSubscription();
-
-
-        if (!subscription) {
-
-          subscription =
-            await registration
-              .pushManager
-              .subscribe({
-
-                userVisibleOnly:
-                  true,
-
-                applicationServerKey
-
-              });
-
-        }
-
-
-        const saveResponse =
-          await fetch(
-            "/api/push/subscribe",
-            {
-
-              method: "POST",
-
-              headers:
-                headers(),
-
-              body:
-                JSON.stringify({
-                  subscription
-                })
-
-            }
-          );
-
-
-        const saveData =
-          await saveResponse.json();
-
-
-        if (!saveResponse.ok) {
-
-          throw new Error(
-            saveData.error ||
-            "Nie udało się zapisać subskrypcji."
-          );
-
-        }
-
-
-        localStorage.setItem(
-          "mdpPushEnabled",
-          "true"
-        );
-
-
-        updatePushButton();
-
-
-        showToast(
-          "🔔 Powiadomienia push zostały włączone!"
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Błąd powiadomień push:",
-          error
-        );
-
-
-        showToast(
-          error.message ||
-          "Nie udało się włączyć powiadomień.",
-          true
-        );
-
-      }
-
-    }
-
-
-    async function updatePushButton() {
-
-      const button =
-        document.getElementById(
-          "enablePushButton"
-        );
-
-
-      if (!button) {
-        return;
-      }
-
-
-      try {
-
-        if (
-          !("serviceWorker" in navigator) ||
-          !("PushManager" in window)
-        ) {
-
-          button.textContent =
-            "🔔 Push niedostępny";
-
-          button.disabled =
-            true;
-
-          return;
-
-        }
-
-
-        const registration =
-          await navigator.serviceWorker.ready;
-
-
-        const subscription =
-          await registration
-            .pushManager
-            .getSubscription();
-
-
-        if (subscription) {
-
-          button.textContent =
-            "✓ Powiadomienia są włączone";
-
-          button.disabled =
-            true;
-
-          button.style.opacity =
-            ".6";
-
-        } else {
-
-          button.textContent =
-            "🔔 Włącz powiadomienia";
-
-          button.disabled =
-            false;
-
-          button.style.opacity =
-            "1";
-
-        }
-
-      } catch (error) {
-
-        console.log(
-          "Nie można sprawdzić statusu push:",
-          error
-        );
-
-      }
-
-    }
-
-
-    /* =========================
-       SERVICE WORKER
-    ========================= */
-
-    if (
-      "serviceWorker" in navigator
-    ) {
-
-      window.addEventListener(
-        "load",
-        () => {
-
-          navigator.serviceWorker
-            .register("/sw.js")
-            .then(
-              registration => {
-
-                console.log(
-                  "Service Worker aktywny.",
-                  registration
-                );
-
-                updatePushButton();
-
-              }
-            )
-            .catch(error => {
-
-              console.error(
-                "Service Worker nie został zarejestrowany:",
-                error
-              );
-
-            });
-
-        }
+      throw new Error(
+        "Serwer nie zwrócił klucza VAPID."
       );
 
     }
 
 
-    /* =========================
-       START
-    ========================= */
+    const applicationServerKey =
+      urlBase64ToUint8Array(
+        data.publicKey
+      );
 
-    selectRole("member");
 
-    restoreSession();
+    let subscription =
+      await registration
+        .pushManager
+        .getSubscription();
 
-  </script>
+
+    if(!subscription){
+
+      subscription =
+        await registration
+          .pushManager
+          .subscribe({
+
+            userVisibleOnly:true,
+
+            applicationServerKey
+
+          });
+
+    }
+
+
+    const saveResponse =
+      await fetch(
+        "/api/push/subscribe",
+        {
+
+          method:"POST",
+
+          headers:headers(),
+
+          body:JSON.stringify({
+
+            subscription
+
+          })
+
+        }
+      );
+
+
+    const saveData =
+      await saveResponse.json();
+
+
+    if(!saveResponse.ok){
+
+      throw new Error(
+        saveData.error ||
+        "Nie udało się zapisać subskrypcji."
+      );
+
+    }
+
+
+    localStorage.setItem(
+      "mdpPushEnabled",
+      "true"
+    );
+
+
+    updatePushButton();
+
+
+    showToast(
+      "🔔 Powiadomienia push zostały włączone!"
+    );
+
+  }catch(error){
+
+    console.error(
+      "Błąd powiadomień push:",
+      error
+    );
+
+
+    showToast(
+      error.message ||
+      "Nie udało się włączyć powiadomień.",
+      true
+    );
+
+  }
+
+}
+
+
+async function updatePushButton(){
+
+  const button =
+    document.getElementById(
+      "enablePushButton"
+    );
+
+
+  if(!button){
+    return;
+  }
+
+
+  try{
+
+    if(
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window)
+    ){
+
+      button.textContent =
+        "🔔 Push niedostępny";
+
+      button.disabled =
+        true;
+
+      return;
+
+    }
+
+
+    const registration =
+      await navigator
+        .serviceWorker
+        .ready;
+
+
+    const subscription =
+      await registration
+        .pushManager
+        .getSubscription();
+
+
+    if(subscription){
+
+      button.textContent =
+        "✓ Powiadomienia są włączone";
+
+      button.disabled =
+        true;
+
+      button.style.opacity =
+        ".6";
+
+    }else{
+
+      button.textContent =
+        "🔔 Włącz powiadomienia";
+
+      button.disabled =
+        false;
+
+      button.style.opacity =
+        "1";
+
+    }
+
+  }catch(error){
+
+    console.log(
+      "Nie można sprawdzić statusu push:",
+      error
+    );
+
+  }
+
+}
+
+
+/* ================= SERVICE WORKER ================= */
+
+if(
+  "serviceWorker" in navigator
+){
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator
+        .serviceWorker
+        .register("/sw.js")
+        .then(() => {
+
+          console.log(
+            "Service Worker został zarejestrowany."
+          );
+
+          updatePushButton();
+
+        })
+        .catch(error => {
+
+          console.error(
+            "Service Worker nie został zarejestrowany:",
+            error
+          );
+
+        });
+
+    }
+  );
+
+}
+
+
+/* ================= START ================= */
+
+selectRole("member");
+
+restoreSession();
+
+</script>
 
 </body>
   </html>
