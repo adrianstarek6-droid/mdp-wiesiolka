@@ -35,9 +35,9 @@ app.use(express.urlencoded({ extended: true, limit: '3mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// =========================
+// ======================================================
 // HELPERY
-// =========================
+// ======================================================
 
 const hashCode = code =>
   crypto
@@ -58,10 +58,111 @@ const normRole = role => {
 const isStaff = req =>
   req.role === 'admin' || req.role === 'guardian';
 
+function safeArray(value) {
+  if (Array.isArray(value)) return value;
 
-// =========================
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function normalizeIds(value) {
+  return [
+    ...new Set(
+      safeArray(value)
+        .map(Number)
+        .filter(Number.isInteger)
+        .filter(x => x > 0)
+    )
+  ];
+}
+
+function normalizeNames(value) {
+  return [
+    ...new Set(
+      safeArray(value)
+        .map(x => String(x || '').trim())
+        .filter(Boolean)
+    )
+  ];
+}
+
+function monthInfo(date = new Date()) {
+  const year = date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, '0');
+
+  const monthKey = `${year}-${month}`;
+
+  const monthLabel =
+    new Intl.DateTimeFormat('pl-PL', {
+      month: 'long',
+      year: 'numeric'
+    }).format(date);
+
+  return {
+    year,
+    month,
+    monthKey,
+    monthLabel
+  };
+}
+
+function groupSnapshot(row) {
+  return {
+    id: Number(row.id),
+    name: row.name || '',
+    region: row.region || '',
+    color: row.color || '#2878ff',
+
+    streets: safeArray(row.streets),
+
+    copies: Number(row.copies || 0),
+    delivered: Number(row.delivered || 0),
+
+    started: !!row.started,
+    done: !!row.done,
+
+    memberIds: normalizeIds(row.member_ids),
+    memberNames: normalizeNames(row.member_names)
+  };
+}
+
+function groupJson(row, members = []) {
+  return {
+    id: Number(row.id),
+    name: row.name || '',
+    region: row.region || '',
+    color: row.color || '#2878ff',
+
+    streets: safeArray(row.streets),
+
+    copies: Number(row.copies || 0),
+    delivered: Number(row.delivered || 0),
+
+    started: !!row.started,
+    done: !!row.done,
+
+    memberIds: normalizeIds(row.member_ids),
+    memberNames: normalizeNames(row.member_names),
+
+    members
+  };
+}
+
+
+// ======================================================
 // AUTH
-// =========================
+// ======================================================
 
 async function auth(req, res, next) {
   const role = normRole(req.headers['x-role']);
@@ -145,9 +246,9 @@ function staff(req, res, next) {
 }
 
 
-// =========================
+// ======================================================
 // BAZA DANYCH
-// =========================
+// ======================================================
 
 async function initDb() {
   await pool.query(`
@@ -222,13 +323,18 @@ async function initDb() {
       name TEXT NOT NULL,
       region TEXT NOT NULL,
       color TEXT NOT NULL DEFAULT '#2878ff',
+
       streets JSONB NOT NULL DEFAULT '[]'::jsonb,
+
       copies INTEGER NOT NULL DEFAULT 0,
       delivered INTEGER NOT NULL DEFAULT 0,
+
       started BOOLEAN NOT NULL DEFAULT FALSE,
       done BOOLEAN NOT NULL DEFAULT FALSE,
+
       member_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
       member_names JSONB NOT NULL DEFAULT '[]'::jsonb,
+
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -256,6 +362,14 @@ async function initDb() {
   await pool.query(
     'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
   );
+
+  // Zabezpieczenie historii przed wielokrotnym
+  // tworzeniem tego samego miesiąca.
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    newspaper_history_month_key_unique
+    ON newspaper_history(month_key)
+  `);
 
   const c = await pool.query(
     'SELECT COUNT(*)::int AS count FROM newspaper_groups'
@@ -324,47 +438,19 @@ async function seedNewspaperGroups() {
 }
 
 
-// =========================
-// GAZETY — HELPERY
-// =========================
-
-function groupJson(row, members = []) {
-  return {
-    id: row.id,
-    name: row.name,
-    region: row.region,
-    color: row.color,
-
-    streets: Array.isArray(row.streets)
-      ? row.streets
-      : [],
-
-    copies: Number(row.copies || 0),
-    delivered: Number(row.delivered || 0),
-
-    started: !!row.started,
-    done: !!row.done,
-
-    memberIds: Array.isArray(row.member_ids)
-      ? row.member_ids.map(Number)
-      : [],
-
-    memberNames: Array.isArray(row.member_names)
-      ? row.member_names
-      : [],
-
-    members
-  };
-}
+// ======================================================
+// GAZETY — POBIERANIE GRUP
+// ======================================================
 
 async function getGroups() {
   const [g, m] = await Promise.all([
-    pool.query(
-      'SELECT * FROM newspaper_groups ORDER BY id'
-    ),
+    pool.query(`
+      SELECT *
+      FROM newspaper_groups
+      ORDER BY id
+    `),
 
-    pool.query(
-      `
+    pool.query(`
       SELECT
         id,
         first_name,
@@ -372,30 +458,30 @@ async function getGroups() {
         name
       FROM members
       ORDER BY first_name,last_name,id
-      `
-    )
+    `)
   ]);
 
   const members = m.rows;
 
   return g.rows.map(row => {
-    let ids = Array.isArray(row.member_ids)
-      ? row.member_ids.map(Number)
-      : [];
+    let ids = normalizeIds(row.member_ids);
+    let names = normalizeNames(row.member_names);
 
-    let names = Array.isArray(row.member_names)
-      ? row.member_names.map(String)
-      : [];
-
+    // Kompatybilność ze starymi zapisami,
+    // w których mogły być zapisane tylko nazwiska.
     if (!ids.length && names.length) {
       ids = members
-        .filter(x =>
-          names.includes(
-            `${x.first_name || ''} ${x.last_name || ''}`.trim()
-          ) ||
-          names.includes(x.name || '')
-        )
-        .map(x => x.id);
+        .filter(x => {
+          const fullName =
+            `${x.first_name || ''} ${x.last_name || ''}`
+              .trim();
+
+          return (
+            names.includes(fullName) ||
+            names.includes(x.name || '')
+          );
+        })
+        .map(x => Number(x.id));
     }
 
     const groupMembers = members.filter(x =>
@@ -412,6 +498,11 @@ async function getGroups() {
     );
   });
 }
+
+
+// ======================================================
+// PUSH
+// ======================================================
 
 async function sendPushToAll(payload) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
@@ -443,9 +534,9 @@ async function sendPushToAll(payload) {
 }
 
 
-// =========================
+// ======================================================
 // LOGIN
-// =========================
+// ======================================================
 
 app.post('/api/login', async (req, res) => {
   try {
@@ -524,9 +615,9 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-// =========================
+// ======================================================
 // DATA
-// =========================
+// ======================================================
 
 app.get('/api/data', auth, async (req, res) => {
   try {
@@ -627,9 +718,9 @@ app.get('/api/stats', auth, async (req, res) => {
 });
 
 
-// =========================
+// ======================================================
 // EVENTS
-// =========================
+// ======================================================
 
 app.post('/api/events', auth, staff, async (req, res) => {
   try {
@@ -713,9 +804,9 @@ app.delete(
 );
 
 
-// =========================
+// ======================================================
 // NEWS
-// =========================
+// ======================================================
 
 app.post('/api/news', auth, staff, async (req, res) => {
   try {
@@ -793,9 +884,9 @@ app.delete(
 );
 
 
-// =========================
+// ======================================================
 // PILNE
-// =========================
+// ======================================================
 
 app.post(
   '/api/urgent-messages',
@@ -932,9 +1023,9 @@ app.delete(
 );
 
 
-// =========================
+// ======================================================
 // ZGŁOSZENIA
-// =========================
+// ======================================================
 
 app.post(
   '/api/member-reports',
@@ -1091,9 +1182,9 @@ app.put(
 );
 
 
-// =========================
+// ======================================================
 // MEMBERS
-// =========================
+// ======================================================
 
 app.post(
   '/api/members',
@@ -1255,9 +1346,9 @@ app.delete(
 );
 
 
-// =========================
+// ======================================================
 // PROFILE
-// =========================
+// ======================================================
 
 app.get(
   '/api/profile',
@@ -1335,9 +1426,9 @@ app.put(
 );
 
 
-// =========================
+// ======================================================
 // ATTENDANCE
-// =========================
+// ======================================================
 
 async function saveAttendance(
   req,
@@ -1631,6 +1722,10 @@ app.get(
 );
 
 
+// ======================================================
+// DODAWANIE GRUPY
+// ======================================================
+
 app.post(
   '/api/newspaper-groups',
   auth,
@@ -1654,12 +1749,9 @@ app.post(
         });
       }
 
-      const ids =
-        Array.isArray(b.memberIds)
-          ? b.memberIds
-              .map(Number)
-              .filter(Number.isFinite)
-          : [];
+      const ids = normalizeIds(
+        b.memberIds
+      );
 
       const m = ids.length
         ? await pool.query(
@@ -1688,6 +1780,10 @@ app.post(
         Number(b.copies || 0)
       );
 
+      const streets = safeArray(
+        b.streets
+      );
+
       const r = await pool.query(
         `
         INSERT INTO newspaper_groups
@@ -1697,6 +1793,9 @@ app.post(
           color,
           streets,
           copies,
+          delivered,
+          started,
+          done,
           member_ids,
           member_names
         )
@@ -1706,6 +1805,9 @@ app.post(
           $3,
           $4::jsonb,
           $5,
+          0,
+          FALSE,
+          FALSE,
           $6::jsonb,
           $7::jsonb
         )
@@ -1715,11 +1817,7 @@ app.post(
           name,
           region,
           b.color || '#2878ff',
-          JSON.stringify(
-            Array.isArray(b.streets)
-              ? b.streets
-              : []
-          ),
+          JSON.stringify(streets),
           copies,
           JSON.stringify(ids),
           JSON.stringify(names)
@@ -1745,6 +1843,10 @@ app.post(
 );
 
 
+// ======================================================
+// EDYCJA GRUPY
+// ======================================================
+
 app.put(
   '/api/newspaper-groups/:id',
   auth,
@@ -1769,14 +1871,17 @@ app.put(
       const old = oldR.rows[0];
 
       const oldIds =
-        Array.isArray(old.member_ids)
-          ? old.member_ids.map(Number)
-          : [];
+        normalizeIds(old.member_ids);
 
       const oldNames =
-        Array.isArray(old.member_names)
-          ? old.member_names.map(String)
-          : [];
+        normalizeNames(old.member_names);
+
+
+      // --------------------------------------------------
+      // CZŁONEK MDP
+      // Może zmieniać tylko postęp swojej grupy.
+      // Nie może zmienić ulic, członków ani nazwy.
+      // --------------------------------------------------
 
       if (req.role === 'member') {
         if (
@@ -1790,14 +1895,21 @@ app.put(
           });
         }
 
+        const copies =
+          Math.max(
+            0,
+            Number(old.copies || 0)
+          );
+
         const delivered =
           Math.min(
-            Number(old.copies),
+            copies,
             Math.max(
               0,
               Number(
                 req.body.delivered ??
-                  old.delivered
+                old.delivered ??
+                0
               )
             )
           );
@@ -1830,10 +1942,11 @@ app.put(
           ]
         );
 
+        const groups =
+          await getGroups();
+
         return res.json(
-          (
-            await getGroups()
-          ).find(
+          groups.find(
             x =>
               x.id ===
               Number(req.params.id)
@@ -1842,6 +1955,11 @@ app.put(
         );
       }
 
+
+      // --------------------------------------------------
+      // OPIEKUN / ADMIN
+      // --------------------------------------------------
+
       if (!isStaff(req)) {
         return res.status(403).json({
           error:
@@ -1849,11 +1967,11 @@ app.put(
         });
       }
 
+      // Jeżeli memberIds nie zostało wysłane,
+      // ZACHOWUJEMY stare przypisanie.
       const ids =
-        Array.isArray(req.body.memberIds)
-          ? req.body.memberIds
-              .map(Number)
-              .filter(Number.isFinite)
+        req.body.memberIds !== undefined
+          ? normalizeIds(req.body.memberIds)
           : oldIds;
 
       const m = ids.length
@@ -1871,8 +1989,12 @@ app.put(
           )
         : { rows: [] };
 
+      // Jeżeli memberIds zostało wysłane,
+      // aktualizujemy nazwy.
+      // Jeżeli nie zostało wysłane,
+      // pozostawiamy stare nazwy.
       const names =
-        Array.isArray(req.body.memberIds)
+        req.body.memberIds !== undefined
           ? m.rows
               .map(x =>
                 `${x.first_name || ''} ${x.last_name || ''}`
@@ -1881,13 +2003,13 @@ app.put(
               .filter(Boolean)
           : oldNames;
 
-      const copies = Math.max(
-        0,
-        Number(
-          req.body.copies ??
-            old.copies
-        )
-      );
+      const copies =
+        req.body.copies !== undefined
+          ? Math.max(
+              0,
+              Number(req.body.copies)
+            )
+          : Number(old.copies || 0);
 
       const delivered =
         Math.min(
@@ -1896,10 +2018,41 @@ app.put(
             0,
             Number(
               req.body.delivered ??
-                old.delivered
+              old.delivered ??
+              0
             )
           )
         );
+
+      const streets =
+        req.body.streets !== undefined
+          ? safeArray(req.body.streets)
+          : safeArray(old.streets);
+
+      const name =
+        req.body.name !== undefined
+          ? String(req.body.name).trim()
+          : old.name;
+
+      const region =
+        req.body.region !== undefined
+          ? String(req.body.region).trim()
+          : old.region;
+
+      const color =
+        req.body.color !== undefined
+          ? String(req.body.color)
+          : old.color;
+
+      const started =
+        req.body.started !== undefined
+          ? !!req.body.started
+          : !!old.started;
+
+      const done =
+        req.body.done !== undefined
+          ? !!req.body.done
+          : !!old.done;
 
       const r = await pool.query(
         `
@@ -1919,45 +2072,16 @@ app.put(
         RETURNING *
         `,
         [
-          req.body.name ??
-            old.name,
-
-          req.body.region ??
-            old.region,
-
-          req.body.color ??
-            old.color,
-
-          JSON.stringify(
-            Array.isArray(
-              req.body.streets
-            )
-              ? req.body.streets
-              : (
-                  Array.isArray(
-                    old.streets
-                  )
-                    ? old.streets
-                    : []
-                )
-          ),
-
+          name,
+          region,
+          color,
+          JSON.stringify(streets),
           copies,
           delivered,
-
-          !!(
-            req.body.started ??
-            old.started
-          ),
-
-          !!(
-            req.body.done ??
-            old.done
-          ),
-
+          started,
+          done,
           JSON.stringify(ids),
           JSON.stringify(names),
-
           req.params.id
         ]
       );
@@ -1981,10 +2105,15 @@ app.put(
 );
 
 
+// ======================================================
+// POSTĘP GAZET
+// ======================================================
+
 app.post(
   '/api/newspaper-groups/:id/start',
   auth,
   async (req, res) => {
+    req.body = req.body || {};
     req.body.started = true;
 
     return updateGroupProgress(
@@ -1994,7 +2123,6 @@ app.post(
     );
   }
 );
-
 
 app.post(
   '/api/newspaper-groups/:id/progress',
@@ -2007,11 +2135,11 @@ app.post(
     )
 );
 
-
 app.post(
   '/api/newspaper-groups/:id/complete',
   auth,
   async (req, res) => {
+    req.body = req.body || {};
     req.body.done = true;
     req.body.started = true;
 
@@ -2022,7 +2150,6 @@ app.post(
     );
   }
 );
-
 
 async function updateGroupProgress(
   req,
@@ -2049,9 +2176,7 @@ async function updateGroupProgress(
     const g = r.rows[0];
 
     const ids =
-      Array.isArray(g.member_ids)
-        ? g.member_ids.map(Number)
-        : [];
+      normalizeIds(g.member_ids);
 
     if (
       req.role === 'member' &&
@@ -2075,14 +2200,21 @@ async function updateGroupProgress(
       });
     }
 
+    const copies =
+      Math.max(
+        0,
+        Number(g.copies || 0)
+      );
+
     const delivered =
       Math.min(
-        Number(g.copies),
+        copies,
         Math.max(
           0,
           Number(
             req.body.delivered ??
-              g.delivered
+            g.delivered ??
+            0
           )
         )
       );
@@ -2115,10 +2247,11 @@ async function updateGroupProgress(
       ]
     );
 
+    const groups =
+      await getGroups();
+
     res.json(
-      (
-        await getGroups()
-      ).find(
+      groups.find(
         x =>
           x.id === Number(id)
       ) ||
@@ -2136,22 +2269,40 @@ async function updateGroupProgress(
 }
 
 
+// ======================================================
+// USUWANIE GRUPY
+// ======================================================
+
 app.delete(
   '/api/newspaper-groups/:id',
   auth,
   staff,
   async (req, res) => {
     try {
-      await pool.query(
-        'DELETE FROM newspaper_groups WHERE id=$1',
+      const r = await pool.query(
+        `
+        DELETE FROM newspaper_groups
+        WHERE id=$1
+        RETURNING id
+        `,
         [req.params.id]
       );
 
+      if (!r.rows[0]) {
+        return res.status(404).json({
+          error:
+            'Nie znaleziono grupy.'
+        });
+      }
+
       res.json({
-        ok: true
+        ok: true,
+        deleted: true
       });
 
     } catch (e) {
+      console.error(e);
+
       res.status(500).json({
         error:
           'Nie udało się usunąć grupy gazet.'
@@ -2161,9 +2312,12 @@ app.delete(
 );
 
 
-// =========================
+// ======================================================
 // RESET PLANU GAZET
-// =========================
+// UWAGA:
+// To jest pełny reset planu.
+// NIE używaj tego do rozpoczęcia nowego miesiąca.
+// ======================================================
 
 app.post(
   '/api/newspaper-groups/reset',
@@ -2278,15 +2432,11 @@ app.get(
             )
           : 0;
 
+      const info = monthInfo();
+
       res.json({
-        month:
-          new Intl.DateTimeFormat(
-            'pl-PL',
-            {
-              month: 'long',
-              year: 'numeric'
-            }
-          ).format(new Date()),
+        month: info.monthLabel,
+        monthKey: info.monthKey,
 
         totalGroups:
           groups.length,
@@ -2319,6 +2469,98 @@ app.get(
 
 
 // ======================================================
+// FUNKCJA ZAPISUJĄCA AKTUALNY MIESIĄC
+// ======================================================
+
+async function archiveCurrentMonth(client) {
+  const groupsResult =
+    await client.query(`
+      SELECT *
+      FROM newspaper_groups
+      ORDER BY id
+      FOR UPDATE
+    `);
+
+  if (!groupsResult.rows.length) {
+    throw new Error(
+      'Brak grup gazet do zapisania.'
+    );
+  }
+
+  const info = monthInfo();
+
+  const snapshot =
+    groupsResult.rows.map(
+      groupSnapshot
+    );
+
+  const existing =
+    await client.query(
+      `
+      SELECT id
+      FROM newspaper_history
+      WHERE month_key=$1
+      LIMIT 1
+      `,
+      [info.monthKey]
+    );
+
+  let historyId;
+
+  if (existing.rows.length) {
+    historyId =
+      existing.rows[0].id;
+
+    await client.query(
+      `
+      UPDATE newspaper_history
+      SET
+        month_label=$1,
+        groups=$2::jsonb,
+        saved_at=NOW()
+      WHERE id=$3
+      `,
+      [
+        info.monthLabel,
+        JSON.stringify(snapshot),
+        historyId
+      ]
+    );
+
+  } else {
+    const saved =
+      await client.query(
+        `
+        INSERT INTO newspaper_history
+        (
+          month_key,
+          month_label,
+          groups
+        )
+        VALUES($1,$2,$3::jsonb)
+        RETURNING id
+        `,
+        [
+          info.monthKey,
+          info.monthLabel,
+          JSON.stringify(snapshot)
+        ]
+      );
+
+    historyId =
+      saved.rows[0].id;
+  }
+
+  return {
+    historyId,
+    monthKey: info.monthKey,
+    monthLabel: info.monthLabel,
+    groups: snapshot
+  };
+}
+
+
+// ======================================================
 // ZAPIS MIESIĄCA
 // ======================================================
 
@@ -2333,152 +2575,10 @@ app.post(
     try {
       await client.query('BEGIN');
 
-      const groupsResult =
-        await client.query(`
-          SELECT *
-          FROM newspaper_groups
-          ORDER BY id
-          FOR UPDATE
-        `);
-
-      if (!groupsResult.rows.length) {
-        await client.query('ROLLBACK');
-
-        return res.status(400).json({
-          error:
-            'Brak grup gazet do zapisania.'
-        });
-      }
-
-      const now =
-        new Date();
-
-      const year =
-        now.getFullYear();
-
-      const month =
-        String(
-          now.getMonth() + 1
-        ).padStart(2, '0');
-
-      const monthKey =
-        `${year}-${month}`;
-
-      const monthLabel =
-        new Intl.DateTimeFormat(
-          'pl-PL',
-          {
-            month: 'long',
-            year: 'numeric'
-          }
-        ).format(now);
-
-      const snapshot =
-        groupsResult.rows.map(g => ({
-          id: g.id,
-          name: g.name,
-          region: g.region,
-          color: g.color,
-
-          streets:
-            Array.isArray(
-              g.streets
-            )
-              ? g.streets
-              : [],
-
-          copies:
-            Number(
-              g.copies || 0
-            ),
-
-          delivered:
-            Number(
-              g.delivered || 0
-            ),
-
-          started:
-            !!g.started,
-
-          done:
-            !!g.done,
-
-          memberIds:
-            Array.isArray(
-              g.member_ids
-            )
-              ? g.member_ids.map(Number)
-              : [],
-
-          memberNames:
-            Array.isArray(
-              g.member_names
-            )
-              ? g.member_names
-              : []
-        }));
-
-      const existing =
-        await client.query(
-          `
-          SELECT id
-          FROM newspaper_history
-          WHERE month_key=$1
-          LIMIT 1
-          `,
-          [monthKey]
+      const archived =
+        await archiveCurrentMonth(
+          client
         );
-
-      let historyId =
-        null;
-
-      if (existing.rows.length) {
-        historyId =
-          existing.rows[0].id;
-
-        await client.query(
-          `
-          UPDATE newspaper_history
-          SET
-            month_label=$1,
-            groups=$2::jsonb,
-            saved_at=NOW()
-          WHERE id=$3
-          `,
-          [
-            monthLabel,
-            JSON.stringify(
-              snapshot
-            ),
-            historyId
-          ]
-        );
-
-      } else {
-        const saved =
-          await client.query(
-            `
-            INSERT INTO newspaper_history
-            (
-              month_key,
-              month_label,
-              groups
-            )
-            VALUES($1,$2,$3::jsonb)
-            RETURNING id
-            `,
-            [
-              monthKey,
-              monthLabel,
-              JSON.stringify(
-                snapshot
-              )
-            ]
-          );
-
-        historyId =
-          saved.rows[0].id;
-      }
 
       await client.query(
         'COMMIT'
@@ -2487,10 +2587,14 @@ app.post(
       res.json({
         ok: true,
         saved: true,
-        historyId,
-        monthKey,
-        monthLabel,
-        groups: snapshot
+        historyId:
+          archived.historyId,
+        monthKey:
+          archived.monthKey,
+        monthLabel:
+          archived.monthLabel,
+        groups:
+          archived.groups
       });
 
     } catch (e) {
@@ -2502,7 +2606,10 @@ app.post(
 
       res.status(500).json({
         error:
-          'Nie udało się zapisać miesiąca.'
+          e.message ===
+          'Brak grup gazet do zapisania.'
+            ? e.message
+            : 'Nie udało się zapisać miesiąca.'
       });
 
     } finally {
@@ -2514,6 +2621,20 @@ app.post(
 
 // ======================================================
 // RESET TYLKO MIESIĄCA
+//
+// WAŻNE:
+// NIE USUWA:
+// - grup
+// - ulic
+// - nazw grup
+// - regionów
+// - liczby egzemplarzy
+// - przypisanych członków
+//
+// ZERUJE TYLKO:
+// - delivered
+// - started
+// - done
 // ======================================================
 
 app.post(
@@ -2521,14 +2642,32 @@ app.post(
   auth,
   staff,
   async (req, res) => {
+    const client =
+      await pool.connect();
+
     try {
-      await pool.query(`
+      await client.query(
+        'BEGIN'
+      );
+
+      await client.query(`
         UPDATE newspaper_groups
         SET
           delivered=0,
           started=FALSE,
           done=FALSE
       `);
+
+      const groupsResult =
+        await client.query(`
+          SELECT *
+          FROM newspaper_groups
+          ORDER BY id
+        `);
+
+      await client.query(
+        'COMMIT'
+      );
 
       res.json({
         ok: true,
@@ -2538,12 +2677,19 @@ app.post(
       });
 
     } catch (e) {
+      await client
+        .query('ROLLBACK')
+        .catch(() => {});
+
       console.error(e);
 
       res.status(500).json({
         error:
           'Nie udało się zresetować miesiąca.'
       });
+
+    } finally {
+      client.release();
     }
   }
 );
@@ -2551,6 +2697,16 @@ app.post(
 
 // ======================================================
 // ZAPISZ + ZRESETUJ MIESIĄC
+//
+// TO JEST GŁÓWNA FUNKCJA „NOWY MIESIĄC”
+//
+// 1. blokuje grupy
+// 2. zapisuje poprzedni stan do historii
+// 3. NIE usuwa grup
+// 4. NIE usuwa członków
+// 5. NIE usuwa ulic
+// 6. NIE zmienia przypisań
+// 7. zeruje tylko postęp
 // ======================================================
 
 app.post(
@@ -2566,144 +2722,14 @@ app.post(
         'BEGIN'
       );
 
-      const groupsResult =
-        await client.query(`
-          SELECT *
-          FROM newspaper_groups
-          ORDER BY id
-          FOR UPDATE
-        `);
-
-      if (!groupsResult.rows.length) {
-        await client.query(
-          'ROLLBACK'
+      const archived =
+        await archiveCurrentMonth(
+          client
         );
 
-        return res.status(400).json({
-          error:
-            'Brak grup gazet do zapisania.'
-        });
-      }
-
-      const now =
-        new Date();
-
-      const year =
-        now.getFullYear();
-
-      const month =
-        String(
-          now.getMonth() + 1
-        ).padStart(2, '0');
-
-      const monthKey =
-        `${year}-${month}`;
-
-      const monthLabel =
-        new Intl.DateTimeFormat(
-          'pl-PL',
-          {
-            month: 'long',
-            year: 'numeric'
-          }
-        ).format(now);
-
-      const snapshot =
-        groupsResult.rows.map(g => ({
-          id: g.id,
-          name: g.name,
-          region: g.region,
-          color: g.color,
-
-          streets:
-            Array.isArray(
-              g.streets
-            )
-              ? g.streets
-              : [],
-
-          copies:
-            Number(
-              g.copies || 0
-            ),
-
-          delivered:
-            Number(
-              g.delivered || 0
-            ),
-
-          started:
-            !!g.started,
-
-          done:
-            !!g.done,
-
-          memberIds:
-            Array.isArray(
-              g.member_ids
-            )
-              ? g.member_ids.map(Number)
-              : [],
-
-          memberNames:
-            Array.isArray(
-              g.member_names
-            )
-              ? g.member_names
-              : []
-        }));
-
-      const existing =
-        await client.query(
-          `
-          SELECT id
-          FROM newspaper_history
-          WHERE month_key=$1
-          LIMIT 1
-          `,
-          [monthKey]
-        );
-
-      if (existing.rows.length) {
-        await client.query(
-          `
-          UPDATE newspaper_history
-          SET
-            month_label=$1,
-            groups=$2::jsonb,
-            saved_at=NOW()
-          WHERE id=$3
-          `,
-          [
-            monthLabel,
-            JSON.stringify(
-              snapshot
-            ),
-            existing.rows[0].id
-          ]
-        );
-
-      } else {
-        await client.query(
-          `
-          INSERT INTO newspaper_history
-          (
-            month_key,
-            month_label,
-            groups
-          )
-          VALUES($1,$2,$3::jsonb)
-          `,
-          [
-            monthKey,
-            monthLabel,
-            JSON.stringify(
-              snapshot
-            )
-          ]
-        );
-      }
-
+      // KLUCZOWE:
+      // aktualizujemy tylko pola miesięczne.
+      // Żadne inne dane grupy nie są ruszane.
       await client.query(`
         UPDATE newspaper_groups
         SET
@@ -2711,6 +2737,13 @@ app.post(
           started=FALSE,
           done=FALSE
       `);
+
+      const newGroupsResult =
+        await client.query(`
+          SELECT *
+          FROM newspaper_groups
+          ORDER BY id
+        `);
 
       await client.query(
         'COMMIT'
@@ -2720,8 +2753,19 @@ app.post(
         ok: true,
         saved: true,
         reset: true,
+
         archivedMonth:
-          monthLabel,
+          archived.monthLabel,
+
+        monthKey:
+          archived.monthKey,
+
+        historyId:
+          archived.historyId,
+
+        previousGroups:
+          archived.groups,
+
         groups:
           await getGroups()
       });
@@ -2735,7 +2779,10 @@ app.post(
 
       res.status(500).json({
         error:
-          'Nie udało się zapisać i zresetować miesiąca.'
+          e.message ===
+          'Brak grup gazet do zapisania.'
+            ? e.message
+            : 'Nie udało się zapisać i zresetować miesiąca.'
       });
 
     } finally {
@@ -2747,6 +2794,10 @@ app.post(
 
 // ======================================================
 // KOMPATYBILNOŚĆ — NOWY MIESIĄC
+//
+// Stary endpoint zostaje, żeby stary HTML nadal działał.
+// Robi dokładnie to samo co:
+// „zapisz + zresetuj”.
 // ======================================================
 
 app.post(
@@ -2762,124 +2813,10 @@ app.post(
         'BEGIN'
       );
 
-      const groupsResult =
-        await client.query(`
-          SELECT *
-          FROM newspaper_groups
-          ORDER BY id
-          FOR UPDATE
-        `);
-
-      if (!groupsResult.rows.length) {
-        await client.query(
-          'ROLLBACK'
+      const archived =
+        await archiveCurrentMonth(
+          client
         );
-
-        return res.status(400).json({
-          error:
-            'Brak grup gazet do zapisania.'
-        });
-      }
-
-      const now =
-        new Date();
-
-      const year =
-        now.getFullYear();
-
-      const month =
-        String(
-          now.getMonth() + 1
-        ).padStart(2, '0');
-
-      const monthKey =
-        `${year}-${month}`;
-
-      const monthLabel =
-        new Intl.DateTimeFormat(
-          'pl-PL',
-          {
-            month: 'long',
-            year: 'numeric'
-          }
-        ).format(now);
-
-      const snapshot =
-        groupsResult.rows.map(g => ({
-          id: g.id,
-          name: g.name,
-          region: g.region,
-          color: g.color,
-
-          streets:
-            Array.isArray(
-              g.streets
-            )
-              ? g.streets
-              : [],
-
-          copies:
-            Number(
-              g.copies || 0
-            ),
-
-          delivered:
-            Number(
-              g.delivered || 0
-            ),
-
-          started:
-            !!g.started,
-
-          done:
-            !!g.done,
-
-          memberIds:
-            Array.isArray(
-              g.member_ids
-            )
-              ? g.member_ids.map(Number)
-              : [],
-
-          memberNames:
-            Array.isArray(
-              g.member_names
-            )
-              ? g.member_names
-              : []
-        }));
-
-      const exists =
-        await client.query(
-          `
-          SELECT id
-          FROM newspaper_history
-          WHERE month_key=$1
-          LIMIT 1
-          `,
-          [monthKey]
-        );
-
-      if (!exists.rows.length) {
-        await client.query(
-          `
-          INSERT INTO newspaper_history
-          (
-            month_key,
-            month_label,
-            groups
-          )
-          VALUES($1,$2,$3::jsonb)
-          `,
-          [
-            monthKey,
-            monthLabel,
-            JSON.stringify(
-              snapshot
-            )
-          ]
-        );
-      }
 
       await client.query(`
         UPDATE newspaper_groups
@@ -2895,8 +2832,19 @@ app.post(
 
       res.json({
         ok: true,
+
+        saved: true,
+        reset: true,
+
         archivedMonth:
-          monthLabel,
+          archived.monthLabel,
+
+        monthKey:
+          archived.monthKey,
+
+        historyId:
+          archived.historyId,
+
         groups:
           await getGroups()
       });
@@ -2920,9 +2868,40 @@ app.post(
 );
 
 
-// =========================
+// ======================================================
+// DODATKOWE — INFORMACJA O AKTUALNYM MIESIĄCU
+// ======================================================
+
+app.get(
+  '/api/newspaper-current-month',
+  auth,
+  async (req, res) => {
+    try {
+      const info = monthInfo();
+
+      res.json({
+        monthKey:
+          info.monthKey,
+
+        monthLabel:
+          info.monthLabel
+      });
+
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się pobrać informacji o miesiącu.'
+      });
+    }
+  }
+);
+
+
+// ======================================================
 // PUSH
-// =========================
+// ======================================================
 
 app.post(
   '/api/push/subscribe',
@@ -3043,9 +3022,9 @@ app.post(
 );
 
 
-// =========================
+// ======================================================
 // HEALTH
-// =========================
+// ======================================================
 
 app.get(
   '/api/health',
@@ -3070,9 +3049,9 @@ app.get(
 );
 
 
-// =========================
+// ======================================================
 // API 404
-// =========================
+// ======================================================
 
 app.use(
   '/api',
@@ -3084,9 +3063,9 @@ app.use(
 );
 
 
-// =========================
+// ======================================================
 // SPA
-// =========================
+// ======================================================
 
 app.use(
   (req, res) =>
@@ -3100,9 +3079,9 @@ app.use(
 );
 
 
-// =========================
+// ======================================================
 // START
-// =========================
+// ======================================================
 
 initDb()
   .then(() => {
