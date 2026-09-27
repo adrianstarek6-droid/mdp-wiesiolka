@@ -553,6 +553,35 @@
       font-weight: 800;
       color: #ddd;
       flex: 0 0 43px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 28px;
+      background: #242424;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: #ddd;
+      overflow: hidden;
+      margin: auto;
+      border: 1px solid var(--border);
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .member-info {
@@ -706,6 +735,57 @@
     }
 
     /* =========================
+       NOTIFICATIONS
+    ========================= */
+
+    #notificationBadge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 19px;
+      height: 19px;
+      margin-left: 5px;
+      padding: 0 5px;
+      border-radius: 10px;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      vertical-align: middle;
+    }
+
+    .notification-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      transition: .2s;
+    }
+
+    .notification-card.unread {
+      border-color: rgba(229,27,35,.45);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(229,27,35,.09),
+          transparent
+        ),
+        var(--card);
+    }
+
+    .notification-icon {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 14px;
+      background: #242424;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* =========================
        EMPTY / LOADING
     ========================= */
 
@@ -840,21 +920,39 @@
       <div class="login-card">
 
         <div class="role-buttons">
-          <button class="role-btn active" data-role="member" onclick="selectRole('member')">
+
+          <button
+            class="role-btn active"
+            data-role="member"
+            onclick="selectRole('member')"
+          >
             👨‍🚒 MDP
           </button>
 
-          <button class="role-btn" data-role="guardian" onclick="selectRole('guardian')">
+          <button
+            class="role-btn"
+            data-role="guardian"
+            onclick="selectRole('guardian')"
+          >
             🛡️ Opiekun
           </button>
 
-          <button class="role-btn" data-role="admin" onclick="selectRole('admin')">
+          <button
+            class="role-btn"
+            data-role="admin"
+            onclick="selectRole('admin')"
+          >
             ⚙️ Admin
           </button>
+
         </div>
 
         <div class="field">
-          <label for="loginCode">Kod dostępu</label>
+
+          <label for="loginCode">
+            Kod dostępu
+          </label>
+
           <input
             id="loginCode"
             class="input"
@@ -864,16 +962,25 @@
             placeholder="Wpisz kod"
             onkeydown="if(event.key === 'Enter') login()"
           >
+
         </div>
 
-        <button class="primary-btn" onclick="login()">
+        <button
+          class="primary-btn"
+          onclick="login()"
+        >
           Zaloguj się
         </button>
 
-        <div id="loginError" class="login-error"></div>
+        <div
+          id="loginError"
+          class="login-error"
+        ></div>
+
       </div>
     </div>
   </section>
+
 
   <!-- =========================
        APP
@@ -882,53 +989,93 @@
   <main id="app" class="hidden">
 
     <header class="topbar">
+
       <div class="topbar-inner">
 
         <div class="brand">
-          <div class="brand-icon">🚒</div>
+
+          <div class="brand-icon">
+            🚒
+          </div>
 
           <div class="brand-text">
-            <strong>MDP Wiesiółka</strong>
-            <span id="roleLabel">Członek MDP</span>
+
+            <strong>
+              MDP Wiesiółka
+            </strong>
+
+            <span id="roleLabel">
+              Członek MDP
+            </span>
+
           </div>
+
         </div>
 
-        <button class="logout-btn" onclick="logout()">
+        <button
+          class="logout-btn"
+          onclick="logout()"
+        >
           Wyloguj
         </button>
 
       </div>
+
     </header>
+
 
     <div class="container">
 
       <!-- HERO -->
 
       <section class="hero">
-        <small>OSP Wiesiółka</small>
-        <h2>Witaj w aplikacji MDP 👋</h2>
+
+        <small>
+          OSP Wiesiółka
+        </small>
+
+        <h2>
+          Witaj w aplikacji MDP 👋
+        </h2>
+
         <p>
-          Wszystkie najważniejsze informacje, zbiórki,
-          ogłoszenia i obecności w jednym miejscu.
+          Wszystkie najważniejsze informacje,
+          zbiórki, ogłoszenia i obecności
+          w jednym miejscu.
         </p>
+
       </section>
+
 
       <!-- NAV -->
 
       <nav class="nav">
-        <button class="nav-btn active" onclick="showSection('home', this)">
+
+        <button
+          class="nav-btn active"
+          onclick="showSection('home', this)"
+        >
           🏠 Start
         </button>
 
-        <button class="nav-btn" onclick="showSection('events', this)">
+        <button
+          class="nav-btn"
+          onclick="showSection('events', this)"
+        >
           📅 Zbiórki
         </button>
 
-        <button class="nav-btn" onclick="showSection('news', this)">
+        <button
+          class="nav-btn"
+          onclick="showSection('news', this)"
+        >
           📢 Ogłoszenia
         </button>
 
-        <button class="nav-btn" onclick="showSection('members', this)">
+        <button
+          class="nav-btn"
+          onclick="showSection('members', this)"
+        >
           👥 Członkowie
         </button>
 
@@ -939,155 +1086,515 @@
         >
           ⚙️ Zarządzanie
         </button>
+
+        <button
+          class="nav-btn"
+          onclick="showSection('profile', this)"
+        >
+          👤 Profil
+        </button>
+
+        <button
+          class="nav-btn"
+          onclick="showSection('notifications', this)"
+        >
+          🔔 Powiadomienia
+          <span id="notificationBadge"></span>
+        </button>
+
       </nav>
+
 
       <!-- =========================
            START
       ========================= -->
 
-      <section id="section-home" class="page-section">
+      <section
+        id="section-home"
+        class="page-section"
+      >
 
         <div class="stats">
 
           <div class="stat">
-            <div class="stat-icon">📅</div>
-            <strong id="statEvents">0</strong>
-            <span>zbiórek</span>
+            <div class="stat-icon">
+              📅
+            </div>
+
+            <strong id="statEvents">
+              0
+            </strong>
+
+            <span>
+              zbiórek
+            </span>
           </div>
 
           <div class="stat">
-            <div class="stat-icon">📢</div>
-            <strong id="statNews">0</strong>
-            <span>ogłoszeń</span>
+
+            <div class="stat-icon">
+              📢
+            </div>
+
+            <strong id="statNews">
+              0
+            </strong>
+
+            <span>
+              ogłoszeń
+            </span>
+
           </div>
 
           <div class="stat">
-            <div class="stat-icon">👥</div>
-            <strong id="statMembers">0</strong>
-            <span>członków</span>
+
+            <div class="stat-icon">
+              👥
+            </div>
+
+            <strong id="statMembers">
+              0
+            </strong>
+
+            <span>
+              członków
+            </span>
+
           </div>
 
         </div>
 
+
         <section class="section">
 
           <div class="section-header">
+
             <div>
-              <div class="section-title">Najbliższa zbiórka</div>
+
+              <div class="section-title">
+                Najbliższa zbiórka
+              </div>
+
               <div class="section-subtitle">
                 Sprawdź termin i zaznacz obecność
               </div>
+
             </div>
+
           </div>
 
           <div id="homeNextEvent">
-            <div class="loading">Ładowanie...</div>
+            <div class="loading">
+              Ładowanie...
+            </div>
           </div>
 
         </section>
 
+
         <section class="section">
 
           <div class="section-header">
+
             <div>
-              <div class="section-title">Najnowsze ogłoszenia</div>
+
+              <div class="section-title">
+                Najnowsze ogłoszenia
+              </div>
+
               <div class="section-subtitle">
                 Najważniejsze informacje dla MDP
               </div>
+
             </div>
+
           </div>
 
-          <div id="homeNews" class="grid"></div>
+          <div
+            id="homeNews"
+            class="grid"
+          ></div>
 
         </section>
 
       </section>
+
 
       <!-- =========================
            EVENTS
       ========================= -->
 
-      <section id="section-events" class="page-section hidden">
+      <section
+        id="section-events"
+        class="page-section hidden"
+      >
 
         <div class="section-header">
+
           <div>
-            <div class="section-title">Zbiórki MDP</div>
+
+            <div class="section-title">
+              Zbiórki MDP
+            </div>
+
             <div class="section-subtitle">
               Terminy spotkań i wydarzeń
             </div>
+
           </div>
 
-          <div id="eventsCount" class="count">0</div>
+          <div
+            id="eventsCount"
+            class="count"
+          >
+            0
+          </div>
+
         </div>
 
-        <div id="eventsList" class="grid events-grid">
-          <div class="loading">Ładowanie...</div>
+        <div
+          id="eventsList"
+          class="grid events-grid"
+        >
+          <div class="loading">
+            Ładowanie...
+          </div>
         </div>
 
       </section>
+
 
       <!-- =========================
            NEWS
       ========================= -->
 
-      <section id="section-news" class="page-section hidden">
+      <section
+        id="section-news"
+        class="page-section hidden"
+      >
 
         <div class="section-header">
+
           <div>
-            <div class="section-title">Ogłoszenia</div>
+
+            <div class="section-title">
+              Ogłoszenia
+            </div>
+
             <div class="section-subtitle">
               Informacje od opiekunów i administratora
             </div>
+
           </div>
 
-          <div id="newsCount" class="count">0</div>
+          <div
+            id="newsCount"
+            class="count"
+          >
+            0
+          </div>
+
         </div>
 
-        <div id="newsList" class="grid">
-          <div class="loading">Ładowanie...</div>
+        <div
+          id="newsList"
+          class="grid"
+        >
+          <div class="loading">
+            Ładowanie...
+          </div>
         </div>
 
       </section>
+
 
       <!-- =========================
            MEMBERS
       ========================= -->
 
-      <section id="section-members" class="page-section hidden">
+      <section
+        id="section-members"
+        class="page-section hidden"
+      >
 
         <div class="section-header">
+
           <div>
-            <div class="section-title">Członkowie MDP</div>
+
+            <div class="section-title">
+              Członkowie MDP
+            </div>
+
             <div class="section-subtitle">
               Lista osób należących do drużyny
             </div>
+
           </div>
 
-          <div id="membersCount" class="count">0</div>
+          <div
+            id="membersCount"
+            class="count"
+          >
+            0
+          </div>
+
         </div>
 
-        <div id="membersList" class="grid">
-          <div class="loading">Ładowanie...</div>
+        <div
+          id="membersList"
+          class="grid"
+        >
+          <div class="loading">
+            Ładowanie...
+          </div>
         </div>
 
       </section>
+
+
+      <!-- =========================
+           PROFILE
+      ========================= -->
+
+      <section
+        id="section-profile"
+        class="page-section hidden"
+      >
+
+        <div class="section-header">
+
+          <div>
+
+            <div class="section-title">
+              👤 Mój profil
+            </div>
+
+            <div class="section-subtitle">
+              Twoje dane w aplikacji MDP Wiesiółka
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-card">
+
+          <div
+            style="
+              text-align:center;
+              margin-bottom:22px;
+            "
+          >
+
+            <div
+              id="profileAvatar"
+              class="profile-avatar"
+            >
+              👤
+            </div>
+
+            <div
+              style="
+                margin-top:12px;
+                color:#777;
+                font-size:11px;
+              "
+            >
+              Twoje zdjęcie profilowe
+            </div>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Zdjęcie profilowe
+            </label>
+
+            <input
+              id="profilePhoto"
+              class="input"
+              type="file"
+              accept="image/*"
+              onchange="changeProfilePhoto(event)"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Imię
+            </label>
+
+            <input
+              id="profileFirstName"
+              class="input"
+              placeholder="Twoje imię"
+              autocomplete="given-name"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Nazwisko
+            </label>
+
+            <input
+              id="profileLastName"
+              class="input"
+              placeholder="Twoje nazwisko"
+              autocomplete="family-name"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Rola
+            </label>
+
+            <input
+              id="profileRole"
+              class="input"
+              readonly
+            >
+
+          </div>
+
+
+          <button
+            class="primary-btn"
+            onclick="saveProfile()"
+          >
+            💾 Zapisz profil
+          </button>
+
+        </div>
+
+
+        <div class="form-card">
+
+          <div class="form-title">
+            ℹ️ Informacje
+          </div>
+
+          <div
+            style="
+              color:#aaa;
+              font-size:13px;
+              line-height:1.6;
+            "
+          >
+            Profil zapisuje się na tym urządzeniu.
+            Twoje zdjęcie i dane profilu nie są
+            wysyłane do serwera.
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           NOTIFICATIONS
+      ========================= -->
+
+      <section
+        id="section-notifications"
+        class="page-section hidden"
+      >
+
+        <div class="section-header">
+
+          <div>
+
+            <div class="section-title">
+              🔔 Powiadomienia
+            </div>
+
+            <div class="section-subtitle">
+              Najważniejsze informacje dla Ciebie
+            </div>
+
+          </div>
+
+          <div
+            id="notificationCount"
+            class="count"
+          >
+            0 nowych
+          </div>
+
+        </div>
+
+
+        <div
+          class="actions"
+          style="margin-bottom:14px"
+        >
+
+          <button
+            class="btn blue"
+            onclick="markAllNotificationsRead()"
+          >
+            ✓ Oznacz wszystkie jako przeczytane
+          </button>
+
+        </div>
+
+
+        <div
+          id="notificationsList"
+          class="grid"
+        >
+
+          <div class="empty">
+            🔔 Brak powiadomień.
+          </div>
+
+        </div>
+
+      </section>
+
 
       <!-- =========================
            MANAGEMENT
       ========================= -->
 
-      <section id="section-management" class="page-section hidden">
+      <section
+        id="section-management"
+        class="page-section hidden"
+      >
 
         <div class="section">
+
           <div class="section-header">
+
             <div>
-              <div class="section-title">Zarządzanie</div>
+
+              <div class="section-title">
+                Zarządzanie
+              </div>
+
               <div class="section-subtitle">
                 Funkcje dostępne dla opiekunów i administratora
               </div>
+
             </div>
+
           </div>
+
         </div>
+
 
         <!-- ADD EVENT -->
 
@@ -1098,51 +1605,93 @@
           </div>
 
           <div class="field">
-            <label>Tytuł</label>
+
+            <label>
+              Tytuł
+            </label>
+
             <input
               id="eventTitle"
               class="input"
               placeholder="np. Zbiórka MDP"
             >
+
           </div>
+
 
           <div class="two">
 
             <div class="field">
-              <label>Data</label>
-              <input id="eventDate" class="input" type="date">
+
+              <label>
+                Data
+              </label>
+
+              <input
+                id="eventDate"
+                class="input"
+                type="date"
+              >
+
             </div>
 
+
             <div class="field">
-              <label>Godzina</label>
-              <input id="eventTime" class="input" type="time">
+
+              <label>
+                Godzina
+              </label>
+
+              <input
+                id="eventTime"
+                class="input"
+                type="time"
+              >
+
             </div>
 
           </div>
 
+
           <div class="field">
-            <label>Miejsce</label>
+
+            <label>
+              Miejsce
+            </label>
+
             <input
               id="eventPlace"
               class="input"
               placeholder="np. Remiza OSP Wiesiółka"
             >
+
           </div>
 
+
           <div class="field">
-            <label>Opis</label>
+
+            <label>
+              Opis
+            </label>
+
             <textarea
               id="eventDescription"
               class="input"
               placeholder="Dodatkowe informacje..."
             ></textarea>
+
           </div>
 
-          <button class="primary-btn" onclick="addEvent()">
+
+          <button
+            class="primary-btn"
+            onclick="addEvent()"
+          >
             Dodaj zbiórkę
           </button>
 
         </div>
+
 
         <!-- ADD NEWS -->
 
@@ -1153,28 +1702,44 @@
           </div>
 
           <div class="field">
-            <label>Tytuł</label>
+
+            <label>
+              Tytuł
+            </label>
+
             <input
               id="newsTitle"
               class="input"
               placeholder="Tytuł ogłoszenia"
             >
+
           </div>
 
+
           <div class="field">
-            <label>Treść</label>
+
+            <label>
+              Treść
+            </label>
+
             <textarea
               id="newsBody"
               class="input"
               placeholder="Treść ogłoszenia..."
             ></textarea>
+
           </div>
 
-          <button class="primary-btn" onclick="addNews()">
+
+          <button
+            class="primary-btn"
+            onclick="addNews()"
+          >
             Dodaj ogłoszenie
           </button>
 
         </div>
+
 
         <!-- ADD MEMBER -->
 
@@ -1185,25 +1750,40 @@
           </div>
 
           <div class="field">
-            <label>Imię i nazwisko</label>
+
+            <label>
+              Imię i nazwisko
+            </label>
+
             <input
               id="memberName"
               class="input"
               placeholder="np. Jan Kowalski"
             >
+
           </div>
 
+
           <div class="field">
-            <label>Rola</label>
+
+            <label>
+              Rola
+            </label>
+
             <input
               id="memberRole"
               class="input"
               value="Członek MDP"
               placeholder="Rola"
             >
+
           </div>
 
-          <button class="primary-btn" onclick="addMember()">
+
+          <button
+            class="primary-btn"
+            onclick="addMember()"
+          >
             Dodaj członka
           </button>
 
@@ -1211,92 +1791,136 @@
 
       </section>
 
+
       <footer>
         MDP Wiesiółka • OSP Wiesiółka
       </footer>
 
     </div>
+
   </main>
+
 
   <!-- TOAST -->
 
   <div id="toast"></div>
 
+
   <script>
+
     /* =========================
        STATE
     ========================= */
 
     let currentRole = "member";
     let authCode = "";
+
     let appData = {
       events: [],
       news: [],
       members: []
     };
 
+    let notifications = [];
+
+
     /* =========================
        ELEMENTS
     ========================= */
 
-    const loginScreen = document.getElementById("loginScreen");
-    const app = document.getElementById("app");
-    const loginCode = document.getElementById("loginCode");
-    const loginError = document.getElementById("loginError");
+    const loginScreen =
+      document.getElementById("loginScreen");
+
+    const app =
+      document.getElementById("app");
+
+    const loginCode =
+      document.getElementById("loginCode");
+
+    const loginError =
+      document.getElementById("loginError");
+
 
     /* =========================
        ROLE
     ========================= */
 
     function selectRole(role) {
+
       currentRole = role;
 
-      document.querySelectorAll(".role-btn").forEach(btn => {
-        btn.classList.toggle(
-          "active",
-          btn.dataset.role === role
-        );
-      });
+      document
+        .querySelectorAll(".role-btn")
+        .forEach(btn => {
+
+          btn.classList.toggle(
+            "active",
+            btn.dataset.role === role
+          );
+
+        });
 
       loginError.textContent = "";
+
       loginCode.focus();
+
     }
+
 
     /* =========================
        LOGIN
     ========================= */
 
     async function login() {
-      const code = loginCode.value.trim();
+
+      const code =
+        loginCode.value.trim();
 
       if (!code) {
-        loginError.textContent = "Wpisz kod dostępu.";
+
+        loginError.textContent =
+          "Wpisz kod dostępu.";
+
         return;
       }
 
       loginError.textContent = "";
 
       try {
-        const response = await fetch("/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            role: currentRole,
-            code
-          })
-        });
 
-        const data = await response.json();
+        const response =
+          await fetch("/api/login", {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              role: currentRole,
+              code
+            })
+
+          });
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się zalogować."
+            data.error ||
+            "Nie udało się zalogować."
           );
+
         }
 
+
         authCode = code;
+
 
         localStorage.setItem(
           "mdpRole",
@@ -1308,233 +1932,424 @@
           code
         );
 
+
         showApp();
+
         await loadData();
 
+
       } catch (error) {
+
         loginError.textContent =
-          error.message || "Błąd logowania.";
+          error.message ||
+          "Błąd logowania.";
+
       }
+
     }
+
 
     /* =========================
        SHOW APP
     ========================= */
 
     function showApp() {
+
       loginScreen.classList.add("hidden");
+
       app.classList.remove("hidden");
 
+
       const roleNames = {
+
         member: "Członek MDP",
+
         guardian: "Opiekun MDP",
+
         admin: "Administrator"
+
       };
 
-      document.getElementById("roleLabel").textContent =
-        roleNames[currentRole] || "Użytkownik";
+
+      document
+        .getElementById("roleLabel")
+        .textContent =
+          roleNames[currentRole] ||
+          "Użytkownik";
+
 
       const staff = [
         "guardian",
         "admin"
       ].includes(currentRole);
 
+
       document
         .getElementById("staffNav")
-        .classList.toggle("hidden", !staff);
+        .classList.toggle(
+          "hidden",
+          !staff
+        );
+
+
+      renderProfile();
+
     }
+
 
     /* =========================
        LOGOUT
     ========================= */
 
     function logout() {
+
       localStorage.removeItem("mdpRole");
+
       localStorage.removeItem("mdpCode");
 
       authCode = "";
+
       loginCode.value = "";
 
       app.classList.add("hidden");
+
       loginScreen.classList.remove("hidden");
 
       selectRole("member");
+
     }
+
 
     /* =========================
        AUTH HEADERS
     ========================= */
 
     function headers() {
+
       return {
-        "Content-Type": "application/json",
-        "x-role": currentRole,
-        "x-code": authCode
+
+        "Content-Type":
+          "application/json",
+
+        "x-role":
+          currentRole,
+
+        "x-code":
+          authCode
+
       };
+
     }
+
 
     /* =========================
        LOAD DATA
     ========================= */
 
     async function loadData() {
-      try {
-        const response = await fetch("/api/data", {
-          headers: headers()
-        });
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            "/api/data",
+            {
+              headers: headers()
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się pobrać danych."
+            data.error ||
+            "Nie udało się pobrać danych."
           );
+
         }
+
 
         appData = data;
 
+
         renderAll();
 
+
       } catch (error) {
+
         showToast(
-          error.message || "Nie udało się pobrać danych.",
+          error.message ||
+          "Nie udało się pobrać danych.",
           true
         );
+
       }
+
     }
+
 
     /* =========================
        RENDER ALL
     ========================= */
 
     function renderAll() {
+
       renderStats();
+
       renderHome();
+
       renderEvents();
+
       renderNews();
+
       renderMembers();
+
+      createNotifications();
+
+      renderProfile();
+
     }
+
 
     /* =========================
        STATS
     ========================= */
 
     function renderStats() {
-      document.getElementById("statEvents").textContent =
-        appData.events.length;
 
-      document.getElementById("statNews").textContent =
-        appData.news.length;
+      document
+        .getElementById("statEvents")
+        .textContent =
+          appData.events.length;
 
-      document.getElementById("statMembers").textContent =
-        appData.members.length;
 
-      document.getElementById("eventsCount").textContent =
-        appData.events.length;
+      document
+        .getElementById("statNews")
+        .textContent =
+          appData.news.length;
 
-      document.getElementById("newsCount").textContent =
-        appData.news.length;
 
-      document.getElementById("membersCount").textContent =
-        appData.members.length;
+      document
+        .getElementById("statMembers")
+        .textContent =
+          appData.members.length;
+
+
+      document
+        .getElementById("eventsCount")
+        .textContent =
+          appData.events.length;
+
+
+      document
+        .getElementById("newsCount")
+        .textContent =
+          appData.news.length;
+
+
+      document
+        .getElementById("membersCount")
+        .textContent =
+          appData.members.length;
+
     }
+
 
     /* =========================
        HOME
     ========================= */
 
     function renderHome() {
+
       const eventBox =
-        document.getElementById("homeNextEvent");
+        document.getElementById(
+          "homeNextEvent"
+        );
+
 
       if (!appData.events.length) {
+
         eventBox.innerHTML =
           '<div class="empty">Brak zaplanowanych zbiórek.</div>';
+
       } else {
+
         eventBox.innerHTML =
-          eventHTML(appData.events[0], true);
+          eventHTML(
+            appData.events[0],
+            true
+          );
+
       }
 
+
       const newsBox =
-        document.getElementById("homeNews");
+        document.getElementById(
+          "homeNews"
+        );
+
 
       if (!appData.news.length) {
+
         newsBox.innerHTML =
           '<div class="empty">Brak ogłoszeń.</div>';
+
       } else {
+
         newsBox.innerHTML =
           appData.news
             .slice(0, 3)
-            .map(item => newsHTML(item, false))
+            .map(
+              item =>
+                newsHTML(
+                  item,
+                  false
+                )
+            )
             .join("");
+
       }
+
     }
+
 
     /* =========================
        EVENTS
     ========================= */
 
     function renderEvents() {
+
       const box =
-        document.getElementById("eventsList");
+        document.getElementById(
+          "eventsList"
+        );
+
 
       if (!appData.events.length) {
+
         box.innerHTML =
           '<div class="empty">Nie ma jeszcze żadnych zbiórek.</div>';
 
         return;
+
       }
+
 
       box.innerHTML =
         appData.events
-          .map(event => eventHTML(event, false))
+          .map(
+            event =>
+              eventHTML(
+                event,
+                false
+              )
+          )
           .join("");
+
     }
+
 
     /* =========================
        EVENT HTML
     ========================= */
 
-    function eventHTML(event, compact = false) {
-      const date = parseDate(event.event_date);
+    function eventHTML(
+      event,
+      compact = false
+    ) {
 
-      const day = date
-        ? String(date.getDate()).padStart(2, "0")
-        : "--";
+      const date =
+        parseDate(
+          event.event_date
+        );
 
-      const month = date
-        ? date.toLocaleDateString("pl-PL", {
-            month: "short"
-          }).replace(".", "")
-        : "---";
+
+      const day =
+        date
+          ? String(
+              date.getDate()
+            ).padStart(2, "0")
+          : "--";
+
+
+      const month =
+        date
+          ? date
+              .toLocaleDateString(
+                "pl-PL",
+                {
+                  month: "short"
+                }
+              )
+              .replace(".", "")
+          : "---";
+
 
       return `
+
         <article class="event-card">
 
           <div class="event-top">
 
             <div class="date-box">
-              <strong>${escapeHTML(day)}</strong>
-              <span>${escapeHTML(month)}</span>
+
+              <strong>
+                ${escapeHTML(day)}
+              </strong>
+
+              <span>
+                ${escapeHTML(month)}
+              </span>
+
             </div>
 
+
             <div class="event-info">
-              <h3>${escapeHTML(event.title)}</h3>
+
+              <h3>
+                ${escapeHTML(
+                  event.title
+                )}
+              </h3>
+
 
               <div class="meta">
-                🕐 ${escapeHTML(event.event_time)}
+
+                🕐
+                ${escapeHTML(
+                  event.event_time
+                )}
+
                 <br>
-                📍 ${escapeHTML(event.place)}
+
+                📍
+                ${escapeHTML(
+                  event.place
+                )}
+
               </div>
+
             </div>
 
           </div>
 
+
           ${
             event.description
-              ? `<div class="description">${escapeHTML(event.description)}</div>`
+              ? `
+                <div class="description">
+                  ${escapeHTML(
+                    event.description
+                  )}
+                </div>
+              `
               : ""
           }
+
 
           <div class="attendance-box">
 
@@ -1542,41 +2357,60 @@
               CZY BĘDZIESZ?
             </div>
 
+
             <div class="attendance-buttons">
 
               <button
                 class="btn green"
-                onclick="setAttendance(${event.id}, 'yes')"
+                onclick="setAttendance(
+                  ${event.id},
+                  'yes'
+                )"
               >
                 ✓ Będę
               </button>
 
+
               <button
                 class="btn yellow"
-                onclick="setAttendance(${event.id}, 'maybe')"
+                onclick="setAttendance(
+                  ${event.id},
+                  'maybe'
+                )"
               >
                 ? Może
               </button>
 
+
               <button
                 class="btn red"
-                onclick="setAttendance(${event.id}, 'no')"
+                onclick="setAttendance(
+                  ${event.id},
+                  'no'
+                )"
               >
                 ✕ Nie
               </button>
 
             </div>
 
+
             ${
               isStaff()
                 ? `
                   <button
                     class="btn blue"
-                    style="width:100%;margin-top:8px"
-                    onclick="loadAttendance(${event.id})"
+                    style="
+                      width:100%;
+                      margin-top:8px
+                    "
+                    onclick="loadAttendance(
+                      ${event.id}
+                    )"
                   >
                     👥 Pokaż obecność
                   </button>
+
 
                   <div
                     id="attendance-${event.id}"
@@ -1588,97 +2422,154 @@
 
           </div>
 
+
           ${
             isStaff()
               ? `
                 <div class="actions">
+
                   <button
                     class="btn red"
-                    onclick="deleteEvent(${event.id})"
+                    onclick="deleteEvent(
+                      ${event.id}
+                    )"
                   >
                     🗑 Usuń zbiórkę
                   </button>
+
                 </div>
               `
               : ""
           }
 
         </article>
+
       `;
+
     }
+
 
     /* =========================
        NEWS
     ========================= */
 
     function renderNews() {
+
       const box =
-        document.getElementById("newsList");
+        document.getElementById(
+          "newsList"
+        );
+
 
       if (!appData.news.length) {
+
         box.innerHTML =
           '<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>';
 
         return;
+
       }
+
 
       box.innerHTML =
         appData.news
-          .map(item => newsHTML(item, true))
+          .map(
+            item =>
+              newsHTML(
+                item,
+                true
+              )
+          )
           .join("");
+
     }
 
-    function newsHTML(item, actions) {
-      const date = item.created_at
-        ? new Date(item.created_at).toLocaleDateString("pl-PL")
-        : "";
+
+    function newsHTML(
+      item,
+      actions
+    ) {
+
+      const date =
+        item.created_at
+          ? new Date(
+              item.created_at
+            ).toLocaleDateString(
+              "pl-PL"
+            )
+          : "";
+
 
       return `
+
         <article class="news-card">
 
           <div class="news-date">
             ${escapeHTML(date)}
           </div>
 
-          <h3>${escapeHTML(item.title)}</h3>
+
+          <h3>
+            ${escapeHTML(
+              item.title
+            )}
+          </h3>
+
 
           <div class="news-body">
-            ${escapeHTML(item.body)}
+            ${escapeHTML(
+              item.body
+            )}
           </div>
+
 
           ${
             actions && isStaff()
               ? `
                 <div class="actions">
+
                   <button
                     class="btn red"
-                    onclick="deleteNews(${item.id})"
+                    onclick="deleteNews(
+                      ${item.id}
+                    )"
                   >
                     🗑 Usuń
                   </button>
+
                 </div>
               `
               : ""
           }
 
         </article>
+
       `;
+
     }
+
 
     /* =========================
        MEMBERS
     ========================= */
 
     function renderMembers() {
+
       const box =
-        document.getElementById("membersList");
+        document.getElementById(
+          "membersList"
+        );
+
 
       if (!appData.members.length) {
+
         box.innerHTML =
           '<div class="empty">Lista członków jest jeszcze pusta.</div>';
 
         return;
+
       }
+
 
       box.innerHTML =
         appData.members
@@ -1689,613 +2580,1960 @@
                 .trim()
                 .split(/\s+/)
                 .slice(0, 2)
-                .map(x => x[0])
+                .map(
+                  x => x[0]
+                )
                 .join("")
                 .toUpperCase();
 
+
             return `
+
               <article class="member-card">
 
                 <div class="member-row">
 
                   <div class="avatar">
-                    ${escapeHTML(initials)}
+                    ${escapeHTML(
+                      initials
+                    )}
                   </div>
 
+
                   <div class="member-info">
-                    <h3>${escapeHTML(member.name)}</h3>
+
+                    <h3>
+                      ${escapeHTML(
+                        member.name
+                      )}
+                    </h3>
+
 
                     <div class="member-role">
-                      ${escapeHTML(member.role || "Członek MDP")}
+                      ${escapeHTML(
+                        member.role ||
+                        "Członek MDP"
+                      )}
                     </div>
+
                   </div>
 
                 </div>
+
 
                 ${
                   isStaff()
                     ? `
                       <div class="actions">
+
                         <button
                           class="btn red"
-                          onclick="deleteMember(${member.id})"
+                          onclick="deleteMember(
+                            ${member.id}
+                          )"
                         >
                           🗑 Usuń
                         </button>
+
                       </div>
                     `
                     : ""
                 }
 
               </article>
+
             `;
+
           })
           .join("");
+
     }
+
+
+    /* =========================
+       PROFILE
+    ========================= */
+
+    function getProfile() {
+
+      try {
+
+        return JSON.parse(
+          localStorage.getItem(
+            "mdpProfile"
+          ) || "{}"
+        );
+
+      } catch {
+
+        return {};
+
+      }
+
+    }
+
+
+    function saveProfile() {
+
+      const firstName =
+        document
+          .getElementById(
+            "profileFirstName"
+          )
+          .value
+          .trim();
+
+
+      const lastName =
+        document
+          .getElementById(
+            "profileLastName"
+          )
+          .value
+          .trim();
+
+
+      if (
+        !firstName ||
+        !lastName
+      ) {
+
+        showToast(
+          "Wpisz imię i nazwisko.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      const oldProfile =
+        getProfile();
+
+
+      const profile = {
+
+        firstName,
+
+        lastName,
+
+        role:
+          currentRole,
+
+        photo:
+          oldProfile.photo ||
+          ""
+
+      };
+
+
+      localStorage.setItem(
+        "mdpProfile",
+        JSON.stringify(
+          profile
+        )
+      );
+
+
+      renderProfile();
+
+
+      showToast(
+        "Profil został zapisany."
+      );
+
+    }
+
+
+    function renderProfile() {
+
+      const profile =
+        getProfile();
+
+
+      const firstName =
+        document.getElementById(
+          "profileFirstName"
+        );
+
+
+      const lastName =
+        document.getElementById(
+          "profileLastName"
+        );
+
+
+      const role =
+        document.getElementById(
+          "profileRole"
+        );
+
+
+      if (!firstName) {
+        return;
+      }
+
+
+      firstName.value =
+        profile.firstName ||
+        "";
+
+
+      lastName.value =
+        profile.lastName ||
+        "";
+
+
+      const roles = {
+
+        member:
+          "Członek MDP",
+
+        guardian:
+          "Opiekun MDP",
+
+        admin:
+          "Administrator"
+
+      };
+
+
+      role.value =
+        roles[currentRole] ||
+        "Użytkownik";
+
+
+      const avatar =
+        document.getElementById(
+          "profileAvatar"
+        );
+
+
+      if (
+        profile.photo
+      ) {
+
+        avatar.innerHTML = `
+          <img
+            src="${profile.photo}"
+            alt="Zdjęcie profilowe"
+          >
+        `;
+
+      } else if (
+        profile.firstName &&
+        profile.lastName
+      ) {
+
+        const initials =
+          (
+            profile.firstName[0] +
+            profile.lastName[0]
+          ).toUpperCase();
+
+
+        avatar.textContent =
+          initials;
+
+      } else {
+
+        avatar.textContent =
+          "👤";
+
+      }
+
+    }
+
+
+    /* =========================
+       PROFILE PHOTO
+    ========================= */
+
+    function changeProfilePhoto(
+      event
+    ) {
+
+      const file =
+        event.target.files[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+
+        showToast(
+          "Wybierz plik graficzny.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        file.size >
+        2 * 1024 * 1024
+      ) {
+
+        showToast(
+          "Zdjęcie jest za duże. Maksymalnie 2 MB.",
+          true
+        );
+
+        event.target.value = "";
+
+        return;
+
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        function() {
+
+          const profile =
+            getProfile();
+
+
+          profile.photo =
+            reader.result;
+
+
+          localStorage.setItem(
+            "mdpProfile",
+            JSON.stringify(
+              profile
+            )
+          );
+
+
+          renderProfile();
+
+
+          showToast(
+            "Zdjęcie profilowe ustawione."
+          );
+
+        };
+
+
+      reader.readAsDataURL(
+        file
+      );
+
+    }
+
+
+    /* =========================
+       NOTIFICATIONS
+    ========================= */
+
+    function createNotifications() {
+
+      notifications = [];
+
+
+      if (
+        appData.news &&
+        appData.news.length
+      ) {
+
+        appData.news
+          .slice(0, 10)
+          .forEach(item => {
+
+            notifications.push({
+
+              id:
+                "news-" +
+                item.id,
+
+              icon:
+                "📢",
+
+              title:
+                item.title,
+
+              body:
+                "Nowe ogłoszenie w aplikacji MDP.",
+
+              date:
+                item.created_at
+
+            });
+
+          });
+
+      }
+
+
+      if (
+        appData.events &&
+        appData.events.length
+      ) {
+
+        appData.events
+          .slice(0, 10)
+          .forEach(item => {
+
+            notifications.push({
+
+              id:
+                "event-" +
+                item.id,
+
+              icon:
+                "📅",
+
+              title:
+                item.title,
+
+              body:
+                "Zaplanowana zbiórka MDP.",
+
+              date:
+                item.event_date
+
+            });
+
+          });
+
+      }
+
+
+      renderNotifications();
+
+    }
+
+
+    function getReadNotifications() {
+
+      try {
+
+        return JSON.parse(
+          localStorage.getItem(
+            "mdpReadNotifications"
+          ) || "[]"
+        );
+
+      } catch {
+
+        return [];
+
+      }
+
+    }
+
+
+    function renderNotifications() {
+
+      const box =
+        document.getElementById(
+          "notificationsList"
+        );
+
+
+      const badge =
+        document.getElementById(
+          "notificationBadge"
+        );
+
+
+      const count =
+        document.getElementById(
+          "notificationCount"
+        );
+
+
+      if (!box) {
+        return;
+      }
+
+
+      const read =
+        getReadNotifications();
+
+
+      const unread =
+        notifications.filter(
+          item =>
+            !read.includes(
+              item.id
+            )
+        ).length;
+
+
+      count.textContent =
+        unread +
+        " nowych";
+
+
+      if (
+        unread > 0
+      ) {
+
+        badge.textContent =
+          unread > 9
+            ? "9+"
+            : unread;
+
+
+        badge.style.display =
+          "inline-flex";
+
+      } else {
+
+        badge.textContent =
+          "";
+
+        badge.style.display =
+          "none";
+
+      }
+
+
+      if (
+        !notifications.length
+      ) {
+
+        box.innerHTML = `
+          <div class="empty">
+            🔔 Brak powiadomień.
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      box.innerHTML =
+        notifications
+          .map(item => {
+
+            const isRead =
+              read.includes(
+                item.id
+              );
+
+
+            const date =
+              item.date
+                ? formatNotificationDate(
+                    item.date
+                  )
+                : "";
+
+
+            return `
+
+              <article
+                class="
+                  notification-card
+                  ${isRead ? "" : "unread"}
+                "
+              >
+
+                <div
+                  style="
+                    display:flex;
+                    gap:12px;
+                    align-items:flex-start;
+                  "
+                >
+
+                  <div class="notification-icon">
+                    ${item.icon}
+                  </div>
+
+
+                  <div
+                    style="
+                      flex:1;
+                      min-width:0;
+                    "
+                  >
+
+                    <div
+                      class="news-date"
+                    >
+                      ${
+                        isRead
+                          ? "PRZECZYTANE"
+                          : "NOWE"
+                      }
+
+                      ${
+                        date
+                          ? " • " +
+                            escapeHTML(
+                              date
+                            )
+                          : ""
+                      }
+                    </div>
+
+
+                    <h3>
+                      ${escapeHTML(
+                        item.title
+                      )}
+                    </h3>
+
+
+                    <div class="news-body">
+                      ${escapeHTML(
+                        item.body
+                      )}
+                    </div>
+
+
+                    ${
+                      !isRead
+                        ? `
+                          <button
+                            class="btn blue"
+                            style="
+                              margin-top:10px
+                            "
+                            onclick="markNotificationRead(
+                              '${escapeHTML(
+                                item.id
+                              )}'
+                            )"
+                          >
+                            ✓ Przeczytane
+                          </button>
+                        `
+                        : ""
+                    }
+
+                  </div>
+
+                </div>
+
+              </article>
+
+            `;
+
+          })
+          .join("");
+
+    }
+
+
+    function formatNotificationDate(
+      value
+    ) {
+
+      try {
+
+        if (
+          /^\d{4}-\d{2}-\d{2}$/.test(
+            String(value)
+          )
+        ) {
+
+          const date =
+            parseDate(
+              value
+            );
+
+
+          return date
+            ? date.toLocaleDateString(
+                "pl-PL"
+              )
+            : "";
+
+        }
+
+
+        return new Date(
+          value
+        ).toLocaleDateString(
+          "pl-PL"
+        );
+
+      } catch {
+
+        return "";
+
+      }
+
+    }
+
+
+    function markNotificationRead(
+      id
+    ) {
+
+      const read =
+        getReadNotifications();
+
+
+      if (
+        !read.includes(id)
+      ) {
+
+        read.push(id);
+
+      }
+
+
+      localStorage.setItem(
+        "mdpReadNotifications",
+        JSON.stringify(
+          read
+        )
+      );
+
+
+      renderNotifications();
+
+    }
+
+
+    function markAllNotificationsRead() {
+
+      const ids =
+        notifications.map(
+          item =>
+            item.id
+        );
+
+
+      localStorage.setItem(
+        "mdpReadNotifications",
+        JSON.stringify(
+          ids
+        )
+      );
+
+
+      renderNotifications();
+
+
+      showToast(
+        "Wszystkie powiadomienia oznaczono jako przeczytane."
+      );
+
+    }
+
 
     /* =========================
        ADD EVENT
     ========================= */
 
     async function addEvent() {
+
       const title =
-        document.getElementById("eventTitle").value.trim();
+        document
+          .getElementById(
+            "eventTitle"
+          )
+          .value
+          .trim();
+
 
       const event_date =
-        document.getElementById("eventDate").value;
+        document
+          .getElementById(
+            "eventDate"
+          )
+          .value;
+
 
       const event_time =
-        document.getElementById("eventTime").value;
+        document
+          .getElementById(
+            "eventTime"
+          )
+          .value;
+
 
       const place =
-        document.getElementById("eventPlace").value.trim();
+        document
+          .getElementById(
+            "eventPlace"
+          )
+          .value
+          .trim();
+
 
       const description =
-        document.getElementById("eventDescription").value.trim();
+        document
+          .getElementById(
+            "eventDescription"
+          )
+          .value
+          .trim();
 
-      if (!title || !event_date || !event_time || !place) {
+
+      if (
+        !title ||
+        !event_date ||
+        !event_time ||
+        !place
+      ) {
+
         showToast(
           "Uzupełnij wszystkie wymagane pola.",
           true
         );
+
         return;
+
       }
 
-      try {
-        const response = await fetch("/api/events", {
-          method: "POST",
-          headers: headers(),
-          body: JSON.stringify({
-            title,
-            event_date,
-            event_time,
-            place,
-            description
-          })
-        });
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            "/api/events",
+            {
+
+              method: "POST",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify({
+                  title,
+                  event_date,
+                  event_time,
+                  place,
+                  description
+                })
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się dodać zbiórki."
+            data.error ||
+            "Nie udało się dodać zbiórki."
           );
+
         }
 
-        document.getElementById("eventTitle").value = "";
-        document.getElementById("eventDate").value = "";
-        document.getElementById("eventTime").value = "";
-        document.getElementById("eventPlace").value = "";
-        document.getElementById("eventDescription").value = "";
 
-        showToast("Zbiórka została dodana.");
+        document
+          .getElementById(
+            "eventTitle"
+          )
+          .value = "";
+
+
+        document
+          .getElementById(
+            "eventDate"
+          )
+          .value = "";
+
+
+        document
+          .getElementById(
+            "eventTime"
+          )
+          .value = "";
+
+
+        document
+          .getElementById(
+            "eventPlace"
+          )
+          .value = "";
+
+
+        document
+          .getElementById(
+            "eventDescription"
+          )
+          .value = "";
+
+
+        showToast(
+          "Zbiórka została dodana."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        DELETE EVENT
     ========================= */
 
-    async function deleteEvent(id) {
-      if (!confirm("Na pewno usunąć tę zbiórkę?")) {
+    async function deleteEvent(
+      id
+    ) {
+
+      if (
+        !confirm(
+          "Na pewno usunąć tę zbiórkę?"
+        )
+      ) {
+
         return;
+
       }
 
-      try {
-        const response = await fetch(
-          `/api/events/${id}`,
-          {
-            method: "DELETE",
-            headers: headers()
-          }
-        );
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            `/api/events/${id}`,
+            {
+
+              method: "DELETE",
+
+              headers:
+                headers()
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się usunąć zbiórki."
+            data.error ||
+            "Nie udało się usunąć zbiórki."
           );
+
         }
 
-        showToast("Zbiórka została usunięta.");
+
+        showToast(
+          "Zbiórka została usunięta."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        ADD NEWS
     ========================= */
 
     async function addNews() {
+
       const title =
-        document.getElementById("newsTitle").value.trim();
+        document
+          .getElementById(
+            "newsTitle"
+          )
+          .value
+          .trim();
+
 
       const body =
-        document.getElementById("newsBody").value.trim();
+        document
+          .getElementById(
+            "newsBody"
+          )
+          .value
+          .trim();
 
-      if (!title || !body) {
+
+      if (
+        !title ||
+        !body
+      ) {
+
         showToast(
           "Uzupełnij tytuł i treść.",
           true
         );
+
         return;
+
       }
 
-      try {
-        const response = await fetch("/api/news", {
-          method: "POST",
-          headers: headers(),
-          body: JSON.stringify({
-            title,
-            body
-          })
-        });
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            "/api/news",
+            {
+
+              method: "POST",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify({
+                  title,
+                  body
+                })
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się dodać ogłoszenia."
+            data.error ||
+            "Nie udało się dodać ogłoszenia."
           );
+
         }
 
-        document.getElementById("newsTitle").value = "";
-        document.getElementById("newsBody").value = "";
 
-        showToast("Ogłoszenie zostało dodane.");
+        document
+          .getElementById(
+            "newsTitle"
+          )
+          .value = "";
+
+
+        document
+          .getElementById(
+            "newsBody"
+          )
+          .value = "";
+
+
+        showToast(
+          "Ogłoszenie zostało dodane."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        DELETE NEWS
     ========================= */
 
-    async function deleteNews(id) {
-      if (!confirm("Na pewno usunąć to ogłoszenie?")) {
+    async function deleteNews(
+      id
+    ) {
+
+      if (
+        !confirm(
+          "Na pewno usunąć to ogłoszenie?"
+        )
+      ) {
+
         return;
+
       }
 
-      try {
-        const response = await fetch(
-          `/api/news/${id}`,
-          {
-            method: "DELETE",
-            headers: headers()
-          }
-        );
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            `/api/news/${id}`,
+            {
+
+              method: "DELETE",
+
+              headers:
+                headers()
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się usunąć ogłoszenia."
+            data.error ||
+            "Nie udało się usunąć ogłoszenia."
           );
+
         }
 
-        showToast("Ogłoszenie zostało usunięte.");
+
+        showToast(
+          "Ogłoszenie zostało usunięte."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        ADD MEMBER
     ========================= */
 
     async function addMember() {
+
       const name =
-        document.getElementById("memberName").value.trim();
+        document
+          .getElementById(
+            "memberName"
+          )
+          .value
+          .trim();
+
 
       const role =
-        document.getElementById("memberRole").value.trim() ||
+        document
+          .getElementById(
+            "memberRole"
+          )
+          .value
+          .trim() ||
         "Członek MDP";
 
+
       if (!name) {
+
         showToast(
           "Podaj imię i nazwisko.",
           true
         );
+
         return;
+
       }
 
-      try {
-        const response = await fetch("/api/members", {
-          method: "POST",
-          headers: headers(),
-          body: JSON.stringify({
-            name,
-            role
-          })
-        });
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            "/api/members",
+            {
+
+              method: "POST",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify({
+                  name,
+                  role
+                })
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się dodać członka."
+            data.error ||
+            "Nie udało się dodać członka."
           );
+
         }
 
-        document.getElementById("memberName").value = "";
 
-        showToast("Członek został dodany.");
+        document
+          .getElementById(
+            "memberName"
+          )
+          .value = "";
+
+
+        showToast(
+          "Członek został dodany."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        DELETE MEMBER
     ========================= */
 
-    async function deleteMember(id) {
-      if (!confirm("Na pewno usunąć tego członka?")) {
+    async function deleteMember(
+      id
+    ) {
+
+      if (
+        !confirm(
+          "Na pewno usunąć tego członka?"
+        )
+      ) {
+
         return;
+
       }
 
-      try {
-        const response = await fetch(
-          `/api/members/${id}`,
-          {
-            method: "DELETE",
-            headers: headers()
-          }
-        );
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            `/api/members/${id}`,
+            {
+
+              method: "DELETE",
+
+              headers:
+                headers()
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się usunąć członka."
+            data.error ||
+            "Nie udało się usunąć członka."
           );
+
         }
 
-        showToast("Członek został usunięty.");
+
+        showToast(
+          "Członek został usunięty."
+        );
+
 
         await loadData();
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        ATTENDANCE
     ========================= */
 
-    async function setAttendance(eventId, status) {
+    async function setAttendance(
+      eventId,
+      status
+    ) {
 
-      const memberName = prompt(
-        "Podaj swoje imię i nazwisko:"
-      );
+      const memberName =
+        prompt(
+          "Podaj swoje imię i nazwisko:"
+        );
+
 
       if (!memberName) {
         return;
       }
 
-      try {
-        const response = await fetch(
-          "/api/attendance",
-          {
-            method: "POST",
-            headers: headers(),
-            body: JSON.stringify({
-              event_id: eventId,
-              member_name: memberName.trim(),
-              status
-            })
-          }
-        );
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            "/api/attendance",
+            {
+
+              method: "POST",
+
+              headers:
+                headers(),
+
+              body:
+                JSON.stringify({
+                  event_id:
+                    eventId,
+
+                  member_name:
+                    memberName.trim(),
+
+                  status
+                })
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się zapisać obecności."
+            data.error ||
+            "Nie udało się zapisać obecności."
           );
+
         }
+
 
         const messages = {
-          yes: "Zapisano: będę.",
-          maybe: "Zapisano: może będę.",
-          no: "Zapisano: nie będę."
+
+          yes:
+            "Zapisano: będę.",
+
+          maybe:
+            "Zapisano: może będę.",
+
+          no:
+            "Zapisano: nie będę."
+
         };
 
-        showToast(messages[status]);
+
+        showToast(
+          messages[status]
+        );
+
 
         if (isStaff()) {
-          await loadAttendance(eventId);
+
+          await loadAttendance(
+            eventId
+          );
+
         }
 
+
       } catch (error) {
-        showToast(error.message, true);
+
+        showToast(
+          error.message,
+          true
+        );
+
       }
+
     }
+
 
     /* =========================
        LOAD ATTENDANCE
     ========================= */
 
-    async function loadAttendance(eventId) {
+    async function loadAttendance(
+      eventId
+    ) {
+
       const box =
         document.getElementById(
           `attendance-${eventId}`
         );
 
+
       if (!box) {
         return;
       }
 
+
       box.innerHTML =
         '<div class="loading">Ładowanie obecności...</div>';
 
-      try {
-        const response = await fetch(
-          `/api/attendance/${eventId}`,
-          {
-            headers: headers()
-          }
-        );
 
-        const data = await response.json();
+      try {
+
+        const response =
+          await fetch(
+            `/api/attendance/${eventId}`,
+            {
+
+              headers:
+                headers()
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
 
         if (!response.ok) {
+
           throw new Error(
-            data.error || "Nie udało się pobrać obecności."
+            data.error ||
+            "Nie udało się pobrać obecności."
           );
+
         }
 
+
         if (!data.length) {
+
           box.innerHTML =
             '<div class="empty">Nikt jeszcze nie zaznaczył obecności.</div>';
 
           return;
+
         }
 
+
         const labels = {
-          yes: "Będzie",
-          maybe: "Może",
-          no: "Nie będzie"
+
+          yes:
+            "Będzie",
+
+          maybe:
+            "Może",
+
+          no:
+            "Nie będzie"
+
         };
 
+
         box.innerHTML =
-          data.map(item => `
-            <div class="attendance-item">
+          data
+            .map(item => `
 
-              <span>
-                ${escapeHTML(item.member_name)}
-              </span>
+              <div
+                class="attendance-item"
+              >
 
-              <span class="status ${escapeHTML(item.status)}">
-                ${labels[item.status] || item.status}
-              </span>
+                <span>
+                  ${escapeHTML(
+                    item.member_name
+                  )}
+                </span>
 
-            </div>
-          `).join("");
+                <span
+                  class="
+                    status
+                    ${escapeHTML(
+                      item.status
+                    )}
+                  "
+                >
+                  ${
+                    labels[
+                      item.status
+                    ] ||
+                    item.status
+                  }
+                </span>
+
+              </div>
+
+            `)
+            .join("");
+
 
       } catch (error) {
+
         box.innerHTML =
-          `<div class="empty">${escapeHTML(error.message)}</div>`;
+          `
+            <div class="empty">
+              ${escapeHTML(
+                error.message
+              )}
+            </div>
+          `;
+
       }
+
     }
+
 
     /* =========================
        NAVIGATION
     ========================= */
 
-    function showSection(section, button) {
+    function showSection(
+      section,
+      button
+    ) {
 
-      document.querySelectorAll(".page-section")
+      document
+        .querySelectorAll(
+          ".page-section"
+        )
         .forEach(item => {
-          item.classList.add("hidden");
+
+          item.classList.add(
+            "hidden"
+          );
+
         });
+
 
       const target =
         document.getElementById(
           `section-${section}`
         );
 
+
       if (target) {
-        target.classList.remove("hidden");
+
+        target.classList.remove(
+          "hidden"
+        );
+
       }
 
-      document.querySelectorAll(".nav-btn")
+
+      document
+        .querySelectorAll(
+          ".nav-btn"
+        )
         .forEach(item => {
-          item.classList.remove("active");
+
+          item.classList.remove(
+            "active"
+          );
+
         });
 
+
       if (button) {
-        button.classList.add("active");
+
+        button.classList.add(
+          "active"
+        );
+
       }
 
+
       window.scrollTo({
+
         top: 0,
+
         behavior: "smooth"
+
       });
+
+
+      if (
+        section === "notifications"
+      ) {
+
+        renderNotifications();
+
+      }
+
+
+      if (
+        section === "profile"
+      ) {
+
+        renderProfile();
+
+      }
+
     }
+
 
     /* =========================
        STAFF
     ========================= */
 
     function isStaff() {
+
       return [
+
         "guardian",
+
         "admin"
-      ].includes(currentRole);
+
+      ].includes(
+        currentRole
+      );
+
     }
+
 
     /* =========================
        TOAST
     ========================= */
 
-    let toastTimer = null;
+    let toastTimer =
+      null;
 
-    function showToast(message, error = false) {
+
+    function showToast(
+      message,
+      error = false
+    ) {
+
       const toast =
-        document.getElementById("toast");
+        document.getElementById(
+          "toast"
+        );
 
-      toast.textContent = message;
-      toast.classList.toggle("error", error);
-      toast.classList.add("show");
 
-      clearTimeout(toastTimer);
+      toast.textContent =
+        message;
 
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 2800);
+
+      toast.classList.toggle(
+        "error",
+        error
+      );
+
+
+      toast.classList.add(
+        "show"
+      );
+
+
+      clearTimeout(
+        toastTimer
+      );
+
+
+      toastTimer =
+        setTimeout(() => {
+
+          toast.classList.remove(
+            "show"
+          );
+
+        }, 2800);
+
     }
+
 
     /* =========================
        DATE
     ========================= */
 
-    function parseDate(value) {
+    function parseDate(
+      value
+    ) {
+
       if (!value) {
         return null;
       }
 
-      const parts = value.split("-");
 
-      if (parts.length !== 3) {
+      const parts =
+        value.split("-");
+
+
+      if (
+        parts.length !== 3
+      ) {
+
         return null;
+
       }
 
-      const year = Number(parts[0]);
-      const month = Number(parts[1]) - 1;
-      const day = Number(parts[2]);
+
+      const year =
+        Number(parts[0]);
+
+
+      const month =
+        Number(parts[1]) - 1;
+
+
+      const day =
+        Number(parts[2]);
+
 
       const date =
-        new Date(year, month, day);
+        new Date(
+          year,
+          month,
+          day
+        );
 
-      if (Number.isNaN(date.getTime())) {
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+
         return null;
+
       }
 
+
       return date;
+
     }
+
 
     /* =========================
        SECURITY
     ========================= */
 
-    function escapeHTML(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    function escapeHTML(
+      value
+    ) {
+
+      return String(
+        value ?? ""
+      )
+
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+
+        .replace(
+          /</g,
+          "&lt;"
+        )
+
+        .replace(
+          />/g,
+          "&gt;"
+        )
+
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
     }
+
 
     /* =========================
        AUTO LOGIN
     ========================= */
 
     async function restoreSession() {
+
       const savedRole =
-        localStorage.getItem("mdpRole");
-
-      const savedCode =
-        localStorage.getItem("mdpCode");
-
-      if (!savedRole || !savedCode) {
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          "/api/login",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              role: savedRole,
-              code: savedCode
-            })
-          }
+        localStorage.getItem(
+          "mdpRole"
         );
 
+
+      const savedCode =
+        localStorage.getItem(
+          "mdpCode"
+        );
+
+
+      if (
+        !savedRole ||
+        !savedCode
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/login",
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+                  role:
+                    savedRole,
+
+                  code:
+                    savedCode
+                })
+
+            }
+          );
+
+
         if (!response.ok) {
-          throw new Error("Sesja wygasła.");
+
+          throw new Error(
+            "Sesja wygasła."
+          );
+
         }
 
-        currentRole = savedRole;
-        authCode = savedCode;
 
-        selectRole(savedRole);
+        currentRole =
+          savedRole;
+
+
+        authCode =
+          savedCode;
+
+
+        selectRole(
+          savedRole
+        );
+
+
         showApp();
+
 
         await loadData();
 
+
       } catch {
-        localStorage.removeItem("mdpRole");
-        localStorage.removeItem("mdpCode");
+
+        localStorage.removeItem(
+          "mdpRole"
+        );
+
+        localStorage.removeItem(
+          "mdpCode"
+        );
+
       }
+
     }
+
 
     /* =========================
        SERVICE WORKER / PWA
     ========================= */
 
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then(() => {
-            console.log("Service Worker aktywny.");
-          })
-          .catch(error => {
-            console.log(
-              "Service Worker nie został zarejestrowany:",
-              error
-            );
-          });
-      });
+    if (
+      "serviceWorker" in navigator
+    ) {
+
+      window.addEventListener(
+        "load",
+        () => {
+
+          navigator.serviceWorker
+            .register(
+              "/sw.js"
+            )
+
+            .then(() => {
+
+              console.log(
+                "Service Worker aktywny."
+              );
+
+            })
+
+            .catch(error => {
+
+              console.log(
+                "Service Worker nie został zarejestrowany:",
+                error
+              );
+
+            });
+
+        }
+      );
+
     }
+
 
     /* =========================
        START
@@ -2306,4 +4544,4 @@
   </script>
 
 </body>
-</html> 
+  </html>
