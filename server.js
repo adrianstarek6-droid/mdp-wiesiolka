@@ -32,8 +32,12 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 
 app.use(express.json({ limit: '3mb' }));
 app.use(express.urlencoded({ extended: true, limit: '3mb' }));
-
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+// =========================
+// HELPERY
+// =========================
 
 const hashCode = code =>
   crypto
@@ -53,6 +57,11 @@ const normRole = role => {
 
 const isStaff = req =>
   req.role === 'admin' || req.role === 'guardian';
+
+
+// =========================
+// AUTH
+// =========================
 
 async function auth(req, res, next) {
   const role = normRole(req.headers['x-role']);
@@ -85,7 +94,17 @@ async function auth(req, res, next) {
 
     if (role === 'member' && memberId && code) {
       const r = await pool.query(
-        'SELECT id,first_name,last_name,role,photo,code_hash FROM members WHERE id=$1',
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo,
+          code_hash
+        FROM members
+        WHERE id=$1
+        `,
         [memberId]
       );
 
@@ -107,6 +126,7 @@ async function auth(req, res, next) {
     return res.status(401).json({
       error: 'Brak autoryzacji.'
     });
+
   } catch (e) {
     console.error(e);
 
@@ -123,6 +143,11 @@ function staff(req, res, next) {
         error: 'Brak uprawnień.'
       });
 }
+
+
+// =========================
+// BAZA DANYCH
+// =========================
 
 async function initDb() {
   await pool.query(`
@@ -298,6 +323,11 @@ async function seedNewspaperGroups() {
   }
 }
 
+
+// =========================
+// GAZETY — HELPERY
+// =========================
+
 function groupJson(row, members = []) {
   return {
     id: row.id,
@@ -335,7 +365,11 @@ async function getGroups() {
 
     pool.query(
       `
-      SELECT id,first_name,last_name,name
+      SELECT
+        id,
+        first_name,
+        last_name,
+        name
       FROM members
       ORDER BY first_name,last_name,id
       `
@@ -395,7 +429,10 @@ async function sendPushToAll(payload) {
         JSON.stringify(payload)
       );
     } catch (e) {
-      if (e.statusCode === 404 || e.statusCode === 410) {
+      if (
+        e.statusCode === 404 ||
+        e.statusCode === 410
+      ) {
         await pool.query(
           'DELETE FROM push_subscriptions WHERE id=$1',
           [s.id]
@@ -435,7 +472,12 @@ app.post('/api/login', async (req, res) => {
     if (role === 'member') {
       const r = await pool.query(
         `
-        SELECT id,first_name,last_name,role,photo
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
         FROM members
         WHERE code_hash=$1
         ORDER BY id
@@ -483,7 +525,7 @@ app.post('/api/login', async (req, res) => {
 
 
 // =========================
-// DATA / STATS
+// DATA
 // =========================
 
 app.get('/api/data', auth, async (req, res) => {
@@ -752,7 +794,7 @@ app.delete(
 
 
 // =========================
-// PILNE KOMUNIKATY
+// PILNE
 // =========================
 
 app.post(
@@ -777,14 +819,11 @@ app.post(
         });
       }
 
-      // Stary pilny komunikat przestaje być aktywny.
-      await pool.query(
-        `
+      await pool.query(`
         UPDATE urgent_messages
         SET active=FALSE
         WHERE active=TRUE
-        `
-      );
+      `);
 
       const r = await pool.query(
         `
@@ -815,7 +854,8 @@ app.post(
       console.error(e);
 
       res.status(500).json({
-        error: 'Nie udało się dodać pilnego komunikatu.'
+        error:
+          'Nie udało się dodać pilnego komunikatu.'
       });
     }
   }
@@ -829,13 +869,11 @@ app.get(
       const r = await pool.query(
         req.role === 'admin' ||
         req.role === 'guardian'
-
           ? `
             SELECT *
             FROM urgent_messages
             ORDER BY created_at DESC,id DESC
             `
-
           : `
             SELECT *
             FROM urgent_messages
@@ -848,15 +886,12 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error: 'Nie udało się pobrać komunikatów.'
+        error:
+          'Nie udało się pobrać komunikatów.'
       });
     }
   }
 );
-
-
-// ⭐ NAJWAŻNIEJSZA ZMIANA ⭐
-// Teraz pilny komunikat jest naprawdę usuwany z PostgreSQL.
 
 app.delete(
   '/api/urgent-messages/:id',
@@ -875,7 +910,8 @@ app.delete(
 
       if (!result.rows[0]) {
         return res.status(404).json({
-          error: 'Nie znaleziono pilnego komunikatu.'
+          error:
+            'Nie znaleziono pilnego komunikatu.'
         });
       }
 
@@ -888,7 +924,8 @@ app.delete(
       console.error(e);
 
       res.status(500).json({
-        error: 'Nie udało się usunąć pilnego komunikatu.'
+        error:
+          'Nie udało się usunąć pilnego komunikatu.'
       });
     }
   }
@@ -896,7 +933,7 @@ app.delete(
 
 
 // =========================
-// ZGŁOSZENIA OD CZŁONKÓW
+// ZGŁOSZENIA
 // =========================
 
 app.post(
@@ -912,13 +949,11 @@ app.post(
       }
 
       const type = String(
-        req.body.type ||
-        'Inne'
+        req.body.type || 'Inne'
       ).trim();
 
       const body = String(
-        req.body.body ||
-        ''
+        req.body.body || ''
       ).trim();
 
       if (!body) {
@@ -962,7 +997,8 @@ app.post(
       console.error(e);
 
       res.status(500).json({
-        error: 'Nie udało się wysłać zgłoszenia.'
+        error:
+          'Nie udało się wysłać zgłoszenia.'
       });
     }
   }
@@ -991,7 +1027,8 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error: 'Nie udało się pobrać zgłoszeń.'
+        error:
+          'Nie udało się pobrać zgłoszeń.'
       });
     }
   }
@@ -1077,8 +1114,7 @@ app.post(
       ).trim();
 
       const code = String(
-        req.body.code ||
-        ''
+        req.body.code || ''
       ).trim();
 
       if (!first || !last || !code) {
@@ -1248,9 +1284,7 @@ app.get(
         [req.member.id]
       );
 
-      res.json(
-        r.rows[0] || {}
-      );
+      res.json(r.rows[0] || {});
 
     } catch (e) {
       res.status(500).json({
@@ -1289,9 +1323,7 @@ app.put(
         ]
       );
 
-      res.json(
-        r.rows[0] || {}
-      );
+      res.json(r.rows[0] || {});
 
     } catch (e) {
       res.status(500).json({
@@ -1576,18 +1608,16 @@ app.get(
 );
 
 
-// =========================
+// ======================================================
 // GAZETY
-// =========================
+// ======================================================
 
 app.get(
   '/api/newspaper-groups',
   auth,
   async (req, res) => {
     try {
-      res.json(
-        await getGroups()
-      );
+      res.json(await getGroups());
 
     } catch (e) {
       console.error(e);
@@ -1599,6 +1629,7 @@ app.get(
     }
   }
 );
+
 
 app.post(
   '/api/newspaper-groups',
@@ -1712,6 +1743,7 @@ app.post(
     }
   }
 );
+
 
 app.put(
   '/api/newspaper-groups/:id',
@@ -1948,6 +1980,7 @@ app.put(
   }
 );
 
+
 app.post(
   '/api/newspaper-groups/:id/start',
   auth,
@@ -1962,6 +1995,7 @@ app.post(
   }
 );
 
+
 app.post(
   '/api/newspaper-groups/:id/progress',
   auth,
@@ -1972,6 +2006,7 @@ app.post(
       req.params.id
     )
 );
+
 
 app.post(
   '/api/newspaper-groups/:id/complete',
@@ -1987,6 +2022,7 @@ app.post(
     );
   }
 );
+
 
 async function updateGroupProgress(
   req,
@@ -2099,6 +2135,7 @@ async function updateGroupProgress(
   }
 }
 
+
 app.delete(
   '/api/newspaper-groups/:id',
   auth,
@@ -2122,6 +2159,11 @@ app.delete(
     }
   }
 );
+
+
+// =========================
+// RESET PLANU GAZET
+// =========================
 
 app.post(
   '/api/newspaper-groups/reset',
@@ -2151,9 +2193,9 @@ app.post(
 );
 
 
-// =========================
+// ======================================================
 // HISTORIA GAZET
-// =========================
+// ======================================================
 
 app.get(
   '/api/newspaper-history',
@@ -2184,6 +2226,528 @@ app.get(
     }
   }
 );
+
+
+// ======================================================
+// PODSUMOWANIE MIESIĄCA
+// ======================================================
+
+app.get(
+  '/api/newspaper-month-summary',
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const groups = await getGroups();
+
+      const totalCopies = groups.reduce(
+        (sum, g) =>
+          sum + Number(g.copies || 0),
+        0
+      );
+
+      const totalDelivered = groups.reduce(
+        (sum, g) =>
+          sum + Number(g.delivered || 0),
+        0
+      );
+
+      const completedGroups =
+        groups.filter(
+          g => g.done
+        ).length;
+
+      const startedGroups =
+        groups.filter(
+          g => g.started
+        ).length;
+
+      const remaining =
+        Math.max(
+          0,
+          totalCopies -
+            totalDelivered
+        );
+
+      const percentage =
+        totalCopies
+          ? Math.round(
+              totalDelivered /
+                totalCopies *
+                100
+            )
+          : 0;
+
+      res.json({
+        month:
+          new Intl.DateTimeFormat(
+            'pl-PL',
+            {
+              month: 'long',
+              year: 'numeric'
+            }
+          ).format(new Date()),
+
+        totalGroups:
+          groups.length,
+
+        startedGroups,
+
+        completedGroups,
+
+        totalCopies,
+
+        totalDelivered,
+
+        remaining,
+
+        percentage,
+
+        groups
+      });
+
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się pobrać podsumowania miesiąca.'
+      });
+    }
+  }
+);
+
+
+// ======================================================
+// ZAPIS MIESIĄCA
+// ======================================================
+
+app.post(
+  '/api/newspaper-groups/save-month',
+  auth,
+  staff,
+  async (req, res) => {
+    const client =
+      await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const groupsResult =
+        await client.query(`
+          SELECT *
+          FROM newspaper_groups
+          ORDER BY id
+          FOR UPDATE
+        `);
+
+      if (!groupsResult.rows.length) {
+        await client.query('ROLLBACK');
+
+        return res.status(400).json({
+          error:
+            'Brak grup gazet do zapisania.'
+        });
+      }
+
+      const now =
+        new Date();
+
+      const year =
+        now.getFullYear();
+
+      const month =
+        String(
+          now.getMonth() + 1
+        ).padStart(2, '0');
+
+      const monthKey =
+        `${year}-${month}`;
+
+      const monthLabel =
+        new Intl.DateTimeFormat(
+          'pl-PL',
+          {
+            month: 'long',
+            year: 'numeric'
+          }
+        ).format(now);
+
+      const snapshot =
+        groupsResult.rows.map(g => ({
+          id: g.id,
+          name: g.name,
+          region: g.region,
+          color: g.color,
+
+          streets:
+            Array.isArray(
+              g.streets
+            )
+              ? g.streets
+              : [],
+
+          copies:
+            Number(
+              g.copies || 0
+            ),
+
+          delivered:
+            Number(
+              g.delivered || 0
+            ),
+
+          started:
+            !!g.started,
+
+          done:
+            !!g.done,
+
+          memberIds:
+            Array.isArray(
+              g.member_ids
+            )
+              ? g.member_ids.map(Number)
+              : [],
+
+          memberNames:
+            Array.isArray(
+              g.member_names
+            )
+              ? g.member_names
+              : []
+        }));
+
+      const existing =
+        await client.query(
+          `
+          SELECT id
+          FROM newspaper_history
+          WHERE month_key=$1
+          LIMIT 1
+          `,
+          [monthKey]
+        );
+
+      let historyId =
+        null;
+
+      if (existing.rows.length) {
+        historyId =
+          existing.rows[0].id;
+
+        await client.query(
+          `
+          UPDATE newspaper_history
+          SET
+            month_label=$1,
+            groups=$2::jsonb,
+            saved_at=NOW()
+          WHERE id=$3
+          `,
+          [
+            monthLabel,
+            JSON.stringify(
+              snapshot
+            ),
+            historyId
+          ]
+        );
+
+      } else {
+        const saved =
+          await client.query(
+            `
+            INSERT INTO newspaper_history
+            (
+              month_key,
+              month_label,
+              groups
+            )
+            VALUES($1,$2,$3::jsonb)
+            RETURNING id
+            `,
+            [
+              monthKey,
+              monthLabel,
+              JSON.stringify(
+                snapshot
+              )
+            ]
+          );
+
+        historyId =
+          saved.rows[0].id;
+      }
+
+      await client.query(
+        'COMMIT'
+      );
+
+      res.json({
+        ok: true,
+        saved: true,
+        historyId,
+        monthKey,
+        monthLabel,
+        groups: snapshot
+      });
+
+    } catch (e) {
+      await client
+        .query('ROLLBACK')
+        .catch(() => {});
+
+      console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się zapisać miesiąca.'
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ======================================================
+// RESET TYLKO MIESIĄCA
+// ======================================================
+
+app.post(
+  '/api/newspaper-groups/reset-month',
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      await pool.query(`
+        UPDATE newspaper_groups
+        SET
+          delivered=0,
+          started=FALSE,
+          done=FALSE
+      `);
+
+      res.json({
+        ok: true,
+        reset: true,
+        groups:
+          await getGroups()
+      });
+
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się zresetować miesiąca.'
+      });
+    }
+  }
+);
+
+
+// ======================================================
+// ZAPISZ + ZRESETUJ MIESIĄC
+// ======================================================
+
+app.post(
+  '/api/newspaper-groups/save-and-reset-month',
+  auth,
+  staff,
+  async (req, res) => {
+    const client =
+      await pool.connect();
+
+    try {
+      await client.query(
+        'BEGIN'
+      );
+
+      const groupsResult =
+        await client.query(`
+          SELECT *
+          FROM newspaper_groups
+          ORDER BY id
+          FOR UPDATE
+        `);
+
+      if (!groupsResult.rows.length) {
+        await client.query(
+          'ROLLBACK'
+        );
+
+        return res.status(400).json({
+          error:
+            'Brak grup gazet do zapisania.'
+        });
+      }
+
+      const now =
+        new Date();
+
+      const year =
+        now.getFullYear();
+
+      const month =
+        String(
+          now.getMonth() + 1
+        ).padStart(2, '0');
+
+      const monthKey =
+        `${year}-${month}`;
+
+      const monthLabel =
+        new Intl.DateTimeFormat(
+          'pl-PL',
+          {
+            month: 'long',
+            year: 'numeric'
+          }
+        ).format(now);
+
+      const snapshot =
+        groupsResult.rows.map(g => ({
+          id: g.id,
+          name: g.name,
+          region: g.region,
+          color: g.color,
+
+          streets:
+            Array.isArray(
+              g.streets
+            )
+              ? g.streets
+              : [],
+
+          copies:
+            Number(
+              g.copies || 0
+            ),
+
+          delivered:
+            Number(
+              g.delivered || 0
+            ),
+
+          started:
+            !!g.started,
+
+          done:
+            !!g.done,
+
+          memberIds:
+            Array.isArray(
+              g.member_ids
+            )
+              ? g.member_ids.map(Number)
+              : [],
+
+          memberNames:
+            Array.isArray(
+              g.member_names
+            )
+              ? g.member_names
+              : []
+        }));
+
+      const existing =
+        await client.query(
+          `
+          SELECT id
+          FROM newspaper_history
+          WHERE month_key=$1
+          LIMIT 1
+          `,
+          [monthKey]
+        );
+
+      if (existing.rows.length) {
+        await client.query(
+          `
+          UPDATE newspaper_history
+          SET
+            month_label=$1,
+            groups=$2::jsonb,
+            saved_at=NOW()
+          WHERE id=$3
+          `,
+          [
+            monthLabel,
+            JSON.stringify(
+              snapshot
+            ),
+            existing.rows[0].id
+          ]
+        );
+
+      } else {
+        await client.query(
+          `
+          INSERT INTO newspaper_history
+          (
+            month_key,
+            month_label,
+            groups
+          )
+          VALUES($1,$2,$3::jsonb)
+          `,
+          [
+            monthKey,
+            monthLabel,
+            JSON.stringify(
+              snapshot
+            )
+          ]
+        );
+      }
+
+      await client.query(`
+        UPDATE newspaper_groups
+        SET
+          delivered=0,
+          started=FALSE,
+          done=FALSE
+      `);
+
+      await client.query(
+        'COMMIT'
+      );
+
+      res.json({
+        ok: true,
+        saved: true,
+        reset: true,
+        archivedMonth:
+          monthLabel,
+        groups:
+          await getGroups()
+      });
+
+    } catch (e) {
+      await client
+        .query('ROLLBACK')
+        .catch(() => {});
+
+      console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się zapisać i zresetować miesiąca.'
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ======================================================
+// KOMPATYBILNOŚĆ — NOWY MIESIĄC
+// ======================================================
 
 app.post(
   '/api/newspaper-groups/new-month',
@@ -2217,7 +2781,8 @@ app.post(
         });
       }
 
-      const now = new Date();
+      const now =
+        new Date();
 
       const year =
         now.getFullYear();
@@ -2247,15 +2812,21 @@ app.post(
           color: g.color,
 
           streets:
-            Array.isArray(g.streets)
+            Array.isArray(
+              g.streets
+            )
               ? g.streets
               : [],
 
           copies:
-            Number(g.copies || 0),
+            Number(
+              g.copies || 0
+            ),
 
           delivered:
-            Number(g.delivered || 0),
+            Number(
+              g.delivered || 0
+            ),
 
           started:
             !!g.started,
@@ -2293,13 +2864,19 @@ app.post(
         await client.query(
           `
           INSERT INTO newspaper_history
-          (month_key,month_label,groups)
+          (
+            month_key,
+            month_label,
+            groups
+          )
           VALUES($1,$2,$3::jsonb)
           `,
           [
             monthKey,
             monthLabel,
-            JSON.stringify(snapshot)
+            JSON.stringify(
+              snapshot
+            )
           ]
         );
       }
@@ -2508,7 +3085,7 @@ app.use(
 
 
 // =========================
-// SPA FALLBACK
+// SPA
 // =========================
 
 app.use(
