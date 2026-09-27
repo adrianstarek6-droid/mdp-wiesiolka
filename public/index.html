@@ -3,155 +3,1401 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#d71920">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="/manifest.json">
-<title>MDP OSP Wiesiółka</title>
+<title>MDP Wiesiółka</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}
-button,input,textarea,select{font:inherit}button{cursor:pointer}
-.wrap{max-width:700px;margin:auto;padding:20px 16px 90px}.card{background:#151515;border:1px solid #292929;border-radius:18px;padding:18px;margin:12px 0}
-h1,h2,h3{margin-top:0}.red{color:#e3262e}.muted{color:#aaa}.btn{border:0;border-radius:12px;padding:12px 15px;background:#d71920;color:white;font-weight:700;margin:4px}.btn.dark{background:#292929}.btn.full{width:100%}
-input,textarea,select{width:100%;padding:13px;border-radius:12px;border:1px solid #333;background:#101010;color:#fff;margin:6px 0 10px}
-.login{min-height:100vh;display:grid;place-items:center;padding:20px}.loginbox{width:min(460px,100%);background:#111;border:1px solid #292929;border-radius:24px;padding:24px}
-.role{display:flex;gap:8px;flex-wrap:wrap}.role button{flex:1;min-width:100px}
-nav{position:fixed;bottom:0;left:0;right:0;background:#101010;border-top:1px solid #292929;display:flex;justify-content:center;z-index:5}
-nav button{background:none;border:0;color:#bbb;padding:12px 10px;font-size:12px}nav button.active{color:#fff}
-.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#252525;color:#ddd;font-size:12px}
-.item{border-top:1px solid #292929;padding:14px 0}.item:first-child{border-top:0}
-.actions{display:flex;gap:6px;flex-wrap:wrap}.hidden{display:none}
+*{box-sizing:border-box}
+
+:root{
+ --bg:#08090b;
+ --panel:#111317;
+ --panel2:#17191e;
+ --line:#24272d;
+ --text:#f5f5f5;
+ --muted:#969ba5;
+ --red:#e21b23;
+ --red2:#ff3038;
+}
+
+html{background:var(--bg)}
+
+body{
+ margin:0;
+ background:
+ radial-gradient(circle at 50% -10%,rgba(226,27,35,.18),transparent 38%),
+ var(--bg);
+ color:var(--text);
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+ min-height:100vh;
+}
+
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+
+.hidden{display:none!important}
+
+.wrap{
+ width:min(760px,100%);
+ margin:auto;
+ padding:0 16px 105px;
+}
+
+/* LOGIN */
+
+.login{
+ min-height:100vh;
+ min-height:100dvh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:22px;
+}
+
+.loginbox{
+ width:min(450px,100%);
+ padding:30px 22px 24px;
+ background:rgba(17,19,23,.94);
+ border:1px solid var(--line);
+ border-radius:28px;
+ box-shadow:0 25px 80px rgba(0,0,0,.5);
+}
+
+.logo{
+ width:72px;
+ height:72px;
+ border-radius:22px;
+ display:grid;
+ place-items:center;
+ background:linear-gradient(145deg,#ef252d,#a90e14);
+ font-size:36px;
+ box-shadow:0 12px 35px rgba(226,27,35,.28);
+ margin-bottom:20px;
+}
+
+.logoText{
+ font-size:30px;
+ font-weight:900;
+ letter-spacing:-1px;
+}
+
+.red{color:var(--red2)}
+
+.muted{color:var(--muted)}
+
+.loginbox p{
+ line-height:1.5;
+}
+
+.role{
+ display:grid;
+ grid-template-columns:1fr 1fr 1fr;
+ gap:8px;
+ margin:22px 0 12px;
+}
+
+.role button{
+ min-height:52px;
+}
+
+.btn{
+ border:0;
+ border-radius:13px;
+ padding:13px 16px;
+ background:var(--red);
+ color:white;
+ font-weight:800;
+ transition:.18s;
+}
+
+.btn:active{
+ transform:scale(.97);
+}
+
+.btn.dark{
+ background:#25282e;
+}
+
+.btn.full{
+ width:100%;
+ margin-top:4px;
+}
+
+input,textarea,select{
+ width:100%;
+ padding:14px;
+ border-radius:13px;
+ border:1px solid var(--line);
+ background:#0d0f12;
+ color:white;
+ outline:none;
+ margin:6px 0 10px;
+}
+
+input:focus,textarea:focus{
+ border-color:var(--red);
+}
+
+textarea{
+ min-height:100px;
+ resize:vertical;
+}
+
+/* HEADER */
+
+.top{
+ padding:25px 0 18px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:15px;
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+
+.brandIcon{
+ width:46px;
+ height:46px;
+ display:grid;
+ place-items:center;
+ background:linear-gradient(145deg,#e9232b,#a70e14);
+ border-radius:15px;
+ font-size:24px;
+ box-shadow:0 8px 25px rgba(226,27,35,.2);
+}
+
+.brandTitle{
+ font-size:20px;
+ font-weight:900;
+}
+
+.brandSub{
+ font-size:12px;
+ color:var(--muted);
+ margin-top:2px;
+}
+
+.userBadge{
+ padding:8px 11px;
+ border-radius:20px;
+ background:#17191e;
+ border:1px solid var(--line);
+ font-size:11px;
+ color:#c7cad0;
+}
+
+/* HERO */
+
+.hero{
+ position:relative;
+ overflow:hidden;
+ background:
+ linear-gradient(135deg,rgba(226,27,35,.18),rgba(17,19,23,.95) 65%),
+ #111317;
+ border:1px solid #2c2f35;
+ border-radius:24px;
+ padding:23px;
+ margin-bottom:14px;
+}
+
+.hero:after{
+ content:"🚒";
+ position:absolute;
+ right:-8px;
+ bottom:-20px;
+ font-size:105px;
+ opacity:.07;
+ transform:rotate(-8deg);
+}
+
+.hero h1{
+ margin:0 0 7px;
+ font-size:27px;
+ letter-spacing:-1px;
+}
+
+.hero p{
+ margin:0;
+ color:#aeb2ba;
+ font-size:14px;
+}
+
+/* CARDS */
+
+.card{
+ background:rgba(17,19,23,.92);
+ border:1px solid var(--line);
+ border-radius:20px;
+ padding:18px;
+ margin:12px 0;
+}
+
+.cardHead{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ margin-bottom:13px;
+}
+
+.card h2{
+ font-size:17px;
+ margin:0;
+}
+
+.card h3{
+ margin:0 0 9px;
+ font-size:17px;
+}
+
+.nextCard{
+ border-color:#3a2022;
+ background:
+ linear-gradient(145deg,rgba(226,27,35,.09),rgba(17,19,23,.96));
+}
+
+.nextDate{
+ display:inline-flex;
+ padding:7px 10px;
+ border-radius:9px;
+ background:rgba(226,27,35,.13);
+ color:#ff5b61;
+ font-size:12px;
+ font-weight:800;
+ margin-bottom:10px;
+}
+
+.bigEvent{
+ font-size:22px;
+ font-weight:900;
+ margin-bottom:9px;
+}
+
+.infoLine{
+ color:#b8bcc4;
+ font-size:13px;
+ margin:7px 0;
+}
+
+.infoLine span{
+ margin-right:7px;
+}
+
+/* ITEMS */
+
+.item{
+ padding:14px 0;
+ border-top:1px solid var(--line);
+}
+
+.item:first-child{
+ border-top:0;
+ padding-top:0;
+}
+
+.itemTitle{
+ font-weight:800;
+ font-size:15px;
+}
+
+.item p{
+ color:#aeb2ba;
+ font-size:13px;
+ line-height:1.5;
+ margin:7px 0 0;
+}
+
+.badge{
+ display:inline-flex;
+ padding:6px 9px;
+ border-radius:8px;
+ background:#24272d;
+ color:#d6d8dd;
+ font-size:11px;
+ font-weight:700;
+}
+
+.event{
+ padding:18px;
+ background:#111317;
+ border:1px solid var(--line);
+ border-radius:20px;
+ margin:12px 0;
+}
+
+.eventTop{
+ display:flex;
+ justify-content:space-between;
+ gap:12px;
+ align-items:flex-start;
+}
+
+.eventTitle{
+ font-size:18px;
+ font-weight:900;
+}
+
+.eventDesc{
+ color:#aeb2ba;
+ line-height:1.5;
+ font-size:13px;
+ margin:12px 0;
+}
+
+.actions{
+ display:flex;
+ gap:7px;
+ flex-wrap:wrap;
+}
+
+.actions .btn{
+ font-size:12px;
+ padding:10px 12px;
+}
+
+/* MEMBERS */
+
+.member{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:13px 0;
+ border-top:1px solid var(--line);
+}
+
+.member:first-child{
+ border-top:0;
+}
+
+.avatar{
+ width:43px;
+ height:43px;
+ flex:none;
+ display:grid;
+ place-items:center;
+ border-radius:14px;
+ background:#24272d;
+ font-weight:900;
+ color:#ddd;
+}
+
+.memberName{
+ font-weight:800;
+ font-size:14px;
+}
+
+.memberRole{
+ color:var(--muted);
+ font-size:12px;
+ margin-top:3px;
+}
+
+/* MANAGEMENT */
+
+.manageTitle{
+ margin:25px 0 10px;
+}
+
+.formCard{
+ padding:18px;
+}
+
+.formCard h3{
+ font-size:16px;
+}
+
+.formCard .btn{
+ margin-top:3px;
+}
+
+/* NAV */
+
+nav{
+ position:fixed;
+ z-index:20;
+ left:50%;
+ bottom:10px;
+ transform:translateX(-50%);
+ width:min(720px,calc(100% - 20px));
+ height:70px;
+ padding:6px;
+ display:flex;
+ align-items:center;
+ justify-content:space-around;
+ background:rgba(18,20,24,.94);
+ backdrop-filter:blur(18px);
+ -webkit-backdrop-filter:blur(18px);
+ border:1px solid #30333a;
+ border-radius:23px;
+ box-shadow:0 12px 45px rgba(0,0,0,.55);
+}
+
+nav button{
+ flex:1;
+ height:58px;
+ background:transparent;
+ border:0;
+ color:#777c86;
+ border-radius:17px;
+ font-size:10px;
+ line-height:1.5;
+ transition:.18s;
+}
+
+nav button.active{
+ color:white;
+ background:#25282e;
+}
+
+.navIcon{
+ font-size:20px;
+ display:block;
+ line-height:23px;
+}
+
+/* EMPTY */
+
+.empty{
+ text-align:center;
+ padding:30px 15px;
+ color:#777c86;
+ font-size:13px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:520px){
+ .role{
+  grid-template-columns:1fr;
+ }
+ .loginbox{
+  padding:26px 18px 20px;
+ }
+ .hero h1{
+  font-size:24px;
+ }
+ .userBadge{
+  display:none;
+ }
+ nav{
+  height:68px;
+ }
+}
+
+@media(min-width:600px){
+ .wrap{
+  padding-left:20px;
+  padding-right:20px;
+ }
+}
 </style>
 </head>
+
 <body>
+
+<!-- LOGIN -->
+
 <div id="login" class="login">
  <div class="loginbox">
-  <h1>🚒 <span class="red">MDP</span> Wiesiółka</h1>
-  <p class="muted">Zaloguj się do aplikacji.</p>
-  <div class="role">
-   <button class="btn" onclick="setRole('member')">👤 Członek</button>
-   <button class="btn" onclick="setRole('guardian')">🧑‍🚒 Opiekun</button>
-   <button class="btn" onclick="setRole('admin')">🛠️ Admin</button>
+
+  <div class="logo">🚒</div>
+
+  <div class="logoText">
+   MDP <span class="red">Wiesiółka</span>
   </div>
+
+  <p class="muted">
+   Oficjalna aplikacja Młodzieżowej Drużyny Pożarniczej.
+  </p>
+
+  <div class="role">
+   <button class="btn" onclick="setRole('member')">👤<br>Członek</button>
+   <button class="btn dark" onclick="setRole('guardian')">🧑‍🚒<br>Opiekun</button>
+   <button class="btn dark" onclick="setRole('admin')">🛠️<br>Admin</button>
+  </div>
+
   <input id="code" type="password" placeholder="Kod dostępu">
-  <button class="btn full" onclick="login()">Zaloguj</button>
+
+  <button class="btn full" onclick="login()">
+   Zaloguj się
+  </button>
+
   <p id="loginMsg" class="red"></p>
+
  </div>
 </div>
+
+
+<!-- APP -->
 
 <div id="app" class="hidden">
+
  <div class="wrap">
-  <header>
-   <h1>🚒 MDP <span class="red">Wiesiółka</span></h1>
-   <p id="who" class="muted"></p>
+
+  <header class="top">
+
+   <div class="brand">
+
+    <div class="brandIcon">🚒</div>
+
+    <div>
+     <div class="brandTitle">
+      MDP <span class="red">Wiesiółka</span>
+     </div>
+     <div class="brandSub">
+      Młodzieżowa Drużyna Pożarnicza
+     </div>
+    </div>
+
+   </div>
+
+   <div id="userBadge" class="userBadge"></div>
+
   </header>
 
+
+  <!-- START -->
+
   <section id="home">
-   <div class="card"><h2>Najbliższa zbiórka</h2><div id="next"></div></div>
-   <div class="card"><h2>📢 Ostatnie ogłoszenia</h2><div id="latest"></div></div>
+
+   <div class="hero">
+    <h1>Witaj w MDP 👋</h1>
+    <p>
+     Wszystko, co najważniejsze dla naszej drużyny — w jednym miejscu.
+    </p>
+   </div>
+
+
+   <div class="card nextCard">
+
+    <div class="cardHead">
+     <h2>📅 Najbliższa zbiórka</h2>
+     <span class="badge">PLAN</span>
+    </div>
+
+    <div id="next"></div>
+
+   </div>
+
+
+   <div class="card">
+
+    <div class="cardHead">
+     <h2>📢 Najnowsze ogłoszenia</h2>
+    </div>
+
+    <div id="latest"></div>
+
+   </div>
+
   </section>
 
-  <section id="events" class="hidden"><h2>📅 Zbiórki</h2><div id="eventList"></div></section>
-  <section id="news" class="hidden"><h2>📢 Ogłoszenia</h2><div id="newsList"></div></section>
-  <section id="members" class="hidden"><h2>👥 Członkowie</h2><div id="memberList"></div></section>
-  <section id="profile" class="hidden">
-   <div class="card"><h2>👤 Mój profil</h2><p id="profileText"></p><button class="btn dark" onclick="logout()">Wyloguj</button></div>
+
+  <!-- EVENTS -->
+
+  <section id="events" class="hidden">
+
+   <div class="hero">
+    <h1>📅 Zbiórki</h1>
+    <p>Sprawdź terminy i zaznacz swoją obecność.</p>
+   </div>
+
+   <div id="eventList"></div>
+
   </section>
+
+
+  <!-- NEWS -->
+
+  <section id="news" class="hidden">
+
+   <div class="hero">
+    <h1>📢 Ogłoszenia</h1>
+    <p>Najważniejsze informacje dla członków MDP.</p>
+   </div>
+
+   <div id="newsList"></div>
+
+  </section>
+
+
+  <!-- MEMBERS -->
+
+  <section id="members" class="hidden">
+
+   <div class="hero">
+    <h1>👥 Nasza drużyna</h1>
+    <p>Członkowie i osoby związane z MDP.</p>
+   </div>
+
+   <div class="card">
+
+    <div id="memberList"></div>
+
+   </div>
+
+  </section>
+
+
+  <!-- PROFILE -->
+
+  <section id="profile" class="hidden">
+
+   <div class="hero">
+    <h1>👤 Mój profil</h1>
+    <p>Twoje konto w aplikacji MDP.</p>
+   </div>
+
+   <div class="card">
+
+    <div id="profileText"></div>
+
+    <br>
+
+    <button class="btn dark full" onclick="logout()">
+     Wyloguj się
+    </button>
+
+   </div>
+
+  </section>
+
+
+  <!-- MANAGEMENT -->
 
   <section id="manage" class="hidden">
-   <h2>🛠️ Zarządzanie</h2>
-   <div class="card">
-    <h3>Dodaj zbiórkę</h3>
+
+   <div class="hero">
+    <h1>🛠️ Zarządzanie</h1>
+    <p>Panel dla opiekunów i administratorów.</p>
+   </div>
+
+
+   <div class="card formCard">
+
+    <h3>📅 Dodaj zbiórkę</h3>
+
     <input id="etitle" placeholder="Nazwa zbiórki">
-    <input id="edate" type="date"><input id="etime" type="time">
+
+    <input id="edate" type="date">
+
+    <input id="etime" type="time">
+
     <input id="eplace" placeholder="Miejsce">
-    <textarea id="edesc" placeholder="Opis"></textarea>
-    <button class="btn" onclick="addEvent()">Dodaj zbiórkę</button>
+
+    <textarea id="edesc" placeholder="Opis zbiórki"></textarea>
+
+    <button class="btn full" onclick="addEvent()">
+     + Dodaj zbiórkę
+    </button>
+
    </div>
-   <div class="card">
-    <h3>Dodaj ogłoszenie</h3>
-    <input id="ntitle" placeholder="Tytuł">
-    <textarea id="nbody" placeholder="Treść"></textarea>
-    <button class="btn" onclick="addNews()">Dodaj ogłoszenie</button>
+
+
+   <div class="card formCard">
+
+    <h3>📢 Dodaj ogłoszenie</h3>
+
+    <input id="ntitle" placeholder="Tytuł ogłoszenia">
+
+    <textarea id="nbody" placeholder="Treść ogłoszenia"></textarea>
+
+    <button class="btn full" onclick="addNews()">
+     + Dodaj ogłoszenie
+    </button>
+
    </div>
-   <div class="card">
-    <h3>Dodaj członka</h3>
+
+
+   <div class="card formCard">
+
+    <h3>👤 Dodaj członka</h3>
+
     <input id="mname" placeholder="Imię i nazwisko">
-    <button class="btn" onclick="addMember()">Dodaj członka</button>
+
+    <button class="btn full" onclick="addMember()">
+     + Dodaj członka
+    </button>
+
    </div>
+
   </section>
+
  </div>
+
+
+ <!-- NAV -->
+
  <nav>
-  <button onclick="show('home')" id="n-home">🏠<br>Start</button>
-  <button onclick="show('events')" id="n-events">📅<br>Zbiórki</button>
-  <button onclick="show('news')" id="n-news">📢<br>Ogłoszenia</button>
-  <button onclick="show('members')" id="n-members">👥<br>Osoby</button>
-  <button onclick="show('profile')" id="n-profile">👤<br>Profil</button>
-  <button id="n-manage" class="hidden" onclick="show('manage')">🛠️<br>Zarządzaj</button>
+
+  <button onclick="show('home')" id="n-home">
+   <span class="navIcon">🏠</span>
+   Start
+  </button>
+
+  <button onclick="show('events')" id="n-events">
+   <span class="navIcon">📅</span>
+   Zbiórki
+  </button>
+
+  <button onclick="show('news')" id="n-news">
+   <span class="navIcon">📢</span>
+   Ogłoszenia
+  </button>
+
+  <button onclick="show('members')" id="n-members">
+   <span class="navIcon">👥</span>
+   Osoby
+  </button>
+
+  <button onclick="show('profile')" id="n-profile">
+   <span class="navIcon">👤</span>
+   Profil
+  </button>
+
+  <button id="n-manage" class="hidden" onclick="show('manage')">
+   <span class="navIcon">🛠️</span>
+   Panel
+  </button>
+
  </nav>
+
 </div>
 
+
 <script>
-let role=null,code=null,data={events:[],news:[],members:[]};
+
+let role=null;
+let code=null;
+
+let data={
+ events:[],
+ news:[],
+ members:[]
+};
+
 const $=id=>document.getElementById(id);
-function setRole(r){role=r; $("loginMsg").textContent="Wybrano: "+({member:"Członek MDP",guardian:"Opiekun MDP",admin:"Administrator"}[r]);$("code").focus()}
+
+
+/* ROLE */
+
+function setRole(r){
+
+ role=r;
+
+ const names={
+  member:"Członek MDP",
+  guardian:"Opiekun MDP",
+  admin:"Administrator"
+ };
+
+ $("loginMsg").textContent="Wybrano: "+names[r];
+
+ document.querySelectorAll(".role .btn").forEach(x=>{
+  x.classList.add("dark");
+ });
+
+ event.currentTarget?.classList.remove("dark");
+
+ $("code").focus();
+}
+
+
+/* LOGIN */
+
 async function login(){
+
  code=$("code").value;
+
+ if(!role){
+  $("loginMsg").textContent="Najpierw wybierz rodzaj konta.";
+  return;
+ }
+
+ if(!code){
+  $("loginMsg").textContent="Wpisz kod dostępu.";
+  return;
+ }
+
  try{
-  const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({role,code})});
-  const j=await r.json(); if(!r.ok) throw Error(j.error);
-  localStorage.setItem("mdpRole",role); localStorage.setItem("mdpCode",code); start();
- }catch(e){$("loginMsg").textContent=e.message}
+
+  const r=await fetch("/api/login",{
+   method:"POST",
+   headers:{
+    "Content-Type":"application/json"
+   },
+   body:JSON.stringify({
+    role,
+    code
+   })
+  });
+
+  const j=await r.json();
+
+  if(!r.ok) throw Error(j.error);
+
+  localStorage.setItem("mdpRole",role);
+  localStorage.setItem("mdpCode",code);
+
+  start();
+
+ }catch(e){
+
+  $("loginMsg").textContent=e.message;
+
+ }
+
 }
-function headers(){return {"Content-Type":"application/json","x-role":role,"x-code":code}}
+
+
+/* HEADERS */
+
+function headers(){
+
+ return {
+  "Content-Type":"application/json",
+  "x-role":role,
+  "x-code":code
+ };
+
+}
+
+
+/* START */
+
 async function start(){
- $("login").classList.add("hidden");$("app").classList.remove("hidden");
- $("who").textContent=role==="member"?"Członek MDP":role==="guardian"?"Opiekun MDP":"Administrator";
- $("profileText").innerHTML="<b>Rola:</b> "+$("who").textContent+"<br><br>Twoje dane są zapisane na serwerze aplikacji.";
- if(role!=="member") $("n-manage").classList.remove("hidden");
- await load();show("home");
+
+ $("login").classList.add("hidden");
+ $("app").classList.remove("hidden");
+
+ const names={
+  member:"Członek MDP",
+  guardian:"Opiekun MDP",
+  admin:"Administrator"
+ };
+
+ $("userBadge").textContent=names[role];
+
+ $("profileText").innerHTML=
+ `
+ <p><b>Rola:</b> ${names[role]}</p>
+ <p class="muted">
+ Twoje dane są zapisane na serwerze aplikacji.
+ </p>
+ `;
+
+ if(role!=="member"){
+  $("n-manage").classList.remove("hidden");
+ }
+
+ await load();
+
+ show("home");
+
 }
+
+
+/* LOAD */
+
 async function load(){
- const r=await fetch("/api/data",{headers:headers()}); data=await r.json(); render();
+
+ try{
+
+  const r=await fetch("/api/data",{
+   headers:headers()
+  });
+
+  data=await r.json();
+
+  render();
+
+ }catch(e){
+
+  console.error(e);
+
+ }
+
 }
+
+
+/* RENDER */
+
 function render(){
+
+ /* NEXT */
+
  const next=data.events[0];
- $("next").innerHTML=next?`<b>${esc(next.title)}</b><br>📅 ${next.event_date} · ${next.event_time}<br>📍 ${esc(next.place)}<br><p>${esc(next.description||"")}</p>`:"Brak zaplanowanych zbiórek.";
- $("latest").innerHTML=data.news.slice(0,3).map(n=>`<div class="item"><b>${esc(n.title)}</b><p>${esc(n.body)}</p></div>`).join("")||"Brak ogłoszeń.";
- $("eventList").innerHTML=data.events.map(e=>`<div class="card"><h3>${esc(e.title)}</h3><span class="badge">${e.event_date} · ${e.event_time}</span><p>📍 ${esc(e.place)}</p><p>${esc(e.description||"")}</p><div class="actions"><button class="btn" onclick="att(${e.id},'yes')">✅ Będę</button><button class="btn dark" onclick="att(${e.id},'maybe')">❓ Nie wiem</button><button class="btn dark" onclick="att(${e.id},'no')">❌ Nie będę</button>${role!=="member"?`<button class="btn dark" onclick="delEvent(${e.id})">Usuń</button>`:""}</div></div>`).join("")||"Brak zbiórek.";
- $("newsList").innerHTML=data.news.map(n=>`<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p>${role!=="member"?`<button class="btn dark" onclick="delNews(${n.id})">Usuń</button>`:""}</div>`).join("")||"Brak ogłoszeń.";
- $("memberList").innerHTML=data.members.map(m=>`<div class="card"><b>${esc(m.name)}</b><br><span class="muted">${esc(m.role)}</span>${role!=="member"?`<br><button class="btn dark" onclick="delMember(${m.id})">Usuń</button>`:""}</div>`).join("")||"Lista członków jest pusta.";
+
+ if(next){
+
+  $("next").innerHTML=`
+
+   <div class="nextDate">
+    📅 ${esc(next.event_date)} · ${esc(next.event_time)}
+   </div>
+
+   <div class="bigEvent">
+    ${esc(next.title)}
+   </div>
+
+   <div class="infoLine">
+    <span>📍</span>${esc(next.place)}
+   </div>
+
+   ${
+    next.description
+    ?
+    `<div class="infoLine"><span>ℹ️</span>${esc(next.description)}</div>`
+    :
+    ""
+   }
+
+  `;
+
+ }else{
+
+  $("next").innerHTML=
+  `<div class="empty">Brak zaplanowanych zbiórek.</div>`;
+
+ }
+
+
+ /* LATEST NEWS */
+
+ $("latest").innerHTML=
+ data.news.slice(0,3).map(n=>`
+
+  <div class="item">
+
+   <div class="itemTitle">
+    ${esc(n.title)}
+   </div>
+
+   <p>
+    ${esc(n.body)}
+   </p>
+
+  </div>
+
+ `).join("")
+ ||
+ `<div class="empty">Brak ogłoszeń.</div>`;
+
+
+ /* EVENTS */
+
+ $("eventList").innerHTML=
+ data.events.map(e=>`
+
+  <div class="event">
+
+   <div class="eventTop">
+
+    <div class="eventTitle">
+     ${esc(e.title)}
+    </div>
+
+    <span class="badge">
+     ${esc(e.event_date)}
+    </span>
+
+   </div>
+
+   <div class="infoLine">
+    <span>🕐</span>${esc(e.event_time)}
+   </div>
+
+   <div class="infoLine">
+    <span>📍</span>${esc(e.place)}
+   </div>
+
+   ${
+    e.description
+    ?
+    `<div class="eventDesc">${esc(e.description)}</div>`
+    :
+    ""
+   }
+
+   <div class="actions">
+
+    <button class="btn" onclick="att(${e.id},'yes')">
+     ✅ Będę
+    </button>
+
+    <button class="btn dark" onclick="att(${e.id},'maybe')">
+     ❓ Nie wiem
+    </button>
+
+    <button class="btn dark" onclick="att(${e.id},'no')">
+     ❌ Nie będę
+    </button>
+
+    ${
+     role!=="member"
+     ?
+     `<button class="btn dark" onclick="delEvent(${e.id})">
+      Usuń
+     </button>`
+     :
+     ""
+    }
+
+   </div>
+
+  </div>
+
+ `).join("")
+ ||
+ `<div class="card empty">Brak zbiórek.</div>`;
+
+
+ /* NEWS */
+
+ $("newsList").innerHTML=
+ data.news.map(n=>`
+
+  <div class="card">
+
+   <h3>
+    ${esc(n.title)}
+   </h3>
+
+   <p class="muted">
+    ${esc(n.body)}
+   </p>
+
+   ${
+    role!=="member"
+    ?
+    `<button class="btn dark" onclick="delNews(${n.id})">
+     Usuń ogłoszenie
+    </button>`
+    :
+    ""
+   }
+
+  </div>
+
+ `).join("")
+ ||
+ `<div class="card empty">Brak ogłoszeń.</div>`;
+
+
+ /* MEMBERS */
+
+ $("memberList").innerHTML=
+ data.members.map(m=>`
+
+  <div class="member">
+
+   <div class="avatar">
+    ${esc((m.name||"?").charAt(0).toUpperCase())}
+   </div>
+
+   <div style="flex:1">
+
+    <div class="memberName">
+     ${esc(m.name)}
+    </div>
+
+    <div class="memberRole">
+     ${esc(m.role)}
+    </div>
+
+   </div>
+
+   ${
+    role!=="member"
+    ?
+    `<button class="btn dark" onclick="delMember(${m.id})">
+     Usuń
+    </button>`
+    :
+    ""
+   }
+
+  </div>
+
+ `).join("")
+ ||
+ `<div class="empty">Lista członków jest pusta.</div>`;
+
 }
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+
+/* ESC */
+
+function esc(s){
+
+ return String(s??"").replace(
+  /[&<>"']/g,
+  c=>({
+   "&":"&amp;",
+   "<":"&lt;",
+   ">":"&gt;",
+   '"':"&quot;",
+   "'":"&#039;"
+  }[c])
+ );
+
+}
+
+
+/* ATTENDANCE */
+
 async function att(id,status){
- const name=prompt("Podaj swoje imię i nazwisko:"); if(!name)return;
- await fetch("/api/attendance",{method:"POST",headers:headers(),body:JSON.stringify({event_id:id,member_name:name,status})});
- alert("Obecność zapisana."); await load();
+
+ const name=prompt("Podaj swoje imię i nazwisko:");
+
+ if(!name)return;
+
+ await fetch("/api/attendance",{
+  method:"POST",
+  headers:headers(),
+  body:JSON.stringify({
+   event_id:id,
+   member_name:name,
+   status
+  })
+ });
+
+ alert("Obecność zapisana.");
+
+ await load();
+
 }
+
+
+/* ADD EVENT */
+
 async function addEvent(){
- const body={title:$("etitle").value,event_date:$("edate").value,event_time:$("etime").value,place:$("eplace").value,description:$("edesc").value};
- const r=await fetch("/api/events",{method:"POST",headers:headers(),body:JSON.stringify(body)}); if(!r.ok)return alert((await r.json()).error);
- ["etitle","edate","etime","eplace","edesc"].forEach(x=>$(x).value="");await load();show("events");
+
+ const body={
+  title:$("etitle").value,
+  event_date:$("edate").value,
+  event_time:$("etime").value,
+  place:$("eplace").value,
+  description:$("edesc").value
+ };
+
+ const r=await fetch("/api/events",{
+  method:"POST",
+  headers:headers(),
+  body:JSON.stringify(body)
+ });
+
+ if(!r.ok){
+
+  return alert((await r.json()).error);
+
+ }
+
+ ["etitle","edate","etime","eplace","edesc"]
+ .forEach(x=>$(x).value="");
+
+ await load();
+
+ show("events");
+
 }
+
+
+/* ADD NEWS */
+
 async function addNews(){
- const r=await fetch("/api/news",{method:"POST",headers:headers(),body:JSON.stringify({title:$("ntitle").value,body:$("nbody").value})});
- if(!r.ok)return alert((await r.json()).error);$("ntitle").value="";$("nbody").value="";await load();show("news");
+
+ const r=await fetch("/api/news",{
+  method:"POST",
+  headers:headers(),
+  body:JSON.stringify({
+   title:$("ntitle").value,
+   body:$("nbody").value
+  })
+ });
+
+ if(!r.ok){
+
+  return alert((await r.json()).error);
+
+ }
+
+ $("ntitle").value="";
+ $("nbody").value="";
+
+ await load();
+
+ show("news");
+
 }
+
+
+/* ADD MEMBER */
+
 async function addMember(){
- const r=await fetch("/api/members",{method:"POST",headers:headers(),body:JSON.stringify({name:$("mname").value})});
- if(!r.ok)return alert((await r.json()).error);$("mname").value="";await load();show("members");
+
+ const r=await fetch("/api/members",{
+  method:"POST",
+  headers:headers(),
+  body:JSON.stringify({
+   name:$("mname").value
+  })
+ });
+
+ if(!r.ok){
+
+  return alert((await r.json()).error);
+
+ }
+
+ $("mname").value="";
+
+ await load();
+
+ show("members");
+
 }
-async function delEvent(id){if(confirm("Usunąć zbiórkę?")){await fetch("/api/events/"+id,{method:"DELETE",headers:headers()});await load()}}
-async function delNews(id){if(confirm("Usunąć ogłoszenie?")){await fetch("/api/news/"+id,{method:"DELETE",headers:headers()});await load()}}
-async function delMember(id){if(confirm("Usunąć członka?")){await fetch("/api/members/"+id,{method:"DELETE",headers:headers()});await load()}}
+
+
+/* DELETE */
+
+async function delEvent(id){
+
+ if(confirm("Usunąć zbiórkę?")){
+
+  await fetch(
+   "/api/events/"+id,
+   {
+    method:"DELETE",
+    headers:headers()
+   }
+  );
+
+  await load();
+
+ }
+
+}
+
+
+async function delNews(id){
+
+ if(confirm("Usunąć ogłoszenie?")){
+
+  await fetch(
+   "/api/news/"+id,
+   {
+    method:"DELETE",
+    headers:headers()
+   }
+  );
+
+  await load();
+
+ }
+
+}
+
+
+async function delMember(id){
+
+ if(confirm("Usunąć członka?")){
+
+  await fetch(
+   "/api/members/"+id,
+   {
+    method:"DELETE",
+    headers:headers()
+   }
+  );
+
+  await load();
+
+ }
+
+}
+
+
+/* NAVIGATION */
+
 function show(id){
- ["home","events","news","members","profile","manage"].forEach(x=>$(x).classList.add("hidden"));
+
+ [
+  "home",
+  "events",
+  "news",
+  "members",
+  "profile",
+  "manage"
+ ].forEach(x=>{
+  $(x).classList.add("hidden");
+ });
+
  $(id).classList.remove("hidden");
+
+
+ document.querySelectorAll("nav button")
+ .forEach(x=>x.classList.remove("active"));
+
+ const nav=document.getElementById("n-"+id);
+
+ if(nav)nav.classList.add("active");
+
+ window.scrollTo({
+  top:0,
+  behavior:"smooth"
+ });
+
 }
-function logout(){localStorage.removeItem("mdpRole");localStorage.removeItem("mdpCode");location.reload()}
+
+
+/* LOGOUT */
+
+function logout(){
+
+ localStorage.removeItem("mdpRole");
+ localStorage.removeItem("mdpCode");
+
+ location.reload();
+
+}
+
+
+/* AUTO LOGIN */
+
 window.addEventListener("load",()=>{
- const r=localStorage.getItem("mdpRole"),c=localStorage.getItem("mdpCode");
- if(r&&c){role=r;code=c;start()}
- if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
+
+ const r=localStorage.getItem("mdpRole");
+ const c=localStorage.getItem("mdpCode");
+
+ if(r&&c){
+
+  role=r;
+  code=c;
+
+  start();
+
+ }
+
+ if("serviceWorker" in navigator){
+
+  navigator.serviceWorker
+   .register("/sw.js")
+   .catch(()=>{});
+
+ }
+
 });
+
 </script>
+
 </body>
 </html>
