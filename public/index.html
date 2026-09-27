@@ -12,46 +12,28 @@
 <meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
 
 <link rel="manifest" href="./manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
 
 <style>
 *{
   box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
   margin:0;
   padding:0;
-}
-
-:root{
-  --red:#d71920;
-  --red-dark:#a80f15;
-  --bg:#090909;
-  --card:#151515;
-  --card2:#1c1c1c;
-  --border:#292929;
-  --text:#fff;
-  --muted:#a7a7a7;
-  --green:#24b36b;
-  --yellow:#e5b83c;
-}
-
-html{
-  scroll-behavior:smooth;
+  min-height:100%;
+  background:#090909;
+  color:#fff;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-  font-family:Arial,Helvetica,sans-serif;
-  background:
-    radial-gradient(circle at top,#261010 0%,#0b0b0b 35%,#050505 100%);
-  color:var(--text);
   min-height:100vh;
 }
 
-button,
-input,
-textarea,
-select{
+button,input,select,textarea{
   font:inherit;
 }
 
@@ -73,121 +55,94 @@ button{
   align-items:center;
   justify-content:center;
   padding:24px;
+  background:
+    radial-gradient(circle at top,#3b1010 0,#090909 48%);
 }
 
 .login-box{
   width:100%;
   max-width:430px;
-  background:rgba(20,20,20,.96);
-  border:1px solid #2c2c2c;
+  background:#151515;
+  border:1px solid #292929;
   border-radius:28px;
-  padding:30px 22px;
-  box-shadow:0 25px 70px rgba(0,0,0,.55);
+  padding:28px 22px;
+  box-shadow:0 20px 70px rgba(0,0,0,.55);
 }
 
 .logo{
-  width:92px;
-  height:92px;
+  width:88px;
+  height:88px;
   margin:0 auto 18px;
-  border-radius:25px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(145deg,#ef2028,#9f0c11);
-  font-size:42px;
-  box-shadow:0 15px 35px rgba(215,25,32,.25);
+  display:block;
+  object-fit:contain;
 }
 
-.login-box h1{
+.login-title{
   text-align:center;
+  margin:0;
   font-size:28px;
-  margin-bottom:7px;
+  font-weight:900;
 }
 
 .login-subtitle{
   text-align:center;
-  color:var(--muted);
-  margin-bottom:28px;
-  font-size:14px;
+  color:#999;
+  margin:8px 0 26px;
 }
 
 .role-buttons{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:15px;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:16px;
 }
 
-.role-btn{
-  border:1px solid var(--border);
-  background:#101010;
-  color:#bbb;
-  padding:13px 8px;
-  border-radius:13px;
-  font-weight:700;
+.role-button{
+  border:1px solid #333;
+  background:#202020;
+  color:#aaa;
+  border-radius:14px;
+  padding:12px 5px;
+  font-size:12px;
+  font-weight:800;
 }
 
-.role-btn.active{
-  background:var(--red);
+.role-button.active{
+  background:#d71920;
+  border-color:#d71920;
   color:#fff;
-  border-color:var(--red);
 }
 
-.field{
-  margin-bottom:14px;
-}
-
-.field label{
-  display:block;
-  font-size:13px;
-  color:#bdbdbd;
-  margin-bottom:7px;
-}
-
-.field input,
-.field textarea,
-.field select{
+.input{
   width:100%;
+  border:1px solid #333;
   background:#0e0e0e;
-  color:white;
-  border:1px solid #303030;
-  border-radius:13px;
-  padding:14px;
+  color:#fff;
+  border-radius:14px;
+  padding:15px;
   outline:none;
 }
 
-.field input:focus,
-.field textarea:focus,
-.field select:focus{
-  border-color:var(--red);
+.input:focus{
+  border-color:#d71920;
 }
 
-textarea{
-  min-height:100px;
-  resize:vertical;
-}
-
-.primary-btn{
+.login-button{
   width:100%;
+  margin-top:12px;
   border:0;
   border-radius:14px;
   padding:15px;
-  background:var(--red);
-  color:white;
-  font-weight:800;
-  font-size:16px;
-  transition:.15s;
+  background:#d71920;
+  color:#fff;
+  font-weight:900;
 }
 
-.primary-btn:active{
-  transform:scale(.98);
-}
-
-.login-info{
-  margin-top:17px;
-  color:#777;
+.login-error{
+  color:#ff6464;
   text-align:center;
-  font-size:11px;
+  margin-top:12px;
+  font-size:13px;
 }
 
 /* =========================
@@ -202,14 +157,11 @@ textarea{
 .topbar{
   position:sticky;
   top:0;
-  z-index:50;
-  backdrop-filter:blur(15px);
-  background:rgba(8,8,8,.88);
-  border-bottom:1px solid #252525;
-  padding:
-    calc(12px + env(safe-area-inset-top))
-    16px
-    12px;
+  z-index:20;
+  background:rgba(9,9,9,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid #222;
+  padding:14px 16px;
 }
 
 .topbar-inner{
@@ -218,7 +170,7 @@ textarea{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
 }
 
 .brand{
@@ -227,198 +179,126 @@ textarea{
   gap:10px;
 }
 
-.brand-logo{
-  width:42px;
-  height:42px;
-  border-radius:12px;
-  background:linear-gradient(145deg,#e92129,#980c11);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
+.brand img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
 }
 
 .brand-text strong{
   display:block;
-  font-size:15px;
+  font-size:14px;
 }
 
 .brand-text span{
   display:block;
-  color:#8e8e8e;
+  color:#888;
   font-size:11px;
   margin-top:2px;
 }
 
-.logout-btn{
-  border:1px solid #343434;
-  background:#151515;
+.top-role{
+  font-size:11px;
+  font-weight:800;
+  background:#222;
+  padding:8px 10px;
+  border-radius:20px;
   color:#ddd;
-  padding:9px 12px;
-  border-radius:11px;
-  font-size:12px;
 }
 
-main{
-  width:100%;
+.main{
   max-width:900px;
   margin:auto;
-  padding:20px 15px;
-}
-
-.page{
-  display:none;
-}
-
-.page.active{
-  display:block;
-}
-
-.page-title{
-  font-size:27px;
-  margin-bottom:5px;
-}
-
-.page-subtitle{
-  color:var(--muted);
-  font-size:13px;
-  margin-bottom:20px;
+  padding:18px 16px 30px;
 }
 
 /* =========================
-   HOME
+   DASHBOARD
 ========================= */
+
+.greeting{
+  margin-bottom:18px;
+}
+
+.greeting small{
+  color:#999;
+}
+
+.greeting h1{
+  margin:5px 0 0;
+  font-size:27px;
+}
 
 .hero{
   background:
-    linear-gradient(135deg,rgba(215,25,32,.95),rgba(117,5,10,.95));
+    linear-gradient(135deg,#d71920,#810e13);
   border-radius:24px;
-  padding:24px 20px;
+  padding:22px;
+  box-shadow:0 15px 40px rgba(215,25,32,.2);
   margin-bottom:16px;
-  overflow:hidden;
-  position:relative;
 }
 
-.hero:after{
-  content:"";
-  position:absolute;
-  width:180px;
-  height:180px;
-  right:-70px;
-  top:-70px;
-  border-radius:50%;
-  background:rgba(255,255,255,.08);
-}
-
-.hero small{
+.hero-label{
   opacity:.8;
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
 }
 
 .hero h2{
-  font-size:27px;
-  margin:8px 0;
+  margin:7px 0;
+  font-size:24px;
 }
 
 .hero p{
-  color:#ffdfe0;
-  font-size:13px;
+  margin:5px 0;
+  opacity:.9;
 }
 
 .cards{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin-bottom:16px;
+  margin-bottom:18px;
 }
 
 .card{
-  background:linear-gradient(145deg,#181818,#111);
-  border:1px solid var(--border);
-  border-radius:19px;
+  background:#151515;
+  border:1px solid #282828;
+  border-radius:20px;
   padding:17px;
-  margin-bottom:14px;
 }
 
-.stat-card{
-  min-height:105px;
+.card-icon{
+  font-size:25px;
 }
 
-.stat-icon{
-  font-size:23px;
-  margin-bottom:8px;
+.card-number{
+  font-size:24px;
+  font-weight:900;
+  margin-top:9px;
 }
 
-.stat-card strong{
-  display:block;
-  font-size:22px;
-}
-
-.stat-card span{
+.card-label{
   color:#888;
-  font-size:11px;
+  font-size:12px;
+  margin-top:3px;
 }
 
-.section-head{
+.section-title{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
-  margin:23px 0 11px;
+  margin:24px 0 12px;
 }
 
-.section-head h3{
+.section-title h2{
+  margin:0;
   font-size:18px;
 }
 
-.small-btn{
-  border:1px solid #363636;
-  background:#151515;
-  color:#ddd;
-  border-radius:10px;
-  padding:8px 10px;
-  font-size:11px;
-}
-
-.event-mini{
-  display:flex;
-  gap:13px;
-  align-items:center;
-}
-
-.date-box{
-  width:58px;
-  min-width:58px;
-  height:62px;
-  border-radius:14px;
-  background:#250d0e;
-  border:1px solid #4b1719;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-.date-box strong{
-  font-size:21px;
-}
-
-.date-box span{
-  font-size:9px;
-  color:#c8c8c8;
-  text-transform:uppercase;
-}
-
-.event-mini-info{
-  min-width:0;
-}
-
-.event-mini-info strong{
-  display:block;
-  margin-bottom:5px;
-}
-
-.event-mini-info p{
-  color:#999;
+.section-title span{
+  color:#777;
   font-size:12px;
 }
 
@@ -426,326 +306,233 @@ main{
    EVENTS
 ========================= */
 
-.event-card{
-  background:linear-gradient(145deg,#171717,#111);
-  border:1px solid var(--border);
-  border-radius:19px;
+.event{
+  background:#151515;
+  border:1px solid #282828;
+  border-radius:20px;
   padding:17px;
-  margin-bottom:13px;
+  margin-bottom:12px;
 }
 
 .event-top{
   display:flex;
-  gap:13px;
+  justify-content:space-between;
+  gap:10px;
 }
 
 .event-date{
-  min-width:65px;
-  width:65px;
-  height:70px;
-  border-radius:15px;
-  background:linear-gradient(145deg,#d71920,#9e0d12);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-.event-date strong{
-  font-size:23px;
-}
-
-.event-date span{
-  font-size:10px;
-}
-
-.event-info{
-  flex:1;
-}
-
-.event-info h3{
-  font-size:17px;
-  margin-bottom:7px;
-}
-
-.event-meta{
-  color:#999;
+  color:#d71920;
   font-size:12px;
-  line-height:1.6;
+  font-weight:900;
 }
 
-.event-description{
-  margin-top:13px;
-  padding-top:13px;
-  border-top:1px solid #292929;
-  color:#bbb;
-  font-size:13px;
-  line-height:1.5;
+.event h3{
+  margin:7px 0 5px;
+  font-size:18px;
 }
 
-.attendance{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:7px;
-  margin-top:14px;
-}
-
-.attendance button{
-  border:1px solid #333;
-  background:#101010;
+.event p{
   color:#aaa;
-  border-radius:10px;
-  padding:10px 4px;
-  font-size:11px;
-  font-weight:700;
+  margin:4px 0;
+  font-size:13px;
 }
 
-.attendance button.selected.yes{
-  background:#164f34;
-  border-color:#287e53;
-  color:#8ff0ba;
+.event-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:13px;
 }
 
-.attendance button.selected.maybe{
-  background:#4d3c12;
-  border-color:#806722;
-  color:#f0d77b;
+.btn{
+  border:1px solid #333;
+  background:#222;
+  color:#fff;
+  border-radius:11px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:800;
 }
 
-.attendance button.selected.no{
-  background:#55171a;
-  border-color:#84262b;
-  color:#ff9a9f;
+.btn.red{
+  background:#d71920;
+  border-color:#d71920;
+}
+
+.btn.green{
+  background:#174d2b;
+  border-color:#276e3e;
+}
+
+.btn.yellow{
+  background:#5c4812;
+  border-color:#82661b;
+}
+
+.btn.gray{
+  background:#252525;
+}
+
+.btn.danger{
+  background:#5a1518;
+  border-color:#7e1e23;
 }
 
 /* =========================
    NEWS
 ========================= */
 
-.news-card{
+.news{
   background:#151515;
-  border:1px solid var(--border);
-  border-radius:18px;
+  border:1px solid #282828;
+  border-radius:20px;
   padding:17px;
   margin-bottom:12px;
 }
 
-.news-card h3{
-  font-size:17px;
-  margin-bottom:8px;
-}
-
 .news-date{
   color:#777;
-  font-size:10px;
-  margin-bottom:10px;
+  font-size:11px;
 }
 
-.news-card p{
-  color:#bbb;
+.news h3{
+  margin:6px 0;
+}
+
+.news p{
+  color:#aaa;
   font-size:13px;
-  line-height:1.6;
-  white-space:pre-wrap;
-}
-
-/* =========================
-   MEMBERS
-========================= */
-
-.member-card{
-  display:flex;
-  align-items:center;
-  gap:13px;
-  background:#151515;
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:13px;
-  margin-bottom:9px;
-}
-
-.avatar{
-  width:45px;
-  height:45px;
-  min-width:45px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(145deg,#d71920,#810b10);
-  font-weight:800;
-}
-
-.member-info{
-  flex:1;
-}
-
-.member-info strong{
-  display:block;
-  font-size:14px;
-}
-
-.member-info span{
-  display:block;
-  color:#888;
-  font-size:11px;
-  margin-top:3px;
-}
-
-/* =========================
-   CALENDAR
-========================= */
-
-.calendar{
-  background:#151515;
-  border:1px solid var(--border);
-  border-radius:19px;
-  overflow:hidden;
-}
-
-.calendar-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px;
-  border-bottom:1px solid #292929;
-}
-
-.calendar-head button{
-  background:#222;
-  border:0;
-  color:white;
-  width:34px;
-  height:34px;
-  border-radius:9px;
-}
-
-.calendar-title{
-  font-weight:800;
-}
-
-.calendar-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-}
-
-.day-name{
-  padding:10px 2px;
-  text-align:center;
-  color:#777;
-  font-size:10px;
-}
-
-.day{
-  min-height:50px;
-  border-top:1px solid #202020;
-  border-right:1px solid #202020;
-  padding:7px;
-  font-size:11px;
-  position:relative;
-}
-
-.day.empty{
-  background:#101010;
-}
-
-.day.today{
-  background:#321012;
-}
-
-.day-number{
-  font-weight:700;
-}
-
-.day-event{
-  position:absolute;
-  left:5px;
-  right:5px;
-  bottom:5px;
-  height:4px;
-  border-radius:5px;
-  background:var(--red);
+  line-height:1.5;
+  margin:0;
 }
 
 /* =========================
    PROFILE
 ========================= */
 
-.profile{
+.profile-head{
+  background:linear-gradient(135deg,#191919,#101010);
+  border:1px solid #292929;
+  border-radius:24px;
+  padding:22px;
   text-align:center;
-  padding:25px 10px;
 }
 
-.big-avatar{
-  width:88px;
-  height:88px;
-  border-radius:28px;
-  margin:0 auto 15px;
+.avatar{
+  width:82px;
+  height:82px;
+  border-radius:50%;
+  background:#d71920;
   display:flex;
-  justify-content:center;
   align-items:center;
-  background:linear-gradient(145deg,#d71920,#850b10);
+  justify-content:center;
+  margin:0 auto 13px;
   font-size:32px;
   font-weight:900;
 }
 
-.profile h2{
-  font-size:23px;
+.profile-head h2{
+  margin:5px 0;
 }
 
-.profile p{
+.profile-head p{
   color:#888;
-  margin-top:5px;
+  margin:5px 0;
+}
+
+.profile-info{
+  margin-top:14px;
+  display:grid;
+  gap:9px;
+}
+
+.info-row{
+  background:#151515;
+  border:1px solid #292929;
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.info-row span:first-child{
+  color:#888;
+}
+
+/* =========================
+   MEMBERS
+========================= */
+
+.member{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:#151515;
+  border:1px solid #282828;
+  border-radius:17px;
+  padding:13px;
+  margin-bottom:9px;
+}
+
+.member-avatar{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:#292929;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+
+.member-name{
+  font-weight:800;
+}
+
+.member-role{
+  color:#888;
+  font-size:11px;
+  margin-top:3px;
 }
 
 /* =========================
    ADMIN
 ========================= */
 
-.admin-section{
-  margin-bottom:22px;
+.admin-box{
+  background:#151515;
+  border:1px solid #3d2525;
+  border-radius:20px;
+  padding:17px;
+  margin-bottom:13px;
 }
 
 .admin-title{
-  font-size:18px;
-  margin-bottom:10px;
-}
-
-.delete-btn{
-  border:1px solid #5a2023;
-  background:#2b1112;
-  color:#ff9da1;
-  padding:8px 10px;
-  border-radius:9px;
-  font-size:11px;
-}
-
-.form-actions{
   display:flex;
-  gap:8px;
+  align-items:center;
+  gap:9px;
+  margin-bottom:14px;
 }
 
-.form-actions button{
-  flex:1;
+.admin-title h3{
+  margin:0;
 }
 
-.secondary-btn{
-  width:100%;
-  border:1px solid #383838;
-  background:#171717;
-  color:#ddd;
-  border-radius:13px;
-  padding:13px;
-  font-weight:700;
+.form-grid{
+  display:grid;
+  gap:9px;
 }
 
-.danger-btn{
-  width:100%;
-  border:1px solid #642025;
-  background:#2b1012;
-  color:#ff9da1;
-  border-radius:13px;
-  padding:13px;
-  font-weight:700;
+textarea.input{
+  min-height:100px;
+  resize:vertical;
+}
+
+.empty{
+  text-align:center;
+  padding:35px 15px;
+  color:#777;
 }
 
 /* =========================
@@ -754,110 +541,104 @@ main{
 
 .bottom-nav{
   position:fixed;
+  bottom:0;
   left:0;
   right:0;
-  bottom:0;
-  z-index:60;
+  z-index:30;
+  background:rgba(12,12,12,.96);
+  backdrop-filter:blur(15px);
+  border-top:1px solid #252525;
   padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-  background:rgba(10,10,10,.94);
-  backdrop-filter:blur(18px);
-  border-top:1px solid #272727;
 }
 
-.bottom-nav-inner{
-  max-width:700px;
+.nav-inner{
+  max-width:650px;
   margin:auto;
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  gap:4px;
 }
 
 .nav-btn{
   border:0;
   background:transparent;
   color:#777;
-  border-radius:12px;
   padding:7px 3px;
-  font-size:9px;
+  font-size:10px;
+  font-weight:800;
 }
 
-.nav-btn .nav-icon{
+.nav-btn span{
   display:block;
-  font-size:19px;
+  font-size:21px;
   margin-bottom:3px;
 }
 
 .nav-btn.active{
-  color:white;
-  background:#211011;
+  color:#fff;
 }
 
-.nav-btn.active .nav-icon{
-  color:var(--red);
+.nav-btn.active span{
+  filter:drop-shadow(0 0 7px rgba(215,25,32,.5));
 }
 
 /* =========================
-   TOAST
+   MODAL
 ========================= */
 
-.toast{
+.modal{
   position:fixed;
-  left:50%;
-  bottom:90px;
-  transform:translateX(-50%) translateY(20px);
-  background:#242424;
-  color:white;
-  border:1px solid #3b3b3b;
-  border-radius:13px;
-  padding:12px 15px;
-  font-size:12px;
-  opacity:0;
-  pointer-events:none;
-  transition:.25s;
+  inset:0;
   z-index:100;
-  max-width:90%;
-  text-align:center;
+  background:rgba(0,0,0,.72);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:12px;
 }
 
-.toast.show{
-  opacity:1;
-  transform:translateX(-50%) translateY(0);
+.modal-box{
+  width:100%;
+  max-width:600px;
+  max-height:90vh;
+  overflow:auto;
+  background:#151515;
+  border:1px solid #303030;
+  border-radius:25px;
+  padding:20px;
 }
 
-/* =========================
-   EMPTY
-========================= */
-
-.empty{
-  text-align:center;
-  padding:35px 15px;
-  color:#777;
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
 }
 
-.empty-icon{
-  font-size:35px;
-  margin-bottom:10px;
+.modal-head h2{
+  margin:0;
 }
 
-.empty p{
-  font-size:13px;
+.close{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:50%;
+  background:#292929;
+  color:#fff;
+  font-size:20px;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
 
-@media(max-width:380px){
+@media(min-width:700px){
   .cards{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(4,1fr);
   }
 
-  .login-box{
-    padding:25px 17px;
-  }
-
-  .hero h2{
-    font-size:23px;
+  .modal{
+    align-items:center;
   }
 }
 </style>
@@ -873,42 +654,41 @@ main{
 
   <div class="login-box">
 
-    <div class="logo">🚒</div>
+    <img class="logo" src="./icon-192.png" alt="MDP OSP Wiesiółka">
 
-    <h1>MDP OSP Wiesiółka</h1>
-
-    <p class="login-subtitle">
-      Aplikacja Młodzieżowej Drużyny Pożarniczej
-    </p>
+    <h1 class="login-title">MDP OSP Wiesiółka</h1>
+    <p class="login-subtitle">Zaloguj się do aplikacji</p>
 
     <div class="role-buttons">
-      <button class="role-btn active" id="memberRoleBtn" onclick="selectRole('member')">
-        👤 Członek MDP
+
+      <button class="role-button active" data-role="member" onclick="chooseRole('member')">
+        👨‍🚒<br>Członek
       </button>
 
-      <button class="role-btn" id="guardianRoleBtn" onclick="selectRole('guardian')">
-        🛡️ Opiekun MDP
+      <button class="role-button" data-role="guardian" onclick="chooseRole('guardian')">
+        🧑‍🚒<br>Opiekun
       </button>
+
+      <button class="role-button" data-role="admin" onclick="chooseRole('admin')">
+        🛡️<br>Admin
+      </button>
+
     </div>
 
-    <div class="field">
-      <label for="loginCode">Kod dostępu</label>
-      <input
-        id="loginCode"
-        type="password"
-        inputmode="numeric"
-        placeholder="Wpisz kod"
-        autocomplete="off"
-      >
-    </div>
+    <input
+      id="loginCode"
+      class="input"
+      type="password"
+      inputmode="numeric"
+      placeholder="Kod dostępu"
+      maxlength="20"
+    >
 
-    <button class="primary-btn" onclick="login()">
-      Zaloguj się
+    <button class="login-button" onclick="login()">
+      ZALOGUJ SIĘ
     </button>
 
-    <div class="login-info">
-      MDP OSP Wiesiółka
-    </div>
+    <div id="loginError" class="login-error"></div>
 
   </div>
 
@@ -919,373 +699,61 @@ main{
      APP
 ========================= -->
 
-<div id="app" class="hidden">
+<section id="app" class="hidden">
 
   <header class="topbar">
 
     <div class="topbar-inner">
 
       <div class="brand">
-        <div class="brand-logo">🚒</div>
+
+        <img src="./icon-192.png" alt="OSP">
 
         <div class="brand-text">
-          <strong>MDP Wiesiółka</strong>
-          <span id="topRole">Członek MDP</span>
+          <strong>MDP OSP Wiesiółka</strong>
+          <span id="topUserName">Użytkownik</span>
         </div>
+
       </div>
 
-      <button class="logout-btn" onclick="logout()">
-        Wyloguj
-      </button>
+      <div id="topRole" class="top-role">
+        CZŁONEK
+      </div>
 
     </div>
 
   </header>
 
 
-  <main>
+  <main id="mainContent" class="main"></main>
 
-    <!-- HOME -->
-    <section id="page-home" class="page active">
-
-      <div class="hero">
-        <small>Witaj w aplikacji MDP</small>
-        <h2 id="welcomeName">Cześć!</h2>
-        <p>
-          Wszystkie najważniejsze informacje o Młodzieżowej Drużynie Pożarniczej.
-        </p>
-      </div>
-
-      <div class="cards">
-
-        <div class="card stat-card">
-          <div class="stat-icon">📅</div>
-          <strong id="statEvents">0</strong>
-          <span>Nadchodzące zbiórki</span>
-        </div>
-
-        <div class="card stat-card">
-          <div class="stat-icon">👥</div>
-          <strong id="statMembers">0</strong>
-          <span>Członków MDP</span>
-        </div>
-
-      </div>
-
-
-      <div class="section-head">
-        <h3>Najbliższa zbiórka</h3>
-        <button class="small-btn" onclick="showPage('events')">
-          Wszystkie
-        </button>
-      </div>
-
-      <div id="homeNextEvent"></div>
-
-
-      <div class="section-head">
-        <h3>Najnowsze ogłoszenie</h3>
-        <button class="small-btn" onclick="showPage('news')">
-          Wszystkie
-        </button>
-      </div>
-
-      <div id="homeNews"></div>
-
-    </section>
-
-
-    <!-- EVENTS -->
-    <section id="page-events" class="page">
-
-      <h1 class="page-title">Zbiórki</h1>
-
-      <p class="page-subtitle">
-        Sprawdź terminy i zaznacz swoją obecność.
-      </p>
-
-      <div id="eventsList"></div>
-
-    </section>
-
-
-    <!-- NEWS -->
-    <section id="page-news" class="page">
-
-      <h1 class="page-title">Ogłoszenia</h1>
-
-      <p class="page-subtitle">
-        Najważniejsze informacje od opiekunów MDP.
-      </p>
-
-      <div id="newsList"></div>
-
-    </section>
-
-
-    <!-- MEMBERS -->
-    <section id="page-members" class="page">
-
-      <h1 class="page-title">Członkowie</h1>
-
-      <p class="page-subtitle">
-        Lista członków Młodzieżowej Drużyny Pożarniczej.
-      </p>
-
-      <div id="membersList"></div>
-
-    </section>
-
-
-    <!-- CALENDAR -->
-    <section id="page-calendar" class="page">
-
-      <h1 class="page-title">Kalendarz</h1>
-
-      <p class="page-subtitle">
-        Terminy zbiórek MDP.
-      </p>
-
-      <div class="calendar">
-
-        <div class="calendar-head">
-
-          <button onclick="changeMonth(-1)">‹</button>
-
-          <div class="calendar-title" id="calendarTitle"></div>
-
-          <button onclick="changeMonth(1)">›</button>
-
-        </div>
-
-        <div class="calendar-grid" id="calendarGrid"></div>
-
-      </div>
-
-    </section>
-
-
-    <!-- PROFILE -->
-    <section id="page-profile" class="page">
-
-      <h1 class="page-title">Profil</h1>
-
-      <p class="page-subtitle">
-        Twoje dane w aplikacji.
-      </p>
-
-      <div class="card profile">
-
-        <div class="big-avatar" id="profileAvatar">
-          M
-        </div>
-
-        <h2 id="profileName">
-          Członek MDP
-        </h2>
-
-        <p id="profileRole">
-          Członek MDP
-        </p>
-
-      </div>
-
-      <div class="card">
-
-        <div class="section-head">
-          <h3>Informacje</h3>
-        </div>
-
-        <p style="color:#aaa;font-size:13px;line-height:1.7;">
-          Młodzieżowa Drużyna Pożarnicza<br>
-          OSP Wiesiółka
-        </p>
-
-      </div>
-
-    </section>
-
-
-    <!-- ADMIN -->
-    <section id="page-admin" class="page">
-
-      <h1 class="page-title">Panel opiekuna</h1>
-
-      <p class="page-subtitle">
-        Zarządzanie aplikacją MDP.
-      </p>
-
-
-      <!-- ADD EVENT -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">➕ Dodaj zbiórkę</h2>
-
-        <div class="card">
-
-          <div class="field">
-            <label>Nazwa zbiórki</label>
-            <input id="eventTitle" placeholder="np. Zbiórka MDP">
-          </div>
-
-          <div class="field">
-            <label>Data</label>
-            <input id="eventDate" type="date">
-          </div>
-
-          <div class="field">
-            <label>Godzina</label>
-            <input id="eventTime" type="time">
-          </div>
-
-          <div class="field">
-            <label>Miejsce</label>
-            <input id="eventPlace" placeholder="np. Remiza OSP Wiesiółka">
-          </div>
-
-          <div class="field">
-            <label>Opis</label>
-            <textarea id="eventDescription" placeholder="Informacje dotyczące zbiórki..."></textarea>
-          </div>
-
-          <button class="primary-btn" onclick="addEvent()">
-            Dodaj zbiórkę
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- ADD NEWS -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">📢 Dodaj ogłoszenie</h2>
-
-        <div class="card">
-
-          <div class="field">
-            <label>Tytuł</label>
-            <input id="newsTitle" placeholder="Tytuł ogłoszenia">
-          </div>
-
-          <div class="field">
-            <label>Treść</label>
-            <textarea id="newsContent" placeholder="Treść ogłoszenia..."></textarea>
-          </div>
-
-          <button class="primary-btn" onclick="addNews()">
-            Opublikuj ogłoszenie
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- ADD MEMBER -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">👥 Dodaj członka</h2>
-
-        <div class="card">
-
-          <div class="field">
-            <label>Imię i nazwisko</label>
-            <input id="memberName" placeholder="np. Jan Kowalski">
-          </div>
-
-          <div class="field">
-            <label>Funkcja</label>
-            <input id="memberFunction" placeholder="np. Członek MDP">
-          </div>
-
-          <button class="primary-btn" onclick="addMember()">
-            Dodaj członka
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- ADMIN EVENTS -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">🗓️ Zarządzaj zbiórkami</h2>
-
-        <div id="adminEventsList"></div>
-
-      </div>
-
-
-      <!-- ADMIN NEWS -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">📢 Zarządzaj ogłoszeniami</h2>
-
-        <div id="adminNewsList"></div>
-
-      </div>
-
-
-      <!-- ADMIN MEMBERS -->
-
-      <div class="admin-section">
-
-        <h2 class="admin-title">👥 Zarządzaj członkami</h2>
-
-        <div id="adminMembersList"></div>
-
-      </div>
-
-
-      <div class="card">
-
-        <button class="danger-btn" onclick="resetAppData()">
-          ⚠️ Przywróć dane demonstracyjne
-        </button>
-
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- BOTTOM NAV -->
 
   <nav class="bottom-nav">
 
-    <div class="bottom-nav-inner">
+    <div class="nav-inner">
 
       <button class="nav-btn active" data-page="home" onclick="showPage('home')">
-        <span class="nav-icon">🏠</span>
+        <span>🏠</span>
         Start
       </button>
 
       <button class="nav-btn" data-page="events" onclick="showPage('events')">
-        <span class="nav-icon">📅</span>
+        <span>📅</span>
         Zbiórki
       </button>
 
       <button class="nav-btn" data-page="news" onclick="showPage('news')">
-        <span class="nav-icon">📢</span>
-        Ogłoszenia
+        <span>📢</span>
+        Info
       </button>
 
       <button class="nav-btn" data-page="members" onclick="showPage('members')">
-        <span class="nav-icon">👥</span>
-        Członkowie
+        <span>👥</span>
+        MDP
       </button>
 
       <button class="nav-btn" data-page="profile" onclick="showPage('profile')">
-        <span class="nav-icon">👤</span>
+        <span>👤</span>
         Profil
       </button>
 
@@ -1293,931 +761,351 @@ main{
 
   </nav>
 
+</section>
+
+
+<!-- =========================
+     MODAL
+========================= -->
+
+<div id="modal" class="modal hidden">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <h2 id="modalTitle">Dodaj</h2>
+      <button class="close" onclick="closeModal()">×</button>
+    </div>
+
+    <div id="modalContent"></div>
+
+  </div>
+
 </div>
-
-
-<div id="toast" class="toast"></div>
 
 
 <script>
 
-/* =====================================
-   KONFIGURACJA
-===================================== */
+/* =========================================================
+   DANE
+========================================================= */
 
-const MEMBER_CODE = "2018";
-const GUARDIAN_CODE = "9982018";
+const CODES = {
+  member: "2018",
+  guardian: "9982018",
+  admin: "0000"
+};
 
-let selectedRole = "member";
+let currentRole = "member";
 
 let currentUser = {
   name: "Członek MDP",
   role: "member"
 };
 
-let calendarDate = new Date();
 
-
-/* =====================================
-   DANE DEMONSTRACYJNE
-===================================== */
-
-const defaultEvents = [
-  {
-    id: 1,
-    title: "Zbiórka MDP",
-    date: "2026-10-03",
-    time: "17:00",
-    place: "Remiza OSP Wiesiółka",
-    description: "Zwykła zbiórka MDP. Prosimy o punktualne przybycie.",
-    attendance: {}
-  }
-];
-
-const defaultNews = [
-  {
-    id: 1,
-    title: "Witamy w aplikacji MDP!",
-    content: "Od teraz najważniejsze informacje, zbiórki i ogłoszenia znajdziesz w jednym miejscu.",
-    date: new Date().toISOString()
-  }
-];
-
-const defaultMembers = [
-  {
-    id: 1,
-    name: "Członek MDP",
-    function: "Członek MDP"
-  }
-];
-
-
-/* =====================================
+/* =========================================================
    LOCAL STORAGE
-===================================== */
+========================================================= */
+
+const defaultData = {
+
+  events: [
+    {
+      id: 1,
+      title: "Zbiórka MDP",
+      date: "2026-10-03",
+      time: "17:00",
+      place: "Remiza OSP Wiesiółka",
+      description: "Regularna zbiórka Młodzieżowej Drużyny Pożarniczej.",
+      attendance: {}
+    }
+  ],
+
+  news: [
+    {
+      id: 1,
+      title: "Witamy w aplikacji MDP!",
+      text: "Tutaj będą pojawiały się najważniejsze informacje, ogłoszenia oraz wiadomości dla członków MDP.",
+      date: new Date().toLocaleDateString("pl-PL")
+    }
+  ],
+
+  members: [
+    {
+      id: 1,
+      name: "Członek MDP",
+      role: "Członek"
+    }
+  ],
+
+  users: [
+    {
+      id: 1,
+      name: "Członek MDP",
+      role: "member"
+    },
+    {
+      id: 2,
+      name: "Opiekun MDP",
+      role: "guardian"
+    },
+    {
+      id: 3,
+      name: "Administrator",
+      role: "admin"
+    }
+  ]
+
+};
+
 
 function loadData(){
 
-  if(!localStorage.getItem("mdp_events")){
-    localStorage.setItem(
-      "mdp_events",
-      JSON.stringify(defaultEvents)
-    );
+  const saved = localStorage.getItem("mdpData");
+
+  if(saved){
+
+    try{
+      return JSON.parse(saved);
+    }catch(e){
+      return JSON.parse(JSON.stringify(defaultData));
+    }
+
   }
 
-  if(!localStorage.getItem("mdp_news")){
-    localStorage.setItem(
-      "mdp_news",
-      JSON.stringify(defaultNews)
-    );
+  return JSON.parse(JSON.stringify(defaultData));
+}
+
+
+let data = loadData();
+
+
+function saveData(){
+  localStorage.setItem("mdpData", JSON.stringify(data));
+}
+
+
+/* =========================================================
+   LOGOWANIE
+========================================================= */
+
+function chooseRole(role){
+
+  currentRole = role;
+
+  document.querySelectorAll(".role-button").forEach(button=>{
+    button.classList.remove("active");
+  });
+
+  const selected = document.querySelector(
+    `.role-button[data-role="${role}"]`
+  );
+
+  if(selected){
+    selected.classList.add("active");
   }
 
-  if(!localStorage.getItem("mdp_members")){
-    localStorage.setItem(
-      "mdp_members",
-      JSON.stringify(defaultMembers)
-    );
-  }
-
+  document.getElementById("loginCode").value = "";
+  document.getElementById("loginError").textContent = "";
 }
 
-function getEvents(){
-  return JSON.parse(
-    localStorage.getItem("mdp_events") || "[]"
-  );
-}
-
-function saveEvents(events){
-  localStorage.setItem(
-    "mdp_events",
-    JSON.stringify(events)
-  );
-}
-
-function getNews(){
-  return JSON.parse(
-    localStorage.getItem("mdp_news") || "[]"
-  );
-}
-
-function saveNews(news){
-  localStorage.setItem(
-    "mdp_news",
-    JSON.stringify(news)
-  );
-}
-
-function getMembers(){
-  return JSON.parse(
-    localStorage.getItem("mdp_members") || "[]"
-  );
-}
-
-function saveMembers(members){
-  localStorage.setItem(
-    "mdp_members",
-    JSON.stringify(members)
-  );
-}
-
-
-/* =====================================
-   LOGIN
-===================================== */
-
-function selectRole(role){
-
-  selectedRole = role;
-
-  document
-    .getElementById("memberRoleBtn")
-    .classList.toggle(
-      "active",
-      role === "member"
-    );
-
-  document
-    .getElementById("guardianRoleBtn")
-    .classList.toggle(
-      "active",
-      role === "guardian"
-    );
-
-}
 
 function login(){
 
-  const code =
-    document
-      .getElementById("loginCode")
-      .value
-      .trim();
+  const code = document.getElementById("loginCode").value.trim();
 
-  if(selectedRole === "member" && code !== MEMBER_CODE){
+  if(code === CODES.member){
 
-    showToast("Nieprawidłowy kod członka MDP.");
+    currentRole = "member";
+
+    currentUser = {
+      name:"Członek MDP",
+      role:"member"
+    };
+
+  }else if(code === CODES.guardian){
+
+    currentRole = "guardian";
+
+    currentUser = {
+      name:"Opiekun MDP",
+      role:"guardian"
+    };
+
+  }else if(code === CODES.admin){
+
+    currentRole = "admin";
+
+    currentUser = {
+      name:"Administrator",
+      role:"admin"
+    };
+
+  }else{
+
+    document.getElementById("loginError").textContent =
+      "Nieprawidłowy kod dostępu.";
+
     return;
-
   }
 
-  if(selectedRole === "guardian" && code !== GUARDIAN_CODE){
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
 
-    showToast("Nieprawidłowy kod opiekuna.");
-    return;
+  document.getElementById("topUserName").textContent =
+    currentUser.name;
 
-  }
+  document.getElementById("topRole").textContent =
+    roleName(currentRole).toUpperCase();
 
-  currentUser = {
-
-    name:
-      selectedRole === "guardian"
-        ? "Opiekun MDP"
-        : "Członek MDP",
-
-    role:selectedRole
-
-  };
-
-  localStorage.setItem(
-    "mdp_session",
-    JSON.stringify(currentUser)
-  );
-
-  document
-    .getElementById("loginScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("app")
-    .classList.remove("hidden");
-
-  initializeApp();
-
+  showPage("home");
 }
+
 
 function logout(){
 
-  localStorage.removeItem("mdp_session");
+  currentUser = {
+    name:"Członek MDP",
+    role:"member"
+  };
 
-  location.reload();
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
 
-}
+  document.getElementById("loginCode").value = "";
 
-function checkSession(){
-
-  const session =
-    localStorage.getItem("mdp_session");
-
-  if(!session){
-    return;
-  }
-
-  try{
-
-    currentUser = JSON.parse(session);
-
-    document
-      .getElementById("loginScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("app")
-      .classList.remove("hidden");
-
-    initializeApp();
-
-  }catch(error){
-
-    localStorage.removeItem("mdp_session");
-
-  }
-
+  chooseRole("member");
 }
 
 
-/* =====================================
-   APP START
-===================================== */
+/* =========================================================
+   ROLE
+========================================================= */
 
-function initializeApp(){
+function roleName(role){
 
-  document.getElementById("topRole").textContent =
-    currentUser.role === "guardian"
-      ? "Opiekun MDP"
-      : "Członek MDP";
-
-  document.getElementById("welcomeName").textContent =
-    currentUser.name;
-
-  document.getElementById("profileName").textContent =
-    currentUser.name;
-
-  document.getElementById("profileRole").textContent =
-    currentUser.role === "guardian"
-      ? "Opiekun MDP"
-      : "Członek MDP";
-
-  document.getElementById("profileAvatar").textContent =
-    getInitials(currentUser.name);
-
-  loadData();
-
-  renderAll();
-
-  setupAdminNavigation();
-
+  if(role === "admin") return "Administrator";
+  if(role === "guardian") return "Opiekun MDP";
+  return "Członek MDP";
 }
 
 
-/* =====================================
+function isGuardian(){
+
+  return currentRole === "guardian" ||
+         currentRole === "admin";
+}
+
+
+function isAdmin(){
+
+  return currentRole === "admin";
+}
+
+
+/* =========================================================
    NAWIGACJA
-===================================== */
+========================================================= */
 
 function showPage(page){
 
-  document
-    .querySelectorAll(".page")
-    .forEach(element => {
-
-      element.classList.remove("active");
-
-    });
-
-  const target =
-    document.getElementById("page-" + page);
-
-  if(target){
-    target.classList.add("active");
-  }
-
-  document
-    .querySelectorAll(".nav-btn")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.page === page
-      );
-
-    });
-
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
+  document.querySelectorAll(".nav-btn").forEach(button=>{
+    button.classList.remove("active");
   });
 
-}
-
-
-/* =====================================
-   ADMIN NAVIGATION
-===================================== */
-
-function setupAdminNavigation(){
-
-  const nav =
-    document.querySelector(".bottom-nav-inner");
-
-  if(
-    currentUser.role === "guardian" &&
-    !document.querySelector('[data-page="admin"]')
-  ){
-
-    const button =
-      document.createElement("button");
-
-    button.className = "nav-btn";
-    button.dataset.page = "admin";
-
-    button.innerHTML =
-      '<span class="nav-icon">🛡️</span>Panel';
-
-    button.onclick =
-      () => showPage("admin");
-
-    nav.appendChild(button);
-
-  }
-
-}
-
-
-/* =====================================
-   RENDER ALL
-===================================== */
-
-function renderAll(){
-
-  renderStats();
-  renderHomeEvent();
-  renderHomeNews();
-  renderEvents();
-  renderNews();
-  renderMembers();
-  renderCalendar();
-
-  if(currentUser.role === "guardian"){
-
-    renderAdminEvents();
-    renderAdminNews();
-    renderAdminMembers();
-
-  }
-
-}
-
-
-/* =====================================
-   STATYSTYKI
-===================================== */
-
-function renderStats(){
-
-  const events =
-    getEvents()
-      .filter(event => isFutureEvent(event));
-
-  const members =
-    getMembers();
-
-  document.getElementById("statEvents").textContent =
-    events.length;
-
-  document.getElementById("statMembers").textContent =
-    members.length;
-
-}
-
-
-/* =====================================
-   HOME EVENT
-===================================== */
-
-function renderHomeEvent(){
-
-  const container =
-    document.getElementById("homeNextEvent");
-
-  const events =
-    getEvents()
-      .filter(event => isFutureEvent(event))
-      .sort(compareEvents);
-
-  if(events.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📅",
-        "Brak nadchodzących zbiórek."
-      );
-
-    return;
-
-  }
-
-  const event = events[0];
-
-  container.innerHTML = `
-
-    <div class="card">
-
-      <div class="event-mini">
-
-        <div class="date-box">
-          <strong>${formatDay(event.date)}</strong>
-          <span>${formatMonthShort(event.date)}</span>
-        </div>
-
-        <div class="event-mini-info">
-
-          <strong>${escapeHTML(event.title)}</strong>
-
-          <p>
-            ${formatDate(event.date)}
-            • ${escapeHTML(event.time)}
-          </p>
-
-          <p>
-            📍 ${escapeHTML(event.place)}
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================
-   HOME NEWS
-===================================== */
-
-function renderHomeNews(){
-
-  const container =
-    document.getElementById("homeNews");
-
-  const news =
-    getNews()
-      .sort((a,b) =>
-        new Date(b.date) -
-        new Date(a.date)
-      );
-
-  if(news.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📢",
-        "Brak ogłoszeń."
-      );
-
-    return;
-
-  }
-
-  const item = news[0];
-
-  container.innerHTML = `
-
-    <div class="news-card">
-
-      <div class="news-date">
-        ${formatNewsDate(item.date)}
-      </div>
-
-      <h3>
-        ${escapeHTML(item.title)}
-      </h3>
-
-      <p>
-        ${escapeHTML(item.content)}
-      </p>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================
-   EVENTS
-===================================== */
-
-function renderEvents(){
-
-  const container =
-    document.getElementById("eventsList");
-
-  const events =
-    getEvents()
-      .sort(compareEvents);
-
-  if(events.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📅",
-        "Nie ma jeszcze żadnych zbiórek."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    events.map(event => {
-
-      const attendance =
-        event.attendance &&
-        event.attendance[currentUser.name]
-          ? event.attendance[currentUser.name]
-          : "";
-
-      return `
-
-        <div class="event-card">
-
-          <div class="event-top">
-
-            <div class="event-date">
-              <strong>${formatDay(event.date)}</strong>
-              <span>${formatMonthShort(event.date)}</span>
-            </div>
-
-            <div class="event-info">
-
-              <h3>
-                ${escapeHTML(event.title)}
-              </h3>
-
-              <div class="event-meta">
-
-                🕐 ${escapeHTML(event.time)}
-                <br>
-
-                📍 ${escapeHTML(event.place)}
-                <br>
-
-                📅 ${formatDate(event.date)}
-
-              </div>
-
-            </div>
-
-          </div>
-
-          ${
-            event.description
-              ? `
-                <div class="event-description">
-                  ${escapeHTML(event.description)}
-                </div>
-              `
-              : ""
-          }
-
-          ${
-            currentUser.role === "member"
-              ? `
-
-                <div class="attendance">
-
-                  <button
-                    class="${attendance === "yes" ? "selected yes" : ""}"
-                    onclick="setAttendance(${event.id},'yes')"
-                  >
-                    ✅ Będę
-                  </button>
-
-                  <button
-                    class="${attendance === "maybe" ? "selected maybe" : ""}"
-                    onclick="setAttendance(${event.id},'maybe')"
-                  >
-                    ❓ Nie wiem
-                  </button>
-
-                  <button
-                    class="${attendance === "no" ? "selected no" : ""}"
-                    onclick="setAttendance(${event.id},'no')"
-                  >
-                    ❌ Nie będę
-                  </button>
-
-                </div>
-
-              `
-              : ""
-          }
-
-          ${
-            currentUser.role === "guardian"
-              ? renderAttendanceSummary(event)
-              : ""
-          }
-
-        </div>
-
-      `;
-
-    }).join("");
-
-}
-
-
-/* =====================================
-   ATTENDANCE
-===================================== */
-
-function setAttendance(eventId,status){
-
-  const events =
-    getEvents();
-
-  const event =
-    events.find(
-      item => item.id === eventId
-    );
-
-  if(!event){
-    return;
-  }
-
-  if(!event.attendance){
-    event.attendance = {};
-  }
-
-  event.attendance[currentUser.name] =
-    status;
-
-  saveEvents(events);
-
-  renderEvents();
-
-  showToast(
-    status === "yes"
-      ? "Zapisano: Będę"
-      : status === "maybe"
-        ? "Zapisano: Nie wiem"
-        : "Zapisano: Nie będę"
+  const active = document.querySelector(
+    `.nav-btn[data-page="${page}"]`
   );
 
+  if(active){
+    active.classList.add("active");
+  }
+
+  if(page === "home") renderHome();
+  if(page === "events") renderEvents();
+  if(page === "news") renderNews();
+  if(page === "members") renderMembers();
+  if(page === "profile") renderProfile();
+
 }
 
-function renderAttendanceSummary(event){
 
-  const attendance =
-    event.attendance || {};
+/* =========================================================
+   HOME
+========================================================= */
 
-  const values =
-    Object.values(attendance);
+function renderHome(){
 
-  const yes =
-    values.filter(x => x === "yes").length;
+  const nextEvent = [...data.events]
+    .sort((a,b)=>
+      new Date(a.date + "T" + a.time) -
+      new Date(b.date + "T" + b.time)
+    )
+    .find(event=>
+      new Date(event.date + "T" + event.time) >= new Date()
+    );
 
-  const maybe =
-    values.filter(x => x === "maybe").length;
+  const latestNews = data.news[data.news.length - 1];
 
-  const no =
-    values.filter(x => x === "no").length;
+  let html = `
 
-  return `
-
-    <div style="
-      margin-top:14px;
-      padding-top:12px;
-      border-top:1px solid #292929;
-      color:#999;
-      font-size:11px;
-      line-height:1.8;
-    ">
-
-      Obecność:
-      <span style="color:#71dda4">Będę: ${yes}</span>
-      •
-      <span style="color:#e8ce72">Nie wiem: ${maybe}</span>
-      •
-      <span style="color:#ff9297">Nie będę: ${no}</span>
-
+    <div class="greeting">
+      <small>Witaj ponownie 👋</small>
+      <h1>${escapeHtml(currentUser.name)}</h1>
     </div>
 
   `;
 
-}
 
-
-/* =====================================
-   NEWS
-===================================== */
-
-function renderNews(){
-
-  const container =
-    document.getElementById("newsList");
-
-  const news =
-    getNews()
-      .sort((a,b) =>
-        new Date(b.date) -
-        new Date(a.date)
-      );
-
-  if(news.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📢",
-        "Brak ogłoszeń."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    news.map(item => `
-
-      <div class="news-card">
-
-        <div class="news-date">
-          ${formatNewsDate(item.date)}
-        </div>
-
-        <h3>
-          ${escapeHTML(item.title)}
-        </h3>
-
-        <p>
-          ${escapeHTML(item.content)}
-        </p>
-
-      </div>
-
-    `).join("");
-
-}
-
-
-/* =====================================
-   MEMBERS
-===================================== */
-
-function renderMembers(){
-
-  const container =
-    document.getElementById("membersList");
-
-  const members =
-    getMembers();
-
-  if(members.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "👥",
-        "Brak członków."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    members.map(member => `
-
-      <div class="member-card">
-
-        <div class="avatar">
-          ${getInitials(member.name)}
-        </div>
-
-        <div class="member-info">
-
-          <strong>
-            ${escapeHTML(member.name)}
-          </strong>
-
-          <span>
-            ${escapeHTML(member.function)}
-          </span>
-
-        </div>
-
-      </div>
-
-    `).join("");
-
-}
-
-
-/* =====================================
-   CALENDAR
-===================================== */
-
-function renderCalendar(){
-
-  const year =
-    calendarDate.getFullYear();
-
-  const month =
-    calendarDate.getMonth();
-
-  const title =
-    document.getElementById("calendarTitle");
-
-  const grid =
-    document.getElementById("calendarGrid");
-
-  const monthNames = [
-    "Styczeń",
-    "Luty",
-    "Marzec",
-    "Kwiecień",
-    "Maj",
-    "Czerwiec",
-    "Lipiec",
-    "Sierpień",
-    "Wrzesień",
-    "Październik",
-    "Listopad",
-    "Grudzień"
-  ];
-
-  title.textContent =
-    `${monthNames[month]} ${year}`;
-
-  const names = [
-    "Pn",
-    "Wt",
-    "Śr",
-    "Cz",
-    "Pt",
-    "Sb",
-    "Nd"
-  ];
-
-  let html =
-    names.map(name =>
-      `<div class="day-name">${name}</div>`
-    ).join("");
-
-  const firstDay =
-    new Date(year,month,1).getDay();
-
-  const mondayIndex =
-    firstDay === 0
-      ? 6
-      : firstDay - 1;
-
-  const daysInMonth =
-    new Date(year,month + 1,0).getDate();
-
-  for(let i=0;i<mondayIndex;i++){
-
-    html +=
-      `<div class="day empty"></div>`;
-
-  }
-
-  const events =
-    getEvents();
-
-  const today =
-    new Date();
-
-  for(let day=1;day<=daysInMonth;day++){
-
-    const dateString =
-      `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-
-    const isToday =
-      today.getFullYear() === year &&
-      today.getMonth() === month &&
-      today.getDate() === day;
-
-    const hasEvent =
-      events.some(
-        event => event.date === dateString
-      );
+  if(nextEvent){
 
     html += `
 
-      <div class="day ${isToday ? "today" : ""}">
+      <div class="hero">
 
-        <div class="day-number">
-          ${day}
+        <div class="hero-label">
+          Najbliższa zbiórka
         </div>
 
-        ${
-          hasEvent
-            ? `<div class="day-event"></div>`
-            : ""
-        }
+        <h2>${escapeHtml(nextEvent.title)}</h2>
+
+        <p>
+          📅 ${formatDate(nextEvent.date)}
+          • ⏰ ${escapeHtml(nextEvent.time)}
+        </p>
+
+        <p>
+          📍 ${escapeHtml(nextEvent.place)}
+        </p>
+
+        <div class="event-actions">
+
+          <button class="btn" onclick="showPage('events')">
+            Zobacz szczegóły
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }else{
+
+    html += `
+
+      <div class="hero">
+
+        <div class="hero-label">
+          MDP OSP Wiesiółka
+        </div>
+
+        <h2>Brak zaplanowanych zbiórek</h2>
+
+        <p>
+          Gdy opiekun doda nową zbiórkę, pojawi się tutaj.
+        </p>
 
       </div>
 
@@ -2225,69 +1113,934 @@ function renderCalendar(){
 
   }
 
-  grid.innerHTML = html;
 
+  html += `
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">📅</div>
+        <div class="card-number">${data.events.length}</div>
+        <div class="card-label">Zbiórek</div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📢</div>
+        <div class="card-number">${data.news.length}</div>
+        <div class="card-label">Ogłoszeń</div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <div class="card-number">${data.members.length}</div>
+        <div class="card-label">Członków</div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🧑‍🚒</div>
+        <div class="card-number">
+          ${data.users.filter(u=>u.role==="guardian").length}
+        </div>
+        <div class="card-label">Opiekunów</div>
+      </div>
+
+    </div>
+
+  `;
+
+
+  html += `
+
+    <div class="section-title">
+      <h2>Najnowsze ogłoszenie</h2>
+      <span>Informacje</span>
+    </div>
+
+  `;
+
+
+  if(latestNews){
+
+    html += `
+
+      <div class="news">
+
+        <div class="news-date">
+          ${escapeHtml(latestNews.date)}
+        </div>
+
+        <h3>${escapeHtml(latestNews.title)}</h3>
+
+        <p>${escapeHtml(latestNews.text)}</p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  if(isGuardian()){
+
+    html += `
+
+      <div class="section-title">
+        <h2>Panel opiekuna</h2>
+      </div>
+
+      <div class="admin-box">
+
+        <div class="admin-title">
+          <span>🧑‍🚒</span>
+          <h3>Funkcje opiekuna</h3>
+        </div>
+
+        <div class="event-actions">
+
+          <button class="btn red" onclick="openEventModal()">
+            ➕ Dodaj zbiórkę
+          </button>
+
+          <button class="btn" onclick="openNewsModal()">
+            📢 Dodaj ogłoszenie
+          </button>
+
+          <button class="btn" onclick="showPage('members')">
+            👥 Zarządzaj MDP
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  if(isAdmin()){
+
+    html += `
+
+      <div class="section-title">
+        <h2>Panel administratora</h2>
+      </div>
+
+      <div class="admin-box">
+
+        <div class="admin-title">
+          <span>🛡️</span>
+          <h3>Administracja</h3>
+        </div>
+
+        <p style="color:#999;font-size:13px">
+          Administrator ma pełny dostęp do zarządzania aplikacją.
+        </p>
+
+        <div class="event-actions">
+
+          <button class="btn red" onclick="openAdminPanel()">
+            ⚙️ Panel administratora
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
-function changeMonth(direction){
 
-  calendarDate.setMonth(
-    calendarDate.getMonth() + direction
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function renderEvents(){
+
+  let html = `
+
+    <div class="section-title">
+
+      <h2>Zbiórki</h2>
+
+      <span>
+        ${data.events.length}
+      </span>
+
+    </div>
+
+  `;
+
+
+  if(isGuardian()){
+
+    html += `
+
+      <button
+        class="btn red"
+        onclick="openEventModal()"
+        style="width:100%;margin-bottom:14px"
+      >
+        ➕ Dodaj nową zbiórkę
+      </button>
+
+    `;
+
+  }
+
+
+  const events = [...data.events].sort(
+    (a,b)=>
+      new Date(a.date+"T"+a.time) -
+      new Date(b.date+"T"+b.time)
   );
 
-  renderCalendar();
 
+  if(events.length === 0){
+
+    html += `
+      <div class="empty">
+        Brak zaplanowanych zbiórek.
+      </div>
+    `;
+
+  }
+
+
+  events.forEach(event=>{
+
+    const myAttendance =
+      event.attendance?.[currentUser.name] || "";
+
+    html += `
+
+      <div class="event">
+
+        <div class="event-top">
+
+          <div>
+
+            <div class="event-date">
+              ${formatDate(event.date)}
+              • ${escapeHtml(event.time)}
+            </div>
+
+            <h3>${escapeHtml(event.title)}</h3>
+
+          </div>
+
+        </div>
+
+        <p>📍 ${escapeHtml(event.place)}</p>
+
+        <p>${escapeHtml(event.description || "")}</p>
+
+        <div class="event-actions">
+
+          <button
+            class="btn ${myAttendance==="Będę"?"green":""}"
+            onclick="setAttendance(${event.id},'Będę')"
+          >
+            ✅ Będę
+          </button>
+
+          <button
+            class="btn ${myAttendance==="Nie wiem"?"yellow":""}"
+            onclick="setAttendance(${event.id},'Nie wiem')"
+          >
+            🤔 Nie wiem
+          </button>
+
+          <button
+            class="btn ${myAttendance==="Nie będę"?"danger":""}"
+            onclick="setAttendance(${event.id},'Nie będę')"
+          >
+            ❌ Nie będę
+          </button>
+
+        </div>
+
+        ${
+          myAttendance
+          ? `<p style="color:#aaa;margin-top:12px">
+              Twoja odpowiedź: <strong>${myAttendance}</strong>
+             </p>`
+          : ""
+        }
+
+    `;
+
+
+    if(isGuardian()){
+
+      html += `
+
+        <div class="event-actions">
+
+          <button
+            class="btn"
+            onclick="showAttendance(${event.id})"
+          >
+            👥 Obecność
+          </button>
+
+          <button
+            class="btn danger"
+            onclick="deleteEvent(${event.id})"
+          >
+            🗑️ Usuń
+          </button>
+
+        </div>
+
+      `;
+
+    }
+
+
+    html += `</div>`;
+
+  });
+
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
 
-/* =====================================
-   ADMIN EVENTS
-===================================== */
+function setAttendance(eventId,status){
+
+  const event = data.events.find(e=>e.id === eventId);
+
+  if(!event) return;
+
+  if(!event.attendance){
+    event.attendance = {};
+  }
+
+  event.attendance[currentUser.name] = status;
+
+  saveData();
+
+  renderEvents();
+}
+
+
+function showAttendance(eventId){
+
+  const event = data.events.find(e=>e.id===eventId);
+
+  if(!event) return;
+
+  let html = "";
+
+  const attendance = event.attendance || {};
+
+  const entries = Object.entries(attendance);
+
+  if(entries.length === 0){
+
+    html = `
+      <div class="empty">
+        Nikt jeszcze nie zaznaczył obecności.
+      </div>
+    `;
+
+  }else{
+
+    entries.forEach(([name,status])=>{
+
+      html += `
+
+        <div class="member">
+
+          <div class="member-avatar">
+            ${status==="Będę"?"✓":status==="Nie będę"?"×":"?"}
+          </div>
+
+          <div>
+
+            <div class="member-name">
+              ${escapeHtml(name)}
+            </div>
+
+            <div class="member-role">
+              ${escapeHtml(status)}
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    });
+
+  }
+
+  openModal(
+    "Obecność — " + event.title,
+    html
+  );
+}
+
+
+function deleteEvent(id){
+
+  if(!confirm("Usunąć tę zbiórkę?")) return;
+
+  data.events = data.events.filter(e=>e.id!==id);
+
+  saveData();
+
+  renderEvents();
+}
+
+
+/* =========================================================
+   NEWS
+========================================================= */
+
+function renderNews(){
+
+  let html = `
+
+    <div class="section-title">
+      <h2>Ogłoszenia</h2>
+      <span>${data.news.length}</span>
+    </div>
+
+  `;
+
+
+  if(isGuardian()){
+
+    html += `
+
+      <button
+        class="btn red"
+        onclick="openNewsModal()"
+        style="width:100%;margin-bottom:14px"
+      >
+        ➕ Dodaj ogłoszenie
+      </button>
+
+    `;
+
+  }
+
+
+  const news = [...data.news].reverse();
+
+
+  if(news.length === 0){
+
+    html += `
+      <div class="empty">
+        Brak ogłoszeń.
+      </div>
+    `;
+
+  }
+
+
+  news.forEach(item=>{
+
+    html += `
+
+      <div class="news">
+
+        <div class="news-date">
+          ${escapeHtml(item.date)}
+        </div>
+
+        <h3>${escapeHtml(item.title)}</h3>
+
+        <p>${escapeHtml(item.text)}</p>
+
+    `;
+
+
+    if(isGuardian()){
+
+      html += `
+
+        <div class="event-actions">
+
+          <button
+            class="btn danger"
+            onclick="deleteNews(${item.id})"
+          >
+            🗑️ Usuń
+          </button>
+
+        </div>
+
+      `;
+
+    }
+
+
+    html += `</div>`;
+
+  });
+
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+
+function deleteNews(id){
+
+  if(!confirm("Usunąć ogłoszenie?")) return;
+
+  data.news = data.news.filter(n=>n.id!==id);
+
+  saveData();
+
+  renderNews();
+}
+
+
+/* =========================================================
+   MEMBERS
+========================================================= */
+
+function renderMembers(){
+
+  let html = `
+
+    <div class="section-title">
+      <h2>Członkowie MDP</h2>
+      <span>${data.members.length}</span>
+    </div>
+
+  `;
+
+
+  if(isGuardian()){
+
+    html += `
+
+      <button
+        class="btn red"
+        onclick="openMemberModal()"
+        style="width:100%;margin-bottom:14px"
+      >
+        ➕ Dodaj członka
+      </button>
+
+    `;
+
+  }
+
+
+  data.members.forEach(member=>{
+
+    html += `
+
+      <div class="member">
+
+        <div class="member-avatar">
+          ${getInitials(member.name)}
+        </div>
+
+        <div style="flex:1">
+
+          <div class="member-name">
+            ${escapeHtml(member.name)}
+          </div>
+
+          <div class="member-role">
+            ${escapeHtml(member.role)}
+          </div>
+
+        </div>
+
+    `;
+
+
+    if(isGuardian()){
+
+      html += `
+
+        <button
+          class="btn danger"
+          onclick="deleteMember(${member.id})"
+        >
+          🗑️
+        </button>
+
+      `;
+
+    }
+
+
+    html += `</div>`;
+
+  });
+
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+
+function deleteMember(id){
+
+  if(!confirm("Usunąć członka?")) return;
+
+  data.members = data.members.filter(m=>m.id!==id);
+
+  saveData();
+
+  renderMembers();
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+function renderProfile(){
+
+  let role = roleName(currentRole);
+
+  let html = `
+
+    <div class="section-title">
+      <h2>Mój profil</h2>
+    </div>
+
+    <div class="profile-head">
+
+      <div class="avatar">
+        ${getInitials(currentUser.name)}
+      </div>
+
+      <h2>${escapeHtml(currentUser.name)}</h2>
+
+      <p>${escapeHtml(role)}</p>
+
+    </div>
+
+    <div class="profile-info">
+
+      <div class="info-row">
+        <span>Rola</span>
+        <strong>${escapeHtml(role)}</strong>
+      </div>
+
+      <div class="info-row">
+        <span>Status</span>
+        <strong>Aktywne</strong>
+      </div>
+
+    </div>
+
+  `;
+
+
+  if(currentRole === "member"){
+
+    html += `
+
+      <div class="section-title">
+        <h2>Uprawnienia</h2>
+      </div>
+
+      <div class="card">
+
+        <p style="color:#aaa;font-size:13px;line-height:1.6">
+          Jako członek MDP możesz przeglądać zbiórki,
+          odpowiadać na obecność, czytać ogłoszenia
+          i przeglądać członków drużyny.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  if(currentRole === "guardian"){
+
+    html += `
+
+      <div class="section-title">
+        <h2>Panel opiekuna</h2>
+      </div>
+
+      <div class="admin-box">
+
+        <p style="color:#aaa;font-size:13px;line-height:1.6">
+          Jako opiekun możesz zarządzać zbiórkami,
+          ogłoszeniami, członkami MDP oraz sprawdzać
+          obecność na zbiórkach.
+        </p>
+
+        <div class="event-actions">
+
+          <button class="btn red" onclick="openEventModal()">
+            ➕ Zbiórka
+          </button>
+
+          <button class="btn" onclick="openNewsModal()">
+            📢 Ogłoszenie
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  if(currentRole === "admin"){
+
+    html += `
+
+      <div class="section-title">
+        <h2>Administrator</h2>
+      </div>
+
+      <div class="admin-box">
+
+        <p style="color:#aaa;font-size:13px;line-height:1.6">
+          Masz pełne uprawnienia do zarządzania aplikacją,
+          użytkownikami, członkami, zbiórkami i ogłoszeniami.
+        </p>
+
+        <button
+          class="btn red"
+          onclick="openAdminPanel()"
+        >
+          ⚙️ Otwórz panel administratora
+        </button>
+
+      </div>
+
+    `;
+
+  }
+
+
+  html += `
+
+    <button
+      class="btn danger"
+      onclick="logout()"
+      style="width:100%;margin-top:18px"
+    >
+      🚪 Wyloguj się
+    </button>
+
+  `;
+
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+
+/* =========================================================
+   ADMIN PANEL
+========================================================= */
+
+function openAdminPanel(){
+
+  let html = `
+
+    <div class="admin-box">
+
+      <div class="admin-title">
+        <span>👥</span>
+        <h3>Użytkownicy</h3>
+      </div>
+
+      <p style="color:#888;font-size:12px">
+        ${data.users.length} kont w systemie
+      </p>
+
+      <div class="event-actions">
+
+        <button class="btn red" onclick="openUserModal()">
+          ➕ Dodaj konto
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="admin-box">
+
+      <div class="admin-title">
+        <span>📅</span>
+        <h3>Zbiórki</h3>
+      </div>
+
+      <p style="color:#888;font-size:12px">
+        ${data.events.length} zapisanych zbiórek
+      </p>
+
+      <button
+        class="btn"
+        onclick="closeModal();showPage('events')"
+      >
+        Zarządzaj zbiórkami
+      </button>
+
+    </div>
+
+    <div class="admin-box">
+
+      <div class="admin-title">
+        <span>📢</span>
+        <h3>Ogłoszenia</h3>
+      </div>
+
+      <p style="color:#888;font-size:12px">
+        ${data.news.length} zapisanych ogłoszeń
+      </p>
+
+      <button
+        class="btn"
+        onclick="closeModal();showPage('news')"
+      >
+        Zarządzaj ogłoszeniami
+      </button>
+
+    </div>
+
+    <div class="admin-box">
+
+      <div class="admin-title">
+        <span>👨‍🚒</span>
+        <h3>Członkowie</h3>
+      </div>
+
+      <p style="color:#888;font-size:12px">
+        ${data.members.length} członków MDP
+      </p>
+
+      <button
+        class="btn"
+        onclick="closeModal();showPage('members')"
+      >
+        Zarządzaj członkami
+      </button>
+
+    </div>
+
+    <div class="admin-box">
+
+      <div class="admin-title">
+        <span>ℹ️</span>
+        <h3>Informacje techniczne</h3>
+      </div>
+
+      <p style="color:#888;font-size:12px;line-height:1.5">
+        Obecna wersja przechowuje dane lokalnie na urządzeniu.
+        W kolejnym etapie można podłączyć wspólną bazę danych,
+        aby zmiany były widoczne na wszystkich telefonach.
+      </p>
+
+    </div>
+
+  `;
+
+  openModal("Panel administratora",html);
+}
+
+
+/* =========================================================
+   MODAL — ZBIÓRKA
+========================================================= */
+
+function openEventModal(){
+
+  const html = `
+
+    <div class="form-grid">
+
+      <input
+        id="eventTitle"
+        class="input"
+        placeholder="Nazwa zbiórki"
+      >
+
+      <input
+        id="eventDate"
+        class="input"
+        type="date"
+      >
+
+      <input
+        id="eventTime"
+        class="input"
+        type="time"
+      >
+
+      <input
+        id="eventPlace"
+        class="input"
+        placeholder="Miejsce"
+        value="Remiza OSP Wiesiółka"
+      >
+
+      <textarea
+        id="eventDescription"
+        class="input"
+        placeholder="Opis zbiórki"
+      ></textarea>
+
+      <button
+        class="btn red"
+        onclick="addEvent()"
+      >
+        Dodaj zbiórkę
+      </button>
+
+    </div>
+
+  `;
+
+  openModal("Nowa zbiórka",html);
+}
+
 
 function addEvent(){
 
   const title =
-    document
-      .getElementById("eventTitle")
-      .value
-      .trim();
+    document.getElementById("eventTitle").value.trim();
 
   const date =
-    document
-      .getElementById("eventDate")
-      .value;
+    document.getElementById("eventDate").value;
 
   const time =
-    document
-      .getElementById("eventTime")
-      .value;
+    document.getElementById("eventTime").value;
 
   const place =
-    document
-      .getElementById("eventPlace")
-      .value
-      .trim();
+    document.getElementById("eventPlace").value.trim();
 
   const description =
-    document
-      .getElementById("eventDescription")
-      .value
-      .trim();
+    document.getElementById("eventDescription").value.trim();
+
 
   if(!title || !date || !time || !place){
 
-    showToast(
-      "Uzupełnij nazwę, datę, godzinę i miejsce."
-    );
+    alert("Uzupełnij nazwę, datę, godzinę i miejsce.");
 
     return;
-
   }
 
-  const events =
-    getEvents();
 
-  events.push({
+  data.events.push({
 
     id:Date.now(),
 
@@ -2305,592 +2058,366 @@ function addEvent(){
 
   });
 
-  saveEvents(events);
 
-  document.getElementById("eventTitle").value = "";
-  document.getElementById("eventDate").value = "";
-  document.getElementById("eventTime").value = "";
-  document.getElementById("eventPlace").value = "";
-  document.getElementById("eventDescription").value = "";
+  saveData();
 
-  renderAll();
+  closeModal();
 
-  showToast("Zbiórka została dodana.");
-
-}
-
-function renderAdminEvents(){
-
-  const container =
-    document.getElementById("adminEventsList");
-
-  const events =
-    getEvents()
-      .sort(compareEvents);
-
-  if(events.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📅",
-        "Brak zbiórek."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    events.map(event => `
-
-      <div class="card">
-
-        <strong>
-          ${escapeHTML(event.title)}
-        </strong>
-
-        <p style="
-          color:#888;
-          font-size:11px;
-          margin:7px 0 12px;
-        ">
-
-          ${formatDate(event.date)}
-          • ${escapeHTML(event.time)}
-          • ${escapeHTML(event.place)}
-
-        </p>
-
-        <button
-          class="delete-btn"
-          onclick="deleteEvent(${event.id})"
-        >
-          Usuń zbiórkę
-        </button>
-
-      </div>
-
-    `).join("");
-
-}
-
-function deleteEvent(id){
-
-  if(!confirm("Usunąć tę zbiórkę?")){
-    return;
-  }
-
-  const events =
-    getEvents()
-      .filter(event => event.id !== id);
-
-  saveEvents(events);
-
-  renderAll();
-
-  showToast("Zbiórka została usunięta.");
-
+  showPage("events");
 }
 
 
-/* =====================================
-   ADMIN NEWS
-===================================== */
-
-function addNews(){
-
-  const title =
-    document
-      .getElementById("newsTitle")
-      .value
-      .trim();
-
-  const content =
-    document
-      .getElementById("newsContent")
-      .value
-      .trim();
-
-  if(!title || !content){
-
-    showToast(
-      "Wpisz tytuł i treść ogłoszenia."
-    );
-
-    return;
-
-  }
-
-  const news =
-    getNews();
-
-  news.push({
-
-    id:Date.now(),
-
-    title,
-
-    content,
-
-    date:new Date().toISOString()
-
-  });
-
-  saveNews(news);
-
-  document.getElementById("newsTitle").value = "";
-  document.getElementById("newsContent").value = "";
-
-  renderAll();
-
-  showToast(
-    "Ogłoszenie zostało opublikowane."
-  );
-
-}
-
-function renderAdminNews(){
-
-  const container =
-    document.getElementById("adminNewsList");
-
-  const news =
-    getNews()
-      .sort((a,b) =>
-        new Date(b.date) -
-        new Date(a.date)
-      );
-
-  if(news.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "📢",
-        "Brak ogłoszeń."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    news.map(item => `
-
-      <div class="card">
-
-        <strong>
-          ${escapeHTML(item.title)}
-        </strong>
-
-        <p style="
-          color:#888;
-          font-size:11px;
-          margin:7px 0 12px;
-        ">
-          ${formatNewsDate(item.date)}
-        </p>
-
-        <button
-          class="delete-btn"
-          onclick="deleteNews(${item.id})"
-        >
-          Usuń ogłoszenie
-        </button>
-
-      </div>
-
-    `).join("");
-
-}
-
-function deleteNews(id){
-
-  if(!confirm("Usunąć to ogłoszenie?")){
-    return;
-  }
-
-  const news =
-    getNews()
-      .filter(item => item.id !== id);
-
-  saveNews(news);
-
-  renderAll();
-
-  showToast(
-    "Ogłoszenie zostało usunięte."
-  );
-
-}
-
-
-/* =====================================
-   ADMIN MEMBERS
-===================================== */
-
-function addMember(){
-
-  const name =
-    document
-      .getElementById("memberName")
-      .value
-      .trim();
-
-  const memberFunction =
-    document
-      .getElementById("memberFunction")
-      .value
-      .trim();
-
-  if(!name || !memberFunction){
-
-    showToast(
-      "Wpisz imię, nazwisko i funkcję."
-    );
-
-    return;
-
-  }
-
-  const members =
-    getMembers();
-
-  members.push({
-
-    id:Date.now(),
-
-    name,
-
-    function:memberFunction
-
-  });
-
-  saveMembers(members);
-
-  document.getElementById("memberName").value = "";
-  document.getElementById("memberFunction").value = "";
-
-  renderAll();
-
-  showToast(
-    "Członek został dodany."
-  );
-
-}
-
-function renderAdminMembers(){
-
-  const container =
-    document.getElementById("adminMembersList");
-
-  const members =
-    getMembers();
-
-  if(members.length === 0){
-
-    container.innerHTML =
-      emptyHTML(
-        "👥",
-        "Brak członków."
-      );
-
-    return;
-
-  }
-
-  container.innerHTML =
-    members.map(member => `
-
-      <div class="card">
-
-        <div style="
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:10px;
-        ">
-
-          <div>
-
-            <strong>
-              ${escapeHTML(member.name)}
-            </strong>
-
-            <p style="
-              color:#888;
-              font-size:11px;
-              margin-top:4px;
-            ">
-              ${escapeHTML(member.function)}
-            </p>
-
-          </div>
-
-          <button
-            class="delete-btn"
-            onclick="deleteMember(${member.id})"
-          >
-            Usuń
-          </button>
-
-        </div>
-
-      </div>
-
-    `).join("");
-
-}
-
-function deleteMember(id){
-
-  if(!confirm("Usunąć tego członka?")){
-    return;
-  }
-
-  const members =
-    getMembers()
-      .filter(member => member.id !== id);
-
-  saveMembers(members);
-
-  renderAll();
-
-  showToast(
-    "Członek został usunięty."
-  );
-
-}
-
-
-/* =====================================
-   RESET
-===================================== */
-
-function resetAppData(){
-
-  if(
-    !confirm(
-      "Czy na pewno przywrócić dane demonstracyjne?"
-    )
-  ){
-    return;
-  }
-
-  localStorage.removeItem("mdp_events");
-  localStorage.removeItem("mdp_news");
-  localStorage.removeItem("mdp_members");
-
-  loadData();
-
-  renderAll();
-
-  showToast(
-    "Przywrócono dane demonstracyjne."
-  );
-
-}
-
-
-/* =====================================
-   HELPERS
-===================================== */
-
-function getInitials(name){
-
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0,2)
-    .map(word => word[0])
-    .join("")
-    .toUpperCase();
-
-}
-
-function formatDay(date){
-
-  return new Date(date + "T00:00:00")
-    .getDate();
-
-}
-
-function formatMonthShort(date){
-
-  const months = [
-    "sty",
-    "lut",
-    "mar",
-    "kwi",
-    "maj",
-    "cze",
-    "lip",
-    "sie",
-    "wrz",
-    "paź",
-    "lis",
-    "gru"
-  ];
-
-  return months[
-    new Date(date + "T00:00:00")
-      .getMonth()
-  ];
-
-}
-
-function formatDate(date){
-
-  return new Date(date + "T00:00:00")
-    .toLocaleDateString(
-      "pl-PL",
-      {
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric"
-      }
-    );
-
-}
-
-function formatNewsDate(date){
-
-  return new Date(date)
-    .toLocaleDateString(
-      "pl-PL",
-      {
-        day:"2-digit",
-        month:"long",
-        year:"numeric"
-      }
-    );
-
-}
-
-function compareEvents(a,b){
-
-  return new Date(
-    a.date + "T" + a.time
-  ) - new Date(
-    b.date + "T" + b.time
-  );
-
-}
-
-function isFutureEvent(event){
-
-  return new Date(
-    event.date + "T" + event.time
-  ) >= new Date();
-
-}
-
-function emptyHTML(icon,text){
-
-  return `
-
-    <div class="empty">
-
-      <div class="empty-icon">
-        ${icon}
-      </div>
-
-      <p>
-        ${text}
-      </p>
+/* =========================================================
+   MODAL — OGŁOSZENIE
+========================================================= */
+
+function openNewsModal(){
+
+  const html = `
+
+    <div class="form-grid">
+
+      <input
+        id="newsTitle"
+        class="input"
+        placeholder="Tytuł ogłoszenia"
+      >
+
+      <textarea
+        id="newsText"
+        class="input"
+        placeholder="Treść ogłoszenia"
+      ></textarea>
+
+      <button
+        class="btn red"
+        onclick="addNews()"
+      >
+        Dodaj ogłoszenie
+      </button>
 
     </div>
 
   `;
 
-}
-
-function escapeHTML(value){
-
-  return String(value)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-
-}
-
-function showToast(message){
-
-  const toast =
-    document.getElementById("toast");
-
-  toast.textContent =
-    message;
-
-  toast.classList.add("show");
-
-  clearTimeout(
-    window.toastTimer
-  );
-
-  window.toastTimer =
-    setTimeout(() => {
-
-      toast.classList.remove("show");
-
-    },2500);
-
+  openModal("Nowe ogłoszenie",html);
 }
 
 
-/* =====================================
-   ENTER = LOGIN
-===================================== */
+function addNews(){
 
-document
-  .getElementById("loginCode")
-  .addEventListener(
-    "keydown",
-    event => {
+  const title =
+    document.getElementById("newsTitle").value.trim();
 
-      if(event.key === "Enter"){
-        login();
-      }
-
-    }
-  );
+  const text =
+    document.getElementById("newsText").value.trim();
 
 
-/* =====================================
-   START
-===================================== */
+  if(!title || !text){
 
-loadData();
-checkSession();
+    alert("Uzupełnij tytuł i treść.");
+
+    return;
+  }
 
 
-/* =====================================
+  data.news.push({
+
+    id:Date.now(),
+
+    title,
+
+    text,
+
+    date:new Date().toLocaleDateString("pl-PL")
+
+  });
+
+
+  saveData();
+
+  closeModal();
+
+  showPage("news");
+}
+
+
+/* =========================================================
+   MODAL — CZŁONEK
+========================================================= */
+
+function openMemberModal(){
+
+  const html = `
+
+    <div class="form-grid">
+
+      <input
+        id="memberName"
+        class="input"
+        placeholder="Imię i nazwisko"
+      >
+
+      <select id="memberRole" class="input">
+
+        <option value="Członek">Członek</option>
+
+        <option value="Dowódca MDP">
+          Dowódca MDP
+        </option>
+
+        <option value="Zastępca dowódcy">
+          Zastępca dowódcy
+        </option>
+
+      </select>
+
+      <button
+        class="btn red"
+        onclick="addMember()"
+      >
+        Dodaj członka
+      </button>
+
+    </div>
+
+  `;
+
+  openModal("Dodaj członka",html);
+}
+
+
+function addMember(){
+
+  const name =
+    document.getElementById("memberName").value.trim();
+
+  const role =
+    document.getElementById("memberRole").value;
+
+
+  if(!name){
+
+    alert("Podaj imię i nazwisko.");
+
+    return;
+  }
+
+
+  data.members.push({
+
+    id:Date.now(),
+
+    name,
+
+    role
+
+  });
+
+
+  saveData();
+
+  closeModal();
+
+  showPage("members");
+}
+
+
+/* =========================================================
+   MODAL — UŻYTKOWNIK
+========================================================= */
+
+function openUserModal(){
+
+  const html = `
+
+    <div class="form-grid">
+
+      <input
+        id="userName"
+        class="input"
+        placeholder="Imię i nazwisko"
+      >
+
+      <select id="userRole" class="input">
+
+        <option value="member">
+          Członek MDP
+        </option>
+
+        <option value="guardian">
+          Opiekun MDP
+        </option>
+
+        <option value="admin">
+          Administrator
+        </option>
+
+      </select>
+
+      <button
+        class="btn red"
+        onclick="addUser()"
+      >
+        Utwórz konto
+      </button>
+
+    </div>
+
+    <div style="margin-top:20px">
+
+      ${data.users.map(user=>`
+
+        <div class="member">
+
+          <div class="member-avatar">
+            ${getInitials(user.name)}
+          </div>
+
+          <div style="flex:1">
+
+            <div class="member-name">
+              ${escapeHtml(user.name)}
+            </div>
+
+            <div class="member-role">
+              ${escapeHtml(roleName(user.role))}
+            </div>
+
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+
+  `;
+
+  openModal("Zarządzanie kontami",html);
+}
+
+
+function addUser(){
+
+  const name =
+    document.getElementById("userName").value.trim();
+
+  const role =
+    document.getElementById("userRole").value;
+
+
+  if(!name){
+
+    alert("Podaj imię i nazwisko.");
+
+    return;
+  }
+
+
+  data.users.push({
+
+    id:Date.now(),
+
+    name,
+
+    role
+
+  });
+
+
+  saveData();
+
+  openUserModal();
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function openModal(title,content){
+
+  document.getElementById("modalTitle").textContent = title;
+
+  document.getElementById("modalContent").innerHTML = content;
+
+  document.getElementById("modal").classList.remove("hidden");
+}
+
+
+function closeModal(){
+
+  document.getElementById("modal").classList.add("hidden");
+
+}
+
+
+/* =========================================================
+   POMOCNICZE
+========================================================= */
+
+function formatDate(date){
+
+  if(!date) return "";
+
+  const d = new Date(date + "T00:00:00");
+
+  return d.toLocaleDateString("pl-PL",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+  });
+}
+
+
+function getInitials(name){
+
+  if(!name) return "?";
+
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0,2)
+    .map(x=>x[0])
+    .join("")
+    .toUpperCase();
+}
+
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+
+/* =========================================================
    SERVICE WORKER
-===================================== */
+========================================================= */
 
 if("serviceWorker" in navigator){
 
-  window.addEventListener(
-    "load",
-    () => {
+  window.addEventListener("load",()=>{
 
-      navigator.serviceWorker
-        .register("./sw.js")
-        .catch(
-          error =>
-            console.log(
-              "Service Worker error:",
-              error
-            )
+    navigator.serviceWorker
+      .register("./sw.js")
+      .catch(error=>{
+        console.log(
+          "Service Worker error:",
+          error
         );
+      });
 
-    }
-  );
+  });
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
