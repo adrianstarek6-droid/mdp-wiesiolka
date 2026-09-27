@@ -25,7 +25,6 @@
     :root {
       --bg: #090909;
       --card: #151515;
-      --card2: #1b1b1b;
       --border: #292929;
       --text: #ffffff;
       --muted: #9d9d9d;
@@ -48,13 +47,7 @@
         radial-gradient(circle at bottom left, rgba(229,27,35,.07), transparent 35%),
         var(--bg);
       color: var(--text);
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       padding-bottom: 90px;
     }
 
@@ -73,9 +66,7 @@
       display: none !important;
     }
 
-    /* =========================
-       LOGIN
-    ========================= */
+    /* LOGIN */
 
     #loginScreen {
       min-height: 100vh;
@@ -203,6 +194,11 @@
       transform: scale(.98);
     }
 
+    .primary-btn:disabled {
+      cursor: default;
+      opacity: .55;
+    }
+
     .login-error {
       margin-top: 12px;
       color: #ff6b6b;
@@ -211,9 +207,7 @@
       min-height: 18px;
     }
 
-    /* =========================
-       APP
-    ========================= */
+    /* APP */
 
     #app {
       min-height: 100vh;
@@ -294,9 +288,7 @@
       padding: 20px 16px;
     }
 
-    /* =========================
-       HERO
-    ========================= */
+    /* HERO */
 
     .hero {
       border: 1px solid var(--border);
@@ -343,9 +335,7 @@
       line-height: 1.5;
     }
 
-    /* =========================
-       NAV
-    ========================= */
+    /* NAV */
 
     .nav {
       display: flex;
@@ -377,9 +367,11 @@
       border-color: var(--red);
     }
 
-    /* =========================
-       SECTIONS
-    ========================= */
+    /* SECTIONS */
+
+    .page-section {
+      width: 100%;
+    }
 
     .section {
       margin-bottom: 25px;
@@ -410,9 +402,7 @@
       font-size: 12px;
     }
 
-    /* =========================
-       STATS
-    ========================= */
+    /* STATS */
 
     .stats {
       display: grid;
@@ -445,9 +435,7 @@
       margin-top: 2px;
     }
 
-    /* =========================
-       CARDS
-    ========================= */
+    /* CARDS */
 
     .grid {
       display: grid;
@@ -601,9 +589,7 @@
       margin-top: 3px;
     }
 
-    /* =========================
-       ACTIONS
-    ========================= */
+    /* ACTIONS */
 
     .actions {
       display: flex;
@@ -650,9 +636,7 @@
       transform: scale(.98);
     }
 
-    /* =========================
-       FORMS
-    ========================= */
+    /* FORMS */
 
     .form-card {
       background: var(--card);
@@ -674,9 +658,7 @@
       gap: 10px;
     }
 
-    /* =========================
-       ATTENDANCE
-    ========================= */
+    /* ATTENDANCE */
 
     .attendance-box {
       border-top: 1px solid var(--border);
@@ -734,9 +716,7 @@
       color: #ff6666;
     }
 
-    /* =========================
-       NOTIFICATIONS
-    ========================= */
+    /* NOTIFICATIONS */
 
     #notificationBadge {
       display: none;
@@ -785,9 +765,34 @@
       font-size: 20px;
     }
 
-    /* =========================
-       EMPTY / LOADING
-    ========================= */
+    .push-box {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(59,130,246,.12),
+          rgba(229,27,35,.08)
+        ),
+        var(--card);
+      border: 1px solid var(--border);
+      border-radius: 19px;
+      padding: 17px;
+      margin-bottom: 14px;
+    }
+
+    .push-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .push-text {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 13px;
+    }
+
+    /* EMPTY */
 
     .empty {
       border: 1px dashed #303030;
@@ -806,9 +811,7 @@
       font-size: 13px;
     }
 
-    /* =========================
-       TOAST
-    ========================= */
+    /* TOAST */
 
     #toast {
       position: fixed;
@@ -841,9 +844,7 @@
       border-color: rgba(229,27,35,.5);
     }
 
-    /* =========================
-       FOOTER
-    ========================= */
+    /* FOOTER */
 
     footer {
       text-align: center;
@@ -851,10 +852,6 @@
       font-size: 10px;
       padding: 25px 10px 10px;
     }
-
-    /* =========================
-       DESKTOP
-    ========================= */
 
     @media (min-width: 700px) {
       .container {
@@ -898,15 +895,17 @@
       .two {
         grid-template-columns: 1fr;
       }
+
+      .attendance-buttons {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- =========================
-       LOGIN
-  ========================= -->
+  <!-- LOGIN -->
 
   <section id="loginScreen">
     <div class="login-wrap">
@@ -948,10 +947,7 @@
         </div>
 
         <div class="field">
-
-          <label for="loginCode">
-            Kod dostępu
-          </label>
+          <label for="loginCode">Kod dostępu</label>
 
           <input
             id="loginCode"
@@ -962,7 +958,6 @@
             placeholder="Wpisz kod"
             onkeydown="if(event.key === 'Enter') login()"
           >
-
         </div>
 
         <button
@@ -982,9 +977,7 @@
   </section>
 
 
-  <!-- =========================
-       APP
-  ========================= -->
+  <!-- APP -->
 
   <main id="app" class="hidden">
 
@@ -1000,9 +993,7 @@
 
           <div class="brand-text">
 
-            <strong>
-              MDP Wiesiółka
-            </strong>
+            <strong>MDP Wiesiółka</strong>
 
             <span id="roleLabel">
               Członek MDP
@@ -1030,9 +1021,7 @@
 
       <section class="hero">
 
-        <small>
-          OSP Wiesiółka
-        </small>
+        <small>OSP Wiesiółka</small>
 
         <h2>
           Witaj w aplikacji MDP 👋
@@ -1105,9 +1094,7 @@
       </nav>
 
 
-      <!-- =========================
-           START
-      ========================= -->
+      <!-- HOME -->
 
       <section
         id="section-home"
@@ -1117,49 +1104,21 @@
         <div class="stats">
 
           <div class="stat">
-            <div class="stat-icon">
-              📅
-            </div>
-
-            <strong id="statEvents">
-              0
-            </strong>
-
-            <span>
-              zbiórek
-            </span>
+            <div class="stat-icon">📅</div>
+            <strong id="statEvents">0</strong>
+            <span>zbiórek</span>
           </div>
 
           <div class="stat">
-
-            <div class="stat-icon">
-              📢
-            </div>
-
-            <strong id="statNews">
-              0
-            </strong>
-
-            <span>
-              ogłoszeń
-            </span>
-
+            <div class="stat-icon">📢</div>
+            <strong id="statNews">0</strong>
+            <span>ogłoszeń</span>
           </div>
 
           <div class="stat">
-
-            <div class="stat-icon">
-              👥
-            </div>
-
-            <strong id="statMembers">
-              0
-            </strong>
-
-            <span>
-              członków
-            </span>
-
+            <div class="stat-icon">👥</div>
+            <strong id="statMembers">0</strong>
+            <span>członków</span>
           </div>
 
         </div>
@@ -1220,9 +1179,7 @@
       </section>
 
 
-      <!-- =========================
-           EVENTS
-      ========================= -->
+      <!-- EVENTS -->
 
       <section
         id="section-events"
@@ -1264,9 +1221,7 @@
       </section>
 
 
-      <!-- =========================
-           NEWS
-      ========================= -->
+      <!-- NEWS -->
 
       <section
         id="section-news"
@@ -1308,9 +1263,7 @@
       </section>
 
 
-      <!-- =========================
-           MEMBERS
-      ========================= -->
+      <!-- MEMBERS -->
 
       <section
         id="section-members"
@@ -1352,9 +1305,7 @@
       </section>
 
 
-      <!-- =========================
-           PROFILE
-      ========================= -->
+      <!-- PROFILE -->
 
       <section
         id="section-profile"
@@ -1426,9 +1377,7 @@
 
           <div class="field">
 
-            <label>
-              Imię
-            </label>
+            <label>Imię</label>
 
             <input
               id="profileFirstName"
@@ -1442,9 +1391,7 @@
 
           <div class="field">
 
-            <label>
-              Nazwisko
-            </label>
+            <label>Nazwisko</label>
 
             <input
               id="profileLastName"
@@ -1458,9 +1405,7 @@
 
           <div class="field">
 
-            <label>
-              Rola
-            </label>
+            <label>Rola</label>
 
             <input
               id="profileRole"
@@ -1495,8 +1440,8 @@
             "
           >
             Profil zapisuje się na tym urządzeniu.
-            Twoje zdjęcie i dane profilu nie są
-            wysyłane do serwera.
+            Zdjęcie i dane profilu nie są wysyłane
+            do serwera.
           </div>
 
         </div>
@@ -1504,9 +1449,7 @@
       </section>
 
 
-      <!-- =========================
-           NOTIFICATIONS
-      ========================= -->
+      <!-- NOTIFICATIONS -->
 
       <section
         id="section-notifications"
@@ -1533,6 +1476,31 @@
           >
             0 nowych
           </div>
+
+        </div>
+
+
+        <!-- PUSH -->
+
+        <div class="push-box">
+
+          <div class="push-title">
+            🔔 Powiadomienia na telefon
+          </div>
+
+          <div class="push-text">
+            Włącz powiadomienia, aby otrzymywać
+            informacje o nowych zbiórkach i ogłoszeniach
+            nawet wtedy, gdy aplikacja jest zamknięta.
+          </div>
+
+          <button
+            id="enablePushButton"
+            class="primary-btn"
+            onclick="enablePushNotifications()"
+          >
+            🔔 Włącz powiadomienia
+          </button>
 
         </div>
 
@@ -1566,9 +1534,7 @@
       </section>
 
 
-      <!-- =========================
-           MANAGEMENT
-      ========================= -->
+      <!-- MANAGEMENT -->
 
       <section
         id="section-management"
@@ -1606,9 +1572,7 @@
 
           <div class="field">
 
-            <label>
-              Tytuł
-            </label>
+            <label>Tytuł</label>
 
             <input
               id="eventTitle"
@@ -1623,9 +1587,7 @@
 
             <div class="field">
 
-              <label>
-                Data
-              </label>
+              <label>Data</label>
 
               <input
                 id="eventDate"
@@ -1638,9 +1600,7 @@
 
             <div class="field">
 
-              <label>
-                Godzina
-              </label>
+              <label>Godzina</label>
 
               <input
                 id="eventTime"
@@ -1655,9 +1615,7 @@
 
           <div class="field">
 
-            <label>
-              Miejsce
-            </label>
+            <label>Miejsce</label>
 
             <input
               id="eventPlace"
@@ -1670,9 +1628,7 @@
 
           <div class="field">
 
-            <label>
-              Opis
-            </label>
+            <label>Opis</label>
 
             <textarea
               id="eventDescription"
@@ -1703,9 +1659,7 @@
 
           <div class="field">
 
-            <label>
-              Tytuł
-            </label>
+            <label>Tytuł</label>
 
             <input
               id="newsTitle"
@@ -1718,9 +1672,7 @@
 
           <div class="field">
 
-            <label>
-              Treść
-            </label>
+            <label>Treść</label>
 
             <textarea
               id="newsBody"
@@ -1751,9 +1703,7 @@
 
           <div class="field">
 
-            <label>
-              Imię i nazwisko
-            </label>
+            <label>Imię i nazwisko</label>
 
             <input
               id="memberName"
@@ -1766,9 +1716,7 @@
 
           <div class="field">
 
-            <label>
-              Rola
-            </label>
+            <label>Rola</label>
 
             <input
               id="memberRole"
@@ -1806,11 +1754,11 @@
   <div id="toast"></div>
 
 
-  <script>
+  <!-- =========================
+       MAIN JAVASCRIPT
+  ========================= -->
 
-    /* =========================
-       STATE
-    ========================= */
+  <script>
 
     let currentRole = "member";
     let authCode = "";
@@ -1824,9 +1772,7 @@
     let notifications = [];
 
 
-    /* =========================
-       ELEMENTS
-    ========================= */
+    /* ELEMENTS */
 
     const loginScreen =
       document.getElementById("loginScreen");
@@ -1841,9 +1787,7 @@
       document.getElementById("loginError");
 
 
-    /* =========================
-       ROLE
-    ========================= */
+    /* ROLE */
 
     function selectRole(role) {
 
@@ -1867,9 +1811,7 @@
     }
 
 
-    /* =========================
-       LOGIN
-    ========================= */
+    /* LOGIN */
 
     async function login() {
 
@@ -1921,7 +1863,6 @@
 
         authCode = code;
 
-
         localStorage.setItem(
           "mdpRole",
           currentRole
@@ -1949,9 +1890,7 @@
     }
 
 
-    /* =========================
-       SHOW APP
-    ========================= */
+    /* SHOW APP */
 
     function showApp() {
 
@@ -1994,17 +1933,16 @@
 
       renderProfile();
 
+      updatePushButton();
+
     }
 
 
-    /* =========================
-       LOGOUT
-    ========================= */
+    /* LOGOUT */
 
     function logout() {
 
       localStorage.removeItem("mdpRole");
-
       localStorage.removeItem("mdpCode");
 
       authCode = "";
@@ -2020,9 +1958,7 @@
     }
 
 
-    /* =========================
-       AUTH HEADERS
-    ========================= */
+    /* AUTH */
 
     function headers() {
 
@@ -2042,9 +1978,7 @@
     }
 
 
-    /* =========================
-       LOAD DATA
-    ========================= */
+    /* LOAD DATA */
 
     async function loadData() {
 
@@ -2075,7 +2009,6 @@
 
         appData = data;
 
-
         renderAll();
 
 
@@ -2092,76 +2025,65 @@
     }
 
 
-    /* =========================
-       RENDER ALL
-    ========================= */
+    /* RENDER ALL */
 
     function renderAll() {
 
       renderStats();
-
       renderHome();
-
       renderEvents();
-
       renderNews();
-
       renderMembers();
-
       createNotifications();
-
       renderProfile();
+      updatePushButton();
 
     }
 
 
-    /* =========================
-       STATS
-    ========================= */
+    /* STATS */
 
     function renderStats() {
 
-      document
-        .getElementById("statEvents")
-        .textContent =
-          appData.events.length;
+      document.getElementById(
+        "statEvents"
+      ).textContent =
+        appData.events.length;
 
 
-      document
-        .getElementById("statNews")
-        .textContent =
-          appData.news.length;
+      document.getElementById(
+        "statNews"
+      ).textContent =
+        appData.news.length;
 
 
-      document
-        .getElementById("statMembers")
-        .textContent =
-          appData.members.length;
+      document.getElementById(
+        "statMembers"
+      ).textContent =
+        appData.members.length;
 
 
-      document
-        .getElementById("eventsCount")
-        .textContent =
-          appData.events.length;
+      document.getElementById(
+        "eventsCount"
+      ).textContent =
+        appData.events.length;
 
 
-      document
-        .getElementById("newsCount")
-        .textContent =
-          appData.news.length;
+      document.getElementById(
+        "newsCount"
+      ).textContent =
+        appData.news.length;
 
 
-      document
-        .getElementById("membersCount")
-        .textContent =
-          appData.members.length;
+      document.getElementById(
+        "membersCount"
+      ).textContent =
+        appData.members.length;
 
     }
 
 
-    /* =========================
-       HOME
-    ========================= */
+    /* HOME */
 
     function renderHome() {
 
@@ -2217,9 +2139,7 @@
     }
 
 
-    /* =========================
-       EVENTS
-    ========================= */
+    /* EVENTS */
 
     function renderEvents() {
 
@@ -2253,9 +2173,7 @@
     }
 
 
-    /* =========================
-       EVENT HTML
-    ========================= */
+    /* EVENT HTML */
 
     function eventHTML(
       event,
@@ -2311,25 +2229,19 @@
             <div class="event-info">
 
               <h3>
-                ${escapeHTML(
-                  event.title
-                )}
+                ${escapeHTML(event.title)}
               </h3>
 
 
               <div class="meta">
 
                 🕐
-                ${escapeHTML(
-                  event.event_time
-                )}
+                ${escapeHTML(event.event_time)}
 
                 <br>
 
                 📍
-                ${escapeHTML(
-                  event.place
-                )}
+                ${escapeHTML(event.place)}
 
               </div>
 
@@ -2342,9 +2254,7 @@
             event.description
               ? `
                 <div class="description">
-                  ${escapeHTML(
-                    event.description
-                  )}
+                  ${escapeHTML(event.description)}
                 </div>
               `
               : ""
@@ -2362,10 +2272,7 @@
 
               <button
                 class="btn green"
-                onclick="setAttendance(
-                  ${event.id},
-                  'yes'
-                )"
+                onclick="setAttendance(${event.id}, 'yes')"
               >
                 ✓ Będę
               </button>
@@ -2373,10 +2280,7 @@
 
               <button
                 class="btn yellow"
-                onclick="setAttendance(
-                  ${event.id},
-                  'maybe'
-                )"
+                onclick="setAttendance(${event.id}, 'maybe')"
               >
                 ? Może
               </button>
@@ -2384,10 +2288,7 @@
 
               <button
                 class="btn red"
-                onclick="setAttendance(
-                  ${event.id},
-                  'no'
-                )"
+                onclick="setAttendance(${event.id}, 'no')"
               >
                 ✕ Nie
               </button>
@@ -2400,17 +2301,11 @@
                 ? `
                   <button
                     class="btn blue"
-                    style="
-                      width:100%;
-                      margin-top:8px
-                    "
-                    onclick="loadAttendance(
-                      ${event.id}
-                    )"
+                    style="width:100%;margin-top:8px"
+                    onclick="loadAttendance(${event.id})"
                   >
                     👥 Pokaż obecność
                   </button>
-
 
                   <div
                     id="attendance-${event.id}"
@@ -2430,9 +2325,7 @@
 
                   <button
                     class="btn red"
-                    onclick="deleteEvent(
-                      ${event.id}
-                    )"
+                    onclick="deleteEvent(${event.id})"
                   >
                     🗑 Usuń zbiórkę
                   </button>
@@ -2449,9 +2342,7 @@
     }
 
 
-    /* =========================
-       NEWS
-    ========================= */
+    /* NEWS */
 
     function renderNews() {
 
@@ -2510,16 +2401,12 @@
 
 
           <h3>
-            ${escapeHTML(
-              item.title
-            )}
+            ${escapeHTML(item.title)}
           </h3>
 
 
           <div class="news-body">
-            ${escapeHTML(
-              item.body
-            )}
+            ${escapeHTML(item.body)}
           </div>
 
 
@@ -2530,9 +2417,7 @@
 
                   <button
                     class="btn red"
-                    onclick="deleteNews(
-                      ${item.id}
-                    )"
+                    onclick="deleteNews(${item.id})"
                   >
                     🗑 Usuń
                   </button>
@@ -2549,9 +2434,7 @@
     }
 
 
-    /* =========================
-       MEMBERS
-    ========================= */
+    /* MEMBERS */
 
     function renderMembers() {
 
@@ -2594,18 +2477,14 @@
                 <div class="member-row">
 
                   <div class="avatar">
-                    ${escapeHTML(
-                      initials
-                    )}
+                    ${escapeHTML(initials)}
                   </div>
 
 
                   <div class="member-info">
 
                     <h3>
-                      ${escapeHTML(
-                        member.name
-                      )}
+                      ${escapeHTML(member.name)}
                     </h3>
 
 
@@ -2628,9 +2507,7 @@
 
                         <button
                           class="btn red"
-                          onclick="deleteMember(
-                            ${member.id}
-                          )"
+                          onclick="deleteMember(${member.id})"
                         >
                           🗑 Usuń
                         </button>
@@ -2650,9 +2527,7 @@
     }
 
 
-    /* =========================
-       PROFILE
-    ========================= */
+    /* PROFILE */
 
     function getProfile() {
 
@@ -2693,10 +2568,7 @@
           .trim();
 
 
-      if (
-        !firstName ||
-        !lastName
-      ) {
+      if (!firstName || !lastName) {
 
         showToast(
           "Wpisz imię i nazwisko.",
@@ -2715,24 +2587,16 @@
       const profile = {
 
         firstName,
-
         lastName,
-
-        role:
-          currentRole,
-
-        photo:
-          oldProfile.photo ||
-          ""
+        role: currentRole,
+        photo: oldProfile.photo || ""
 
       };
 
 
       localStorage.setItem(
         "mdpProfile",
-        JSON.stringify(
-          profile
-        )
+        JSON.stringify(profile)
       );
 
 
@@ -2776,13 +2640,11 @@
 
 
       firstName.value =
-        profile.firstName ||
-        "";
+        profile.firstName || "";
 
 
       lastName.value =
-        profile.lastName ||
-        "";
+        profile.lastName || "";
 
 
       const roles = {
@@ -2810,9 +2672,7 @@
         );
 
 
-      if (
-        profile.photo
-      ) {
+      if (profile.photo) {
 
         avatar.innerHTML = `
           <img
@@ -2846,13 +2706,9 @@
     }
 
 
-    /* =========================
-       PROFILE PHOTO
-    ========================= */
+    /* PROFILE PHOTO */
 
-    function changeProfilePhoto(
-      event
-    ) {
+    function changeProfilePhoto(event) {
 
       const file =
         event.target.files[0];
@@ -2863,11 +2719,7 @@
       }
 
 
-      if (
-        !file.type.startsWith(
-          "image/"
-        )
-      ) {
+      if (!file.type.startsWith("image/")) {
 
         showToast(
           "Wybierz plik graficzny.",
@@ -2879,10 +2731,7 @@
       }
 
 
-      if (
-        file.size >
-        2 * 1024 * 1024
-      ) {
+      if (file.size > 2 * 1024 * 1024) {
 
         showToast(
           "Zdjęcie jest za duże. Maksymalnie 2 MB.",
@@ -2913,9 +2762,7 @@
 
           localStorage.setItem(
             "mdpProfile",
-            JSON.stringify(
-              profile
-            )
+            JSON.stringify(profile)
           );
 
 
@@ -2929,16 +2776,12 @@
         };
 
 
-      reader.readAsDataURL(
-        file
-      );
+      reader.readAsDataURL(file);
 
     }
 
 
-    /* =========================
-       NOTIFICATIONS
-    ========================= */
+    /* NOTIFICATIONS */
 
     function createNotifications() {
 
@@ -2957,8 +2800,7 @@
             notifications.push({
 
               id:
-                "news-" +
-                item.id,
+                "news-" + item.id,
 
               icon:
                 "📢",
@@ -2991,8 +2833,7 @@
             notifications.push({
 
               id:
-                "event-" +
-                item.id,
+                "event-" + item.id,
 
               icon:
                 "📅",
@@ -3069,26 +2910,20 @@
       const unread =
         notifications.filter(
           item =>
-            !read.includes(
-              item.id
-            )
+            !read.includes(item.id)
         ).length;
 
 
       count.textContent =
-        unread +
-        " nowych";
+        unread + " nowych";
 
 
-      if (
-        unread > 0
-      ) {
+      if (unread > 0) {
 
         badge.textContent =
           unread > 9
             ? "9+"
             : unread;
-
 
         badge.style.display =
           "inline-flex";
@@ -3104,9 +2939,7 @@
       }
 
 
-      if (
-        !notifications.length
-      ) {
+      if (!notifications.length) {
 
         box.innerHTML = `
           <div class="empty">
@@ -3124,9 +2957,7 @@
           .map(item => {
 
             const isRead =
-              read.includes(
-                item.id
-              );
+              read.includes(item.id);
 
 
             const date =
@@ -3166,9 +2997,8 @@
                     "
                   >
 
-                    <div
-                      class="news-date"
-                    >
+                    <div class="news-date">
+
                       ${
                         isRead
                           ? "PRZECZYTANE"
@@ -3178,25 +3008,20 @@
                       ${
                         date
                           ? " • " +
-                            escapeHTML(
-                              date
-                            )
+                            escapeHTML(date)
                           : ""
                       }
+
                     </div>
 
 
                     <h3>
-                      ${escapeHTML(
-                        item.title
-                      )}
+                      ${escapeHTML(item.title)}
                     </h3>
 
 
                     <div class="news-body">
-                      ${escapeHTML(
-                        item.body
-                      )}
+                      ${escapeHTML(item.body)}
                     </div>
 
 
@@ -3205,14 +3030,8 @@
                         ? `
                           <button
                             class="btn blue"
-                            style="
-                              margin-top:10px
-                            "
-                            onclick="markNotificationRead(
-                              '${escapeHTML(
-                                item.id
-                              )}'
-                            )"
+                            style="margin-top:10px"
+                            onclick="markNotificationRead('${escapeHTML(item.id)}')"
                           >
                             ✓ Przeczytane
                           </button>
@@ -3234,9 +3053,7 @@
     }
 
 
-    function formatNotificationDate(
-      value
-    ) {
+    function formatNotificationDate(value) {
 
       try {
 
@@ -3247,25 +3064,18 @@
         ) {
 
           const date =
-            parseDate(
-              value
-            );
+            parseDate(value);
 
 
           return date
-            ? date.toLocaleDateString(
-                "pl-PL"
-              )
+            ? date.toLocaleDateString("pl-PL")
             : "";
 
         }
 
 
-        return new Date(
-          value
-        ).toLocaleDateString(
-          "pl-PL"
-        );
+        return new Date(value)
+          .toLocaleDateString("pl-PL");
 
       } catch {
 
@@ -3276,17 +3086,13 @@
     }
 
 
-    function markNotificationRead(
-      id
-    ) {
+    function markNotificationRead(id) {
 
       const read =
         getReadNotifications();
 
 
-      if (
-        !read.includes(id)
-      ) {
+      if (!read.includes(id)) {
 
         read.push(id);
 
@@ -3295,9 +3101,7 @@
 
       localStorage.setItem(
         "mdpReadNotifications",
-        JSON.stringify(
-          read
-        )
+        JSON.stringify(read)
       );
 
 
@@ -3310,16 +3114,13 @@
 
       const ids =
         notifications.map(
-          item =>
-            item.id
+          item => item.id
         );
 
 
       localStorage.setItem(
         "mdpReadNotifications",
-        JSON.stringify(
-          ids
-        )
+        JSON.stringify(ids)
       );
 
 
@@ -3333,53 +3134,38 @@
     }
 
 
-    /* =========================
-       ADD EVENT
-    ========================= */
+    /* ADD EVENT */
 
     async function addEvent() {
 
       const title =
-        document
-          .getElementById(
-            "eventTitle"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "eventTitle"
+        ).value.trim();
 
 
       const event_date =
-        document
-          .getElementById(
-            "eventDate"
-          )
-          .value;
+        document.getElementById(
+          "eventDate"
+        ).value;
 
 
       const event_time =
-        document
-          .getElementById(
-            "eventTime"
-          )
-          .value;
+        document.getElementById(
+          "eventTime"
+        ).value;
 
 
       const place =
-        document
-          .getElementById(
-            "eventPlace"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "eventPlace"
+        ).value.trim();
 
 
       const description =
-        document
-          .getElementById(
-            "eventDescription"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "eventDescription"
+        ).value.trim();
 
 
       if (
@@ -3438,39 +3224,29 @@
         }
 
 
-        document
-          .getElementById(
-            "eventTitle"
-          )
-          .value = "";
+        document.getElementById(
+          "eventTitle"
+        ).value = "";
 
 
-        document
-          .getElementById(
-            "eventDate"
-          )
-          .value = "";
+        document.getElementById(
+          "eventDate"
+        ).value = "";
 
 
-        document
-          .getElementById(
-            "eventTime"
-          )
-          .value = "";
+        document.getElementById(
+          "eventTime"
+        ).value = "";
 
 
-        document
-          .getElementById(
-            "eventPlace"
-          )
-          .value = "";
+        document.getElementById(
+          "eventPlace"
+        ).value = "";
 
 
-        document
-          .getElementById(
-            "eventDescription"
-          )
-          .value = "";
+        document.getElementById(
+          "eventDescription"
+        ).value = "";
 
 
         showToast(
@@ -3493,13 +3269,9 @@
     }
 
 
-    /* =========================
-       DELETE EVENT
-    ========================= */
+    /* DELETE EVENT */
 
-    async function deleteEvent(
-      id
-    ) {
+    async function deleteEvent(id) {
 
       if (
         !confirm(
@@ -3562,34 +3334,23 @@
     }
 
 
-    /* =========================
-       ADD NEWS
-    ========================= */
+    /* ADD NEWS */
 
     async function addNews() {
 
       const title =
-        document
-          .getElementById(
-            "newsTitle"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "newsTitle"
+        ).value.trim();
 
 
       const body =
-        document
-          .getElementById(
-            "newsBody"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "newsBody"
+        ).value.trim();
 
 
-      if (
-        !title ||
-        !body
-      ) {
+      if (!title || !body) {
 
         showToast(
           "Uzupełnij tytuł i treść.",
@@ -3637,18 +3398,14 @@
         }
 
 
-        document
-          .getElementById(
-            "newsTitle"
-          )
-          .value = "";
+        document.getElementById(
+          "newsTitle"
+        ).value = "";
 
 
-        document
-          .getElementById(
-            "newsBody"
-          )
-          .value = "";
+        document.getElementById(
+          "newsBody"
+        ).value = "";
 
 
         showToast(
@@ -3671,13 +3428,9 @@
     }
 
 
-    /* =========================
-       DELETE NEWS
-    ========================= */
+    /* DELETE NEWS */
 
-    async function deleteNews(
-      id
-    ) {
+    async function deleteNews(id) {
 
       if (
         !confirm(
@@ -3740,28 +3493,20 @@
     }
 
 
-    /* =========================
-       ADD MEMBER
-    ========================= */
+    /* ADD MEMBER */
 
     async function addMember() {
 
       const name =
-        document
-          .getElementById(
-            "memberName"
-          )
-          .value
-          .trim();
+        document.getElementById(
+          "memberName"
+        ).value.trim();
 
 
       const role =
-        document
-          .getElementById(
-            "memberRole"
-          )
-          .value
-          .trim() ||
+        document.getElementById(
+          "memberRole"
+        ).value.trim() ||
         "Członek MDP";
 
 
@@ -3813,11 +3558,9 @@
         }
 
 
-        document
-          .getElementById(
-            "memberName"
-          )
-          .value = "";
+        document.getElementById(
+          "memberName"
+        ).value = "";
 
 
         showToast(
@@ -3840,13 +3583,9 @@
     }
 
 
-    /* =========================
-       DELETE MEMBER
-    ========================= */
+    /* DELETE MEMBER */
 
-    async function deleteMember(
-      id
-    ) {
+    async function deleteMember(id) {
 
       if (
         !confirm(
@@ -3909,9 +3648,7 @@
     }
 
 
-    /* =========================
-       ATTENDANCE
-    ========================= */
+    /* ATTENDANCE */
 
     async function setAttendance(
       eventId,
@@ -3943,12 +3680,9 @@
 
               body:
                 JSON.stringify({
-                  event_id:
-                    eventId,
-
+                  event_id: eventId,
                   member_name:
                     memberName.trim(),
-
                   status
                 })
 
@@ -4010,9 +3744,7 @@
     }
 
 
-    /* =========================
-       LOAD ATTENDANCE
-    ========================= */
+    /* LOAD ATTENDANCE */
 
     async function loadAttendance(
       eventId
@@ -4039,10 +3771,8 @@
           await fetch(
             `/api/attendance/${eventId}`,
             {
-
               headers:
                 headers()
-
             }
           );
 
@@ -4089,28 +3819,20 @@
           data
             .map(item => `
 
-              <div
-                class="attendance-item"
-              >
+              <div class="attendance-item">
 
                 <span>
-                  ${escapeHTML(
-                    item.member_name
-                  )}
+                  ${escapeHTML(item.member_name)}
                 </span>
 
                 <span
                   class="
                     status
-                    ${escapeHTML(
-                      item.status
-                    )}
+                    ${escapeHTML(item.status)}
                   "
                 >
                   ${
-                    labels[
-                      item.status
-                    ] ||
+                    labels[item.status] ||
                     item.status
                   }
                 </span>
@@ -4126,9 +3848,7 @@
         box.innerHTML =
           `
             <div class="empty">
-              ${escapeHTML(
-                error.message
-              )}
+              ${escapeHTML(error.message)}
             </div>
           `;
 
@@ -4137,9 +3857,7 @@
     }
 
 
-    /* =========================
-       NAVIGATION
-    ========================= */
+    /* NAVIGATION */
 
     function showSection(
       section,
@@ -4197,11 +3915,8 @@
 
 
       window.scrollTo({
-
         top: 0,
-
         behavior: "smooth"
-
       });
 
 
@@ -4210,6 +3925,7 @@
       ) {
 
         renderNotifications();
+        updatePushButton();
 
       }
 
@@ -4225,18 +3941,13 @@
     }
 
 
-    /* =========================
-       STAFF
-    ========================= */
+    /* STAFF */
 
     function isStaff() {
 
       return [
-
         "guardian",
-
         "admin"
-
       ].includes(
         currentRole
       );
@@ -4244,12 +3955,9 @@
     }
 
 
-    /* =========================
-       TOAST
-    ========================= */
+    /* TOAST */
 
-    let toastTimer =
-      null;
+    let toastTimer = null;
 
 
     function showToast(
@@ -4295,13 +4003,9 @@
     }
 
 
-    /* =========================
-       DATE
-    ========================= */
+    /* DATE */
 
-    function parseDate(
-      value
-    ) {
+    function parseDate(value) {
 
       if (!value) {
         return null;
@@ -4357,49 +4061,24 @@
     }
 
 
-    /* =========================
-       SECURITY
-    ========================= */
+    /* SECURITY */
 
-    function escapeHTML(
-      value
-    ) {
+    function escapeHTML(value) {
 
       return String(
         value ?? ""
       )
 
-        .replace(
-          /&/g,
-          "&amp;"
-        )
-
-        .replace(
-          /</g,
-          "&lt;"
-        )
-
-        .replace(
-          />/g,
-          "&gt;"
-        )
-
-        .replace(
-          /"/g,
-          "&quot;"
-        )
-
-        .replace(
-          /'/g,
-          "&#039;"
-        );
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
     }
 
 
-    /* =========================
-       AUTO LOGIN
-    ========================= */
+    /* AUTO LOGIN */
 
     async function restoreSession() {
 
@@ -4496,8 +4175,337 @@
 
 
     /* =========================
-       SERVICE WORKER / PWA
+       PRAWDZIWE POWIADOMIENIA PUSH
     ========================= */
+
+    function urlBase64ToUint8Array(
+      base64String
+    ) {
+
+      const padding =
+        "=".repeat(
+          (4 - (base64String.length % 4)) % 4
+        );
+
+
+      const base64 =
+        (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+
+
+      const rawData =
+        atob(base64);
+
+
+      return Uint8Array.from(
+        [...rawData].map(
+          char => char.charCodeAt(0)
+        )
+      );
+
+    }
+
+
+    async function enablePushNotifications() {
+
+      try {
+
+        if (
+          !("serviceWorker" in navigator)
+        ) {
+
+          showToast(
+            "Twoja przeglądarka nie obsługuje powiadomień.",
+            true
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !("PushManager" in window)
+        ) {
+
+          showToast(
+            "To urządzenie nie obsługuje powiadomień push.",
+            true
+          );
+
+          return;
+
+        }
+
+
+        if (
+          typeof Notification === "undefined"
+        ) {
+
+          showToast(
+            "Powiadomienia nie są dostępne.",
+            true
+          );
+
+          return;
+
+        }
+
+
+        const permission =
+          await Notification.requestPermission();
+
+
+        if (
+          permission !== "granted"
+        ) {
+
+          showToast(
+            "Nie zezwolono na powiadomienia.",
+            true
+          );
+
+          return;
+
+        }
+
+
+        const registration =
+          await navigator.serviceWorker.ready;
+
+
+        const response =
+          await fetch(
+            "/api/push/public-key"
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Nie udało się pobrać klucza push."
+          );
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !data.publicKey
+        ) {
+
+          throw new Error(
+            "Serwer nie zwrócił klucza VAPID."
+          );
+
+        }
+
+
+        const applicationServerKey =
+          urlBase64ToUint8Array(
+            data.publicKey
+          );
+
+
+        let subscription =
+          await registration.pushManager
+            .getSubscription();
+
+
+        if (!subscription) {
+
+          subscription =
+            await registration.pushManager.subscribe({
+
+              userVisibleOnly: true,
+
+              applicationServerKey
+
+            });
+
+        }
+
+
+        const authCode =
+          localStorage.getItem(
+            "mdpCode"
+          ) || "";
+
+
+        const role =
+          localStorage.getItem(
+            "mdpRole"
+          ) || "member";
+
+
+        if (
+          !authCode
+        ) {
+
+          throw new Error(
+            "Najpierw zaloguj się do aplikacji."
+          );
+
+        }
+
+
+        const saveResponse =
+          await fetch(
+            "/api/push/subscribe",
+            {
+
+              method: "POST",
+
+              headers: {
+
+                "Content-Type":
+                  "application/json",
+
+                "x-role":
+                  role,
+
+                "x-code":
+                  authCode
+
+              },
+
+              body:
+                JSON.stringify({
+                  subscription
+                })
+
+            }
+          );
+
+
+        const saveData =
+          await saveResponse.json();
+
+
+        if (!saveResponse.ok) {
+
+          throw new Error(
+            saveData.error ||
+            "Nie udało się zapisać subskrypcji."
+          );
+
+        }
+
+
+        localStorage.setItem(
+          "mdpPushEnabled",
+          "true"
+        );
+
+
+        updatePushButton();
+
+
+        showToast(
+          "🔔 Powiadomienia push zostały włączone!"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Błąd powiadomień push:",
+          error
+        );
+
+
+        showToast(
+          error.message ||
+          "Nie udało się włączyć powiadomień.",
+          true
+        );
+
+      }
+
+    }
+
+
+    async function updatePushButton() {
+
+      const button =
+        document.getElementById(
+          "enablePushButton"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      try {
+
+        if (
+          !("serviceWorker" in navigator) ||
+          !("PushManager" in window)
+        ) {
+
+          button.textContent =
+            "🔔 Push niedostępny";
+
+          button.disabled = true;
+
+          return;
+
+        }
+
+
+        const registration =
+          await navigator.serviceWorker.ready;
+
+
+        const subscription =
+          await registration.pushManager
+            .getSubscription();
+
+
+        if (
+          subscription
+        ) {
+
+          button.textContent =
+            "✓ Powiadomienia są włączone";
+
+          button.disabled = true;
+
+          button.style.opacity =
+            ".6";
+
+        } else {
+
+          button.textContent =
+            "🔔 Włącz powiadomienia";
+
+          button.disabled =
+            false;
+
+          button.style.opacity =
+            "1";
+
+        }
+
+      } catch (error) {
+
+        console.log(
+          "Nie można sprawdzić statusu push:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /* SERVICE WORKER */
 
     if (
       "serviceWorker" in navigator
@@ -4508,21 +4516,22 @@
         () => {
 
           navigator.serviceWorker
-            .register(
-              "/sw.js"
+            .register("/sw.js")
+            .then(
+              registration => {
+
+                console.log(
+                  "Service Worker aktywny.",
+                  registration
+                );
+
+                updatePushButton();
+
+              }
             )
-
-            .then(() => {
-
-              console.log(
-                "Service Worker aktywny."
-              );
-
-            })
-
             .catch(error => {
 
-              console.log(
+              console.error(
                 "Service Worker nie został zarejestrowany:",
                 error
               );
@@ -4535,246 +4544,11 @@
     }
 
 
-    /* =========================
-       START
-    ========================= */
+    /* START */
 
     restoreSession();
 
-<script>
-/* =========================
-   PRAWDZIWE POWIADOMIENIA PUSH
-========================= */
-
-async function enablePushNotifications() {
-  try {
-    if (!("serviceWorker" in navigator)) {
-      alert("Twoja przeglądarka nie obsługuje powiadomień push.");
-      return;
-    }
-
-    if (!("PushManager" in window)) {
-      alert("Powiadomienia push nie są obsługiwane na tym urządzeniu.");
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-
-    if (permission !== "granted") {
-      alert("Powiadomienia nie zostały włączone.");
-      return;
-    }
-
-    const registration =
-      await navigator.serviceWorker.ready;
-
-    const response = await fetch(
-      "/api/push/public-key"
-    );
-
-    if (!response.ok) {
-      throw new Error("Nie udało się pobrać klucza push.");
-    }
-
-    const data = await response.json();
-
-    const applicationServerKey =
-      urlBase64ToUint8Array(data.publicKey);
-
-    let subscription =
-      await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-      subscription =
-        await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey
-        });
-    }
-
-    const authCode =
-      localStorage.getItem("mdpCode") || "";
-
-    const role =
-      localStorage.getItem("mdpRole") || "member";
-
-    const saveResponse = await fetch(
-      "/api/push/subscribe",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-role": role,
-          "x-code": authCode
-        },
-        body: JSON.stringify({
-          subscription
-        })
-      }
-    );
-
-    if (!saveResponse.ok) {
-      throw new Error(
-        "Nie udało się zapisać subskrypcji."
-      );
-    }
-
-    localStorage.setItem(
-      "mdpPushEnabled",
-      "true"
-    );
-
-    updatePushButton();
-
-    alert(
-      "🔔 Powiadomienia push zostały włączone!"
-    );
-
-  } catch (error) {
-    console.error(
-      "Błąd powiadomień push:",
-      error
-    );
-
-    alert(
-      "Nie udało się włączyć powiadomień. Sprawdź konsolę."
-    );
-  }
-}
-
-
-/* =========================
-   ZAMIANA KLUCZA VAPID
-========================= */
-
-function urlBase64ToUint8Array(base64String) {
-  const padding =
-    "=".repeat(
-      (4 - (base64String.length % 4)) % 4
-    );
-
-  const base64 =
-    (base64String + padding)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-  const rawData =
-    atob(base64);
-
-  return Uint8Array.from(
-    [...rawData].map(
-      char => char.charCodeAt(0)
-    )
-  );
-}
-
-
-/* =========================
-   PRZYCISK PUSH
-========================= */
-
-function createPushButton() {
-
-  if (
-    document.getElementById(
-      "enablePushButton"
-    )
-  ) {
-    return;
-  }
-
-  const button =
-    document.createElement("button");
-
-  button.id =
-    "enablePushButton";
-
-  button.className =
-    "primary-btn";
-
-  button.style.margin =
-    "12px 0";
-
-  button.innerHTML =
-    "🔔 Włącz powiadomienia";
-
-  button.onclick =
-    enablePushNotifications;
-
-  const target =
-    document.querySelector(
-      ".app-content"
-    ) ||
-    document.querySelector(
-      "main"
-    ) ||
-    document.body;
-
-  target.prepend(button);
-
-  updatePushButton();
-}
-
-
-/* =========================
-   STATUS PRZYCISKU
-========================= */
-
-async function updatePushButton() {
-
-  const button =
-    document.getElementById(
-      "enablePushButton"
-    );
-
-  if (!button) return;
-
-  try {
-
-    const registration =
-      await navigator.serviceWorker.ready;
-
-    const subscription =
-      await registration.pushManager
-        .getSubscription();
-
-    if (subscription) {
-
-      button.innerHTML =
-        "🔔 Powiadomienia są włączone";
-
-      button.disabled = true;
-
-      button.style.opacity =
-        "0.65";
-
-    }
-
-  } catch (error) {
-    console.log(
-      "Nie można sprawdzić statusu push:",
-      error
-    );
-  }
-}
-
-
-/* =========================
-   START
-========================= */
-
-window.addEventListener(
-  "load",
-  () => {
-
-    setTimeout(
-      createPushButton,
-      1000
-    );
-
-  }
-);
-</script>
+  </script>
 
 </body>
-  </html>
+</html>
