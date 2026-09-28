@@ -618,16 +618,6 @@ async function sendPushToMember(memberId, payload) {
 
 // ======================================================
 // PUSH — PRZYPOMNIENIA O ZBIÓRKACH
-//
-// Zasady:
-// - brak odpowiedzi -> przypomnienie
-// - maybe -> przypomnienie
-// - yes -> brak przypomnienia
-// - no -> brak przypomnienia
-// - po rozpoczęciu zbiórki -> brak przypomnienia
-//
-// Sprawdzane co 1 minutę.
-// Rzeczywiste przypomnienie co 30 minut.
 // ======================================================
 
 const REMINDER_INTERVAL_MS = 60 * 1000;
@@ -706,12 +696,10 @@ async function sendAttendanceReminders() {
         continue;
       }
 
-      // Zbiórka już się rozpoczęła.
       if (eventDate.getTime() <= now.getTime()) {
         continue;
       }
 
-      // Pobieramy odpowiedzi.
       const attendanceResult =
         await pool.query(
           `
@@ -751,8 +739,6 @@ async function sendAttendanceReminders() {
         const status =
           attendanceMap.get(memberName) || '';
 
-        // yes i no kończą przypomnienia.
-        // Brak odpowiedzi oraz maybe = przypominamy.
         if (
           status === 'yes' ||
           status === 'no'
@@ -764,15 +750,10 @@ async function sendAttendanceReminders() {
           eventDate.getTime() -
           now.getTime();
 
-        // Przypomnienia mają sens tylko przed zbiórką.
         if (msUntilEvent <= 0) {
           continue;
         }
 
-        /*
-         * Żeby nie spamować co minutę, wykorzystujemy
-         * tabelę pomocniczą w pamięci procesu.
-         */
         const key =
           `${event.id}:${memberId}`;
 
@@ -827,7 +808,6 @@ async function sendAttendanceReminders() {
       }
     }
 
-    // Czyścimy stare wpisy pamięci.
     for (
       const [
         key,
@@ -1169,7 +1149,6 @@ app.delete(
         [req.params.id]
       );
 
-      // Usunięcie z pamięci przypomnień.
       for (
         const key of attendanceReminderMemory.keys()
       ) {
@@ -1898,7 +1877,6 @@ async function saveAttendance(
     }
 
     let memberName = '';
-
     let savedMemberId = null;
 
     if (req.role === 'member') {
@@ -1960,8 +1938,6 @@ async function saveAttendance(
       ]
     );
 
-    // Gdy członek wybierze Będę lub Nie będę,
-    // usuwamy blokadę przypomnienia z pamięci.
     if (
       savedMemberId &&
       (
@@ -1974,8 +1950,6 @@ async function saveAttendance(
       );
     }
 
-    // Gdy kliknie "Może", ustawiamy 0,
-    // żeby następny cykl mógł przypomnieć.
     if (
       savedMemberId &&
       status === 'maybe'
@@ -2046,6 +2020,11 @@ app.get(
     }
   }
 );
+
+
+// ======================================================
+// FREKWENCJA CZŁONKA
+// ======================================================
 
 app.get(
   '/api/member-stats/:memberId',
@@ -2146,6 +2125,192 @@ app.get(
       res.status(500).json({
         error:
           'Nie udało się pobrać frekwencji.'
+      });
+    }
+  }
+);
+
+
+// ======================================================
+// NOWE — FREKWENCJA ROCZNA
+// ======================================================
+//
+// Pokazuje wszystkich obecnych członków MDP.
+// Domyślnie liczy bieżący rok.
+// Można również podać ?year=2026.
+//
+// yes   = był
+// no    = nie było
+// maybe = nie jest liczone do procentu
+//
+// Świeżo dodany członek również pojawia się na liście.
+// Jeśli nie ma jeszcze żadnej zapisanej obecności,
+// otrzymuje 0% i 0 / 0.
+//
+// ======================================================
+
+app.get(
+  '/api/annual-attendance',
+  auth,
+  staff,
+  async (req, res) => {
+    try {
+      const currentYear =
+        new Date().getFullYear();
+
+      const requestedYear =
+        Number(req.query.year);
+
+      const year =
+        Number.isInteger(requestedYear) &&
+        requestedYear >= 2000 &&
+        requestedYear <= 2100
+          ? requestedYear
+          : currentYear;
+
+      const r = await pool.query(
+        `
+        SELECT
+          m.id,
+          m.first_name,
+          m.last_name,
+          m.role,
+          m.photo,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN a.status='yes'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS yes,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN a.status='no'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS no,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN a.status='maybe'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS maybe
+
+        FROM members m
+
+        LEFT JOIN attendance a
+          ON a.member_name =
+             TRIM(
+               CONCAT(
+                 COALESCE(m.first_name,''),
+                 ' ',
+                 COALESCE(m.last_name,'')
+               )
+             )
+
+        LEFT JOIN events e
+          ON e.id=a.event_id
+          AND e.event_date IS NOT NULL
+          AND e.event_date <> ''
+          AND LEFT(e.event_date,4)=$1
+
+        GROUP BY
+          m.id,
+          m.first_name,
+          m.last_name,
+          m.role,
+          m.photo
+
+        ORDER BY
+          m.first_name,
+          m.last_name,
+          m.id
+        `,
+        [String(year)]
+      );
+
+      const members =
+        r.rows.map(m => {
+          const yes =
+            Number(m.yes || 0);
+
+          const no =
+            Number(m.no || 0);
+
+          const maybe =
+            Number(m.maybe || 0);
+
+          const confirmed =
+            yes + no;
+
+          const percentage =
+            confirmed > 0
+              ? Math.round(
+                  yes /
+                    confirmed *
+                    100
+                )
+              : 0;
+
+          return {
+            id: Number(m.id),
+
+            first_name:
+              m.first_name || '',
+
+            last_name:
+              m.last_name || '',
+
+            role:
+              m.role || 'member',
+
+            photo:
+              m.photo || '',
+
+            yes,
+            no,
+            maybe,
+
+            attended: yes,
+            absent: no,
+
+            confirmed,
+
+            total:
+              confirmed + maybe,
+
+            percentage
+          };
+        });
+
+      res.json({
+        year,
+        members
+      });
+
+    } catch (e) {
+      console.error(
+        'Błąd frekwencji rocznej:',
+        e
+      );
+
+      res.status(500).json({
+        error:
+          'Nie udało się pobrać frekwencji rocznej.'
       });
     }
   }
@@ -3473,14 +3638,11 @@ initDb()
         )
     );
 
-    // Automatyczne przypomnienia.
-    // Pierwsze sprawdzenie po uruchomieniu.
     setTimeout(() => {
       sendAttendanceReminders()
         .catch(console.error);
     }, 10000);
 
-    // Następnie kontrola co minutę.
     setInterval(() => {
       sendAttendanceReminders()
         .catch(console.error);
