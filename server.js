@@ -1,3 +1,4 @@
+
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
@@ -260,6 +261,8 @@ async function initDb() {
       place TEXT,
       description TEXT,
       outfit TEXT,
+      completed BOOLEAN NOT NULL DEFAULT FALSE,
+      completed_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -360,6 +363,14 @@ async function initDb() {
 
   await pool.query(
     'ALTER TABLE events ADD COLUMN IF NOT EXISTS outfit TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE events ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT FALSE'
+  );
+
+  await pool.query(
+    'ALTER TABLE events ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ'
   );
 
   await pool.query(
@@ -1514,11 +1525,11 @@ app.put(
       ).trim();
 
       if (
-        ![
+        [
           'new',
           'in_progress',
           'done'
-        ].includes(status)
+        ].includes(status) === false
       ) {
         return res.status(400).json({
           error:
@@ -1848,7 +1859,7 @@ async function saveAttendance(
     }
 
     const ev = await pool.query(
-      'SELECT id FROM events WHERE id=$1',
+      'SELECT id,completed FROM events WHERE id=$1',
       [eventId]
     );
 
@@ -1856,6 +1867,13 @@ async function saveAttendance(
       return res.status(404).json({
         error:
           'Nie znaleziono zbiórki.'
+      });
+    }
+
+    if (ev.rows[0].completed) {
+      return res.status(400).json({
+        error:
+          'Ta zbiórka została już zakończona.'
       });
     }
 
@@ -1946,6 +1964,11 @@ app.post(
     )
 );
 
+
+// ======================================================
+// LISTA OBECNOŚCI — WSZYSCY AKTUALNI CZŁONKOWIE
+// ======================================================
+
 app.get(
   '/api/attendance/:eventId',
   auth,
@@ -1953,10 +1976,43 @@ app.get(
     try {
       const r = await pool.query(
         `
-        SELECT *
-        FROM attendance
-        WHERE event_id=$1
-        ORDER BY member_name
+        SELECT
+          m.id AS member_id,
+          m.first_name,
+          m.last_name,
+          m.photo,
+          TRIM(
+            CONCAT(
+              COALESCE(m.first_name,''),
+              ' ',
+              COALESCE(m.last_name,'')
+            )
+          ) AS member_name,
+          a.status,
+          a.created_at
+        FROM members m
+        LEFT JOIN attendance a
+          ON a.event_id=$1
+         AND a.member_name=
+            TRIM(
+              CONCAT(
+                COALESCE(m.first_name,''),
+                ' ',
+                COALESCE(m.last_name,'')
+              )
+            )
+        WHERE COALESCE(m.role,'member')='member'
+        ORDER BY
+          LOWER(
+            TRIM(
+              CONCAT(
+                COALESCE(m.first_name,''),
+                ' ',
+                COALESCE(m.last_name,'')
+              )
+            )
+          ),
+          m.id
         `,
         [req.params.eventId]
       );
@@ -1964,6 +2020,8 @@ app.get(
       res.json(r.rows);
 
     } catch (e) {
+      console.error(e);
+
       res.status(500).json({
         error:
           'Nie udało się pobrać obecności.'
@@ -1971,6 +2029,134 @@ app.get(
     }
   }
 );
+
+
+// ======================================================
+// ZAKOŃCZENIE ZBIÓRKI
+// ======================================================
+
+app.post(
+  '/api/events/:id/complete',
+  auth,
+  staff,
+  async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const event = await client.query(
+        `
+        SELECT *
+        FROM events
+        WHERE id=$1
+        FOR UPDATE
+        `,
+        [req.params.id]
+      );
+
+      if (!event.rows[0]) {
+        await client.query('ROLLBACK');
+
+        return res.status(404).json({
+          error:
+            'Nie znaleziono zbiórki.'
+        });
+      }
+
+      if (event.rows[0].completed) {
+        await client.query('COMMIT');
+
+        return res.json(
+          event.rows[0]
+        );
+      }
+
+      const members = await client.query(`
+        SELECT
+          id,
+          first_name,
+          last_name
+        FROM members
+        WHERE COALESCE(role,'member')='member'
+        ORDER BY id
+      `);
+
+      for (const member of members.rows) {
+        const name =
+          `${member.first_name || ''} ${member.last_name || ''}`
+            .trim();
+
+        if (!name) continue;
+
+        /*
+          Jeśli członek nie odpowiedział,
+          zapisujemy "maybe".
+
+          Dzięki temu:
+          - wiadomo, że był na liście,
+          - nie liczymy go jako obecnego,
+          - nie liczymy go jako nieobecnego.
+        */
+
+        await client.query(
+          `
+          INSERT INTO attendance
+          (event_id,member_name,status)
+          VALUES($1,$2,'maybe')
+          ON CONFLICT(event_id,member_name)
+          DO NOTHING
+          `,
+          [
+            req.params.id,
+            name
+          ]
+        );
+      }
+
+      const updated = await client.query(
+        `
+        UPDATE events
+        SET
+          completed=TRUE,
+          completed_at=NOW()
+        WHERE id=$1
+        RETURNING *
+        `,
+        [req.params.id]
+      );
+
+      await client.query('COMMIT');
+
+      res.json(
+        updated.rows[0]
+      );
+
+    } catch (e) {
+      await client
+        .query('ROLLBACK')
+        .catch(() => {});
+
+      console.error(
+        'Błąd kończenia zbiórki:',
+        e
+      );
+
+      res.status(500).json({
+        error:
+          'Nie udało się zakończyć zbiórki.'
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ======================================================
+// STATYSTYKI CZŁONKA
+// ======================================================
 
 app.get(
   '/api/member-stats/:memberId',
@@ -2088,7 +2274,8 @@ app.get(
   async (req, res) => {
     try {
       const year = Number(
-        req.query.year || new Date().getFullYear()
+        req.query.year ||
+        new Date().getFullYear()
       );
 
       if (
@@ -2097,7 +2284,8 @@ app.get(
         year > 2100
       ) {
         return res.status(400).json({
-          error: 'Nieprawidłowy rok.'
+          error:
+            'Nieprawidłowy rok.'
         });
       }
 
@@ -2113,8 +2301,11 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='yes'
+                WHEN LEFT(
+                  COALESCE(e.event_date,''),
+                  4
+                )=$1::text
+                AND a.status='yes'
                 THEN 1
                 ELSE 0
               END
@@ -2125,8 +2316,11 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='no'
+                WHEN LEFT(
+                  COALESCE(e.event_date,''),
+                  4
+                )=$1::text
+                AND a.status='no'
                 THEN 1
                 ELSE 0
               END
@@ -2137,8 +2331,11 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='maybe'
+                WHEN LEFT(
+                  COALESCE(e.event_date,''),
+                  4
+                )=$1::text
+                AND a.status='maybe'
                 THEN 1
                 ELSE 0
               END
@@ -2176,36 +2373,57 @@ app.get(
         [String(year)]
       );
 
-      const members = r.rows.map(x => {
-        const yes = Number(x.yes || 0);
-        const no = Number(x.no || 0);
-        const maybe = Number(x.maybe || 0);
+      const members =
+        r.rows.map(x => {
+          const yes =
+            Number(x.yes || 0);
 
-        const confirmed = yes + no;
-        const total = confirmed + maybe;
+          const no =
+            Number(x.no || 0);
 
-        return {
-          id: Number(x.id),
-          first_name: x.first_name || '',
-          last_name: x.last_name || '',
-          role: x.role || 'member',
-          photo: x.photo || '',
+          const maybe =
+            Number(x.maybe || 0);
 
-          yes,
-          no,
-          maybe,
+          const confirmed =
+            yes + no;
 
-          attended: yes,
-          absent: no,
+          const total =
+            confirmed + maybe;
 
-          confirmed,
-          total,
+          return {
+            id: Number(x.id),
 
-          percentage: confirmed
-            ? Math.round(yes / confirmed * 100)
-            : 0
-        };
-      });
+            first_name:
+              x.first_name || '',
+
+            last_name:
+              x.last_name || '',
+
+            role:
+              x.role || 'member',
+
+            photo:
+              x.photo || '',
+
+            yes,
+            no,
+            maybe,
+
+            attended: yes,
+            absent: no,
+
+            confirmed,
+            total,
+
+            percentage: confirmed
+              ? Math.round(
+                  yes /
+                    confirmed *
+                    100
+                )
+              : 0
+          };
+        });
 
       res.json({
         year,
@@ -2236,7 +2454,9 @@ app.get(
   auth,
   async (req, res) => {
     try {
-      res.json(await getGroups());
+      res.json(
+        await getGroups()
+      );
 
     } catch (e) {
       console.error(e);
@@ -2277,9 +2497,10 @@ app.post(
         });
       }
 
-      const ids = normalizeIds(
-        b.memberIds
-      );
+      const ids =
+        normalizeIds(
+          b.memberIds
+        );
 
       const m = ids.length
         ? await pool.query(
@@ -2296,61 +2517,63 @@ app.post(
           )
         : { rows: [] };
 
-      const names = m.rows
-        .map(x =>
-          `${x.first_name || ''} ${x.last_name || ''}`
-            .trim()
-        )
-        .filter(Boolean);
+      const names =
+        m.rows
+          .map(x =>
+            `${x.first_name || ''} ${x.last_name || ''}`
+              .trim()
+          )
+          .filter(Boolean);
 
-      const copies = Math.max(
-        0,
-        Number(b.copies || 0)
-      );
-
-      const streets = safeArray(
-        b.streets
-      );
-
-      const r = await pool.query(
-        `
-        INSERT INTO newspaper_groups
-        (
-          name,
-          region,
-          color,
-          streets,
-          copies,
-          delivered,
-          started,
-          done,
-          member_ids,
-          member_names
-        )
-        VALUES(
-          $1,
-          $2,
-          $3,
-          $4::jsonb,
-          $5,
+      const copies =
+        Math.max(
           0,
-          FALSE,
-          FALSE,
-          $6::jsonb,
-          $7::jsonb
-        )
-        RETURNING *
-        `,
-        [
-          name,
-          region,
-          b.color || '#2878ff',
-          JSON.stringify(streets),
-          copies,
-          JSON.stringify(ids),
-          JSON.stringify(names)
-        ]
-      );
+          Number(b.copies || 0)
+        );
+
+      const streets =
+        safeArray(b.streets);
+
+      const r =
+        await pool.query(
+          `
+          INSERT INTO newspaper_groups
+          (
+            name,
+            region,
+            color,
+            streets,
+            copies,
+            delivered,
+            started,
+            done,
+            member_ids,
+            member_names
+          )
+          VALUES(
+            $1,
+            $2,
+            $3,
+            $4::jsonb,
+            $5,
+            0,
+            FALSE,
+            FALSE,
+            $6::jsonb,
+            $7::jsonb
+          )
+          RETURNING *
+          `,
+          [
+            name,
+            region,
+            b.color || '#2878ff',
+            JSON.stringify(streets),
+            copies,
+            JSON.stringify(ids),
+            JSON.stringify(names)
+          ]
+        );
 
       res.json(
         groupJson(
@@ -2380,14 +2603,15 @@ app.put(
   auth,
   async (req, res) => {
     try {
-      const oldR = await pool.query(
-        `
-        SELECT *
-        FROM newspaper_groups
-        WHERE id=$1
-        `,
-        [req.params.id]
-      );
+      const oldR =
+        await pool.query(
+          `
+          SELECT *
+          FROM newspaper_groups
+          WHERE id=$1
+          `,
+          [req.params.id]
+        );
 
       if (!oldR.rows[0]) {
         return res.status(404).json({
@@ -2396,13 +2620,18 @@ app.put(
         });
       }
 
-      const old = oldR.rows[0];
+      const old =
+        oldR.rows[0];
 
       const oldIds =
-        normalizeIds(old.member_ids);
+        normalizeIds(
+          old.member_ids
+        );
 
       const oldNames =
-        normalizeNames(old.member_names);
+        normalizeNames(
+          old.member_names
+        );
 
       if (req.role === 'member') {
         if (
@@ -2445,23 +2674,24 @@ app.put(
             ? !!old.done
             : !!req.body.done;
 
-        const r = await pool.query(
-          `
-          UPDATE newspaper_groups
-          SET
-            delivered=$1,
-            started=$2,
-            done=$3
-          WHERE id=$4
-          RETURNING *
-          `,
-          [
-            delivered,
-            started,
-            done,
-            req.params.id
-          ]
-        );
+        const r =
+          await pool.query(
+            `
+            UPDATE newspaper_groups
+            SET
+              delivered=$1,
+              started=$2,
+              done=$3
+            WHERE id=$4
+            RETURNING *
+            `,
+            [
+              delivered,
+              started,
+              done,
+              req.params.id
+            ]
+          );
 
         const groups =
           await getGroups();
@@ -2472,7 +2702,9 @@ app.put(
               x.id ===
               Number(req.params.id)
           ) ||
-          groupJson(r.rows[0])
+          groupJson(
+            r.rows[0]
+          )
         );
       }
 
@@ -2485,23 +2717,26 @@ app.put(
 
       const ids =
         req.body.memberIds !== undefined
-          ? normalizeIds(req.body.memberIds)
+          ? normalizeIds(
+              req.body.memberIds
+            )
           : oldIds;
 
-      const m = ids.length
-        ? await pool.query(
-            `
-            SELECT
-              id,
-              first_name,
-              last_name,
-              name
-            FROM members
-            WHERE id=ANY($1::int[])
-            `,
-            [ids]
-          )
-        : { rows: [] };
+      const m =
+        ids.length
+          ? await pool.query(
+              `
+              SELECT
+                id,
+                first_name,
+                last_name,
+                name
+              FROM members
+              WHERE id=ANY($1::int[])
+              `,
+              [ids]
+            )
+          : { rows: [] };
 
       const names =
         req.body.memberIds !== undefined
@@ -2519,7 +2754,9 @@ app.put(
               0,
               Number(req.body.copies)
             )
-          : Number(old.copies || 0);
+          : Number(
+              old.copies || 0
+            );
 
       const delivered =
         Math.min(
@@ -2536,22 +2773,32 @@ app.put(
 
       const streets =
         req.body.streets !== undefined
-          ? safeArray(req.body.streets)
-          : safeArray(old.streets);
+          ? safeArray(
+              req.body.streets
+            )
+          : safeArray(
+              old.streets
+            );
 
       const name =
         req.body.name !== undefined
-          ? String(req.body.name).trim()
+          ? String(
+              req.body.name
+            ).trim()
           : old.name;
 
       const region =
         req.body.region !== undefined
-          ? String(req.body.region).trim()
+          ? String(
+              req.body.region
+            ).trim()
           : old.region;
 
       const color =
         req.body.color !== undefined
-          ? String(req.body.color)
+          ? String(
+              req.body.color
+            )
           : old.color;
 
       const started =
@@ -2564,37 +2811,38 @@ app.put(
           ? !!req.body.done
           : !!old.done;
 
-      const r = await pool.query(
-        `
-        UPDATE newspaper_groups
-        SET
-          name=$1,
-          region=$2,
-          color=$3,
-          streets=$4::jsonb,
-          copies=$5,
-          delivered=$6,
-          started=$7,
-          done=$8,
-          member_ids=$9::jsonb,
-          member_names=$10::jsonb
-        WHERE id=$11
-        RETURNING *
-        `,
-        [
-          name,
-          region,
-          color,
-          JSON.stringify(streets),
-          copies,
-          delivered,
-          started,
-          done,
-          JSON.stringify(ids),
-          JSON.stringify(names),
-          req.params.id
-        ]
-      );
+      const r =
+        await pool.query(
+          `
+          UPDATE newspaper_groups
+          SET
+            name=$1,
+            region=$2,
+            color=$3,
+            streets=$4::jsonb,
+            copies=$5,
+            delivered=$6,
+            started=$7,
+            done=$8,
+            member_ids=$9::jsonb,
+            member_names=$10::jsonb
+          WHERE id=$11
+          RETURNING *
+          `,
+          [
+            name,
+            region,
+            color,
+            JSON.stringify(streets),
+            copies,
+            delivered,
+            started,
+            done,
+            JSON.stringify(ids),
+            JSON.stringify(names),
+            req.params.id
+          ]
+        );
 
       res.json(
         groupJson(
@@ -2623,8 +2871,11 @@ app.post(
   '/api/newspaper-groups/:id/start',
   auth,
   async (req, res) => {
-    req.body = req.body || {};
-    req.body.started = true;
+    req.body =
+      req.body || {};
+
+    req.body.started =
+      true;
 
     return updateGroupProgress(
       req,
@@ -2649,9 +2900,14 @@ app.post(
   '/api/newspaper-groups/:id/complete',
   auth,
   async (req, res) => {
-    req.body = req.body || {};
-    req.body.done = true;
-    req.body.started = true;
+    req.body =
+      req.body || {};
+
+    req.body.done =
+      true;
+
+    req.body.started =
+      true;
 
     return updateGroupProgress(
       req,
@@ -2667,14 +2923,15 @@ async function updateGroupProgress(
   id
 ) {
   try {
-    const r = await pool.query(
-      `
-      SELECT *
-      FROM newspaper_groups
-      WHERE id=$1
-      `,
-      [id]
-    );
+    const r =
+      await pool.query(
+        `
+        SELECT *
+        FROM newspaper_groups
+        WHERE id=$1
+        `,
+        [id]
+      );
 
     if (!r.rows[0]) {
       return res.status(404).json({
@@ -2683,10 +2940,13 @@ async function updateGroupProgress(
       });
     }
 
-    const g = r.rows[0];
+    const g =
+      r.rows[0];
 
     const ids =
-      normalizeIds(g.member_ids);
+      normalizeIds(
+        g.member_ids
+      );
 
     if (
       req.role === 'member' &&
@@ -2739,23 +2999,24 @@ async function updateGroupProgress(
         ? !!g.done
         : !!req.body.done;
 
-    const u = await pool.query(
-      `
-      UPDATE newspaper_groups
-      SET
-        delivered=$1,
-        started=$2,
-        done=$3
-      WHERE id=$4
-      RETURNING *
-      `,
-      [
-        delivered,
-        started,
-        done,
-        id
-      ]
-    );
+    const u =
+      await pool.query(
+        `
+        UPDATE newspaper_groups
+        SET
+          delivered=$1,
+          started=$2,
+          done=$3
+        WHERE id=$4
+        RETURNING *
+        `,
+        [
+          delivered,
+          started,
+          done,
+          id
+        ]
+      );
 
     const groups =
       await getGroups();
@@ -2765,7 +3026,9 @@ async function updateGroupProgress(
         x =>
           x.id === Number(id)
       ) ||
-      groupJson(u.rows[0])
+      groupJson(
+        u.rows[0]
+      )
     );
 
   } catch (e) {
@@ -2789,14 +3052,15 @@ app.delete(
   staff,
   async (req, res) => {
     try {
-      const r = await pool.query(
-        `
-        DELETE FROM newspaper_groups
-        WHERE id=$1
-        RETURNING id
-        `,
-        [req.params.id]
-      );
+      const r =
+        await pool.query(
+          `
+          DELETE FROM newspaper_groups
+          WHERE id=$1
+          RETURNING id
+          `,
+          [req.params.id]
+        );
 
       if (!r.rows[0]) {
         return res.status(404).json({
@@ -2831,10 +3095,13 @@ app.post(
   auth,
   staff,
   async (req, res) => {
-    const client = await pool.connect();
+    const client =
+      await pool.connect();
 
     try {
-      await client.query('BEGIN');
+      await client.query(
+        'BEGIN'
+      );
 
       await client.query(`
         UPDATE newspaper_groups
@@ -2844,18 +3111,24 @@ app.post(
           done = FALSE
       `);
 
-      const result = await client.query(`
-        SELECT *
-        FROM newspaper_groups
-        ORDER BY id
-      `);
+      const result =
+        await client.query(`
+          SELECT *
+          FROM newspaper_groups
+          ORDER BY id
+        `);
 
-      await client.query('COMMIT');
+      await client.query(
+        'COMMIT'
+      );
 
       res.json({
         ok: true,
         reset: true,
-        groups: result.rows.map(groupSnapshot)
+        groups:
+          result.rows.map(
+            groupSnapshot
+          )
       });
 
     } catch (e) {
@@ -2890,16 +3163,19 @@ app.get(
   staff,
   async (req, res) => {
     try {
-      const r = await pool.query(`
-        SELECT
-          id,
-          month_key,
-          month_label,
-          saved_at,
-          groups
-        FROM newspaper_history
-        ORDER BY month_key DESC,id DESC
-      `);
+      const r =
+        await pool.query(`
+          SELECT
+            id,
+            month_key,
+            month_label,
+            saved_at,
+            groups
+          FROM newspaper_history
+          ORDER BY
+            month_key DESC,
+            id DESC
+        `);
 
       res.json(r.rows);
 
@@ -2925,19 +3201,28 @@ app.get(
   staff,
   async (req, res) => {
     try {
-      const groups = await getGroups();
+      const groups =
+        await getGroups();
 
-      const totalCopies = groups.reduce(
-        (sum, g) =>
-          sum + Number(g.copies || 0),
-        0
-      );
+      const totalCopies =
+        groups.reduce(
+          (sum, g) =>
+            sum +
+            Number(
+              g.copies || 0
+            ),
+          0
+        );
 
-      const totalDelivered = groups.reduce(
-        (sum, g) =>
-          sum + Number(g.delivered || 0),
-        0
-      );
+      const totalDelivered =
+        groups.reduce(
+          (sum, g) =>
+            sum +
+            Number(
+              g.delivered || 0
+            ),
+          0
+        );
 
       const completedGroups =
         groups.filter(
@@ -2965,11 +3250,15 @@ app.get(
             )
           : 0;
 
-      const info = monthInfo();
+      const info =
+        monthInfo();
 
       res.json({
-        month: info.monthLabel,
-        monthKey: info.monthKey,
+        month:
+          info.monthLabel,
+
+        monthKey:
+          info.monthKey,
 
         totalGroups:
           groups.length,
@@ -3005,7 +3294,9 @@ app.get(
 // FUNKCJA ZAPISUJĄCA AKTUALNY MIESIĄC
 // ======================================================
 
-async function archiveCurrentMonth(client) {
+async function archiveCurrentMonth(
+  client
+) {
   const groupsResult =
     await client.query(`
       SELECT *
@@ -3014,13 +3305,16 @@ async function archiveCurrentMonth(client) {
       FOR UPDATE
     `);
 
-  if (!groupsResult.rows.length) {
+  if (
+    !groupsResult.rows.length
+  ) {
     throw new Error(
       'Brak grup gazet do zapisania.'
     );
   }
 
-  const info = monthInfo();
+  const info =
+    monthInfo();
 
   const snapshot =
     groupsResult.rows.map(
@@ -3055,7 +3349,9 @@ async function archiveCurrentMonth(client) {
       `,
       [
         info.monthLabel,
-        JSON.stringify(snapshot),
+        JSON.stringify(
+          snapshot
+        ),
         historyId
       ]
     );
@@ -3076,7 +3372,9 @@ async function archiveCurrentMonth(client) {
         [
           info.monthKey,
           info.monthLabel,
-          JSON.stringify(snapshot)
+          JSON.stringify(
+            snapshot
+          )
         ]
       );
 
@@ -3086,9 +3384,12 @@ async function archiveCurrentMonth(client) {
 
   return {
     historyId,
-    monthKey: info.monthKey,
-    monthLabel: info.monthLabel,
-    groups: snapshot
+    monthKey:
+      info.monthKey,
+    monthLabel:
+      info.monthLabel,
+    groups:
+      snapshot
   };
 }
 
@@ -3106,7 +3407,9 @@ app.post(
       await pool.connect();
 
     try {
-      await client.query('BEGIN');
+      await client.query(
+        'BEGIN'
+      );
 
       const archived =
         await archiveCurrentMonth(
@@ -3120,12 +3423,16 @@ app.post(
       res.json({
         ok: true,
         saved: true,
+
         historyId:
           archived.historyId,
+
         monthKey:
           archived.monthKey,
+
         monthLabel:
           archived.monthLabel,
+
         groups:
           archived.groups
       });
@@ -3310,7 +3617,8 @@ app.get(
   auth,
   async (req, res) => {
     try {
-      const info = monthInfo();
+      const info =
+        monthInfo();
 
       res.json({
         monthKey:
@@ -3341,7 +3649,8 @@ app.post(
   auth,
   async (req, res) => {
     try {
-      const s = req.body;
+      const s =
+        req.body;
 
       if (!s?.endpoint) {
         return res.status(400).json({
@@ -3352,10 +3661,14 @@ app.post(
 
       const memberId =
         req.role === 'member'
-          ? Number(req.member.id)
+          ? Number(
+              req.member.id
+            )
           : (
               s.memberId !== undefined
-                ? Number(s.memberId)
+                ? Number(
+                    s.memberId
+                  )
                 : null
             );
 
@@ -3375,7 +3688,9 @@ app.post(
         [
           s.endpoint,
           JSON.stringify(s),
-          Number.isInteger(memberId) &&
+          Number.isInteger(
+            memberId
+          ) &&
           memberId > 0
             ? memberId
             : null
@@ -3384,8 +3699,11 @@ app.post(
 
       res.json({
         ok: true,
+
         memberId:
-          Number.isInteger(memberId) &&
+          Number.isInteger(
+            memberId
+          ) &&
           memberId > 0
             ? memberId
             : null
@@ -3455,7 +3773,9 @@ app.post(
   async (req, res) => {
     try {
       await sendPushToAll({
-        title: 'MDP Wiesiółka',
+        title:
+          'MDP Wiesiółka',
+
         body:
           req.body?.body ||
           'Testowe powiadomienie'
@@ -3485,20 +3805,26 @@ app.post(
   '/api/cron/attendance-reminders',
   async (req, res) => {
     try {
-      const secret = String(
-        process.env.CRON_SECRET || ''
-      );
+      const secret =
+        String(
+          process.env.CRON_SECRET || ''
+        );
 
-      const provided = String(
-        req.headers['x-cron-secret'] ||
-        req.body?.secret ||
-        req.query?.secret ||
-        ''
-      );
+      const provided =
+        String(
+          req.headers['x-cron-secret'] ||
+          req.body?.secret ||
+          req.query?.secret ||
+          ''
+        );
 
-      if (!secret || provided !== secret) {
+      if (
+        !secret ||
+        provided !== secret
+      ) {
         return res.status(401).json({
-          error: 'Brak prawidłowego klucza CRON.'
+          error:
+            'Brak prawidłowego klucza CRON.'
         });
       }
 
@@ -3506,7 +3832,8 @@ app.post(
 
       res.json({
         ok: true,
-        ranAt: new Date().toISOString()
+        ranAt:
+          new Date().toISOString()
       });
 
     } catch (e) {
@@ -3577,7 +3904,7 @@ app.use(
         'public',
         'index.html'
       )
-    )
+  )
 );
 
 
