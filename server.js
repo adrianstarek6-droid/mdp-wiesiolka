@@ -260,6 +260,8 @@ async function initDb() {
       place TEXT,
       description TEXT,
       outfit TEXT,
+      completed BOOLEAN NOT NULL DEFAULT FALSE,
+      completed_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -360,6 +362,14 @@ async function initDb() {
 
   await pool.query(
     'ALTER TABLE events ADD COLUMN IF NOT EXISTS outfit TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE events ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT FALSE'
+  );
+
+  await pool.query(
+    'ALTER TABLE events ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ'
   );
 
   await pool.query(
@@ -1848,7 +1858,7 @@ async function saveAttendance(
     }
 
     const ev = await pool.query(
-      'SELECT id FROM events WHERE id=$1',
+      'SELECT id,completed FROM events WHERE id=$1',
       [eventId]
     );
 
@@ -1856,6 +1866,13 @@ async function saveAttendance(
       return res.status(404).json({
         error:
           'Nie znaleziono zbiórki.'
+      });
+    }
+
+    if (ev.rows[0].completed) {
+      return res.status(400).json({
+        error:
+          'Ta zbiórka została już zakończona.'
       });
     }
 
@@ -1953,10 +1970,20 @@ app.get(
     try {
       const r = await pool.query(
         `
-        SELECT *
-        FROM attendance
-        WHERE event_id=$1
-        ORDER BY member_name
+        SELECT
+          m.id AS member_id,
+          m.first_name,
+          m.last_name,
+          m.photo,
+          TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))) AS member_name,
+          a.status,
+          a.created_at
+        FROM members m
+        LEFT JOIN attendance a
+          ON a.event_id=$1
+         AND a.member_name=TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))
+        WHERE COALESCE(m.role,'member')='member'
+        ORDER BY LOWER(TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))), m.id
         `,
         [req.params.eventId]
       );
@@ -1964,6 +1991,7 @@ app.get(
       res.json(r.rows);
 
     } catch (e) {
+      console.error(e);
       res.status(500).json({
         error:
           'Nie udało się pobrać obecności.'
@@ -1971,6 +1999,111 @@ app.get(
     }
   }
 );
+
+
+// ======================================================
+// ZAKOŃCZENIE ZBIÓRKI
+// ======================================================
+
+app.post(
+  '/api/events/:id/complete',
+  auth,
+  staff,
+  async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const event = await client.query(
+        'SELECT * FROM events WHERE id=$1 FOR UPDATE',
+        [req.params.id]
+      );
+
+      if (!event.rows[0]) {
+        await client.query('ROLLBACK');
+
+        return res.status(404).json({
+          error:
+            'Nie znaleziono zbiórki.'
+        });
+      }
+
+      if (event.rows[0].completed) {
+        await client.query('COMMIT');
+        return res.json(event.rows[0]);
+      }
+
+      const members = await client.query(`
+        SELECT
+          id,
+          first_name,
+          last_name
+        FROM members
+        WHERE COALESCE(role,'member')='member'
+        ORDER BY id
+      `);
+
+      for (const member of members.rows) {
+        const name =
+          `${member.first_name || ''} ${member.last_name || ''}`
+            .trim();
+
+        if (!name) continue;
+
+        await client.query(
+          `
+          INSERT INTO attendance
+          (event_id,member_name,status)
+          VALUES($1,$2,'maybe')
+          ON CONFLICT(event_id,member_name)
+          DO NOTHING
+          `,
+          [
+            req.params.id,
+            name
+          ]
+        );
+      }
+
+      const updated = await client.query(`
+        UPDATE events
+        SET
+          completed=TRUE,
+          completed_at=NOW()
+        WHERE id=$1
+        RETURNING *
+      `, [
+        req.params.id
+      ]);
+
+      await client.query('COMMIT');
+
+      res.json(updated.rows[0]);
+
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+
+      console.error(
+        'Błąd kończenia zbiórki:',
+        e
+      );
+
+      res.status(500).json({
+        error:
+          'Nie udało się zakończyć zbiórki.'
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ======================================================
+// STATYSTYKI CZŁONKA
+// ======================================================
 
 app.get(
   '/api/member-stats/:memberId',
@@ -2078,7 +2211,7 @@ app.get(
 
 
 // ======================================================
-// FREKWENCJA ROCZNA — WSZYSCY CZŁONKOWIE
+// FREKWENCJA ROCZNA
 // ======================================================
 
 app.get(
@@ -2088,7 +2221,8 @@ app.get(
   async (req, res) => {
     try {
       const year = Number(
-        req.query.year || new Date().getFullYear()
+        req.query.year ||
+        new Date().getFullYear()
       );
 
       if (
@@ -2097,7 +2231,8 @@ app.get(
         year > 2100
       ) {
         return res.status(400).json({
-          error: 'Nieprawidłowy rok.'
+          error:
+            'Nieprawidłowy rok.'
         });
       }
 
@@ -2181,8 +2316,11 @@ app.get(
         const no = Number(x.no || 0);
         const maybe = Number(x.maybe || 0);
 
-        const confirmed = yes + no;
-        const total = confirmed + maybe;
+        const confirmed =
+          yes + no;
+
+        const total =
+          confirmed + maybe;
 
         return {
           id: Number(x.id),
@@ -2202,7 +2340,11 @@ app.get(
           total,
 
           percentage: confirmed
-            ? Math.round(yes / confirmed * 100)
+            ? Math.round(
+                yes /
+                  confirmed *
+                  100
+              )
             : 0
         };
       });
