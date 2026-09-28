@@ -57,13 +57,20 @@ app.use(
   )
 );
 
+
+/* =========================================================
+   POMOCNICZE
+========================================================= */
+
 const hashCode = code =>
   crypto
     .createHash('sha256')
     .update(String(code || ''))
     .digest('hex');
 
+
 const normRole = role => {
+
   const r =
     String(role || '')
       .toLowerCase()
@@ -90,11 +97,14 @@ const normRole = role => {
   return r;
 };
 
+
 const isStaff = req =>
   req.role === 'admin' ||
   req.role === 'guardian';
 
+
 async function auth(req, res, next) {
+
   const role =
     normRole(req.headers['x-role']);
 
@@ -116,27 +126,35 @@ async function auth(req, res, next) {
   req.memberId = memberId;
 
   try {
+
     if (
       role === 'admin' &&
       code === ADMIN_CODE
     ) {
+
       req.authenticated = true;
+
       return next();
     }
+
 
     if (
       role === 'guardian' &&
       code === GUARDIAN_CODE
     ) {
+
       req.authenticated = true;
+
       return next();
     }
+
 
     if (
       role === 'member' &&
       memberId &&
       code
     ) {
+
       const r =
         await pool.query(
           `
@@ -153,41 +171,54 @@ async function auth(req, res, next) {
           [memberId]
         );
 
+
       if (
         !r.rows[0] ||
         r.rows[0].code_hash !==
           hashCode(code)
       ) {
+
         return res.status(401).json({
           error:
             'Nieprawidłowe dane logowania.'
         });
       }
 
-      req.member = r.rows[0];
-      req.authenticated = true;
+
+      req.member =
+        r.rows[0];
+
+      req.authenticated =
+        true;
 
       return next();
     }
 
+
     return res.status(401).json({
-      error: 'Brak autoryzacji.'
+      error:
+        'Brak autoryzacji.'
     });
 
   } catch (e) {
+
     console.error(e);
 
     return res.status(500).json({
-      error: 'Błąd autoryzacji.'
+      error:
+        'Błąd autoryzacji.'
     });
   }
 }
 
+
 function staff(req, res, next) {
+
   return isStaff(req)
     ? next()
     : res.status(403).json({
-        error: 'Brak uprawnień.'
+        error:
+          'Brak uprawnień.'
       });
 }
 
@@ -317,7 +348,18 @@ async function initDb() {
 
 
   /* =======================================================
-     UZUPEŁNIANIE STAREJ TABELI MEMBERS
+     DODATKOWE KOLUMNY EVENTS
+  ======================================================= */
+
+  await pool.query(`
+    ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS completed
+    BOOLEAN NOT NULL DEFAULT FALSE
+  `);
+
+
+  /* =======================================================
+     UZUPEŁNIANIE TABELI MEMBERS
   ======================================================= */
 
   await pool.query(`
@@ -342,10 +384,7 @@ async function initDb() {
 
 
   /* =======================================================
-     NAPRAWA STAREJ TABELI ATTENDANCE
-     
-     CREATE TABLE IF NOT EXISTS NIE AKTUALIZUJE
-     ISTNIEJĄCEJ TABELI.
+     NAPRAWA ATTENDANCE
   ======================================================= */
 
   await pool.query(`
@@ -366,7 +405,7 @@ async function initDb() {
 
 
   /* =======================================================
-     USUNIĘCIE EWENTUALNYCH DUPLIKATÓW
+     USUNIĘCIE DUPLIKATÓW OBECNOŚCI
   ======================================================= */
 
   await pool.query(`
@@ -380,14 +419,24 @@ async function initDb() {
 
 
   /* =======================================================
-     UNIKALNOŚĆ:
-     JEDEN CZŁONEK = JEDNA ODPOWIEDŹ NA ZBIÓRKĘ
+     UNIKALNOŚĆ OBECNOŚCI
   ======================================================= */
 
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS
     attendance_event_member_unique
     ON attendance(event_id, member_name)
+  `);
+
+
+  /* =======================================================
+     UNIKALNOŚĆ HISTORII MIESIĘCY
+  ======================================================= */
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    newspaper_history_month_key_unique
+    ON newspaper_history(month_key)
   `);
 
 
@@ -401,9 +450,11 @@ async function initDb() {
       FROM newspaper_groups
     `);
 
+
   if (
     c.rows[0].count === 0
   ) {
+
     await seedNewspaperGroups();
   }
 }
@@ -416,6 +467,7 @@ async function initDb() {
 async function seedNewspaperGroups() {
 
   const groups = [
+
     [
       'Wiesiółka',
       'Henryka Pobożnego i to osiedle',
@@ -461,9 +513,13 @@ async function seedNewspaperGroups() {
       [],
       75
     ]
+
   ];
 
-  for (const g of groups) {
+
+  for (
+    const g of groups
+  ) {
 
     await pool.query(
       `
@@ -506,13 +562,18 @@ function groupJson(
 ) {
 
   return {
-    id: row.id,
 
-    name: row.name,
+    id:
+      row.id,
 
-    region: row.region,
+    name:
+      row.name,
 
-    color: row.color,
+    region:
+      row.region,
+
+    color:
+      row.color,
 
     streets:
       Array.isArray(row.streets)
@@ -573,10 +634,13 @@ async function getGroups() {
           id
         `
       )
+
     ]);
+
 
   const members =
     m.rows;
+
 
   return g.rows.map(row => {
 
@@ -584,6 +648,7 @@ async function getGroups() {
       Array.isArray(row.member_ids)
         ? row.member_ids.map(Number)
         : [];
+
 
     let names =
       Array.isArray(row.member_names)
@@ -645,6 +710,7 @@ async function sendPushToAll(
   ) {
     return;
   }
+
 
   const r =
     await pool.query(
@@ -732,7 +798,9 @@ app.post(
       }
 
 
-      if (role === 'member') {
+      if (
+        role === 'member'
+      ) {
 
         const r =
           await pool.query(
@@ -769,9 +837,11 @@ app.post(
 
         return res.json({
 
-          role: 'member',
+          role:
+            'member',
 
-          memberId: m.id,
+          memberId:
+            m.id,
 
           firstName:
             m.first_name || '',
@@ -780,7 +850,9 @@ app.post(
             m.last_name || '',
 
           member: {
-            id: m.id,
+
+            id:
+              m.id,
 
             first_name:
               m.first_name || '',
@@ -794,6 +866,7 @@ app.post(
             photo:
               m.photo || ''
           }
+
         });
       }
 
@@ -881,14 +954,24 @@ app.get(
               created_at DESC,
               id DESC
           `)
+
         ]);
 
 
       res.json({
-        events: events.rows,
-        news: news.rows,
-        members: members.rows,
-        urgent: urgent.rows
+
+        events:
+          events.rows,
+
+        news:
+          news.rows,
+
+        members:
+          members.rows,
+
+        urgent:
+          urgent.rows
+
       });
 
     } catch (e) {
@@ -942,13 +1025,21 @@ app.get(
             FROM news
             `
           )
+
         ]);
 
 
       res.json({
-        members: m.rows[0].c,
-        events: e.rows[0].c,
-        news: n.rows[0].c
+
+        members:
+          m.rows[0].c,
+
+        events:
+          e.rows[0].c,
+
+        news:
+          n.rows[0].c
+
       });
 
     } catch (e) {
@@ -963,7 +1054,7 @@ app.get(
 
 
 /* =========================================================
-   EVENTS
+   EVENTS - DODAWANIE
 ========================================================= */
 
 app.post(
@@ -976,6 +1067,7 @@ app.post(
 
       const b =
         req.body;
+
 
       const title =
         String(
@@ -1003,7 +1095,8 @@ app.post(
             event_date,
             event_time,
             place,
-            description
+            description,
+            completed
           )
           VALUES
           (
@@ -1011,12 +1104,15 @@ app.post(
             $2,
             $3,
             $4,
-            $5
+            $5,
+            FALSE
           )
           RETURNING *
           `,
           [
+
             title,
+
             b.event_date ||
               b.date ||
               null,
@@ -1034,6 +1130,7 @@ app.post(
               b.desc ||
               b.text ||
               ''
+
           ]
         );
 
@@ -1041,10 +1138,13 @@ app.post(
       try {
 
         await sendPushToAll({
+
           title:
             'Nowa zbiórka MDP',
+
           body:
             title
+
         });
 
       } catch (e) {
@@ -1070,6 +1170,105 @@ app.post(
 );
 
 
+/* =========================================================
+   ZAKOŃCZENIE ZBIÓRKI
+========================================================= */
+
+app.post(
+  '/api/events/:id/complete',
+  auth,
+  staff,
+  async (req, res) => {
+
+    try {
+
+      const eventId =
+        Number(req.params.id);
+
+
+      if (
+        !Number.isInteger(eventId) ||
+        eventId <= 0
+      ) {
+
+        return res.status(400).json({
+          error:
+            'Nieprawidłowe ID zbiórki.'
+        });
+      }
+
+
+      const existing =
+        await pool.query(
+          `
+          SELECT *
+          FROM events
+          WHERE id=$1
+          `,
+          [eventId]
+        );
+
+
+      if (!existing.rows[0]) {
+
+        return res.status(404).json({
+          error:
+            'Nie znaleziono zbiórki.'
+        });
+      }
+
+
+      const updated =
+        await pool.query(
+          `
+          UPDATE events
+          SET completed=TRUE
+          WHERE id=$1
+          RETURNING *
+          `,
+          [eventId]
+        );
+
+
+      return res.json({
+
+        ok:
+          true,
+
+        event:
+          updated.rows[0]
+
+      });
+
+    } catch (e) {
+
+      console.error(
+        'BŁĄD POST /api/events/:id/complete:',
+        e
+      );
+
+
+      return res.status(500).json({
+
+        error:
+          'Nie udało się zakończyć zbiórki.',
+
+        details:
+          process.env.NODE_ENV ===
+          'production'
+            ? undefined
+            : e.message
+
+      });
+    }
+  }
+);
+
+
+/* =========================================================
+   USUWANIE ZBIÓRKI
+========================================================= */
+
 app.delete(
   '/api/events/:id',
   auth,
@@ -1086,11 +1285,14 @@ app.delete(
         [req.params.id]
       );
 
+
       res.json({
         ok: true
       });
 
     } catch (e) {
+
+      console.error(e);
 
       res.status(500).json({
         error:
@@ -1115,6 +1317,7 @@ app.post(
 
       const b =
         req.body;
+
 
       const title =
         String(
@@ -1149,12 +1352,15 @@ app.post(
           RETURNING *
           `,
           [
+
             title,
+
             b.body ||
               b.content ||
               b.description ||
               b.text ||
               ''
+
           ]
         );
 
@@ -1162,10 +1368,13 @@ app.post(
       try {
 
         await sendPushToAll({
+
           title:
             'Nowe ogłoszenie MDP',
+
           body:
             title
+
         });
 
       } catch (e) {
@@ -1207,6 +1416,7 @@ app.delete(
         [req.params.id]
       );
 
+
       res.json({
         ok: true
       });
@@ -1239,6 +1449,7 @@ app.post(
           req.body.title ||
           ''
         ).trim();
+
 
       const body =
         String(
@@ -1299,10 +1510,13 @@ app.post(
       try {
 
         await sendPushToAll({
+
           title:
             '🚨 PILNY KOMUNIKAT MDP',
+
           body:
             title
+
         });
 
       } catch (e) {
@@ -1357,6 +1571,7 @@ app.get(
                 created_at DESC,
                 id DESC
               `
+
         );
 
 
@@ -1391,6 +1606,7 @@ app.delete(
         `,
         [req.params.id]
       );
+
 
       res.json({
         ok: true
@@ -1492,10 +1708,13 @@ app.post(
       try {
 
         await sendPushToAll({
+
           title:
             'Nowe zgłoszenie od członka',
+
           body:
             `${memberName}: ${type}`
+
         });
 
       } catch (e) {
@@ -1544,6 +1763,7 @@ app.get(
             id DESC
           `
         );
+
 
       res.json(
         r.rows
@@ -1706,12 +1926,18 @@ app.post(
             photo
           `,
           [
+
             first,
+
             last,
+
             `${first} ${last}`,
+
             req.body.role ||
               'member',
+
             hashCode(code)
+
           ]
         );
 
@@ -1796,6 +2022,7 @@ app.put(
             photo
           `,
           [
+
             b.first_name ||
               b.firstName ||
               null,
@@ -1818,6 +2045,7 @@ app.put(
               null,
 
             req.params.id
+
           ]
         );
 
@@ -1896,7 +2124,8 @@ app.get(
       ) {
 
         return res.json({
-          role: req.role
+          role:
+            req.role
         });
       }
 
@@ -2059,7 +2288,8 @@ async function saveAttendance(
     }
 
 
-    let memberName = '';
+    let memberName =
+      '';
 
 
     if (
@@ -2143,6 +2373,7 @@ async function saveAttendance(
       DO UPDATE SET
         status =
           EXCLUDED.status,
+
         created_at =
           NOW()
       `,
@@ -2155,10 +2386,18 @@ async function saveAttendance(
 
 
     res.json({
-      ok: true,
-      event_id: eventId,
-      member_name: memberName,
+
+      ok:
+        true,
+
+      event_id:
+        eventId,
+
+      member_name:
+        memberName,
+
       status
+
     });
 
   } catch (e) {
@@ -2168,7 +2407,9 @@ async function saveAttendance(
       e
     );
 
+
     res.status(500).json({
+
       error:
         'Nie udało się zapisać obecności.',
 
@@ -2177,6 +2418,7 @@ async function saveAttendance(
         'production'
           ? undefined
           : e.message
+
     });
   }
 }
@@ -2186,7 +2428,10 @@ app.post(
   '/api/attendance',
   auth,
   (req, res) =>
-    saveAttendance(req, res)
+    saveAttendance(
+      req,
+      res
+    )
 );
 
 
@@ -2204,7 +2449,6 @@ app.post(
 
 /* =========================================================
    POKAŻ OBECNOŚĆ
-   POPRAWIONA WERSJA
 ========================================================= */
 
 app.get(
@@ -2275,7 +2519,6 @@ app.get(
               ''
             ) AS photo,
 
-
             TRIM(
               CONCAT(
                 COALESCE(
@@ -2290,14 +2533,11 @@ app.get(
               )
             ) AS member_name,
 
-
             a.status,
 
             a.created_at
 
-
           FROM members m
-
 
           LEFT JOIN attendance a
 
@@ -2319,13 +2559,11 @@ app.get(
                 )
               )
 
-
           WHERE
             COALESCE(
               m.role,
               'member'
             ) = 'member'
-
 
           ORDER BY
 
@@ -2373,6 +2611,7 @@ app.get(
           'production'
             ? undefined
             : e.message
+
       });
     }
   }
@@ -2451,9 +2690,16 @@ app.get(
 
 
       const s = {
-        yes: 0,
-        maybe: 0,
-        no: 0
+
+        yes:
+          0,
+
+        maybe:
+          0,
+
+        no:
+          0
+
       };
 
 
@@ -2467,11 +2713,13 @@ app.get(
       const confirmed =
         s.yes + s.no;
 
+
       const total =
         confirmed + s.maybe;
 
 
       res.json({
+
         member:
           m.rows[0],
 
@@ -2504,7 +2752,9 @@ app.get(
                     100
                 )
               : 0
+
         }
+
       });
 
     } catch (e) {
@@ -2521,7 +2771,7 @@ app.get(
 
 
 /* =========================================================
-   GAZETY
+   GAZETY - POBIERANIE
 ========================================================= */
 
 app.get(
@@ -2548,6 +2798,10 @@ app.get(
 );
 
 
+/* =========================================================
+   GAZETY - DODAWANIE GRUPY
+========================================================= */
+
 app.post(
   '/api/newspaper-groups',
   auth,
@@ -2559,10 +2813,12 @@ app.post(
       const b =
         req.body;
 
+
       const name =
         String(
           b.name || ''
         ).trim();
+
 
       const region =
         String(
@@ -2596,6 +2852,7 @@ app.post(
 
       const m =
         ids.length
+
           ? await pool.query(
               `
               SELECT
@@ -2608,6 +2865,7 @@ app.post(
               `,
               [ids]
             )
+
           : {
               rows: []
             };
@@ -2660,8 +2918,11 @@ app.post(
           RETURNING *
           `,
           [
+
             name,
+
             region,
+
             b.color ||
               '#2878ff',
 
@@ -2682,6 +2943,7 @@ app.post(
             JSON.stringify(
               names
             )
+
           ]
         );
 
@@ -2757,7 +3019,9 @@ app.put(
           : [];
 
 
-      /* CZŁONEK */
+      /* =====================================================
+         CZŁONEK
+      ===================================================== */
 
       if (
         req.role === 'member'
@@ -2796,14 +3060,18 @@ app.put(
         const started =
           req.body.started ===
           undefined
+
             ? !!old.started
+
             : !!req.body.started;
 
 
         const done =
           req.body.done ===
           undefined
+
             ? !!old.done
+
             : !!req.body.done;
 
 
@@ -2844,7 +3112,9 @@ app.put(
       }
 
 
-      /* OPIEKUN / ADMIN */
+      /* =====================================================
+         OPIEKUN / ADMIN
+      ===================================================== */
 
       if (
         !isStaff(req)
@@ -2871,6 +3141,7 @@ app.put(
 
       const m =
         ids.length
+
           ? await pool.query(
               `
               SELECT
@@ -2883,6 +3154,7 @@ app.put(
               `,
               [ids]
             )
+
           : {
               rows: []
             };
@@ -2892,6 +3164,7 @@ app.put(
         Array.isArray(
           req.body.memberIds
         )
+
           ? m.rows
               .map(
                 x =>
@@ -2901,6 +3174,7 @@ app.put(
                   `.trim()
               )
               .filter(Boolean)
+
           : oldNames;
 
 
@@ -2993,6 +3267,7 @@ app.put(
             ),
 
             req.params.id
+
           ]
         );
 
@@ -3018,7 +3293,7 @@ app.put(
 
 
 /* =========================================================
-   START / POSTĘP / ZAKOŃCZENIE GAZET
+   START GAZET
 ========================================================= */
 
 app.post(
@@ -3038,6 +3313,10 @@ app.post(
 );
 
 
+/* =========================================================
+   POSTĘP GAZET
+========================================================= */
+
 app.post(
   '/api/newspaper-groups/:id/progress',
   auth,
@@ -3049,6 +3328,10 @@ app.post(
     )
 );
 
+
+/* =========================================================
+   ZAKOŃCZENIE GAZET
+========================================================= */
 
 app.post(
   '/api/newspaper-groups/:id/complete',
@@ -3156,14 +3439,18 @@ async function updateGroupProgress(
     const started =
       req.body.started ===
       undefined
+
         ? !!g.started
+
         : !!req.body.started;
 
 
     const done =
       req.body.done ===
       undefined
+
         ? !!g.done
+
         : !!req.body.done;
 
 
@@ -3211,6 +3498,10 @@ async function updateGroupProgress(
   }
 }
 
+
+/* =========================================================
+   USUWANIE GRUPY GAZET
+========================================================= */
 
 app.delete(
   '/api/newspaper-groups/:id',
@@ -3332,7 +3623,7 @@ app.get(
 /* =========================================================
    NOWY MIESIĄC GAZET
 
-   ZAPISUJE STAN POPRZEDNIEGO MIESIĄCA.
+   ZAPISUJE POPRZEDNI MIESIĄC.
 
    NIE USUWA:
    - grup
@@ -3340,9 +3631,9 @@ app.get(
    - regionów
    - ulic
    - kolorów
-   - liczby egzemplarzy
+   - egzemplarzy
    - członków
-   - kolejności przypisania
+   - przypisań
 
    ZERUJE TYLKO:
    - delivered
@@ -3358,6 +3649,7 @@ app.post(
 
     const client =
       await pool.connect();
+
 
     try {
 
@@ -3384,6 +3676,7 @@ app.post(
         await client.query(
           'ROLLBACK'
         );
+
 
         return res.status(400).json({
           error:
@@ -3417,8 +3710,11 @@ app.post(
         new Intl.DateTimeFormat(
           'pl-PL',
           {
-            month: 'long',
-            year: 'numeric'
+            month:
+              'long',
+
+            year:
+              'numeric'
           }
         ).format(now);
 
@@ -3477,6 +3773,7 @@ app.post(
               )
                 ? g.member_names
                 : []
+
           })
         );
 
@@ -3514,7 +3811,9 @@ app.post(
           `,
           [
             monthKey,
+
             monthLabel,
+
             JSON.stringify(
               snapshot
             )
@@ -3522,6 +3821,18 @@ app.post(
         );
       }
 
+
+      /*
+       * BARDZO WAŻNE:
+       *
+       * Tutaj NIE MA DELETE.
+       * Nie kasujemy grup.
+       * Nie kasujemy ulic.
+       * Nie kasujemy członków.
+       * Nie kasujemy przypisań.
+       *
+       * Zerujemy wyłącznie postęp.
+       */
 
       await client.query(
         `
@@ -3540,20 +3851,25 @@ app.post(
 
 
       res.json({
-        ok: true,
+
+        ok:
+          true,
 
         archivedMonth:
           monthLabel,
 
         groups:
           await getGroups()
+
       });
 
 
     } catch (e) {
 
       await client
-        .query('ROLLBACK')
+        .query(
+          'ROLLBACK'
+        )
         .catch(() => {});
 
 
@@ -3574,7 +3890,7 @@ app.post(
 
 
 /* =========================================================
-   PUSH
+   PUSH - SUBSCRIBE
 ========================================================= */
 
 app.post(
@@ -3642,6 +3958,10 @@ app.post(
 );
 
 
+/* =========================================================
+   PUSH - PUBLIC KEY
+========================================================= */
+
 app.get(
   '/api/push/public-key',
   auth,
@@ -3665,6 +3985,10 @@ app.get(
   }
 );
 
+
+/* =========================================================
+   PUSH - UNSUBSCRIBE
+========================================================= */
 
 app.post(
   '/api/push/unsubscribe',
@@ -3704,6 +4028,10 @@ app.post(
 );
 
 
+/* =========================================================
+   PUSH - TEST
+========================================================= */
+
 app.post(
   '/api/push/test',
   auth,
@@ -3713,12 +4041,14 @@ app.post(
     try {
 
       await sendPushToAll({
+
         title:
           'MDP Wiesiółka',
 
         body:
           req.body?.body ||
           'Testowe powiadomienie'
+
       });
 
 
