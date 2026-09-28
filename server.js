@@ -20,7 +20,8 @@ const ADMIN_CODE = process.env.ADMIN_CODE || '0000';
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_EMAIL =
-  process.env.VAPID_EMAIL || 'mailto:admin@example.com';
+  process.env.VAPID_EMAIL ||
+  'mailto:admin@example.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -259,6 +260,7 @@ async function initDb() {
       event_time TEXT,
       place TEXT,
       description TEXT,
+      outfit TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -294,6 +296,7 @@ async function initDb() {
       id SERIAL PRIMARY KEY,
       endpoint TEXT UNIQUE NOT NULL,
       subscription JSONB NOT NULL,
+      member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -347,21 +350,45 @@ async function initDb() {
     );
   `);
 
-  await pool.query(
-    'ALTER TABLE members ADD COLUMN IF NOT EXISTS first_name TEXT'
-  );
+  // ====================================================
+  // MIGRACJE
+  // ====================================================
 
-  await pool.query(
-    'ALTER TABLE members ADD COLUMN IF NOT EXISTS last_name TEXT'
-  );
+  await pool.query(`
+    ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS outfit TEXT
+  `);
 
-  await pool.query(
-    'ALTER TABLE members ADD COLUMN IF NOT EXISTS code_hash TEXT'
-  );
+  await pool.query(`
+    ALTER TABLE members
+    ADD COLUMN IF NOT EXISTS first_name TEXT
+  `);
 
-  await pool.query(
-    'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
-  );
+  await pool.query(`
+    ALTER TABLE members
+    ADD COLUMN IF NOT EXISTS last_name TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE members
+    ADD COLUMN IF NOT EXISTS code_hash TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE members
+    ADD COLUMN IF NOT EXISTS photo TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE push_subscriptions
+    ADD COLUMN IF NOT EXISTS member_id INTEGER
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+    push_subscriptions_member_id_idx
+    ON push_subscriptions(member_id)
+  `);
 
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS
@@ -524,10 +551,307 @@ async function sendPushToAll(payload) {
           'DELETE FROM push_subscriptions WHERE id=$1',
           [s.id]
         );
+      } else {
+        console.error(
+          'Błąd wysyłania push:',
+          e.message || e
+        );
       }
     }
   }
 }
+
+
+// ======================================================
+// PUSH — KONKRETNY CZŁONEK
+// ======================================================
+
+async function sendPushToMember(memberId, payload) {
+  if (
+    !VAPID_PUBLIC_KEY ||
+    !VAPID_PRIVATE_KEY ||
+    !memberId
+  ) {
+    return;
+  }
+
+  const r = await pool.query(
+    `
+    SELECT
+      id,
+      endpoint,
+      subscription
+    FROM push_subscriptions
+    WHERE member_id=$1
+    `,
+    [memberId]
+  );
+
+  for (const s of r.rows) {
+    try {
+      await webpush.sendNotification(
+        s.subscription,
+        JSON.stringify(payload)
+      );
+    } catch (e) {
+      if (
+        e.statusCode === 404 ||
+        e.statusCode === 410
+      ) {
+        await pool.query(
+          `
+          DELETE FROM push_subscriptions
+          WHERE id=$1
+          `,
+          [s.id]
+        );
+      } else {
+        console.error(
+          `Błąd push dla członka ${memberId}:`,
+          e.message || e
+        );
+      }
+    }
+  }
+}
+
+
+// ======================================================
+// PUSH — PRZYPOMNIENIA O ZBIÓRKACH
+//
+// Zasady:
+// - brak odpowiedzi -> przypomnienie
+// - maybe -> przypomnienie
+// - yes -> brak przypomnienia
+// - no -> brak przypomnienia
+// - po rozpoczęciu zbiórki -> brak przypomnienia
+//
+// Sprawdzane co 1 minutę.
+// Rzeczywiste przypomnienie co 30 minut.
+// ======================================================
+
+const REMINDER_INTERVAL_MS = 60 * 1000;
+const REMINDER_EVERY_MS = 30 * 60 * 1000;
+
+async function sendAttendanceReminders() {
+  if (
+    !VAPID_PUBLIC_KEY ||
+    !VAPID_PRIVATE_KEY
+  ) {
+    return;
+  }
+
+  try {
+    const eventsResult = await pool.query(`
+      SELECT
+        id,
+        title,
+        event_date,
+        event_time,
+        place,
+        outfit
+      FROM events
+      WHERE
+        event_date IS NOT NULL
+        AND event_date <> ''
+    `);
+
+    if (!eventsResult.rows.length) {
+      return;
+    }
+
+    const membersResult = await pool.query(`
+      SELECT
+        id,
+        first_name,
+        last_name
+      FROM members
+      ORDER BY id
+    `);
+
+    const subscriptionsResult = await pool.query(`
+      SELECT
+        id,
+        member_id
+      FROM push_subscriptions
+      WHERE member_id IS NOT NULL
+    `);
+
+    const subscribedMembers = new Set(
+      subscriptionsResult.rows
+        .map(x => Number(x.member_id))
+        .filter(x => Number.isInteger(x) && x > 0)
+    );
+
+    if (!subscribedMembers.size) {
+      return;
+    }
+
+    const now = new Date();
+
+    for (const event of eventsResult.rows) {
+      const dateText =
+        String(event.event_date || '').trim();
+
+      const timeText =
+        String(event.event_time || '00:00').trim();
+
+      if (!dateText) continue;
+
+      const eventDate = new Date(
+        `${dateText}T${timeText || '00:00'}:00`
+      );
+
+      if (Number.isNaN(eventDate.getTime())) {
+        continue;
+      }
+
+      // Zbiórka już się rozpoczęła.
+      if (eventDate.getTime() <= now.getTime()) {
+        continue;
+      }
+
+      // Pobieramy odpowiedzi.
+      const attendanceResult =
+        await pool.query(
+          `
+          SELECT
+            member_name,
+            status
+          FROM attendance
+          WHERE event_id=$1
+          `,
+          [event.id]
+        );
+
+      const attendanceMap = new Map();
+
+      for (const a of attendanceResult.rows) {
+        attendanceMap.set(
+          String(a.member_name || '').trim(),
+          String(a.status || '').trim()
+        );
+      }
+
+      for (const member of membersResult.rows) {
+        const memberId = Number(member.id);
+
+        if (!subscribedMembers.has(memberId)) {
+          continue;
+        }
+
+        const memberName =
+          `${member.first_name || ''} ${member.last_name || ''}`
+            .trim();
+
+        if (!memberName) {
+          continue;
+        }
+
+        const status =
+          attendanceMap.get(memberName) || '';
+
+        // yes i no kończą przypomnienia.
+        // Brak odpowiedzi oraz maybe = przypominamy.
+        if (
+          status === 'yes' ||
+          status === 'no'
+        ) {
+          continue;
+        }
+
+        const msUntilEvent =
+          eventDate.getTime() -
+          now.getTime();
+
+        // Przypomnienia mają sens tylko przed zbiórką.
+        if (msUntilEvent <= 0) {
+          continue;
+        }
+
+        /*
+         * Żeby nie spamować co minutę, wykorzystujemy
+         * tabelę pomocniczą w pamięci procesu.
+         */
+        const key =
+          `${event.id}:${memberId}`;
+
+        const lastSent =
+          attendanceReminderMemory.get(key) || 0;
+
+        if (
+          lastSent &&
+          now.getTime() - lastSent <
+            REMINDER_EVERY_MS
+        ) {
+          continue;
+        }
+
+        const outfitText =
+          String(event.outfit || '').trim();
+
+        let body =
+          `Zbiórka „${event.title || 'MDP'}” — odpowiedz, czy będziesz.`;
+
+        if (status === 'maybe') {
+          body =
+            `Zbiórka „${event.title || 'MDP'}” — nadal masz odpowiedź „Może”. Potwierdź, czy będziesz.`;
+        }
+
+        if (outfitText) {
+          body += ` Ubiór: ${outfitText}.`;
+        }
+
+        try {
+          await sendPushToMember(
+            memberId,
+            {
+              title: '🔔 Potwierdź obecność',
+              body,
+              eventId: Number(event.id),
+              type: 'attendance-reminder',
+              url: '/'
+            }
+          );
+
+          attendanceReminderMemory.set(
+            key,
+            now.getTime()
+          );
+        } catch (e) {
+          console.error(
+            'Błąd przypomnienia:',
+            e
+          );
+        }
+      }
+    }
+
+    // Czyścimy stare wpisy pamięci.
+    for (
+      const [
+        key,
+        timestamp
+      ] of attendanceReminderMemory.entries()
+    ) {
+      if (
+        now.getTime() - timestamp >
+        24 * 60 * 60 * 1000
+      ) {
+        attendanceReminderMemory.delete(key);
+      }
+    }
+
+  } catch (e) {
+    console.error(
+      'Błąd automatycznych przypomnień:',
+      e
+    );
+  }
+}
+
+const attendanceReminderMemory =
+  new Map();
 
 
 // ======================================================
@@ -550,7 +874,10 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    if (role === 'guardian' && code === GUARDIAN_CODE) {
+    if (
+      role === 'guardian' &&
+      code === GUARDIAN_CODE
+    ) {
       return res.json({
         role: 'guardian'
       });
@@ -577,7 +904,8 @@ app.post('/api/login', async (req, res) => {
 
       if (!m) {
         return res.status(401).json({
-          error: 'Nieprawidłowy kod członka.'
+          error:
+            'Nieprawidłowy kod członka.'
         });
       }
 
@@ -598,14 +926,16 @@ app.post('/api/login', async (req, res) => {
     }
 
     return res.status(401).json({
-      error: 'Nieprawidłowe dane logowania.'
+      error:
+        'Nieprawidłowe dane logowania.'
     });
 
   } catch (e) {
     console.error(e);
 
     res.status(500).json({
-      error: 'Błąd logowania.'
+      error:
+        'Błąd logowania.'
     });
   }
 });
@@ -675,7 +1005,8 @@ app.get('/api/data', auth, async (req, res) => {
     console.error(e);
 
     res.status(500).json({
-      error: 'Nie udało się pobrać danych.'
+      error:
+        'Nie udało się pobrać danych.'
     });
   }
 });
@@ -708,7 +1039,8 @@ app.get('/api/stats', auth, async (req, res) => {
 
   } catch (e) {
     res.status(500).json({
-      error: 'Błąd statystyk.'
+      error:
+        'Błąd statystyk.'
     });
   }
 });
@@ -718,63 +1050,113 @@ app.get('/api/stats', auth, async (req, res) => {
 // EVENTS
 // ======================================================
 
-app.post('/api/events', auth, staff, async (req, res) => {
-  try {
-    const b = req.body;
-
-    const title = String(
-      b.title ||
-      b.name ||
-      ''
-    ).trim();
-
-    if (!title) {
-      return res.status(400).json({
-        error: 'Podaj nazwę zbiórki.'
-      });
-    }
-
-    const r = await pool.query(
-      `
-      INSERT INTO events
-      (title,event_date,event_time,place,description)
-      VALUES($1,$2,$3,$4,$5)
-      RETURNING *
-      `,
-      [
-        title,
-        b.event_date || b.date || null,
-        b.event_time || b.time || null,
-        b.place ||
-          b.location ||
-          b.address ||
-          '',
-        b.description ||
-          b.desc ||
-          b.text ||
-          ''
-      ]
-    );
-
+app.post(
+  '/api/events',
+  auth,
+  staff,
+  async (req, res) => {
     try {
-      await sendPushToAll({
-        title: 'Nowa zbiórka MDP',
-        body: title
-      });
+      const b = req.body;
+
+      const title = String(
+        b.title ||
+        b.name ||
+        ''
+      ).trim();
+
+      if (!title) {
+        return res.status(400).json({
+          error:
+            'Podaj nazwę zbiórki.'
+        });
+      }
+
+      const outfit =
+        String(
+          b.outfit ||
+          b.clothing ||
+          ''
+        ).trim();
+
+      const r = await pool.query(
+        `
+        INSERT INTO events
+        (
+          title,
+          event_date,
+          event_time,
+          place,
+          description,
+          outfit
+        )
+        VALUES($1,$2,$3,$4,$5,$6)
+        RETURNING *
+        `,
+        [
+          title,
+
+          b.event_date ||
+            b.date ||
+            null,
+
+          b.event_time ||
+            b.time ||
+            null,
+
+          b.place ||
+            b.location ||
+            b.address ||
+            '',
+
+          b.description ||
+            b.desc ||
+            b.text ||
+            '',
+
+          outfit
+        ]
+      );
+
+      try {
+        let body =
+          title;
+
+        if (outfit) {
+          body +=
+            ` • Ubiór: ${outfit}`;
+        }
+
+        body +=
+          ' • Kliknij zbiórkę i potwierdź obecność.';
+
+        await sendPushToAll({
+          title:
+            '📅 Nowa zbiórka MDP',
+          body,
+          eventId:
+            Number(r.rows[0].id),
+          type:
+            'new-event',
+          url:
+            '/'
+        });
+
+      } catch (e) {
+        console.error(e);
+      }
+
+      res.json(r.rows[0]);
+
     } catch (e) {
       console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się dodać zbiórki.'
+      });
     }
-
-    res.json(r.rows[0]);
-
-  } catch (e) {
-    console.error(e);
-
-    res.status(500).json({
-      error: 'Nie udało się dodać zbiórki.'
-    });
   }
-});
+);
 
 app.delete(
   '/api/events/:id',
@@ -787,13 +1169,27 @@ app.delete(
         [req.params.id]
       );
 
+      // Usunięcie z pamięci przypomnień.
+      for (
+        const key of attendanceReminderMemory.keys()
+      ) {
+        if (
+          key.startsWith(
+            `${Number(req.params.id)}:`
+          )
+        ) {
+          attendanceReminderMemory.delete(key);
+        }
+      }
+
       res.json({
         ok: true
       });
 
     } catch (e) {
       res.status(500).json({
-        error: 'Nie udało się usunąć zbiórki.'
+        error:
+          'Nie udało się usunąć zbiórki.'
       });
     }
   }
@@ -804,57 +1200,66 @@ app.delete(
 // NEWS
 // ======================================================
 
-app.post('/api/news', auth, staff, async (req, res) => {
-  try {
-    const b = req.body;
-
-    const title = String(
-      b.title ||
-      b.name ||
-      ''
-    ).trim();
-
-    if (!title) {
-      return res.status(400).json({
-        error: 'Podaj tytuł ogłoszenia.'
-      });
-    }
-
-    const r = await pool.query(
-      `
-      INSERT INTO news(title,body)
-      VALUES($1,$2)
-      RETURNING *
-      `,
-      [
-        title,
-        b.body ||
-          b.content ||
-          b.description ||
-          b.text ||
-          ''
-      ]
-    );
-
+app.post(
+  '/api/news',
+  auth,
+  staff,
+  async (req, res) => {
     try {
-      await sendPushToAll({
-        title: 'Nowe ogłoszenie MDP',
-        body: title
-      });
+      const b = req.body;
+
+      const title = String(
+        b.title ||
+        b.name ||
+        ''
+      ).trim();
+
+      if (!title) {
+        return res.status(400).json({
+          error:
+            'Podaj tytuł ogłoszenia.'
+        });
+      }
+
+      const r = await pool.query(
+        `
+        INSERT INTO news(title,body)
+        VALUES($1,$2)
+        RETURNING *
+        `,
+        [
+          title,
+          b.body ||
+            b.content ||
+            b.description ||
+            b.text ||
+            ''
+        ]
+      );
+
+      try {
+        await sendPushToAll({
+          title:
+            'Nowe ogłoszenie MDP',
+          body:
+            title
+        });
+      } catch (e) {
+        console.error(e);
+      }
+
+      res.json(r.rows[0]);
+
     } catch (e) {
       console.error(e);
+
+      res.status(500).json({
+        error:
+          'Nie udało się dodać ogłoszenia.'
+      });
     }
-
-    res.json(r.rows[0]);
-
-  } catch (e) {
-    console.error(e);
-
-    res.status(500).json({
-      error: 'Nie udało się dodać ogłoszenia.'
-    });
   }
-});
+);
 
 app.delete(
   '/api/news/:id',
@@ -873,7 +1278,8 @@ app.delete(
 
     } catch (e) {
       res.status(500).json({
-        error: 'Nie udało się usunąć ogłoszenia.'
+        error:
+          'Nie udało się usunąć ogłoszenia.'
       });
     }
   }
@@ -902,7 +1308,8 @@ app.post(
 
       if (!title || !body) {
         return res.status(400).json({
-          error: 'Podaj tytuł i treść komunikatu.'
+          error:
+            'Podaj tytuł i treść komunikatu.'
         });
       }
 
@@ -928,8 +1335,10 @@ app.post(
 
       try {
         await sendPushToAll({
-          title: '🚨 PILNY KOMUNIKAT MDP',
-          body: title
+          title:
+            '🚨 PILNY KOMUNIKAT MDP',
+          body:
+            title
         });
       } catch (e) {
         console.error(e);
@@ -1045,7 +1454,8 @@ app.post(
 
       if (!body) {
         return res.status(400).json({
-          error: 'Napisz treść zgłoszenia.'
+          error:
+            'Napisz treść zgłoszenia.'
         });
       }
 
@@ -1071,8 +1481,10 @@ app.post(
 
       try {
         await sendPushToAll({
-          title: 'Nowe zgłoszenie od członka',
-          body: `${memberName}: ${type}`
+          title:
+            'Nowe zgłoszenie od członka',
+          body:
+            `${memberName}: ${type}`
         });
       } catch (e) {
         console.error(e);
@@ -1375,7 +1787,8 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error: 'Błąd profilu.'
+        error:
+          'Błąd profilu.'
       });
     }
   }
@@ -1388,7 +1801,8 @@ app.put(
     try {
       if (req.role !== 'member') {
         return res.status(403).json({
-          error: 'Brak uprawnień.'
+          error:
+            'Brak uprawnień.'
         });
       }
 
@@ -1466,7 +1880,13 @@ async function saveAttendance(
     }
 
     const ev = await pool.query(
-      'SELECT id FROM events WHERE id=$1',
+      `
+      SELECT
+        id,
+        title
+      FROM events
+      WHERE id=$1
+      `,
       [eventId]
     );
 
@@ -1479,15 +1899,23 @@ async function saveAttendance(
 
     let memberName = '';
 
+    let savedMemberId = null;
+
     if (req.role === 'member') {
       memberName =
         `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim();
 
+      savedMemberId =
+        Number(req.member.id);
+
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT first_name,last_name
+        SELECT
+          id,
+          first_name,
+          last_name
         FROM members
         WHERE id=$1
         `,
@@ -1498,6 +1926,9 @@ async function saveAttendance(
         memberName =
           `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
             .trim();
+
+        savedMemberId =
+          Number(m.rows[0].id);
       }
 
     } else {
@@ -1529,10 +1960,36 @@ async function saveAttendance(
       ]
     );
 
+    // Gdy członek wybierze Będę lub Nie będę,
+    // usuwamy blokadę przypomnienia z pamięci.
+    if (
+      savedMemberId &&
+      (
+        status === 'yes' ||
+        status === 'no'
+      )
+    ) {
+      attendanceReminderMemory.delete(
+        `${eventId}:${savedMemberId}`
+      );
+    }
+
+    // Gdy kliknie "Może", ustawiamy 0,
+    // żeby następny cykl mógł przypomnieć.
+    if (
+      savedMemberId &&
+      status === 'maybe'
+    ) {
+      attendanceReminderMemory.delete(
+        `${eventId}:${savedMemberId}`
+      );
+    }
+
     res.json({
       ok: true,
       event_id: eventId,
       member_name: memberName,
+      member_id: savedMemberId,
       status
     });
 
@@ -2292,24 +2749,6 @@ app.delete(
 
 // ======================================================
 // RESET PLANU GAZET
-//
-// WAŻNE:
-// TEN ENDPOINT NIE USUWA JUŻ GRUP.
-//
-// Zachowuje:
-// - grupy
-// - nazwy
-// - regiony
-// - ulice
-// - kolory
-// - liczbę gazet
-// - memberIds
-// - memberNames
-//
-// Resetuje tylko:
-// - delivered
-// - started
-// - done
 // ======================================================
 
 app.post(
@@ -2819,7 +3258,7 @@ app.get(
 
 
 // ======================================================
-// PUSH
+// PUSH — SUBSKRYPCJA
 // ======================================================
 
 app.post(
@@ -2836,23 +3275,44 @@ app.post(
         });
       }
 
+      const memberId =
+        req.role === 'member'
+          ? Number(req.member.id)
+          : (
+              s.memberId
+                ? Number(s.memberId)
+                : null
+            );
+
       await pool.query(
         `
         INSERT INTO push_subscriptions
-        (endpoint,subscription)
-        VALUES($1,$2::jsonb)
+        (
+          endpoint,
+          subscription,
+          member_id
+        )
+        VALUES($1,$2::jsonb,$3)
         ON CONFLICT(endpoint)
         DO UPDATE SET
-          subscription=EXCLUDED.subscription
+          subscription=EXCLUDED.subscription,
+          member_id=EXCLUDED.member_id
         `,
         [
           s.endpoint,
-          JSON.stringify(s)
+          JSON.stringify(s),
+          Number.isInteger(memberId)
+            ? memberId
+            : null
         ]
       );
 
       res.json({
-        ok: true
+        ok: true,
+        memberId:
+          Number.isInteger(memberId)
+            ? memberId
+            : null
       });
 
     } catch (e) {
@@ -2919,7 +3379,8 @@ app.post(
   async (req, res) => {
     try {
       await sendPushToAll({
-        title: 'MDP Wiesiółka',
+        title:
+          'MDP Wiesiółka',
         body:
           req.body?.body ||
           'Testowe powiadomienie'
@@ -2994,7 +3455,7 @@ app.use(
         'public',
         'index.html'
       )
-    )
+  )
 );
 
 
@@ -3011,6 +3472,19 @@ initDb()
           `MDP Wiesiółka działa na porcie ${PORT}`
         )
     );
+
+    // Automatyczne przypomnienia.
+    // Pierwsze sprawdzenie po uruchomieniu.
+    setTimeout(() => {
+      sendAttendanceReminders()
+        .catch(console.error);
+    }, 10000);
+
+    // Następnie kontrola co minutę.
+    setInterval(() => {
+      sendAttendanceReminders()
+        .catch(console.error);
+    }, REMINDER_INTERVAL_MS);
   })
   .catch(err => {
     console.error(
