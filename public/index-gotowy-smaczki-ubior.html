@@ -1,0 +1,1872 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
+<meta name="description" content="MDP Wiesiółka – informacje, zbiórki i obecność">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<title>MDP Wiesiółka</title>
+
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#080808;--card:#121212;--card2:#181818;--line:#292929;
+  --red:#e21b23;--red2:#ff3038;--white:#f5f5f5;--muted:#9d9d9d;
+  --green:#20c878;--yellow:#e9b949;--blue:#4285f4;
+}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100%;-webkit-tap-highlight-color:transparent}
+body{padding-bottom:env(safe-area-inset-bottom)}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.app{max-width:900px;margin:auto;min-height:100vh}
+header{
+  position:sticky;top:0;z-index:50;background:rgba(8,8,8,.94);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+  width:42px;height:42px;border-radius:13px;background:#111;border:1px solid #3b3b3b;
+  display:grid;place-items:center;font-weight:900;color:var(--red);font-size:15px;
+}
+.brand b{font-size:16px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.icon-btn{border:1px solid var(--line);background:#141414;color:white;border-radius:12px;width:42px;height:42px}
+main{padding:18px 14px 100px}
+.screen{display:none}.screen.active{display:block}
+.hero{
+  padding:25px 20px;border:1px solid #292929;border-radius:24px;
+  background:radial-gradient(circle at 90% 0,#3b0b0e 0,#171010 28%,#101010 65%,#0d0d0d 100%);
+  box-shadow:0 18px 50px rgba(0,0,0,.3);margin-bottom:16px
+}
+.hero h1{margin:0 0 6px;font-size:29px;line-height:1.05}
+.hero h1 span{color:var(--red)}
+.hero p{margin:0;color:#aaa;line-height:1.5}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 3px 10px}
+.section-title h2{font-size:18px;margin:0}.section-title small{color:var(--muted)}
+.card{
+  background:linear-gradient(145deg,#151515,#101010);border:1px solid var(--line);
+  border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 10px 25px rgba(0,0,0,.16)
+}
+.card h3{margin:0 0 7px;font-size:17px}.muted{color:var(--muted)}
+.meta{display:flex;gap:7px;flex-wrap:wrap;color:#aaa;font-size:13px;margin:8px 0}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#1d1d1d;border:1px solid #303030;font-size:12px}
+.btn{
+  border:0;border-radius:12px;padding:11px 14px;background:#292929;color:white;font-weight:700;
+  transition:.15s transform,.15s opacity
+}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.red{background:var(--red)}.btn.green{background:#13784a}.btn.yellow{background:#8d6b19}
+.btn.danger{background:#75151a}.btn.outline{background:transparent;border:1px solid #3a3a3a}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+form{display:grid;gap:10px}
+input,textarea,select{
+  width:100%;background:#0d0d0d;color:white;border:1px solid #333;border-radius:12px;
+  padding:12px 13px;outline:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--red)}
+textarea{min-height:100px;resize:vertical}
+label{font-size:12px;color:#aaa}
+.field{display:grid;gap:6px}
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login-card{width:min(440px,100%);background:#111;border:1px solid #292929;border-radius:25px;padding:24px;box-shadow:0 25px 80px rgba(0,0,0,.5)}
+.login-logo{width:75px;height:75px;border-radius:22px;border:1px solid #3b3b3b;background:#0b0b0b;display:grid;place-items:center;color:var(--red);font-weight:1000;font-size:25px;margin:0 auto 15px}
+.login-card h1{text-align:center;margin:0;font-size:26px}.login-card p{text-align:center;color:#888;margin:7px 0 22px}
+.role-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.role-tab{padding:10px 5px;border-radius:11px;border:1px solid #303030;background:#181818;color:#aaa;font-size:12px;font-weight:700}
+.role-tab.active{background:#3b0d10;border-color:#8f171d;color:#fff}
+#memberFields{display:none}.login-error{color:#ff5c63;background:#321013;border:1px solid #642126;border-radius:11px;padding:10px;font-size:13px}
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(8,8,8,.88);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(255,255,255,.08);
+  padding:7px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -12px 35px rgba(0,0,0,.35)
+}
+.nav-inner{max-width:900px;margin:auto;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:0 1px}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-btn{flex:0 0 72px;min-width:72px;height:58px;border:1px solid transparent;background:transparent;color:#777;padding:6px 4px;border-radius:16px;font-size:10px;font-weight:700;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.nav-btn b{display:block;font-size:20px;line-height:23px;margin-bottom:2px;filter:grayscale(.3);transition:transform .18s}
+.nav-btn.active{background:linear-gradient(145deg,#321013,#211012);border-color:#57181d;color:#fff;box-shadow:0 5px 18px rgba(226,27,35,.12)}
+.nav-btn.active b{transform:translateY(-1px);filter:none}
+.nav-btn:active{transform:scale(.94)}
+.screen.active{animation:screenIn .18s ease-out}
+@keyframes screenIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media(max-width:430px){.nav-btn{flex-basis:68px;min-width:68px;height:56px}.nav-btn b{font-size:19px}}
+.empty{text-align:center;padding:28px;color:#777;border:1px dashed #303030;border-radius:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat{padding:14px;border-radius:15px;background:#181818;border:1px solid #2b2b2b;text-align:center}
+.stat strong{display:block;font-size:23px}.stat span{font-size:11px;color:#888}
+.att-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.att-btn{border:1px solid #333;background:#191919;color:#ddd;border-radius:11px;padding:9px 5px;font-size:12px;font-weight:700}
+.att-btn.active.yes{background:#125a3b;border-color:#1b9863}.att-btn.active.maybe{background:#6c5414;border-color:#b48b23}.att-btn.active.no{background:#65161b;border-color:#a92a31}
+.outfit-box{margin-top:10px;padding:11px 12px;border:1px solid #3b3030;border-radius:13px;background:#181212}.outfit-box b{color:#fff}
+.profile-head{display:flex;gap:14px;align-items:center}
+.avatar{width:70px;height:70px;border-radius:20px;object-fit:cover;background:#242424;border:1px solid #333}
+.avatar-fallback{width:70px;height:70px;border-radius:20px;background:#291012;display:grid;place-items:center;font-size:25px;font-weight:900;color:var(--red)}
+.toast{
+  position:fixed;left:50%;bottom:85px;transform:translateX(-50%) translateY(20px);
+  background:#202020;border:1px solid #3a3a3a;color:white;border-radius:13px;padding:11px 15px;
+  z-index:100;opacity:0;pointer-events:none;transition:.2s;max-width:90%;text-align:center;font-size:13px
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:90;display:grid;place-items:center;padding:16px}
+.modal{width:min(600px,100%);max-height:90vh;overflow:auto;background:#121212;border:1px solid #333;border-radius:22px;padding:19px}
+.modal h2{margin-top:0}.close-row{display:flex;justify-content:flex-end}
+.notice{padding:12px;border-radius:12px;background:#211011;border:1px solid #4b171a;color:#ddd;font-size:13px;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #292929;text-align:left}th{color:#999}
+@media(min-width:700px){main{padding:24px 20px 100px}.hero{padding:30px}.login-card{padding:30px}}
+
+/* MOBILE NAV + ZGŁOSZENIA */
+.report-shortcut{border-color:#3b1518;background:linear-gradient(145deg,#1a1011,#101010)}
+.report-icon{width:42px;height:42px;border-radius:13px;background:#291012;border:1px solid #54171c;display:grid;place-items:center;font-size:20px;margin-bottom:10px}
+.report-card{background:linear-gradient(145deg,#171112,#101010);border-color:#32171a}
+.report-card h3{font-size:19px}.report-card .field{margin-top:4px}.report-send{width:100%;padding:13px}
+
+/* GAZETY */
+.newspaper-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.group-card{position:relative;overflow:hidden}.group-color{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:7px}.group-members{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.member-chip{padding:6px 9px;border-radius:999px;background:#191919;border:1px solid #2d2d2d;font-size:12px}.progress{height:9px;background:#222;border-radius:999px;overflow:hidden;margin:10px 0}.progress>div{height:100%;border-radius:999px}.street-list{margin:10px 0;padding-left:18px}.street-list li{margin:5px 0;color:#ddd}.map-preview{border:1px solid #2b2b2b;border-radius:14px;padding:18px;background:linear-gradient(135deg,#121212,#1b1b1b);min-height:150px}.map-road{display:inline-block;padding:6px 10px;margin:4px;border-radius:9px;background:#202020;border:1px solid #333;font-size:12px}.status-done{color:#69d27d}.status-work{color:#ffd45a}.status-new{color:#ff6b6b}
+
+
+/* ===== MDP SMACZKI UI — nie zmieniają przewijanego menu ===== */
+:root{
+  --ease-mdp:cubic-bezier(.2,.75,.25,1);
+}
+button,.card,.nav-btn,.stat,.badge,.att-btn,.group-card,.icon-btn{
+  -webkit-tap-highlight-color:transparent;
+}
+.btn,.icon-btn,.nav-btn,.role-tab,.att-btn{
+  will-change:transform;
+}
+.btn{
+  transition:transform .16s var(--ease-mdp),opacity .16s ease,box-shadow .2s ease,filter .2s ease;
+}
+.btn:hover:not(:disabled),.icon-btn:hover,.role-tab:hover,.att-btn:hover{
+  filter:brightness(1.08);
+}
+.btn:active,.icon-btn:active,.role-tab:active,.att-btn:active{
+  transform:scale(.96);
+}
+.card,.stat,.group-card{
+  transition:transform .2s var(--ease-mdp),border-color .2s ease,box-shadow .2s ease;
+}
+.card:hover,.stat:hover{
+  border-color:#353535;
+}
+.nav-btn{
+  position:relative;
+  overflow:hidden;
+}
+.nav-btn::after{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:13px;
+  background:rgba(255,255,255,.045);
+  opacity:0;
+  transform:scale(.8);
+  transition:opacity .18s ease,transform .18s var(--ease-mdp);
+  pointer-events:none;
+}
+.nav-btn:active::after{
+  opacity:1;
+  transform:scale(1);
+}
+.screen.active{
+  animation:screenIn .22s var(--ease-mdp);
+}
+@keyframes screenIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+.mdp-online-status{
+  position:fixed;
+  left:50%;
+  top:10px;
+  transform:translate(-50%,-90px);
+  z-index:200;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 13px;
+  border:1px solid #3a3a3a;
+  border-radius:999px;
+  background:rgba(22,22,22,.94);
+  backdrop-filter:blur(16px);
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 12px 35px rgba(0,0,0,.35);
+  transition:transform .28s var(--ease-mdp);
+}
+.mdp-online-status.show{transform:translate(-50%,0)}
+.mdp-online-status.offline{border-color:#6b252a}
+.mdp-online-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 4px rgba(32,200,120,.10);
+}
+.mdp-online-status.offline .mdp-online-dot{
+  background:var(--red);
+  box-shadow:0 0 0 4px rgba(226,27,35,.10);
+}
+.mdp-loading{
+  position:fixed;inset:0;z-index:180;display:grid;place-items:center;
+  background:rgba(8,8,8,.42);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+}
+.mdp-loading.show{opacity:1;pointer-events:auto}
+.mdp-loading-box{
+  min-width:150px;text-align:center;padding:18px 20px;border-radius:18px;
+  background:#151515;border:1px solid #333;box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.mdp-spinner{
+  width:28px;height:28px;margin:0 auto 10px;border-radius:50%;
+  border:3px solid #333;border-top-color:var(--red);
+  animation:mdpSpin .75s linear infinite;
+}
+@keyframes mdpSpin{to{transform:rotate(360deg)}}
+.mdp-loading-text{font-size:12px;color:#bbb}
+.mdp-ripple{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:rgba(255,255,255,.16);transform:scale(0);
+  animation:mdpRipple .48s ease-out forwards;
+}
+@keyframes mdpRipple{to{transform:scale(1);opacity:0}}
+.mdp-greeting{
+  margin:0 0 10px;color:#aaa;font-size:13px;
+}
+.mdp-greeting b{color:#fff}
+.mdp-back-top{
+  position:fixed;right:14px;bottom:86px;z-index:45;width:42px;height:42px;
+  border:1px solid #333;border-radius:13px;background:rgba(20,20,20,.92);
+  color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  opacity:0;pointer-events:none;transform:translateY(10px);
+  transition:opacity .2s ease,transform .2s var(--ease-mdp);
+}
+.mdp-back-top.show{opacity:1;pointer-events:auto;transform:none}
+.mdp-success{
+  animation:mdpSuccess .45s var(--ease-mdp);
+}
+@keyframes mdpSuccess{
+  0%{transform:scale(1)}
+  45%{transform:scale(1.035)}
+  100%{transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.01ms!important;
+  }
+}
+
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
+</head>
+
+<body>
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">MDP</div>
+    <h1>MDP Wiesiółka</h1>
+    <p>Gotowi. Czujni. Razem.</p>
+
+    <div class="role-tabs">
+      <button type="button" class="role-tab active" data-role="member">Członek</button>
+      <button type="button" class="role-tab" data-role="guardian">Opiekun</button>
+      <button type="button" class="role-tab" data-role="admin">Admin</button>
+    </div>
+
+    <form id="loginForm">
+      <div id="memberFields">
+        <div class="field">
+          <label>Imię</label>
+          <input id="loginFirstName" autocomplete="given-name" placeholder="Imię">
+        </div>
+        <div class="field">
+          <label>Nazwisko</label>
+          <input id="loginLastName" autocomplete="family-name" placeholder="Nazwisko">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Kod dostępu</label>
+        <input id="loginCode" type="password" autocomplete="current-password" placeholder="Kod">
+      </div>
+
+      <div id="loginError" class="login-error hidden"></div>
+      <button class="btn red" type="submit">Zaloguj się</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">MDP</div>
+      <div><b>MDP Wiesiółka</b><small id="roleLabel">Panel</small></div>
+    </div>
+    <button class="icon-btn" id="logoutBtn" title="Wyloguj">↪</button>
+  </div>
+</header>
+
+<main>
+  <section id="homeScreen" class="screen active">
+    <div class="hero">
+      <h1>MDP <span>Wiesiółka</span></h1>
+      <p>Informacje, zbiórki, obecność i najważniejsze sprawy naszej drużyny.</p>
+    </div>
+
+    <div class="section-title"><h2>Najbliższe zbiórki</h2><small id="eventCount"></small></div>
+    <div id="homeEvents"></div>
+
+    <div class="section-title"><h2>Ogłoszenia</h2></div>
+    <div id="homeNews"></div>
+  </section>
+
+  <section id="eventsScreen" class="screen">
+    <div class="section-title"><h2>Zbiórki</h2><small id="eventsCount"></small></div>
+    <div id="eventsList"></div>
+  </section>
+
+  <section id="newsScreen" class="screen">
+    <div class="section-title"><h2>Ogłoszenia</h2></div>
+    <div id="newsList"></div>
+  </section>
+
+  <section id="profileScreen" class="screen">
+    <div class="card">
+      <div class="profile-head">
+        <div id="profileAvatarWrap"></div>
+        <div>
+          <h3 id="profileName">Profil</h3>
+          <div class="muted" id="profileRole"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="memberProfileArea"></div>
+    <div id="staffProfileArea"></div>
+  </section>
+
+
+  <section id="urgentScreen" class="screen">
+    <div class="section-title"><h2>🚨 Pilne</h2><small>Ważne informacje</small></div>
+    <div id="urgentList"></div>
+    <div id="urgentManage" class="card hidden">
+      <h3>🚨 Wyślij pilne powiadomienie</h3>
+      <p class="muted">Wiadomość pojawi się członkom MDP w zakładce „Pilne”.</p>
+      <form id="urgentForm">
+        <div class="field"><label>Tytuł</label><input id="urgentTitle" required placeholder="Np. Zmiana godziny zbiórki"></div>
+        <div class="field"><label>Treść</label><textarea id="urgentBody" required placeholder="Napisz najważniejszą informację..."></textarea></div>
+        <button class="btn red" type="submit">🚨 Wyślij pilne</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="reportsScreen" class="screen">
+    <div class="section-title"><h2>📝 Zgłoszenia</h2><small>Od członków MDP</small></div>
+    <div id="memberReportFormWrap"></div>
+    <div id="reportsList"></div>
+  </section>
+
+  <section id="newspapersScreen" class="screen">
+    <div class="section-title"><h2>📰 Gazety</h2><small>Echo Łaz</small></div>
+    <div id="newspaperMemberView"></div>
+  </section>
+
+  <section id="manageScreen" class="screen">
+    <div class="section-title"><h2>Panel zarządzania</h2></div>
+
+    <div class="card">
+      <h3>➕ Dodaj zbiórkę</h3>
+      <form id="eventForm">
+        <div class="field"><label>Tytuł</label><input id="eventTitle" required placeholder="Np. Zbiórka MDP"></div>
+        <div class="field"><label>Data</label><input id="eventDate" type="date" required></div>
+        <div class="field"><label>Godzina</label><input id="eventTime" type="time" required></div>
+        <div class="field"><label>Miejsce</label><input id="eventPlace" required placeholder="Np. remiza OSP Wiesiółka"></div>
+        <div class="field"><label>👕 Jaki ubiór?</label><input id="eventOutfit" placeholder="Np. Koszarówka"></div>
+        <div class="field"><label>Opis</label><textarea id="eventDescription" placeholder="Dodatkowe informacje..."></textarea></div>
+        <button class="btn red" type="submit">Dodaj zbiórkę</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📢 Dodaj ogłoszenie</h3>
+      <form id="newsForm">
+        <div class="field"><label>Tytuł</label><input id="newsTitle" required placeholder="Tytuł ogłoszenia"></div>
+        <div class="field"><label>Treść</label><textarea id="newsBody" required placeholder="Treść ogłoszenia..."></textarea></div>
+        <button class="btn red" type="submit">Dodaj ogłoszenie</button>
+      </form>
+    </div>
+
+
+    <div class="card">
+      <h3>🚨 Pilne powiadomienia</h3>
+      <p class="muted">Szybko wyślij ważną wiadomość do członków MDP.</p>
+      <button class="btn red" type="button" onclick="openScreen('urgentScreen')">Otwórz Pilne</button>
+    </div>
+
+    <div class="card">
+      <h3>📝 Zgłoszenia od członków</h3>
+      <p class="muted">Sprawdź problemy, pomysły i inne wiadomości od członków.</p>
+      <button class="btn outline" type="button" onclick="openScreen('reportsScreen')">Otwórz zgłoszenia</button>
+    </div>
+
+    <div class="card">
+      <h3>📰 Kolportaż Echo Łaz</h3>
+      <p class="muted">Twórz grupy, przypisuj członków i wpisuj ulice/regiony.</p>
+      <form id="newspaperGroupForm">
+        <div class="field"><label>Nazwa grupy</label><input id="newspaperGroupName" required placeholder="Np. Grupa 1"></div>
+        <div class="field"><label>Region</label><input id="newspaperRegion" required placeholder="Np. Wysoka"></div>
+        <div class="field"><label>Kolor grupy</label><select id="newspaperColor"><option value="#2878ff">🔵 Niebieski</option><option value="#36b86b">🟢 Zielony</option><option value="#ff9d2e">🟠 Pomarańczowy</option><option value="#e23b45">🔴 Czerwony</option><option value="#a66cff">🟣 Fioletowy</option></select></div>
+        <div class="field"><label>Ulice (każda w osobnej linii)</label><textarea id="newspaperStreets" required placeholder="ul. Przykładowa 1
+ul. Przykładowa 2"></textarea></div>
+        <div class="field"><label>Członkowie grupy</label><div id="newspaperMemberChecks"></div></div>
+        <div class="field"><label>Liczba gazet</label><input id="newspaperCopies" type="number" min="0" value="0"></div>
+        <button class="btn red" type="submit">➕ Dodaj grupę</button>
+        <button class="btn outline" type="button" onclick="loadPaperPlan()">↻ Wczytaj plan z kartki</button>
+      </form>
+      <div class="card" style="margin-top:14px;background:#101010;border-color:#3a2525">
+        <h3>📅 Miesiąc kolportażu</h3>
+        <p class="muted">Zapisz wyniki bieżącego miesiąca, zobacz podsumowanie albo zakończ miesiąc i rozpocznij nowy. Przed wyzerowaniem aktualny wynik zostanie zapisany w historii.</p>
+        <div class="actions">
+          <button class="btn green" type="button" onclick="saveNewspaperMonth()">💾 Zapisz miesiąc</button>
+          <button class="btn outline" type="button" onclick="showNewspaperMonthSummary()">📊 Podsumowanie miesiąca</button>
+          <button class="btn red" type="button" onclick="finishNewspaperMonth()">🔄 Zakończ miesiąc / Nowy miesiąc</button>
+        </div>
+        <div id="newspaperMonthStatus" class="muted" style="margin-top:10px"></div>
+      </div>
+
+      <div id="newspaperManageList" style="margin-top:16px"></div>
+    </div>
+
+    <div class="card">
+      <h3>👥 Członkowie</h3>
+      <form id="memberForm" style="margin-bottom:16px">
+        <div class="field"><label>Imię</label><input id="memberFirstName" required placeholder="Np. Jan"></div>
+        <div class="field"><label>Nazwisko</label><input id="memberLastName" required placeholder="Np. Kowalski"></div>
+        <div class="field"><label>Kod logowania</label><input id="memberCode" required inputmode="numeric" placeholder="Np. 1234"></div>
+        <button class="btn red" type="submit">➕ Dodaj członka</button>
+      </form>
+      <div id="memberFormMessage" class="muted" style="margin-bottom:12px"></div>
+      <div id="membersManage"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-screen="homeScreen"><b>⌂</b>Start</button>
+    <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
+    <button class="nav-btn" data-screen="newsScreen"><b>📢</b>Ogłoszenia</button>
+    <button class="nav-btn" data-screen="urgentScreen"><b>🚨</b>Pilne</button>
+    <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
+    <button class="nav-btn" data-screen="reportsScreen"><b>📝</b>Zgłoszenia</button>
+    <button class="nav-btn" data-screen="profileScreen"><b>👤</b>Profil</button>
+  </div>
+</nav>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="modalRoot"></div>
+
+<div id="mdpLoading" class="mdp-loading" aria-hidden="true">
+  <div class="mdp-loading-box">
+    <div class="mdp-spinner"></div>
+    <div id="mdpLoadingText" class="mdp-loading-text">Ładowanie...</div>
+  </div>
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+"use strict";
+
+const state = {
+  role: localStorage.getItem("mdp_role") || "",
+  code: localStorage.getItem("mdp_code") || "",
+  memberId: localStorage.getItem("mdp_member_id") || "",
+  firstName: localStorage.getItem("mdp_first_name") || "",
+  lastName: localStorage.getItem("mdp_last_name") || "",
+  photo: localStorage.getItem("mdp_photo") || "",
+  data: {events:[],news:[],members:[]},
+  newspapers: []
+};
+
+function defaultNewspaperGroups(){
+  return [
+    {id:101,name:"Wiesiółka",region:"Henryka Pobożnego i to osiedle",color:"#2878ff",streets:["Henryka Pobożnego"],copies:75,delivered:0,started:false,done:false,memberNames:["Aleksandra Skrzypek","Wiktoria Wilk"]},
+    {id:102,name:"Wysoka",region:"3 bloki — Sportowa, Parkowa, Robotnicza",color:"#36b86b",streets:["Sportowa","Parkowa","Robotnicza"],copies:85,delivered:0,started:false,done:false,memberNames:[]},
+    {id:103,name:"Wysoka — Kościuszki",region:"Kościuszki → do Dzwonka",color:"#ff9d2e",streets:["Kościuszki — do Dzwonka"],copies:90,delivered:0,started:false,done:false,memberNames:["Karol","Mateusz Wilczyński","Roksana Koszowska"]},
+    {id:104,name:"Kopanina",region:"Kopanina",color:"#e23b45",streets:[],copies:45,delivered:0,started:false,done:false,memberNames:["Jessica Labęda","Maja Banaszak"]},
+    {id:105,name:"Gięto",region:"Gięto",color:"#a66cff",streets:[],copies:75,delivered:0,started:false,done:false,memberNames:["Iga Chmurzyńska","Oliwia Popczyk"]}
+  ];
+}
+
+function loadNewspaperGroups(){
+  try{
+    const saved=JSON.parse(localStorage.getItem("mdp_newspaper_groups") || "null");
+    if(Array.isArray(saved) && saved.length) return saved;
+  }catch(e){}
+  const defaults=defaultNewspaperGroups();
+  localStorage.setItem("mdp_newspaper_groups",JSON.stringify(defaults));
+  return defaults;
+}
+
+let selectedLoginRole = "member";
+
+const $ = id => document.getElementById(id);
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+function toast(message, type="info"){
+  const el = $("toast");
+  el.textContent = message;
+  el.className = "toast show";
+  if(type==="error") el.style.borderColor="#7d2025";
+  else el.style.borderColor="#3a3a3a";
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>el.className="toast",2800);
+}
+
+function saveSession(data){
+  state.role = data.role || state.role;
+  state.code = state.code || "";
+  if(data.member){
+    state.memberId = data.member.id || "";
+    state.firstName = data.member.first_name || data.member.firstName || "";
+    state.lastName = data.member.last_name || data.member.lastName || "";
+    state.photo = data.member.photo || "";
+  } else {
+    state.memberId = data.memberId || state.memberId || "";
+    state.firstName = data.firstName || state.firstName || "";
+    state.lastName = data.lastName || state.lastName || "";
+    state.photo = data.photo || state.photo || "";
+  }
+
+  localStorage.setItem("mdp_role",state.role);
+  localStorage.setItem("mdp_code",state.code);
+  localStorage.setItem("mdp_member_id",state.memberId);
+  localStorage.setItem("mdp_first_name",state.firstName);
+  localStorage.setItem("mdp_last_name",state.lastName);
+  localStorage.setItem("mdp_photo",state.photo);
+}
+
+function clearSession(){
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith("mdp_")) localStorage.removeItem(k);
+  });
+  state.role="";state.code="";state.memberId="";
+  state.firstName="";state.lastName="";state.photo="";
+}
+
+function authHeaders(json=true){
+  const h={
+    "x-role":state.role,
+    "x-code":state.code
+  };
+  if(state.memberId) h["x-member-id"]=state.memberId;
+  if(json) h["Content-Type"]="application/json";
+  return h;
+}
+
+async function api(url, options={}){
+  const opts={...options,headers:{...authHeaders(options.body !== undefined),...(options.headers||{})}};
+  let res;
+  try{
+    res=await fetch(url,opts);
+  }catch(e){
+    throw new Error("Brak połączenia z serwerem.");
+  }
+
+  const text=await res.text();
+  let data=null;
+  try{data=text?JSON.parse(text):null}catch{data=text}
+
+  if(!res.ok){
+    const msg=data?.error || data?.message || `Błąd ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function formatDate(date){
+  if(!date) return "";
+  const d=new Date(String(date).length===10 ? date+"T00:00:00" : date);
+  if(Number.isNaN(d.getTime())) return date;
+  return new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"2-digit",year:"numeric"}).format(d);
+}
+
+function formatCreated(date){
+  if(!date) return "";
+  const d=new Date(date);
+  if(Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(d);
+}
+
+function roleName(role){
+  return role==="admin" ? "Administrator" : role==="guardian" ? "Opiekun MDP" : "Członek MDP";
+}
+
+function initials(first,last){
+  return ((first||"").charAt(0)+(last||"").charAt(0)).toUpperCase() || "M";
+}
+
+function avatarHtml(first,last,photo,cls="avatar"){
+  if(photo) return `<img class="${cls}" src="${escapeHtml(photo)}" alt="Zdjęcie profilu">`;
+  return `<div class="avatar-fallback">${escapeHtml(initials(first,last))}</div>`;
+}
+
+function normalizeData(data){
+  return {
+    events:Array.isArray(data?.events)?data.events:[],
+    news:Array.isArray(data?.news)?data.news:[],
+    members:Array.isArray(data?.members)?data.members:[],
+    urgent:Array.isArray(data?.urgent)?data.urgent:[]
+  };
+}
+
+async function loadData(){
+  const data=await api("/api/data",{method:"GET"});
+  state.data=normalizeData(data);
+  await loadUrgent();
+  await loadNewspaperGroupsFromServer();
+  renderAll();
+}
+
+function renderAll(){
+  renderHome();
+  renderEvents();
+  renderNews();
+  renderProfile();
+  renderNewspapers();
+  renderUrgent();
+  renderReports();
+  if(["admin","guardian"].includes(state.role)){
+    renderManage();
+  }
+}
+
+function eventDateTime(e){
+  const date=e.event_date || e.date || "";
+  const time=e.event_time || e.time || "00:00";
+  return date ? new Date(`${date}T${time}`) : new Date(0);
+}
+
+function eventCard(e, compact=false){
+  const id=e.id;
+  const title=e.title || "Zbiórka";
+  const date=e.event_date || e.date || "";
+  const time=e.event_time || e.time || "";
+  const place=e.place || e.location || "";
+  const desc=e.description || "";
+  const outfit=e.outfit || e.clothing || "";
+
+  const attendanceForMember =
+    state.role==="member" && state.memberId
+      ? getLocalAttendance(id)
+      : null;
+
+  return `
+  <article class="card">
+    <h3>${escapeHtml(title)}</h3>
+    <div class="meta">
+      ${date?`<span class="badge">📅 ${escapeHtml(formatDate(date))}</span>`:""}
+      ${time?`<span class="badge">🕐 ${escapeHtml(time)}</span>`:""}
+      ${place?`<span class="badge">📍 ${escapeHtml(place)}</span>`:""}
+    </div>
+    ${desc?`<div class="muted" style="line-height:1.5">${escapeHtml(desc).replaceAll("\\n","<br>")}</div>`:""}
+    <button class="btn outline" style="width:100%;margin-top:10px" onclick="showOutfit(${Number(id)})">👕 Ubiór</button>
+    ${state.role==="member" ? `
+      <div class="att-grid">
+        <button class="att-btn yes ${attendanceForMember==="yes"?"active":""}" onclick="setAttendance(${Number(id)},'yes')">✅ Będę</button>
+        <button class="att-btn maybe ${attendanceForMember==="maybe"?"active":""}" onclick="setAttendance(${Number(id)},'maybe')">🟡 Może</button>
+        <button class="att-btn no ${attendanceForMember==="no"?"active":""}" onclick="setAttendance(${Number(id)},'no')">❌ Nie będę</button>
+      </div>
+    `:""}
+    ${["admin","guardian"].includes(state.role) ? `
+      <div class="actions">
+        <button class="btn outline" onclick="showAttendance(${Number(id)})">👥 Pokaż obecność</button>
+        <button class="btn danger" onclick="deleteEvent(${Number(id)})">Usuń</button>
+      </div>
+    `:""}
+  </article>`;
+}
+
+function renderHome(){
+  const events=[...state.data.events].sort((a,b)=>eventDateTime(a)-eventDateTime(b));
+  $("eventCount").textContent=events.length ? `${events.length}` : "";
+  $("homeEvents").innerHTML=events.slice(0,3).map(e=>eventCard(e,true)).join("") ||
+    `<div class="empty">Brak zaplanowanych zbiórek.</div>`;
+
+  const news=[...state.data.news].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("homeNews").innerHTML=news.slice(0,3).map(newsCard).join("") ||
+    `<div class="empty">Brak ogłoszeń.</div>`;
+}
+
+function renderEvents(){
+  const events=[...state.data.events].sort((a,b)=>eventDateTime(a)-eventDateTime(b));
+  $("eventsCount").textContent=events.length ? `${events.length} ${events.length===1?"zbiórka":"zbiórek"}` : "";
+  $("eventsList").innerHTML=events.map(e=>eventCard(e)).join("") ||
+    `<div class="empty">Nie ma jeszcze żadnych zbiórek.</div>`;
+}
+
+function newsCard(n){
+  const title=n.title || "Ogłoszenie";
+  const body=n.body ?? n.content ?? "";
+  return `
+  <article class="card">
+    <h3>📢 ${escapeHtml(title)}</h3>
+    ${n.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(n.created_at))}</span></div>`:""}
+    <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(body)}</div>
+    ${["admin","guardian"].includes(state.role)?`
+      <div class="actions">
+        <button class="btn danger" onclick="deleteNews(${Number(n.id)})">Usuń</button>
+      </div>`:""}
+  </article>`;
+}
+
+function renderNews(){
+  const news=[...state.data.news].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("newsList").innerHTML=news.map(newsCard).join("") ||
+    `<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>`;
+}
+
+function isStaff(){return ["admin","guardian"].includes(state.role);}
+
+async function loadUrgent(){
+  try{
+    const rows=await api("/api/urgent-messages",{method:"GET"});
+    state.data.urgent=Array.isArray(rows)?rows:[];
+  }catch(e){
+    state.data.urgent=[];
+  }
+}
+
+function renderUrgent(){
+  const list=$("urgentList"); if(!list)return;
+  const rows=state.data.urgent||[];
+  list.innerHTML=rows.length ? rows.map(x=>`<article class="card" style="border-left:4px solid var(--red)">
+    <h3>🚨 ${escapeHtml(x.title||"Pilne powiadomienie")}</h3>
+    ${x.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(x.created_at))}</span></div>`:""}
+    <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(x.body||"")}</div>
+    ${isStaff()?`<div class="actions"><button class="btn danger" onclick="deleteUrgent(${Number(x.id)})">Usuń</button></div>`:""}
+  </article>`).join(""):`<div class="empty">Brak pilnych powiadomień.</div>`;
+  const manage=$("urgentManage"); if(manage)manage.classList.toggle("hidden",!isStaff());
+}
+
+async function deleteUrgent(id){
+  if(!confirm("Usunąć to pilne powiadomienie na stałe?"))return;
+  try{
+    await api(`/api/urgent-messages/${Number(id)}`,{method:"DELETE"});
+    await loadUrgent(); renderUrgent(); toast("Powiadomienie usunięte.");
+  }catch(e){toast(e.message,"error")}
+}
+
+function renderReports(){
+  const formWrap=$("memberReportFormWrap"), list=$("reportsList");
+  if(!formWrap||!list)return;
+  if(state.role==="member"){
+    formWrap.innerHTML=`<div class="card report-card"><div class="report-icon">📝</div><h3>Napisz do opiekunów</h3><p class="muted">Zgłoś problem, pomysł albo inną ważną sprawę.</p><form id="memberReportForm"><div class="field"><label>Rodzaj zgłoszenia</label><select id="reportType"><option value="problem">🚨 Problem</option><option value="pomysl">💡 Pomysł</option><option value="inne">📌 Inne</option></select></div><div class="field"><label>Treść</label><textarea id="reportBody" required placeholder="Napisz tutaj swoją wiadomość..."></textarea></div><button class="btn red report-send" type="submit">Wyślij zgłoszenie</button></form></div>`;
+    list.innerHTML="";
+    $("memberReportForm").addEventListener("submit",submitMemberReport);
+  }else if(isStaff()){
+    formWrap.innerHTML=`<div class="card"><h3>📋 Zgłoszenia</h3><p class="muted">Tutaj pojawiają się wiadomości wysłane przez członków.</p></div>`;
+    loadReports();
+  }else{formWrap.innerHTML="";list.innerHTML="";}
+}
+
+async function loadReports(){
+  if(!isStaff())return;
+  try{
+    const rows=await api("/api/member-reports",{method:"GET"});
+    const list=$("reportsList");
+    if(!list)return;
+    const data=Array.isArray(rows)?rows:[];
+    list.innerHTML=data.length?data.map(r=>`<article class="card">
+      <h3>📝 ${escapeHtml(r.report_type||"Zgłoszenie")}</h3>
+      <div class="meta"><span class="badge">👤 ${escapeHtml(r.member_name||"Członek")}</span>${r.created_at?`<span class="badge">${escapeHtml(formatCreated(r.created_at))}</span>`:""}</div>
+      <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(r.body||"")}</div>
+      <div class="actions"><select onchange="changeReportStatus(${Number(r.id)},this.value)">
+        <option value="new" ${r.status==="new"?"selected":""}>🆕 Nowe</option>
+        <option value="in_progress" ${r.status==="in_progress"?"selected":""}>🟡 W trakcie</option>
+        <option value="done" ${r.status==="done"?"selected":""}>🟢 Zrobione</option>
+      </select></div>
+    </article>`).join(""):`<div class="empty">Brak zgłoszeń.</div>`;
+  }catch(e){$("reportsList").innerHTML=`<div class="empty">Nie udało się pobrać zgłoszeń.</div>`;}
+}
+
+async function submitMemberReport(e){
+  e.preventDefault();
+  try{
+    await api("/api/member-reports",{method:"POST",body:JSON.stringify({type:$("reportType").value,body:$("reportBody").value.trim()})});
+    e.target.reset(); toast("Zgłoszenie zostało wysłane.");
+  }catch(err){toast(err.message,"error")}
+}
+
+async function changeReportStatus(id,status){
+  try{await api(`/api/member-reports/${Number(id)}`,{method:"PUT",body:JSON.stringify({status})});toast("Status zgłoszenia zapisany.");await loadReports();}
+  catch(e){toast(e.message,"error")}
+}
+
+function renderProfile(){
+  $("profileAvatarWrap").innerHTML=avatarHtml(state.firstName,state.lastName,state.photo);
+  $("profileName").textContent=state.role==="member"
+    ? `${state.firstName} ${state.lastName}`.trim() || "Członek MDP"
+    : roleName(state.role);
+  $("profileRole").textContent=roleName(state.role);
+
+  if(state.role==="member"){
+    $("memberProfileArea").innerHTML=`
+      <div class="section-title"><h2>Moja obecność</h2></div>
+      <div id="myStats"><div class="empty">Ładowanie statystyk...</div></div>
+      <div class="card">
+        <h3>📷 Zdjęcie profilowe</h3>
+        <form id="photoForm">
+          <div class="field"><label>Link do zdjęcia</label><input id="photoUrl" value="${escapeHtml(state.photo)}" placeholder="https://..."></div>
+          <button class="btn red" type="submit">Zapisz zdjęcie</button>
+        </form>
+      </div>
+      <div class="card report-shortcut">
+        <h3>📝 Masz coś do zgłoszenia?</h3>
+        <p class="muted">Wyślij wiadomość do opiekunów MDP — problem, pomysł albo inną sprawę.</p>
+        <button class="btn red" type="button" onclick="openScreen('reportsScreen')">Napisz zgłoszenie</button>
+      </div>`;
+    $("staffProfileArea").innerHTML="";
+    loadMyStats();
+  }else{
+    $("memberProfileArea").innerHTML="";
+    $("staffProfileArea").innerHTML=`
+      <div class="card">
+        <h3>Panel ${escapeHtml(roleName(state.role))}</h3>
+        <p class="muted">Masz dostęp do zarządzania zbiórkami, ogłoszeniami i członkami.</p>
+        <button class="btn red" onclick="openScreen('manageScreen')">Otwórz panel zarządzania</button>
+      </div>
+      <div class="card">
+        <h3>📊 Statystyki drużyny</h3>
+        <div id="generalStats"><div class="empty">Ładowanie...</div></div>
+      </div>`;
+    loadGeneralStats();
+  }
+}
+
+async function loadMyStats(){
+  if(state.role!=="member") return;
+  try{
+    const data=await api(`/api/member-stats/${encodeURIComponent(state.memberId)}`);
+
+    const stats=data?.stats || data || {};
+
+    const yes=Number(stats?.yes ?? stats?.attended ?? 0);
+    const maybe=Number(stats?.maybe ?? 0);
+    const no=Number(stats?.no ?? stats?.absent ?? 0);
+
+    // Frekwencja liczy tylko zbiórki, na których członek
+    // zaznaczył „Będę” albo „Nie będę”. „Może” nie zmienia procentu.
+    const counted=yes+no;
+    const percentage=counted>0
+      ? Math.round((yes/counted)*100)
+      : 0;
+
+    $("myStats").innerHTML=`
+      <div class="stats">
+        <div class="stat"><strong>${yes}</strong><span>Byłem</span></div>
+        <div class="stat"><strong>${no}</strong><span>Nie było mnie</span></div>
+        <div class="stat"><strong>${percentage}%</strong><span>Frekwencja</span></div>
+      </div>
+      <div class="stats" style="margin-top:10px">
+        <div class="stat"><strong>${maybe}</strong><span>Może</span></div>
+        <div class="stat"><strong>${counted}</strong><span>Potwierdzone</span></div>
+        <div class="stat"><strong>${yes+maybe+no}</strong><span>Odpowiedzi</span></div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <h3>📊 Twoja frekwencja</h3>
+        <div style="height:12px;background:#222;border-radius:999px;overflow:hidden;margin:12px 0 8px">
+          <div style="width:${percentage}%;height:100%;background:#e21b23;border-radius:999px;transition:width .4s"></div>
+        </div>
+        <div class="muted">Byłeś na <b style="color:white">${yes}</b> zbiórkach, nie było Cię na <b style="color:white">${no}</b>. Frekwencja: <b style="color:white">${percentage}%</b>.</div>
+      </div>`;
+  }catch(e){
+    $("myStats").innerHTML=`<div class="empty">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadGeneralStats(){
+  try{
+    const data=await api("/api/stats");
+    $("generalStats").innerHTML=`
+      <div class="stats">
+        <div class="stat"><strong>${Number(data?.members ?? state.data.members.length)}</strong><span>Członków</span></div>
+        <div class="stat"><strong>${Number(data?.events ?? state.data.events.length)}</strong><span>Zbiórek</span></div>
+        <div class="stat"><strong>${Number(data?.news ?? state.data.news.length)}</strong><span>Ogłoszeń</span></div>
+      </div>`;
+  }catch(e){
+    $("generalStats").innerHTML=`
+      <div class="stats">
+        <div class="stat"><strong>${state.data.members.length}</strong><span>Członków</span></div>
+        <div class="stat"><strong>${state.data.events.length}</strong><span>Zbiórek</span></div>
+        <div class="stat"><strong>${state.data.news.length}</strong><span>Ogłoszeń</span></div>
+      </div>`;
+  }
+}
+
+function saveNewspaperGroups(){
+  // Grupy gazet są teraz przechowywane na serwerze w PostgreSQL.
+  // localStorage nie jest już źródłem danych — dzięki temu każdy telefon widzi ten sam plan.
+}
+
+async function loadNewspaperGroupsFromServer(){
+  try{
+    const data=await api("/api/newspaper-groups",{method:"GET"});
+    if(Array.isArray(data)){
+      state.newspapers=data;
+      return true;
+    }
+  }catch(e){
+    console.warn("Nie udało się pobrać grup gazet z serwera:",e);
+  }
+  // awaryjnie zachowujemy poprzedni lokalny plan, jeśli serwer chwilowo nie odpowiada
+  state.newspapers=loadNewspaperGroups();
+  return false;
+}
+
+function memberFullName(m){return `${m?.first_name||m?.name||""} ${m?.last_name||""}`.trim();}
+function normName(s){return String(s||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>({ą:"a",ć:"c",ę:"e",ł:"l",ń:"n",ó:"o",ś:"s",ź:"z",ż:"z"}[c]||c)).replace(/[^a-z0-9]+/g," ").trim();}
+function groupHasMember(g){
+  if(state.role!=="member") return false;
+  const me=normName(`${state.firstName} ${state.lastName}`);
+  if((g.memberIds||[]).map(String).includes(String(state.memberId))) return true;
+  return (g.memberNames||[]).some(n=>normName(n)===me || normName(n).includes(me) || me.includes(normName(n)));
+}
+
+function renderNewspaperMemberChecks(){
+  const box=$("newspaperMemberChecks"); if(!box)return;
+  const members=state.data.members||[];
+  box.innerHTML=members.length ? members.map(m=>{
+    const name=memberFullName(m);
+    return `<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="checkbox" value="${Number(m.id)}"> ${escapeHtml(name||"Członek")}</label>`;
+  }).join("") : `<div class="muted">Najpierw dodaj członków MDP.</div>`;
+}
+
+function newspaperGroupCard(g, isMember){
+  const done=!!g.done, copies=Number(g.copies||0), delivered=Number(g.delivered||0);
+  const pct=copies>0?Math.min(100,Math.round(delivered/copies*100)):0;
+  const members=(g.memberIds||[]).map(id=>state.data.members.find(m=>String(m.id)===String(id))).filter(Boolean);
+  const names=[...new Set([...(members.map(memberFullName)),...(g.memberNames||[])])].filter(Boolean);
+  return `<article class="card group-card" style="border-left:4px solid ${escapeHtml(g.color)}">
+    <h3><span class="group-color" style="background:${escapeHtml(g.color)}"></span>${escapeHtml(g.name)}</h3>
+    <div class="meta"><span class="badge">📍 ${escapeHtml(g.region)}</span><span class="badge">📰 ${copies} gazet</span></div>
+    <h4>👥 Z kim jesteś</h4>
+    <div class="group-members">${names.map(n=>`<span class="member-chip">${escapeHtml(n)}</span>`).join("")}</div>
+    <h4>📍 Region</h4>
+    <div class="map-preview"><b><span class="group-color" style="background:${escapeHtml(g.color)}"></span>${escapeHtml(g.region)}</b>
+      <div style="margin-top:10px">${(g.streets||[]).map(x=>`<span class="map-road">📍 ${escapeHtml(x)}</span>`).join("") || `<span class="muted">Region zapisany jako ${escapeHtml(g.region)}.</span>`}</div>
+    </div>
+    <div class="progress"><div style="width:${pct}%;background:${escapeHtml(g.color)}"></div></div>
+    <div class="muted">Rozdano: <b style="color:white">${delivered}/${copies}</b> (${pct}%)</div>
+    <div style="margin-top:14px"><span class="${done?'status-done':g.started?'status-work':'status-new'}">${done?'🟢 GOTOWE':g.started?'🟡 W TRAKCIE':'🔴 NIE ROZPOCZĘTO'}</span></div>
+    <div class="actions" style="margin-top:14px">
+      ${isMember&&!g.started&&!done?`<button class="btn red" onclick="startNewspaper(${Number(g.id)})">🚀 Rozpocznij</button>`:''}
+      ${isMember&&g.started&&!done?`<button class="btn outline" onclick="openNewspaperMap(${Number(g.id)})">🗺️ Mapa regionu</button>`:''}
+      ${isMember&&g.started&&!done?`<button class="btn outline" onclick="setNewspaperDone(${Number(g.id)})">✅ Gotowe</button>`:''}
+      ${isMember&&g.started&&!done?`<button class="btn outline" onclick="addDelivered(${Number(g.id)})">+10 gazet</button>`:''}
+    </div>
+  </article>`;
+}
+
+function renderNewspapers(){
+  const groups=state.newspapers||[];
+  const memberView=$("newspaperMemberView"); if(!memberView)return;
+
+  if(state.role==="member"){
+    const mine=groups.filter(groupHasMember);
+    const total=mine.reduce((s,g)=>s+Number(g.copies||0),0);
+    const done=mine.filter(g=>g.done).length;
+    memberView.innerHTML=`<div class="card"><h3>📰 Echo Łaz</h3><p class="muted">Twój kolportaż. Wybierz swoją grupę, rozpocznij, sprawdź region na mapie i po rozniesieniu kliknij „Gotowe”.</p><div class="stats"><div class="stat"><strong>${mine.length}</strong><span>Twoje grupy</span></div><div class="stat"><strong>${total}</strong><span>Gazet</span></div><div class="stat"><strong>${done}</strong><span>Gotowe</span></div></div></div>${mine.length?mine.map(g=>newspaperGroupCard(g,true)).join(""): `<div class="empty">Nie znaleziono Twojej grupy. Sprawdź, czy Twoje imię i nazwisko jest przypisane do kolportażu.</div>`}`;
+  }else{
+    const total=groups.reduce((s,g)=>s+Number(g.copies||0),0), delivered=groups.reduce((s,g)=>s+Number(g.delivered||0),0);
+    memberView.innerHTML=`<div class="card"><h3>📰 Centrum kolportażu</h3><p class="muted">${groups.length} grup · ${delivered}/${total} gazet · ${groups.filter(g=>g.done).length}/${groups.length} grup gotowych</p></div>`;
+  }
+
+  if(["admin","guardian"].includes(state.role)){
+    renderNewspaperMemberChecks();
+    const list=$("newspaperManageList"); if(!list)return;
+    list.innerHTML=groups.map(g=>{
+      const members=(g.memberIds||[]).map(id=>state.data.members.find(m=>String(m.id)===String(id))).filter(Boolean);
+      const names=[...new Set([...(members.map(memberFullName)),...(g.memberNames||[])])].filter(Boolean);
+      const copies=Number(g.copies||0),delivered=Number(g.delivered||0);
+      return `<div class="card" style="margin:10px 0;background:#101010;border-left:4px solid ${escapeHtml(g.color)}">
+        <h3><span class="group-color" style="background:${escapeHtml(g.color)}"></span>${escapeHtml(g.name)}</h3>
+        <div class="muted">📍 ${escapeHtml(g.region)} · 📰 ${delivered}/${copies} · ${g.done?'🟢 Gotowe':g.started?'🟡 W trakcie':'🔴 Nie rozpoczęto'}</div>
+        <div class="group-members">${names.map(n=>`<span class="member-chip">${escapeHtml(n)}</span>`).join("")}</div>
+        <div class="muted">Ulice: ${(g.streets||[]).map(escapeHtml).join(", ")||"brak"}</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn outline" onclick="editNewspaperGroup(${Number(g.id)})">✏️ Edytuj</button>
+          <button class="btn danger" onclick="deleteNewspaperGroup(${Number(g.id)})">Usuń grupę</button>
+        </div>
+      </div>`;
+    }).join("");
+    updateNewspaperMonthStatus();
+  }
+}
+
+function openNewspaperMap(id){
+  const groups=state.newspapers||[]; const active=groups.find(x=>Number(x.id)===Number(id)); if(!active)return;
+  const others=groups.filter(g=>Number(g.id)!==Number(id));
+  openModal(`<h2>🗺️ Mapa kolportażu</h2><p class="muted"><b style="color:${escapeHtml(active.color)}">${escapeHtml(active.name)}</b> — ${escapeHtml(active.region)}</p><div class="map-legend"><span><i class="map-dot" style="background:${escapeHtml(active.color)}"></i> Twój region</span>${others.map(g=>`<span><i class="map-dot" style="background:${escapeHtml(g.color)}"></i>${escapeHtml(g.name)}</span>`).join("")}</div><div id="newspaperMap"></div><div class="card" style="margin-top:12px"><b>📍 Twój region</b><div style="margin-top:8px">${(active.streets||[]).map(s=>`<div class="map-road">📍 ${escapeHtml(s)}</div>`).join("")||`<span class="muted">${escapeHtml(active.region)}</span>`}</div></div><div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>`);
+  if(typeof L!=="undefined") initNewspaperMap(active,groups); else toast("Mapa wymaga połączenia z internetem.","error");
+}
+
+async function initNewspaperMap(active,groups){
+  const map=L.map("newspaperMap").setView([50.473,19.394],13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
+  const allStreets=groups.flatMap(g=>(g.streets||[]).map(st=>({g,st}))).filter(x=>x.st);
+  if(!allStreets.length){ L.marker([50.473,19.394]).addTo(map).bindPopup(escapeHtml(active.region)); return; }
+  const bounds=[];
+  for(const item of allStreets){
+    try{
+      const q=encodeURIComponent(`${item.st}, ${item.g.region}, Polska`);
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${q}`);
+      const data=await r.json(); const hit=data?.[0];
+      if(!hit)continue;
+      const lat=Number(hit.lat),lon=Number(hit.lon); bounds.push([lat,lon]);
+      L.circleMarker([lat,lon],{radius:item.g.id===active.id?10:7,color:item.g.color,fillColor:item.g.color,fillOpacity:.9,weight:3}).addTo(map).bindPopup(`<b>${escapeHtml(item.g.name)}</b><br>${escapeHtml(item.st)}`);
+    }catch(e){}
+  }
+  if(bounds.length)map.fitBounds(bounds,{padding:[20,20]});
+}
+
+async function startNewspaper(id){
+  const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
+  try{
+    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true})});
+    state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
+    renderNewspapers(); toast("Kolportaż rozpoczęty.");
+  }catch(e){toast(e.message,"error")}
+}
+
+async function setNewspaperDone(id){
+  const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
+  try{
+    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true,done:true,delivered:Number(g.copies||0)})});
+    state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
+    renderNewspapers(); toast("Kolportaż oznaczony jako gotowy.");
+  }catch(e){toast(e.message,"error")}
+}
+
+async function addDelivered(id){
+  const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
+  const delivered=Math.min(Number(g.copies||0),Number(g.delivered||0)+10);
+  try{
+    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true,delivered,done:delivered>=Number(g.copies||0)&&Number(g.copies||0)>0})});
+    state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
+    renderNewspapers();
+  }catch(e){toast(e.message,"error")}
+}
+
+function newspaperMonthKey(date=new Date()){
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,"0");
+  return `${y}-${m}`;
+}
+
+function newspaperMonthLabel(key=newspaperMonthKey()){
+  const [y,m]=String(key).split("-");
+  const d=new Date(Number(y),Number(m)-1,1);
+  return new Intl.DateTimeFormat("pl-PL",{month:"long",year:"numeric"}).format(d);
+}
+
+function getNewspaperMonthHistory(){
+  try{
+    const raw=localStorage.getItem("mdp_newspaper_month_history");
+    const data=raw?JSON.parse(raw):[];
+    return Array.isArray(data)?data:[];
+  }catch(e){return []}
+}
+
+function setNewspaperMonthHistory(history){
+  localStorage.setItem("mdp_newspaper_month_history",JSON.stringify(history));
+}
+
+function buildNewspaperMonthSnapshot(){
+  const groups=Array.isArray(state.newspapers)?state.newspapers:[];
+  const total=groups.reduce((sum,g)=>sum+Number(g.copies||0),0);
+  const delivered=groups.reduce((sum,g)=>sum+Number(g.delivered||0),0);
+  const done=groups.filter(g=>!!g.done).length;
+  return {
+    month:newspaperMonthKey(),
+    label:newspaperMonthLabel(),
+    savedAt:new Date().toISOString(),
+    total,
+    delivered,
+    remaining:Math.max(0,total-delivered),
+    groupsDone:done,
+    groupsTotal:groups.length,
+    groups:groups.map(g=>({
+      id:g.id,name:g.name,region:g.region,color:g.color,
+      copies:Number(g.copies||0),delivered:Number(g.delivered||0),
+      done:!!g.done,started:!!g.started
+    }))
+  };
+}
+
+function saveNewspaperMonth(showToast=true){
+  if(!isStaff())return;
+  const snapshot=buildNewspaperMonthSnapshot();
+  const history=getNewspaperMonthHistory();
+  const index=history.findIndex(x=>x.month===snapshot.month);
+
+  if(index>=0) history[index]=snapshot;
+  else history.unshift(snapshot);
+
+  history.sort((a,b)=>String(b.month).localeCompare(String(a.month)));
+  setNewspaperMonthHistory(history);
+
+  localStorage.setItem("mdp_newspaper_last_saved",snapshot.savedAt);
+  updateNewspaperMonthStatus();
+
+  if(showToast) toast(`Zapisano wyniki za ${snapshot.label}.`);
+  return snapshot;
+}
+
+function updateNewspaperMonthStatus(){
+  const el=$("newspaperMonthStatus");
+  if(!el)return;
+  const history=getNewspaperMonthHistory();
+  const current=history.find(x=>x.month===newspaperMonthKey());
+  if(current){
+    const when=current.savedAt?formatCreated(current.savedAt):"";
+    el.textContent=`Ostatni zapis: ${current.label} · ${current.delivered}/${current.total} gazet${when?` · ${when}`:""}`;
+  }else{
+    el.textContent=`Bieżący miesiąc: ${newspaperMonthLabel()} · brak zapisanego podsumowania.`;
+  }
+}
+
+function showNewspaperMonthSummary(){
+  if(!isStaff())return;
+  const snapshot=buildNewspaperMonthSnapshot();
+  const pct=snapshot.total>0?Math.min(100,Math.round(snapshot.delivered/snapshot.total*100)):0;
+  const history=getNewspaperMonthHistory().filter(x=>x.month!==snapshot.month);
+
+  openModal(`
+    <h2>📊 Podsumowanie miesiąca</h2>
+    <p class="muted"><b style="color:white">${escapeHtml(snapshot.label)}</b> · aktualny stan kolportażu</p>
+
+    <div class="stats" style="margin:14px 0">
+      <div class="stat"><strong>${snapshot.delivered}</strong><span>Rozdano</span></div>
+      <div class="stat"><strong>${snapshot.remaining}</strong><span>Pozostało</span></div>
+      <div class="stat"><strong>${pct}%</strong><span>Realizacja</span></div>
+    </div>
+
+    <div class="stats" style="margin-bottom:14px">
+      <div class="stat"><strong>${snapshot.total}</strong><span>Wszystkie gazety</span></div>
+      <div class="stat"><strong>${snapshot.groupsDone}</strong><span>Gotowe grupy</span></div>
+      <div class="stat"><strong>${snapshot.groupsTotal}</strong><span>Wszystkie grupy</span></div>
+    </div>
+
+    <div class="progress"><div style="width:${pct}%;background:var(--green)"></div></div>
+
+    <div style="overflow:auto;margin-top:14px">
+      <table>
+        <thead><tr><th>Grupa</th><th>Gazety</th><th>Stan</th></tr></thead>
+        <tbody>
+          ${snapshot.groups.map(g=>`
+            <tr>
+              <td>${escapeHtml(g.name)}</td>
+              <td>${g.delivered}/${g.copies}</td>
+              <td>${g.done?"🟢 Gotowe":g.started?"🟡 W trakcie":"🔴 Nie rozpoczęto"}</td>
+            </tr>`).join("") || `<tr><td colspan="3">Brak grup.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+
+    ${history.length?`
+      <h3 style="margin-top:20px">📚 Zapisane poprzednie miesiące</h3>
+      ${history.slice(0,12).map(h=>`
+        <div class="card" style="margin:8px 0;background:#101010">
+          <b>${escapeHtml(h.label||h.month)}</b>
+          <div class="muted">${Number(h.delivered||0)}/${Number(h.total||0)} gazet · ${Number(h.groupsDone||0)}/${Number(h.groupsTotal||0)} grup gotowych</div>
+        </div>`).join("")}`:""}
+
+    <div class="actions">
+      <button class="btn green" onclick="saveNewspaperMonth();closeModal()">💾 Zapisz miesiąc</button>
+      <button class="btn outline" onclick="closeModal()">Zamknij</button>
+    </div>
+  `);
+}
+
+async function finishNewspaperMonth(){
+  if(!isStaff())return;
+
+  const snapshot=buildNewspaperMonthSnapshot();
+  const ok=confirm(
+    `Zakończyć ${snapshot.label}?\\n\\n`+
+    `Wynik ${snapshot.delivered}/${snapshot.total} gazet zostanie najpierw zapisany.\\n`+
+    `Następnie bieżący kolportaż zostanie wyzerowany i rozpocznie się nowy miesiąc.`
+  );
+  if(!ok)return;
+
+  try{
+    saveNewspaperMonth(false);
+
+    const result=await api("/api/newspaper-groups/reset",{
+      method:"POST",
+      body:JSON.stringify({})
+    });
+
+    if(Array.isArray(result)){
+      state.newspapers=result;
+    }else{
+      await loadNewspaperGroupsFromServer();
+    }
+
+    renderNewspapers();
+    updateNewspaperMonthStatus();
+    toast(`Miesiąc ${snapshot.label} zakończony. Kolportaż został wyzerowany.`);
+  }catch(e){
+    toast("Nie udało się rozpocząć nowego miesiąca: "+e.message,"error");
+  }
+}
+
+async function loadPaperPlan(){
+  if(!confirm("Wczytać aktualny plan Echo Łaz z kartki? Obecne grupy kolportażowe zostaną zastąpione."))return;
+  try{
+    state.newspapers=await api("/api/newspaper-groups/reset",{method:"POST",body:JSON.stringify({})});
+    renderNewspapers();
+    toast("Plan Echo Łaz został zapisany na stałe w bazie.");
+  }catch(e){toast(e.message,"error")}
+}
+
+async function deleteNewspaperGroup(id){
+  if(!confirm("Usunąć tę grupę kolportażową?"))return;
+  try{
+    await api(`/api/newspaper-groups/${Number(id)}`,{method:"DELETE"});
+    state.newspapers=(state.newspapers||[]).filter(g=>Number(g.id)!==Number(id));
+    renderNewspapers(); toast("Grupa usunięta.");
+  }catch(e){toast(e.message,"error")}
+}
+
+function editNewspaperGroup(id){
+  if(!["admin","guardian"].includes(state.role))return;
+  const g=(state.newspapers||[]).find(x=>Number(x.id)===Number(id)); if(!g)return;
+  const members=state.data.members||[];
+  const checks=members.map(m=>{
+    const checked=(g.memberIds||[]).map(String).includes(String(m.id));
+    return `<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="checkbox" class="editNewspaperMember" value="${Number(m.id)}" ${checked?"checked":""}> ${escapeHtml(memberFullName(m))}</label>`;
+  }).join("");
+  openModal(`<h2>✏️ Edytuj grupę</h2>
+    <form id="editNewspaperForm">
+      <div class="field"><label>Nazwa grupy</label><input id="editNewspaperName" required value="${escapeHtml(g.name)}"></div>
+      <div class="field"><label>Region</label><input id="editNewspaperRegion" required value="${escapeHtml(g.region)}"></div>
+      <div class="field"><label>Kolor</label><select id="editNewspaperColor">
+        ${[["#2878ff","🔵 Niebieski"],["#36b86b","🟢 Zielony"],["#ff9d2e","🟠 Pomarańczowy"],["#e23b45","🔴 Czerwony"],["#a66cff","🟣 Fioletowy"]].map(([v,l])=>`<option value="${v}" ${g.color===v?"selected":""}>${l}</option>`).join("")}
+      </select></div>
+      <div class="field"><label>Ulice — każda w osobnej linii</label><textarea id="editNewspaperStreets" required>${escapeHtml((g.streets||[]).join("\n"))}</textarea></div>
+      <div class="field"><label>Członkowie grupy</label><div>${checks||`<span class="muted">Brak członków.</span>`}</div></div>
+      <div class="field"><label>Liczba gazet</label><input id="editNewspaperCopies" type="number" min="0" value="${Number(g.copies||0)}"></div>
+      <div class="actions"><button class="btn outline" type="button" onclick="closeModal()">Anuluj</button><button class="btn red" type="submit">💾 Zapisz zmiany</button></div>
+    </form>`);
+  $("editNewspaperForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const memberIds=[...document.querySelectorAll(".editNewspaperMember:checked")].map(x=>Number(x.value));
+    const body={name:$("editNewspaperName").value.trim(),region:$("editNewspaperRegion").value.trim(),color:$("editNewspaperColor").value,streets:$("editNewspaperStreets").value.split("\n").map(x=>x.trim()).filter(Boolean),copies:Number($("editNewspaperCopies").value||0),memberIds};
+    try{
+      const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify(body)});
+      state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
+      closeModal(); renderNewspapers(); toast("Grupa została zapisana.");
+    }catch(err){toast(err.message,"error")}
+  });
+}
+
+function renderManage(){
+  const members=state.data.members || [];
+  $("membersManage").innerHTML=members.length ? members.map(m=>`
+    <div class="card" style="margin:8px 0;background:#101010">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div>
+          <b>${escapeHtml(m.first_name || m.name || "")} ${escapeHtml(m.last_name || "")}</b>
+          <div class="muted">${escapeHtml(m.role || "member")}</div>
+        </div>
+        <button class="btn danger" onclick="deleteMember(${Number(m.id)})">Usuń</button>
+      </div>
+    </div>
+  `).join("") : `<div class="empty">Brak członków.</div>`;
+}
+
+function getLocalAttendance(eventId){
+  return localStorage.getItem(`mdp_att_${eventId}_${state.memberId}`) || "";
+}
+
+function setLocalAttendance(eventId,status){
+  localStorage.setItem(`mdp_att_${eventId}_${state.memberId}`,status);
+}
+
+function showOutfit(eventId){
+  const event=state.data.events.find(e=>Number(e.id)===Number(eventId));
+  const outfit=String(event?.outfit || event?.clothing || "").trim();
+  if(!outfit){
+    openModal(`
+      <h2>👕 Ubiór</h2>
+      <div class="card" style="margin-top:12px;text-align:center">Opiekun nie podał jeszcze ubioru.</div>
+      <div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>
+    `);
+    return;
+  }
+  openModal(`
+    <h2>👕 Ubiór</h2>
+    <div class="card" style="margin-top:12px;text-align:center;font-size:20px">${escapeHtml(outfit)}</div>
+    <div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>
+  `);
+}
+
+async function setAttendance(eventId,status){
+  try{
+    await api(`/api/attendance/${eventId}`,{
+      method:"POST",
+      body:JSON.stringify({status})
+    });
+    setLocalAttendance(eventId,status);
+    toast(status==="yes"?"Obecność: Będę":status==="maybe"?"Obecność: Może":"Obecność: Nie będę");
+    await loadData();
+  }catch(e){
+    toast(e.message,"error");
+  }
+}
+
+async function showAttendance(eventId){
+  try{
+    const data=await api(`/api/attendance/${eventId}`,{method:"GET"});
+    const rows=Array.isArray(data)?data:
+      Array.isArray(data?.attendance)?data.attendance:
+      Array.isArray(data?.rows)?data.rows:[];
+
+    const event=state.data.events.find(e=>Number(e.id)===Number(eventId));
+
+    let yes=0,maybe=0,no=0;
+    rows.forEach(r=>{
+      if(r.status==="yes")yes++;
+      else if(r.status==="maybe")maybe++;
+      else if(r.status==="no")no++;
+    });
+
+    openModal(`
+      <h2>📋 Obecność</h2>
+      <p class="muted">${escapeHtml(event?.title || "Zbiórka")}</p>
+
+      <div class="stats" style="margin:14px 0">
+        <div class="stat"><strong>${yes}</strong><span>✅ Będę</span></div>
+        <div class="stat"><strong>${maybe}</strong><span>🟡 Może</span></div>
+        <div class="stat"><strong>${no}</strong><span>❌ Nie będę</span></div>
+      </div>
+
+      ${rows.length ? `
+        <div style="overflow:auto">
+          <table>
+            <thead><tr><th>Członek</th><th>Status</th></tr></thead>
+            <tbody>
+              ${rows.map(r=>{
+                const name=r.member_name || r.name ||
+                  `${r.first_name||""} ${r.last_name||""}`.trim() || "Nieznany";
+                const status=r.status==="yes"?"✅ Będę":r.status==="maybe"?"🟡 Może":r.status==="no"?"❌ Nie będę":"❔";
+                return `<tr><td>${escapeHtml(name)}</td><td>${status}</td></tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `:`<div class="empty">Nikt jeszcze nie zaznaczył obecności.</div>`}
+
+      <div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>
+    `);
+  }catch(e){
+    toast("Nie udało się pobrać obecności: "+e.message,"error");
+  }
+}
+
+async function deleteEvent(id){
+  if(!confirm("Na pewno usunąć tę zbiórkę?"))return;
+  try{
+    await api(`/api/events/${id}`,{method:"DELETE"});
+    toast("Zbiórka usunięta.");
+    await loadData();
+  }catch(e){toast(e.message,"error")}
+}
+
+async function deleteNews(id){
+  if(!confirm("Na pewno usunąć to ogłoszenie?"))return;
+  try{
+    await api(`/api/news/${id}`,{method:"DELETE"});
+    toast("Ogłoszenie usunięte.");
+    await loadData();
+  }catch(e){toast(e.message,"error")}
+}
+
+async function addMember(e){
+  e.preventDefault();
+
+  const firstName=$("memberFirstName").value.trim();
+  const lastName=$("memberLastName").value.trim();
+  const code=$("memberCode").value.trim();
+  const msg=$("memberFormMessage");
+
+  msg.textContent="Dodawanie członka...";
+
+  try{
+    await api("/api/members",{
+      method:"POST",
+      body:JSON.stringify({
+        first_name:firstName,
+        last_name:lastName,
+        code,
+        role:"member"
+      })
+    });
+
+    e.target.reset();
+    msg.textContent="✅ Członek został dodany.";
+    toast("Członek został dodany.");
+    await loadData();
+  }catch(err){
+    msg.textContent="❌ "+err.message;
+    toast("Nie udało się dodać członka: "+err.message,"error");
+  }
+}
+
+async function deleteMember(id){
+  if(!confirm("Na pewno usunąć tego członka?"))return;
+  try{
+    await api(`/api/members/${id}`,{method:"DELETE"});
+    toast("Członek usunięty.");
+    await loadData();
+  }catch(e){toast(e.message,"error")}
+}
+
+function openModal(html){
+  $("modalRoot").innerHTML=`
+    <div class="modal-backdrop" id="mainModalBackdrop" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="close-row"><button class="icon-btn" onclick="closeModal()">✕</button></div>
+        ${html}
+      </div>
+    </div>`;
+}
+
+function closeModal(){$("modalRoot").innerHTML=""}
+
+function openScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  const screen=$(id);
+  if(screen)screen.classList.add("active");
+
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));
+
+  if(id==="manageScreen" && !["admin","guardian"].includes(state.role)){
+    openScreen("homeScreen");return;
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function updateUIForRole(){
+  $("roleLabel").textContent=roleName(state.role);
+  const manageBtn=document.querySelector('[data-screen="manageScreen"]');
+  const reportBtn=document.querySelector('[data-screen="reportsScreen"]');
+
+  if(["admin","guardian"].includes(state.role)){
+    if(!manageBtn){
+      const nav=document.querySelector(".nav-inner");
+      const b=document.createElement("button");
+      b.className="nav-btn";
+      b.dataset.screen="manageScreen";
+      b.innerHTML="<b>⚙</b>Zarządzanie";
+      b.onclick=()=>openScreen("manageScreen");
+      nav.appendChild(b);
+    }else manageBtn.classList.remove("hidden");
+  }
+}
+
+async function login(role,code,firstName,lastName){
+  const payload={role,code};
+  if(role==="member"){
+    payload.firstName=firstName;
+    payload.lastName=lastName;
+  }
+
+  const data=await fetch("/api/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  }).then(async r=>{
+    const t=await r.text();
+    let d=null;try{d=t?JSON.parse(t):null}catch{d={error:t}};
+    if(!r.ok)throw new Error(d?.error || "Nieprawidłowe dane logowania.");
+    return d;
+  });
+
+  state.code=code;
+  saveSession({...data,role:data.role||role});
+  updateUIForRole();
+  $("loginScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  await loadData();
+  toast("Zalogowano pomyślnie.");
+}
+
+document.querySelectorAll(".role-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".role-tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedLoginRole=btn.dataset.role;
+    $("memberFields").style.display=selectedLoginRole==="member"?"grid":"none";
+  });
+});
+
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  $("loginError").classList.add("hidden");
+
+  const code=$("loginCode").value.trim();
+  const first=$("loginFirstName").value.trim();
+  const last=$("loginLastName").value.trim();
+
+  if(!code){
+    $("loginError").textContent="Wpisz kod dostępu.";
+    $("loginError").classList.remove("hidden");
+    return;
+  }
+
+  if(selectedLoginRole==="member" && (!first || !last)){
+    $("loginError").textContent="Wpisz imię i nazwisko.";
+    $("loginError").classList.remove("hidden");
+    return;
+  }
+
+  try{
+    await login(selectedLoginRole,code,first,last);
+  }catch(err){
+    $("loginError").textContent=err.message;
+    $("loginError").classList.remove("hidden");
+  }
+});
+
+$("logoutBtn").addEventListener("click",()=>{
+  clearSession();
+  location.reload();
+});
+
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>openScreen(btn.dataset.screen));
+});
+
+$("eventForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+
+  const body={
+    title:$("eventTitle").value.trim(),
+    event_date:$("eventDate").value,
+    event_time:$("eventTime").value,
+    place:$("eventPlace").value.trim(),
+    outfit:$("eventOutfit").value.trim(),
+    description:$("eventDescription").value.trim(),
+
+    /* kompatybilność ze starszym frontendem */
+    date:$("eventDate").value,
+    time:$("eventTime").value,
+    location:$("eventPlace").value.trim()
+  };
+
+  try{
+    await api("/api/events",{method:"POST",body:JSON.stringify(body)});
+    e.target.reset();
+    toast("Zbiórka została dodana.");
+    await loadData();
+    openScreen("eventsScreen");
+  }catch(err){
+    toast("Nie udało się dodać zbiórki: "+err.message,"error");
+  }
+});
+
+
+$("newspaperGroupForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const checks=[...document.querySelectorAll("#newspaperMemberChecks input:checked")].map(x=>Number(x.value));
+  const body={
+    name:$("newspaperGroupName").value.trim(),
+    region:$("newspaperRegion").value.trim(),
+    color:$("newspaperColor").value,
+    streets:$("newspaperStreets").value.split("\n").map(x=>x.trim()).filter(Boolean),
+    copies:Number($("newspaperCopies").value||0),
+    memberIds:checks
+  };
+  try{
+    const group=await api("/api/newspaper-groups",{method:"POST",body:JSON.stringify(body)});
+    state.newspapers.push(group);
+    e.target.reset(); $("newspaperCopies").value=0; renderNewspapers();
+    toast("Grupa kolportażowa została zapisana na stałe.");
+  }catch(err){toast(err.message,"error")}
+});
+
+$("urgentForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  try{
+    await api("/api/urgent-messages",{method:"POST",body:JSON.stringify({title:$("urgentTitle").value.trim(),body:$("urgentBody").value.trim()})});
+    e.target.reset(); await loadUrgent(); renderUrgent(); toast("Pilne powiadomienie zostało wysłane.");
+  }catch(err){toast(err.message,"error")}
+});
+
+$("memberForm").addEventListener("submit",addMember);
+
+$("newsForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+
+  const title=$("newsTitle").value.trim();
+  const bodyText=$("newsBody").value.trim();
+
+  try{
+    await api("/api/news",{
+      method:"POST",
+      body:JSON.stringify({
+        title,
+        body:bodyText,
+        content:bodyText
+      })
+    });
+    e.target.reset();
+    toast("Ogłoszenie zostało dodane.");
+    await loadData();
+    openScreen("newsScreen");
+  }catch(err){
+    toast("Nie udało się dodać ogłoszenia: "+err.message,"error");
+  }
+});
+
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="photoForm")return;
+  e.preventDefault();
+
+  const photo=$("photoUrl").value.trim();
+
+  try{
+    const data=await api("/api/profile",{
+      method:"PUT",
+      body:JSON.stringify({photo})
+    });
+
+    state.photo=data?.member?.photo ?? data?.photo ?? photo;
+    localStorage.setItem("mdp_photo",state.photo);
+    renderProfile();
+    toast("Zdjęcie zapisane.");
+  }catch(err){
+    toast("Nie udało się zapisać zdjęcia: "+err.message,"error");
+  }
+});
+
+async function ensurePushSubscription(){
+  if(state.role!=="member") return;
+  if(!( "serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+  try{
+    const permission=Notification.permission==="granted" ? "granted" : await Notification.requestPermission();
+    if(permission!=="granted") return;
+    const registration=await navigator.serviceWorker.ready;
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription){
+      const keyData=await api("/api/push/public-key",{method:"GET"});
+      if(!keyData?.publicKey) return;
+      const raw=atob(keyData.publicKey.replace(/-/g,"+").replace(/_/g,"/"));
+      const key=new Uint8Array(raw.length);
+      for(let i=0;i<raw.length;i++) key[i]=raw.charCodeAt(i);
+      subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+    }
+    await api("/api/push/subscribe",{method:"POST",body:JSON.stringify(subscription.toJSON ? subscription.toJSON() : subscription)});
+  }catch(e){ console.warn("Push nie zostały włączone:",e); }
+}
+
+async function start(){
+  if(!state.role || !state.code){
+    $("loginScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    return;
+  }
+
+  try{
+    $("loginScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    updateUIForRole();
+    await loadData();
+    await ensurePushSubscription();
+  }catch(e){
+    $("loginScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    clearSession();
+    $("loginError").textContent="Sesja wygasła. Zaloguj się ponownie.";
+    $("loginError").classList.remove("hidden");
+  }
+}
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  });
+}
+
+start();
+
+/* ===== MDP SMACZKI UI ===== */
+(function(){
+  const originalToast = window.toast;
+  let loadingCount = 0;
+
+  function haptic(ms=8){
+    try{
+      if("vibrate" in navigator) navigator.vibrate(ms);
+    }catch(e){}
+  }
+
+  function showLoading(text="Ładowanie..."){
+    const el=document.getElementById("mdpLoading");
+    const tx=document.getElementById("mdpLoadingText");
+    if(!el)return;
+    if(tx)tx.textContent=text;
+    loadingCount++;
+    el.classList.add("show");
+  }
+
+  function hideLoading(){
+    const el=document.getElementById("mdpLoading");
+    if(!el)return;
+    loadingCount=Math.max(0,loadingCount-1);
+    if(loadingCount===0)el.classList.remove("show");
+  }
+
+  window.mdpShowLoading=showLoading;
+  window.mdpHideLoading=hideLoading;
+
+  /* Ładny ekran ładowania dla zapisów/edycji, bez ingerowania w istniejącą funkcję api(). */
+  const originalFetch=window.fetch.bind(window);
+  window.fetch=async function(input,options={}){
+    const method=String(options.method||"GET").toUpperCase();
+    const important=method!=="GET";
+    let timer=null;
+    if(important) timer=setTimeout(()=>showLoading("Zapisywanie..."),420);
+    try{
+      return await originalFetch(input,options);
+    }finally{
+      if(timer)clearTimeout(timer);
+      hideLoading();
+    }
+  };
+
+  /* Powiadomienia online/offline. */
+  const status=document.createElement("div");
+  status.className="mdp-online-status";
+  status.innerHTML='<span class="mdp-online-dot"></span><span id="mdpOnlineText">Połączenie przywrócone</span>';
+  document.body.appendChild(status);
+
+  let statusTimer;
+  function connectionMessage(online){
+    const text=document.getElementById("mdpOnlineText");
+    if(!text)return;
+    status.classList.toggle("offline",!online);
+    text.textContent=online ? "Połączenie przywrócone" : "Brak połączenia z internetem";
+    status.classList.add("show");
+    clearTimeout(statusTimer);
+    if(online)statusTimer=setTimeout(()=>status.classList.remove("show"),2200);
+  }
+  window.addEventListener("offline",()=>connectionMessage(false));
+  window.addEventListener("online",()=>connectionMessage(true));
+
+  /* Małe wibracje + ripple na przyciskach, bez zmiany ich działania. */
+  document.addEventListener("click",e=>{
+    const btn=e.target.closest("button");
+    if(!btn || btn.disabled)return;
+    haptic(7);
+
+    const rect=btn.getBoundingClientRect();
+    const size=Math.max(rect.width,rect.height)*1.5;
+    const ripple=document.createElement("span");
+    ripple.className="mdp-ripple";
+    ripple.style.width=size+"px";
+    ripple.style.height=size+"px";
+    ripple.style.left=(e.clientX-rect.left-size/2)+"px";
+    ripple.style.top=(e.clientY-rect.top-size/2)+"px";
+    btn.appendChild(ripple);
+    setTimeout(()=>ripple.remove(),520);
+  },true);
+
+  /* Płynne przewijanie strony. Nie dotyka przewijanego menu na dole. */
+  document.documentElement.style.scrollBehavior="smooth";
+
+  /* Przycisk powrotu na górę. */
+  const topBtn=document.createElement("button");
+  topBtn.type="button";
+  topBtn.className="mdp-back-top";
+  topBtn.setAttribute("aria-label","Wróć na górę");
+  topBtn.textContent="↑";
+  document.body.appendChild(topBtn);
+
+  function updateTopButton(){
+    topBtn.classList.toggle("show",window.scrollY>420);
+  }
+  window.addEventListener("scroll",updateTopButton,{passive:true});
+  topBtn.addEventListener("click",()=>{
+    haptic(10);
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+
+  /* Delikatny efekt sukcesu dla toastów typu zapisano/dodano/usunięto. */
+  if(typeof originalToast==="function"){
+    window.toast=function(message,type="info"){
+      originalToast(message,type);
+      if(type!=="error"){
+        const active=document.querySelector(".screen.active");
+        if(active){
+          active.classList.remove("mdp-success");
+          void active.offsetWidth;
+          active.classList.add("mdp-success");
+          setTimeout(()=>active.classList.remove("mdp-success"),500);
+        }
+      }
+    };
+  }
+
+  /* Powitanie na ekranie głównym. */
+  function addGreeting(){
+    const hero=document.querySelector("#homeScreen .hero");
+    if(!hero || hero.querySelector(".mdp-greeting"))return;
+    const hour=new Date().getHours();
+    const prefix=hour<12 ? "Dzień dobry" : hour<18 ? "Miłego dnia" : "Dobry wieczór";
+    const name=localStorage.getItem("mdp_first_name") || "";
+    const safeName=name.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+    const p=document.createElement("div");
+    p.className="mdp-greeting";
+    p.innerHTML=safeName ? `${prefix}, <b>${safeName}</b> 👋` : `${prefix} 👋`;
+    hero.insertBefore(p,hero.querySelector("h1"));
+  }
+
+  /* Po zalogowaniu renderProfile/loadData już istnieją, więc sprawdzamy chwilę później. */
+  const greetingTimer=setInterval(()=>{
+    if(document.getElementById("app") && !document.getElementById("app").classList.contains("hidden")){
+      addGreeting();
+      clearInterval(greetingTimer);
+    }
+  },350);
+  setTimeout(()=>clearInterval(greetingTimer),15000);
+
+  /* Uzupełnienie tooltipów na ikonach menu. */
+  document.querySelectorAll(".nav-btn").forEach(btn=>{
+    if(!btn.title)btn.title=btn.textContent.trim();
+  });
+})();
+
+</script>
+</body>
+</html>
