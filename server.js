@@ -9,26 +9,15 @@ const PORT = process.env.PORT || 3000;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL
-    ? { rejectUnauthorized: false }
-    : false
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-const GUARDIAN_CODE =
-  process.env.GUARDIAN_CODE || '9982018';
+const GUARDIAN_CODE = process.env.GUARDIAN_CODE || '9982018';
+const ADMIN_CODE = process.env.ADMIN_CODE || '0000';
 
-const ADMIN_CODE =
-  process.env.ADMIN_CODE || '0000';
-
-const VAPID_PUBLIC_KEY =
-  process.env.VAPID_PUBLIC_KEY || '';
-
-const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY || '';
-
-const VAPID_EMAIL =
-  process.env.VAPID_EMAIL ||
-  'mailto:admin@example.com';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -38,187 +27,112 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   );
 }
 
-app.use(
-  express.json({
-    limit: '3mb'
-  })
-);
+app.use(express.json({ limit: '3mb' }));
+app.use(express.urlencoded({ extended: true, limit: '3mb' }));
 
-app.use(
-  express.urlencoded({
-    extended: true,
-    limit: '3mb'
-  })
-);
-
-app.use(
-  express.static(
-    path.join(__dirname, 'public')
-  )
-);
-
-
-/* =========================================================
-   POMOCNICZE
-========================================================= */
+app.use(express.static(path.join(__dirname, 'public')));
 
 const hashCode = code =>
-  crypto
-    .createHash('sha256')
+  crypto.createHash('sha256')
     .update(String(code || ''))
     .digest('hex');
 
-
 const normRole = role => {
+  const r = String(role || '').toLowerCase().trim();
 
-  const r =
-    String(role || '')
-      .toLowerCase()
-      .trim();
-
-  if (
-    ['opiekun', 'guardian'].includes(r)
-  ) {
-    return 'guardian';
-  }
-
-  if (
-    ['admin', 'administrator'].includes(r)
-  ) {
-    return 'admin';
-  }
-
-  if (
-    ['member', 'czlonek', 'członek'].includes(r)
-  ) {
-    return 'member';
-  }
+  if (['opiekun', 'guardian'].includes(r)) return 'guardian';
+  if (['admin', 'administrator'].includes(r)) return 'admin';
+  if (['member', 'czlonek', 'członek'].includes(r)) return 'member';
 
   return r;
 };
 
-
 const isStaff = req =>
-  req.role === 'admin' ||
-  req.role === 'guardian';
+  req.role === 'admin' || req.role === 'guardian';
 
+
+/* =========================================================
+   AUTORYZACJA
+========================================================= */
 
 async function auth(req, res, next) {
+  const role = normRole(req.headers['x-role']);
 
-  const role =
-    normRole(req.headers['x-role']);
+  const code = String(
+    req.headers['x-code'] ||
+    req.headers['x-access-code'] ||
+    ''
+  );
 
-  const code =
-    String(
-      req.headers['x-code'] ||
-      req.headers['x-access-code'] ||
-      ''
-    );
-
-  const memberId =
-    String(
-      req.headers['x-member-id'] ||
-      req.headers['x-memberid'] ||
-      ''
-    );
+  const memberId = String(
+    req.headers['x-member-id'] ||
+    req.headers['x-memberid'] ||
+    ''
+  );
 
   req.role = role;
   req.memberId = memberId;
 
   try {
-
-    if (
-      role === 'admin' &&
-      code === ADMIN_CODE
-    ) {
-
+    if (role === 'admin' && code === ADMIN_CODE) {
       req.authenticated = true;
-
       return next();
     }
 
-
-    if (
-      role === 'guardian' &&
-      code === GUARDIAN_CODE
-    ) {
-
+    if (role === 'guardian' && code === GUARDIAN_CODE) {
       req.authenticated = true;
-
       return next();
     }
 
-
-    if (
-      role === 'member' &&
-      memberId &&
-      code
-    ) {
-
-      const r =
-        await pool.query(
-          `
-          SELECT
-            id,
-            first_name,
-            last_name,
-            role,
-            photo,
-            code_hash
-          FROM members
-          WHERE id=$1
-          `,
-          [memberId]
-        );
-
+    if (role === 'member' && memberId && code) {
+      const r = await pool.query(
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo,
+          code_hash
+        FROM members
+        WHERE id=$1
+        `,
+        [memberId]
+      );
 
       if (
         !r.rows[0] ||
-        r.rows[0].code_hash !==
-          hashCode(code)
+        r.rows[0].code_hash !== hashCode(code)
       ) {
-
         return res.status(401).json({
-          error:
-            'Nieprawidłowe dane logowania.'
+          error: 'Nieprawidłowe dane logowania.'
         });
       }
 
-
-      req.member =
-        r.rows[0];
-
-      req.authenticated =
-        true;
+      req.member = r.rows[0];
+      req.authenticated = true;
 
       return next();
     }
 
-
     return res.status(401).json({
-      error:
-        'Brak autoryzacji.'
+      error: 'Brak autoryzacji.'
     });
 
   } catch (e) {
-
     console.error(e);
 
     return res.status(500).json({
-      error:
-        'Błąd autoryzacji.'
+      error: 'Błąd autoryzacji.'
     });
   }
 }
 
-
 function staff(req, res, next) {
-
   return isStaff(req)
     ? next()
     : res.status(403).json({
-        error:
-          'Brak uprawnień.'
+        error: 'Brak uprawnień.'
       });
 }
 
@@ -269,19 +183,12 @@ async function initDb() {
 
     CREATE TABLE IF NOT EXISTS member_reports (
       id SERIAL PRIMARY KEY,
-      member_id INTEGER REFERENCES members(id)
-        ON DELETE CASCADE,
+      member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
       member_name TEXT NOT NULL,
       report_type TEXT NOT NULL,
       body TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'new'
-        CHECK (
-          status IN (
-            'new',
-            'in_progress',
-            'done'
-          )
-        ),
+        CHECK (status IN ('new','in_progress','done')),
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -289,17 +196,10 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS attendance (
       id SERIAL PRIMARY KEY,
       event_id INTEGER NOT NULL
-        REFERENCES events(id)
-        ON DELETE CASCADE,
+        REFERENCES events(id) ON DELETE CASCADE,
       member_name TEXT NOT NULL,
       status TEXT NOT NULL
-        CHECK (
-          status IN (
-            'yes',
-            'maybe',
-            'no'
-          )
-        ),
+        CHECK (status IN ('yes','maybe','no')),
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(event_id, member_name)
     );
@@ -315,146 +215,72 @@ async function initDb() {
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       region TEXT NOT NULL,
-      color TEXT NOT NULL
-        DEFAULT '#2878ff',
-      streets JSONB NOT NULL
-        DEFAULT '[]'::jsonb,
-      copies INTEGER NOT NULL
-        DEFAULT 0,
-      delivered INTEGER NOT NULL
-        DEFAULT 0,
-      started BOOLEAN NOT NULL
-        DEFAULT FALSE,
-      done BOOLEAN NOT NULL
-        DEFAULT FALSE,
-      member_ids JSONB NOT NULL
-        DEFAULT '[]'::jsonb,
-      member_names JSONB NOT NULL
-        DEFAULT '[]'::jsonb,
-      created_at TIMESTAMPTZ
-        DEFAULT NOW()
+      color TEXT NOT NULL DEFAULT '#2878ff',
+      streets JSONB NOT NULL DEFAULT '[]'::jsonb,
+      copies INTEGER NOT NULL DEFAULT 0,
+      delivered INTEGER NOT NULL DEFAULT 0,
+      started BOOLEAN NOT NULL DEFAULT FALSE,
+      done BOOLEAN NOT NULL DEFAULT FALSE,
+      member_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+      member_names JSONB NOT NULL DEFAULT '[]'::jsonb,
+      created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS newspaper_history (
       id SERIAL PRIMARY KEY,
       month_key TEXT NOT NULL,
       month_label TEXT NOT NULL,
-      saved_at TIMESTAMPTZ
-        DEFAULT NOW(),
-      groups JSONB NOT NULL
-        DEFAULT '[]'::jsonb
+      saved_at TIMESTAMPTZ DEFAULT NOW(),
+      groups JSONB NOT NULL DEFAULT '[]'::jsonb
     );
   `);
 
 
-  /* =======================================================
-     DODATKOWE KOLUMNY EVENTS
-  ======================================================= */
+  /* ===========================
+     MIGRACJE CZŁONKÓW
+  =========================== */
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS first_name TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS last_name TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS code_hash TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
+  );
+
+
+  /* ===========================
+     MIGRACJE ZBIÓREK
+  =========================== */
 
   await pool.query(`
     ALTER TABLE events
-    ADD COLUMN IF NOT EXISTS completed
-    BOOLEAN NOT NULL DEFAULT FALSE
-  `);
-
-
-  /* =======================================================
-     UZUPEŁNIANIE TABELI MEMBERS
-  ======================================================= */
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS first_name TEXT
+    ADD COLUMN IF NOT EXISTS outfit TEXT
   `);
 
   await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS last_name TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS code_hash TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS photo TEXT
+    ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT FALSE
   `);
 
 
-  /* =======================================================
-     NAPRAWA ATTENDANCE
-  ======================================================= */
+  /* ===========================
+     SEED GAZET
+  =========================== */
 
-  await pool.query(`
-    ALTER TABLE attendance
-    ADD COLUMN IF NOT EXISTS member_name TEXT
-  `);
+  const c = await pool.query(
+    'SELECT COUNT(*)::int AS count FROM newspaper_groups'
+  );
 
-  await pool.query(`
-    ALTER TABLE attendance
-    ADD COLUMN IF NOT EXISTS status TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE attendance
-    ADD COLUMN IF NOT EXISTS created_at
-    TIMESTAMPTZ DEFAULT NOW()
-  `);
-
-
-  /* =======================================================
-     USUNIĘCIE DUPLIKATÓW OBECNOŚCI
-  ======================================================= */
-
-  await pool.query(`
-    DELETE FROM attendance a
-    USING attendance b
-    WHERE a.id < b.id
-      AND a.event_id = b.event_id
-      AND a.member_name = b.member_name
-      AND a.member_name IS NOT NULL
-  `);
-
-
-  /* =======================================================
-     UNIKALNOŚĆ OBECNOŚCI
-  ======================================================= */
-
-  await pool.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS
-    attendance_event_member_unique
-    ON attendance(event_id, member_name)
-  `);
-
-
-  /* =======================================================
-     UNIKALNOŚĆ HISTORII MIESIĘCY
-  ======================================================= */
-
-  await pool.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS
-    newspaper_history_month_key_unique
-    ON newspaper_history(month_key)
-  `);
-
-
-  /* =======================================================
-     GAZETY - SEED
-  ======================================================= */
-
-  const c =
-    await pool.query(`
-      SELECT COUNT(*)::int AS count
-      FROM newspaper_groups
-    `);
-
-
-  if (
-    c.rows[0].count === 0
-  ) {
-
+  if (c.rows[0].count === 0) {
     await seedNewspaperGroups();
   }
 }
@@ -480,11 +306,7 @@ async function seedNewspaperGroups() {
       'Wysoka',
       '3 bloki — Sportowa, Parkowa, Robotnicza',
       '#36b86b',
-      [
-        'Sportowa',
-        'Parkowa',
-        'Robotnicza'
-      ],
+      ['Sportowa', 'Parkowa', 'Robotnicza'],
       85
     ],
 
@@ -492,9 +314,7 @@ async function seedNewspaperGroups() {
       'Wysoka — Kościuszki',
       'Kościuszki → do Dzwonka',
       '#ff9d2e',
-      [
-        'Kościuszki — do Dzwonka'
-      ],
+      ['Kościuszki — do Dzwonka'],
       90
     ],
 
@@ -516,10 +336,7 @@ async function seedNewspaperGroups() {
 
   ];
 
-
-  for (
-    const g of groups
-  ) {
+  for (const g of groups) {
 
     await pool.query(
       `
@@ -531,14 +348,7 @@ async function seedNewspaperGroups() {
         streets,
         copies
       )
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        $4::jsonb,
-        $5
-      )
+      VALUES($1,$2,$3,$4::jsonb,$5)
       `,
       [
         g[0],
@@ -553,54 +363,37 @@ async function seedNewspaperGroups() {
 
 
 /* =========================================================
-   GAZETY - FORMATOWANIE
+   GAZETY — FORMAT
 ========================================================= */
 
-function groupJson(
-  row,
-  members = []
-) {
+function groupJson(row, members = []) {
 
   return {
+    id: row.id,
+    name: row.name,
+    region: row.region,
+    color: row.color,
 
-    id:
-      row.id,
+    streets: Array.isArray(row.streets)
+      ? row.streets
+      : [],
 
-    name:
-      row.name,
+    copies: Number(row.copies || 0),
 
-    region:
-      row.region,
+    delivered: Number(
+      row.delivered || 0
+    ),
 
-    color:
-      row.color,
+    started: !!row.started,
+    done: !!row.done,
 
-    streets:
-      Array.isArray(row.streets)
-        ? row.streets
-        : [],
+    memberIds: Array.isArray(row.member_ids)
+      ? row.member_ids.map(Number)
+      : [],
 
-    copies:
-      Number(row.copies || 0),
-
-    delivered:
-      Number(row.delivered || 0),
-
-    started:
-      !!row.started,
-
-    done:
-      !!row.done,
-
-    memberIds:
-      Array.isArray(row.member_ids)
-        ? row.member_ids.map(Number)
-        : [],
-
-    memberNames:
-      Array.isArray(row.member_names)
-        ? row.member_names
-        : [],
+    memberNames: Array.isArray(row.member_names)
+      ? row.member_names
+      : [],
 
     members
   };
@@ -609,79 +402,59 @@ function groupJson(
 
 async function getGroups() {
 
-  const [g, m] =
-    await Promise.all([
+  const [g, m] = await Promise.all([
 
-      pool.query(
-        `
-        SELECT *
-        FROM newspaper_groups
-        ORDER BY id
-        `
-      ),
+    pool.query(
+      'SELECT * FROM newspaper_groups ORDER BY id'
+    ),
 
-      pool.query(
-        `
-        SELECT
-          id,
-          first_name,
-          last_name,
-          name
-        FROM members
-        ORDER BY
-          first_name,
-          last_name,
-          id
-        `
-      )
+    pool.query(
+      `
+      SELECT
+        id,
+        first_name,
+        last_name,
+        name
+      FROM members
+      ORDER BY first_name,last_name,id
+      `
+    )
 
-    ]);
+  ]);
 
-
-  const members =
-    m.rows;
-
+  const members = m.rows;
 
   return g.rows.map(row => {
 
-    let ids =
-      Array.isArray(row.member_ids)
-        ? row.member_ids.map(Number)
-        : [];
+    let ids = Array.isArray(row.member_ids)
+      ? row.member_ids.map(Number)
+      : [];
+
+    let names = Array.isArray(row.member_names)
+      ? row.member_names.map(String)
+      : [];
 
 
-    let names =
-      Array.isArray(row.member_names)
-        ? row.member_names.map(String)
-        : [];
+    if (!ids.length && names.length) {
 
+      ids = members
+        .filter(x =>
 
-    if (
-      !ids.length &&
-      names.length
-    ) {
-
-      ids =
-        members
-          .filter(x =>
-            names.includes(
-              `${x.first_name || ''} ${x.last_name || ''}`
-                .trim()
-            ) ||
-            names.includes(
-              x.name || ''
-            )
+          names.includes(
+            `${x.first_name || ''} ${x.last_name || ''}`.trim()
           )
-          .map(x => x.id);
+
+          ||
+
+          names.includes(x.name || '')
+        )
+        .map(x => x.id);
     }
 
 
-    const groupMembers =
-      members.filter(x =>
-        ids.includes(
-          Number(x.id)
-        )
-      );
+    const groupMembers = members.filter(x =>
+      ids.includes(Number(x.id))
+    );
 
 
     return groupJson(
@@ -692,6 +465,7 @@ async function getGroups() {
       },
       groupMembers
     );
+
   });
 }
 
@@ -700,9 +474,7 @@ async function getGroups() {
    PUSH
 ========================================================= */
 
-async function sendPushToAll(
-  payload
-) {
+async function sendPushToAll(payload) {
 
   if (
     !VAPID_PUBLIC_KEY ||
@@ -711,22 +483,17 @@ async function sendPushToAll(
     return;
   }
 
+  const r = await pool.query(
+    `
+    SELECT
+      id,
+      endpoint,
+      subscription
+    FROM push_subscriptions
+    `
+  );
 
-  const r =
-    await pool.query(
-      `
-      SELECT
-        id,
-        endpoint,
-        subscription
-      FROM push_subscriptions
-      `
-    );
-
-
-  for (
-    const s of r.rows
-  ) {
+  for (const s of r.rows) {
 
     try {
 
@@ -759,515 +526,350 @@ async function sendPushToAll(
    LOGIN
 ========================================================= */
 
-app.post(
-  '/api/login',
-  async (req, res) => {
+app.post('/api/login', async (req, res) => {
 
-    try {
+  try {
 
-      const role =
-        normRole(req.body.role);
+    const role = normRole(req.body.role);
 
-      const code =
-        String(
-          req.body.code ||
-          req.body.password ||
-          ''
-        );
+    const code = String(
+      req.body.code ||
+      req.body.password ||
+      ''
+    );
 
 
-      if (
-        role === 'admin' &&
-        code === ADMIN_CODE
-      ) {
+    if (
+      role === 'admin' &&
+      code === ADMIN_CODE
+    ) {
 
-        return res.json({
-          role: 'admin'
-        });
-      }
-
-
-      if (
-        role === 'guardian' &&
-        code === GUARDIAN_CODE
-      ) {
-
-        return res.json({
-          role: 'guardian'
-        });
-      }
-
-
-      if (
-        role === 'member'
-      ) {
-
-        const r =
-          await pool.query(
-            `
-            SELECT
-              id,
-              first_name,
-              last_name,
-              role,
-              photo
-            FROM members
-            WHERE code_hash=$1
-            ORDER BY id
-            LIMIT 1
-            `,
-            [
-              hashCode(code)
-            ]
-          );
-
-
-        const m =
-          r.rows[0];
-
-
-        if (!m) {
-
-          return res.status(401).json({
-            error:
-              'Nieprawidłowy kod członka.'
-          });
-        }
-
-
-        return res.json({
-
-          role:
-            'member',
-
-          memberId:
-            m.id,
-
-          firstName:
-            m.first_name || '',
-
-          lastName:
-            m.last_name || '',
-
-          member: {
-
-            id:
-              m.id,
-
-            first_name:
-              m.first_name || '',
-
-            last_name:
-              m.last_name || '',
-
-            role:
-              m.role || 'member',
-
-            photo:
-              m.photo || ''
-          }
-
-        });
-      }
-
-
-      return res.status(401).json({
-        error:
-          'Nieprawidłowe dane logowania.'
-      });
-
-    } catch (e) {
-
-      console.error(e);
-
-      res.status(500).json({
-        error:
-          'Błąd logowania.'
+      return res.json({
+        role: 'admin'
       });
     }
+
+
+    if (
+      role === 'guardian' &&
+      code === GUARDIAN_CODE
+    ) {
+
+      return res.json({
+        role: 'guardian'
+      });
+    }
+
+
+    if (role === 'member') {
+
+      const r = await pool.query(
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        FROM members
+        WHERE code_hash=$1
+        ORDER BY id
+        LIMIT 1
+        `,
+        [hashCode(code)]
+      );
+
+      const m = r.rows[0];
+
+      if (!m) {
+
+        return res.status(401).json({
+          error: 'Nieprawidłowy kod członka.'
+        });
+      }
+
+
+      return res.json({
+
+        role: 'member',
+
+        memberId: m.id,
+
+        firstName:
+          m.first_name || '',
+
+        lastName:
+          m.last_name || '',
+
+        member: {
+          id: m.id,
+          first_name:
+            m.first_name || '',
+          last_name:
+            m.last_name || '',
+          role:
+            m.role || 'member',
+          photo:
+            m.photo || ''
+        }
+
+      });
+    }
+
+
+    return res.status(401).json({
+      error: 'Nieprawidłowe dane logowania.'
+    });
+
+  } catch (e) {
+
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Błąd logowania.'
+    });
   }
-);
+});
 
 
 /* =========================================================
    DATA
 ========================================================= */
 
-app.get(
-  '/api/data',
-  auth,
-  async (req, res) => {
+app.get('/api/data', auth, async (req, res) => {
+
+  try {
+
+    const [
+      events,
+      news,
+      members,
+      urgent
+    ] = await Promise.all([
+
+      pool.query(`
+        SELECT *
+        FROM events
+        ORDER BY
+          event_date ASC NULLS LAST,
+          event_time ASC NULLS LAST,
+          id DESC
+      `),
+
+      pool.query(`
+        SELECT *
+        FROM news
+        ORDER BY created_at DESC,id DESC
+      `),
+
+      pool.query(`
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo,
+          name,
+          created_at
+        FROM members
+        ORDER BY first_name,last_name,id
+      `),
+
+      pool.query(`
+        SELECT
+          id,
+          title,
+          body,
+          active,
+          created_at
+        FROM urgent_messages
+        WHERE active=TRUE
+        ORDER BY created_at DESC,id DESC
+      `)
+
+    ]);
+
+
+    res.json({
+
+      events: events.rows,
+
+      news: news.rows,
+
+      members: members.rows,
+
+      urgent: urgent.rows
+
+    });
+
+  } catch (e) {
+
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się pobrać danych.'
+    });
+  }
+});
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+app.get('/api/stats', auth, async (req, res) => {
+
+  try {
+
+    const [m, e, n] =
+      await Promise.all([
+
+        pool.query(
+          'SELECT COUNT(*)::int c FROM members'
+        ),
+
+        pool.query(
+          'SELECT COUNT(*)::int c FROM events'
+        ),
+
+        pool.query(
+          'SELECT COUNT(*)::int c FROM news'
+        )
+
+      ]);
+
+
+    res.json({
+
+      members: m.rows[0].c,
+
+      events: e.rows[0].c,
+
+      news: n.rows[0].c
+
+    });
+
+  } catch (e) {
+
+    res.status(500).json({
+      error: 'Błąd statystyk.'
+    });
+  }
+});
+
+
+/* =========================================================
+   ZBIÓRKI
+========================================================= */
+
+app.post('/api/events', auth, staff, async (req, res) => {
+
+  try {
+
+    const b = req.body;
+
+    const title =
+      String(
+        b.title ||
+        b.name ||
+        ''
+      ).trim();
+
+
+    if (!title) {
+
+      return res.status(400).json({
+        error: 'Podaj nazwę zbiórki.'
+      });
+    }
+
+
+    const outfit =
+      String(
+        b.outfit ??
+        b.clothing ??
+        b.ubior ??
+        ''
+      ).trim();
+
+
+    const r = await pool.query(
+      `
+      INSERT INTO events
+      (
+        title,
+        event_date,
+        event_time,
+        place,
+        description,
+        outfit,
+        completed
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        FALSE
+      )
+      RETURNING *
+      `,
+      [
+        title,
+
+        b.event_date ||
+        b.date ||
+        null,
+
+        b.event_time ||
+        b.time ||
+        null,
+
+        b.place ||
+        b.location ||
+        b.address ||
+        '',
+
+        b.description ||
+        b.desc ||
+        b.text ||
+        '',
+
+        outfit
+      ]
+    );
+
 
     try {
 
-      const [
-        events,
-        news,
-        members,
-        urgent
-      ] =
-        await Promise.all([
-
-          pool.query(`
-            SELECT *
-            FROM events
-            ORDER BY
-              event_date ASC NULLS LAST,
-              event_time ASC NULLS LAST,
-              id DESC
-          `),
-
-          pool.query(`
-            SELECT *
-            FROM news
-            ORDER BY
-              created_at DESC,
-              id DESC
-          `),
-
-          pool.query(`
-            SELECT
-              id,
-              first_name,
-              last_name,
-              role,
-              photo,
-              name,
-              created_at
-            FROM members
-            ORDER BY
-              first_name,
-              last_name,
-              id
-          `),
-
-          pool.query(`
-            SELECT
-              id,
-              title,
-              body,
-              active,
-              created_at
-            FROM urgent_messages
-            WHERE active=TRUE
-            ORDER BY
-              created_at DESC,
-              id DESC
-          `)
-
-        ]);
-
-
-      res.json({
-
-        events:
-          events.rows,
-
-        news:
-          news.rows,
-
-        members:
-          members.rows,
-
-        urgent:
-          urgent.rows
-
+      await sendPushToAll({
+        title: 'Nowa zbiórka MDP',
+        body: title
       });
 
     } catch (e) {
 
       console.error(e);
-
-      res.status(500).json({
-        error:
-          'Nie udało się pobrać danych.'
-      });
     }
+
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się dodać zbiórki.'
+    });
   }
-);
+});
 
 
-/* =========================================================
-   STATYSTYKI
-========================================================= */
-
-app.get(
-  '/api/stats',
-  auth,
-  async (req, res) => {
-
-    try {
-
-      const [
-        m,
-        e,
-        n
-      ] =
-        await Promise.all([
-
-          pool.query(
-            `
-            SELECT COUNT(*)::int c
-            FROM members
-            `
-          ),
-
-          pool.query(
-            `
-            SELECT COUNT(*)::int c
-            FROM events
-            `
-          ),
-
-          pool.query(
-            `
-            SELECT COUNT(*)::int c
-            FROM news
-            `
-          )
-
-        ]);
-
-
-      res.json({
-
-        members:
-          m.rows[0].c,
-
-        events:
-          e.rows[0].c,
-
-        news:
-          n.rows[0].c
-
-      });
-
-    } catch (e) {
-
-      res.status(500).json({
-        error:
-          'Błąd statystyk.'
-      });
-    }
-  }
-);
-
-
-/* =========================================================
-   EVENTS - DODAWANIE
-========================================================= */
-
-app.post(
-  '/api/events',
-  auth,
-  staff,
-  async (req, res) => {
-
-    try {
-
-      const b =
-        req.body;
-
-
-      const title =
-        String(
-          b.title ||
-          b.name ||
-          ''
-        ).trim();
-
-
-      if (!title) {
-
-        return res.status(400).json({
-          error:
-            'Podaj nazwę zbiórki.'
-        });
-      }
-
-
-      const r =
-        await pool.query(
-          `
-          INSERT INTO events
-          (
-            title,
-            event_date,
-            event_time,
-            place,
-            description,
-            completed
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            FALSE
-          )
-          RETURNING *
-          `,
-          [
-
-            title,
-
-            b.event_date ||
-              b.date ||
-              null,
-
-            b.event_time ||
-              b.time ||
-              null,
-
-            b.place ||
-              b.location ||
-              b.address ||
-              '',
-
-            b.description ||
-              b.desc ||
-              b.text ||
-              ''
-
-          ]
-        );
-
-
-      try {
-
-        await sendPushToAll({
-
-          title:
-            'Nowa zbiórka MDP',
-
-          body:
-            title
-
-        });
-
-      } catch (e) {
-
-        console.error(e);
-      }
-
-
-      res.json(
-        r.rows[0]
-      );
-
-    } catch (e) {
-
-      console.error(e);
-
-      res.status(500).json({
-        error:
-          'Nie udało się dodać zbiórki.'
-      });
-    }
-  }
-);
-
-
-/* =========================================================
-   ZAKOŃCZENIE ZBIÓRKI
-========================================================= */
-
-app.post(
-  '/api/events/:id/complete',
-  auth,
-  staff,
-  async (req, res) => {
-
-    try {
-
-      const eventId =
-        Number(req.params.id);
-
-
-      if (
-        !Number.isInteger(eventId) ||
-        eventId <= 0
-      ) {
-
-        return res.status(400).json({
-          error:
-            'Nieprawidłowe ID zbiórki.'
-        });
-      }
-
-
-      const existing =
-        await pool.query(
-          `
-          SELECT *
-          FROM events
-          WHERE id=$1
-          `,
-          [eventId]
-        );
-
-
-      if (!existing.rows[0]) {
-
-        return res.status(404).json({
-          error:
-            'Nie znaleziono zbiórki.'
-        });
-      }
-
-
-      const updated =
-        await pool.query(
-          `
-          UPDATE events
-          SET completed=TRUE
-          WHERE id=$1
-          RETURNING *
-          `,
-          [eventId]
-        );
-
-
-      return res.json({
-
-        ok:
-          true,
-
-        event:
-          updated.rows[0]
-
-      });
-
-    } catch (e) {
-
-      console.error(
-        'BŁĄD POST /api/events/:id/complete:',
-        e
-      );
-
-
-      return res.status(500).json({
-
-        error:
-          'Nie udało się zakończyć zbiórki.',
-
-        details:
-          process.env.NODE_ENV ===
-          'production'
-            ? undefined
-            : e.message
-
-      });
-    }
-  }
-);
-
-
-/* =========================================================
-   USUWANIE ZBIÓRKI
-========================================================= */
+/* USUWANIE ZBIÓRKI */
 
 app.delete(
   '/api/events/:id',
@@ -1278,13 +880,9 @@ app.delete(
     try {
 
       await pool.query(
-        `
-        DELETE FROM events
-        WHERE id=$1
-        `,
+        'DELETE FROM events WHERE id=$1',
         [req.params.id]
       );
-
 
       res.json({
         ok: true
@@ -1292,11 +890,66 @@ app.delete(
 
     } catch (e) {
 
+      res.status(500).json({
+        error: 'Nie udało się usunąć zbiórki.'
+      });
+    }
+  }
+);
+
+
+/* ZAKOŃCZENIE ZBIÓRKI */
+
+app.post(
+  '/api/events/:id/complete',
+  auth,
+  staff,
+  async (req, res) => {
+
+    try {
+
+      const id =
+        Number(req.params.id);
+
+
+      if (
+        !Number.isInteger(id) ||
+        id <= 0
+      ) {
+
+        return res.status(400).json({
+          error: 'Nieprawidłowe ID zbiórki.'
+        });
+      }
+
+
+      const r = await pool.query(
+        `
+        UPDATE events
+        SET completed=TRUE
+        WHERE id=$1
+        RETURNING *
+        `,
+        [id]
+      );
+
+
+      if (!r.rows[0]) {
+
+        return res.status(404).json({
+          error: 'Nie znaleziono zbiórki.'
+        });
+      }
+
+
+      res.json(r.rows[0]);
+
+    } catch (e) {
+
       console.error(e);
 
       res.status(500).json({
-        error:
-          'Nie udało się usunąć zbiórki.'
+        error: 'Nie udało się zakończyć zbiórki.'
       });
     }
   }
@@ -1304,7 +957,7 @@ app.delete(
 
 
 /* =========================================================
-   NEWS
+   OGŁOSZENIA
 ========================================================= */
 
 app.post(
@@ -1315,9 +968,7 @@ app.post(
 
     try {
 
-      const b =
-        req.body;
-
+      const b = req.body;
 
       const title =
         String(
@@ -1330,51 +981,33 @@ app.post(
       if (!title) {
 
         return res.status(400).json({
-          error:
-            'Podaj tytuł ogłoszenia.'
+          error: 'Podaj tytuł ogłoszenia.'
         });
       }
 
 
-      const r =
-        await pool.query(
-          `
-          INSERT INTO news
-          (
-            title,
-            body
-          )
-          VALUES
-          (
-            $1,
-            $2
-          )
-          RETURNING *
-          `,
-          [
-
-            title,
-
-            b.body ||
-              b.content ||
-              b.description ||
-              b.text ||
-              ''
-
-          ]
-        );
+      const r = await pool.query(
+        `
+        INSERT INTO news(title,body)
+        VALUES($1,$2)
+        RETURNING *
+        `,
+        [
+          title,
+          b.body ||
+          b.content ||
+          b.description ||
+          b.text ||
+          ''
+        ]
+      );
 
 
       try {
 
         await sendPushToAll({
-
-          title:
-            'Nowe ogłoszenie MDP',
-
-          body:
-            title
-
+          title: 'Nowe ogłoszenie MDP',
+          body: title
         });
 
       } catch (e) {
@@ -1383,17 +1016,14 @@ app.post(
       }
 
 
-      res.json(
-        r.rows[0]
-      );
+      res.json(r.rows[0]);
 
     } catch (e) {
 
       console.error(e);
 
       res.status(500).json({
-        error:
-          'Nie udało się dodać ogłoszenia.'
+        error: 'Nie udało się dodać ogłoszenia.'
       });
     }
   }
@@ -1409,13 +1039,9 @@ app.delete(
     try {
 
       await pool.query(
-        `
-        DELETE FROM news
-        WHERE id=$1
-        `,
+        'DELETE FROM news WHERE id=$1',
         [req.params.id]
       );
-
 
       res.json({
         ok: true
@@ -1424,8 +1050,7 @@ app.delete(
     } catch (e) {
 
       res.status(500).json({
-        error:
-          'Nie udało się usunąć ogłoszenia.'
+        error: 'Nie udało się usunąć ogłoszenia.'
       });
     }
   }
@@ -1450,7 +1075,6 @@ app.post(
           ''
         ).trim();
 
-
       const body =
         String(
           req.body.body ||
@@ -1459,10 +1083,7 @@ app.post(
         ).trim();
 
 
-      if (
-        !title ||
-        !body
-      ) {
+      if (!title || !body) {
 
         return res.status(400).json({
           error:
@@ -1480,43 +1101,37 @@ app.post(
       );
 
 
-      const r =
-        await pool.query(
-          `
-          INSERT INTO urgent_messages
-          (
-            title,
-            body,
-            active,
-            created_by_role
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            TRUE,
-            $3
-          )
-          RETURNING *
-          `,
-          [
-            title,
-            body,
-            req.role
-          ]
-        );
+      const r = await pool.query(
+        `
+        INSERT INTO urgent_messages
+        (
+          title,
+          body,
+          active,
+          created_by_role
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          TRUE,
+          $3
+        )
+        RETURNING *
+        `,
+        [
+          title,
+          body,
+          req.role
+        ]
+      );
 
 
       try {
 
         await sendPushToAll({
-
-          title:
-            '🚨 PILNY KOMUNIKAT MDP',
-
-          body:
-            title
-
+          title: '🚨 PILNY KOMUNIKAT MDP',
+          body: title
         });
 
       } catch (e) {
@@ -1525,9 +1140,7 @@ app.post(
       }
 
 
-      res.json(
-        r.rows[0]
-      );
+      res.json(r.rows[0]);
 
     } catch (e) {
 
@@ -1551,33 +1164,25 @@ app.get(
 
       const r =
         await pool.query(
-
           req.role === 'admin' ||
           req.role === 'guardian'
 
             ? `
               SELECT *
               FROM urgent_messages
-              ORDER BY
-                created_at DESC,
-                id DESC
-              `
+              ORDER BY created_at DESC,id DESC
+            `
 
             : `
               SELECT *
               FROM urgent_messages
               WHERE active=TRUE
-              ORDER BY
-                created_at DESC,
-                id DESC
-              `
-
+              ORDER BY created_at DESC,id DESC
+            `
         );
 
 
-      res.json(
-        r.rows
-      );
+      res.json(r.rows);
 
     } catch (e) {
 
@@ -1624,7 +1229,7 @@ app.delete(
 
 
 /* =========================================================
-   ZGŁOSZENIA CZŁONKÓW
+   ZGŁOSZENIA OD CZŁONKÓW
 ========================================================= */
 
 app.post(
@@ -1634,9 +1239,7 @@ app.post(
 
     try {
 
-      if (
-        req.role !== 'member'
-      ) {
+      if (req.role !== 'member') {
 
         return res.status(403).json({
           error:
@@ -1669,52 +1272,45 @@ app.post(
 
 
       const memberName =
-        `
-        ${req.member.first_name || ''}
-        ${req.member.last_name || ''}
-        `
+        `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim() ||
         'Członek MDP';
 
 
-      const r =
-        await pool.query(
-          `
-          INSERT INTO member_reports
-          (
-            member_id,
-            member_name,
-            report_type,
-            body
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            $3,
-            $4
-          )
-          RETURNING *
-          `,
-          [
-            req.member.id,
-            memberName,
-            type,
-            body
-          ]
-        );
+      const r = await pool.query(
+        `
+        INSERT INTO member_reports
+        (
+          member_id,
+          member_name,
+          report_type,
+          body
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4
+        )
+        RETURNING *
+        `,
+        [
+          req.member.id,
+          memberName,
+          type,
+          body
+        ]
+      );
 
 
       try {
 
         await sendPushToAll({
-
           title:
             'Nowe zgłoszenie od członka',
-
           body:
             `${memberName}: ${type}`
-
         });
 
       } catch (e) {
@@ -1723,9 +1319,7 @@ app.post(
       }
 
 
-      res.json(
-        r.rows[0]
-      );
+      res.json(r.rows[0]);
 
     } catch (e) {
 
@@ -1748,26 +1342,21 @@ app.get(
 
     try {
 
-      const r =
-        await pool.query(
-          `
-          SELECT *
-          FROM member_reports
-          ORDER BY
-            CASE status
-              WHEN 'new' THEN 0
-              WHEN 'in_progress' THEN 1
-              ELSE 2
-            END,
-            created_at DESC,
-            id DESC
-          `
-        );
+      const r = await pool.query(`
+        SELECT *
+        FROM member_reports
+        ORDER BY
+          CASE status
+            WHEN 'new' THEN 0
+            WHEN 'in_progress' THEN 1
+            ELSE 2
+          END,
+          created_at DESC,
+          id DESC
+      `);
 
 
-      res.json(
-        r.rows
-      );
+      res.json(r.rows);
 
     } catch (e) {
 
@@ -1810,21 +1399,20 @@ app.put(
       }
 
 
-      const r =
-        await pool.query(
-          `
-          UPDATE member_reports
-          SET
-            status=$1,
-            updated_at=NOW()
-          WHERE id=$2
-          RETURNING *
-          `,
-          [
-            status,
-            req.params.id
-          ]
-        );
+      const r = await pool.query(
+        `
+        UPDATE member_reports
+        SET
+          status=$1,
+          updated_at=NOW()
+        WHERE id=$2
+        RETURNING *
+        `,
+        [
+          status,
+          req.params.id
+        ]
+      );
 
 
       if (!r.rows[0]) {
@@ -1836,9 +1424,7 @@ app.put(
       }
 
 
-      res.json(
-        r.rows[0]
-      );
+      res.json(r.rows[0]);
 
     } catch (e) {
 
@@ -1852,7 +1438,7 @@ app.put(
 
 
 /* =========================================================
-   MEMBERS
+   CZŁONKOWIE
 ========================================================= */
 
 app.post(
@@ -1886,11 +1472,7 @@ app.post(
         ).trim();
 
 
-      if (
-        !first ||
-        !last ||
-        !code
-      ) {
+      if (!first || !last || !code) {
 
         return res.status(400).json({
           error:
@@ -1899,52 +1481,42 @@ app.post(
       }
 
 
-      const r =
-        await pool.query(
-          `
-          INSERT INTO members
-          (
-            first_name,
-            last_name,
-            name,
-            role,
-            code_hash
-          )
-          VALUES
-          (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5
-          )
-          RETURNING
-            id,
-            first_name,
-            last_name,
-            role,
-            photo
-          `,
-          [
-
-            first,
-
-            last,
-
-            `${first} ${last}`,
-
-            req.body.role ||
-              'member',
-
-            hashCode(code)
-
-          ]
-        );
-
-
-      res.json(
-        r.rows[0]
+      const r = await pool.query(
+        `
+        INSERT INTO members
+        (
+          first_name,
+          last_name,
+          name,
+          role,
+          code_hash
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5
+        )
+        RETURNING
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        `,
+        [
+          first,
+          last,
+          `${first} ${last}`,
+          req.body.role || 'member',
+          hashCode(code)
+        ]
       );
+
+
+      res.json(r.rows[0]);
 
     } catch (e) {
 
@@ -1967,87 +1539,51 @@ app.put(
 
     try {
 
-      const b =
-        req.body;
+      const b = req.body;
 
+      const r = await pool.query(
+        `
+        UPDATE members
+        SET
+          first_name=COALESCE($1,first_name),
+          last_name=COALESCE($2,last_name),
+          name=COALESCE($3,name),
+          role=COALESCE($4,role),
+          code_hash=COALESCE($5,code_hash),
+          photo=COALESCE($6,photo)
+        WHERE id=$7
+        RETURNING
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        `,
+        [
+          b.first_name ||
+            b.firstName ||
+            null,
 
-      const r =
-        await pool.query(
-          `
-          UPDATE members
-          SET
-            first_name =
-              COALESCE(
-                $1,
-                first_name
-              ),
+          b.last_name ||
+            b.lastName ||
+            null,
 
-            last_name =
-              COALESCE(
-                $2,
-                last_name
-              ),
+          b.name ||
+            null,
 
-            name =
-              COALESCE(
-                $3,
-                name
-              ),
+          b.role ||
+            null,
 
-            role =
-              COALESCE(
-                $4,
-                role
-              ),
+          b.code
+            ? hashCode(b.code)
+            : null,
 
-            code_hash =
-              COALESCE(
-                $5,
-                code_hash
-              ),
+          b.photo ||
+            null,
 
-            photo =
-              COALESCE(
-                $6,
-                photo
-              )
-
-          WHERE id=$7
-
-          RETURNING
-            id,
-            first_name,
-            last_name,
-            role,
-            photo
-          `,
-          [
-
-            b.first_name ||
-              b.firstName ||
-              null,
-
-            b.last_name ||
-              b.lastName ||
-              null,
-
-            b.name ||
-              null,
-
-            b.role ||
-              null,
-
-            b.code
-              ? hashCode(b.code)
-              : null,
-
-            b.photo ||
-              null,
-
-            req.params.id
-
-          ]
-        );
+          req.params.id
+        ]
+      );
 
 
       if (!r.rows[0]) {
@@ -2059,9 +1595,7 @@ app.put(
       }
 
 
-      res.json(
-        r.rows[0]
-      );
+      res.json(r.rows[0]);
 
     } catch (e) {
 
@@ -2085,10 +1619,7 @@ app.delete(
     try {
 
       await pool.query(
-        `
-        DELETE FROM members
-        WHERE id=$1
-        `,
+        'DELETE FROM members WHERE id=$1',
         [req.params.id]
       );
 
@@ -2109,7 +1640,7 @@ app.delete(
 
 
 /* =========================================================
-   PROFILE
+   PROFIL
 ========================================================= */
 
 app.get(
@@ -2119,31 +1650,27 @@ app.get(
 
     try {
 
-      if (
-        req.role !== 'member'
-      ) {
+      if (req.role !== 'member') {
 
         return res.json({
-          role:
-            req.role
+          role: req.role
         });
       }
 
 
-      const r =
-        await pool.query(
-          `
-          SELECT
-            id,
-            first_name,
-            last_name,
-            role,
-            photo
-          FROM members
-          WHERE id=$1
-          `,
-          [req.member.id]
-        );
+      const r = await pool.query(
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        FROM members
+        WHERE id=$1
+        `,
+        [req.member.id]
+      );
 
 
       res.json(
@@ -2168,9 +1695,7 @@ app.put(
 
     try {
 
-      if (
-        req.role !== 'member'
-      ) {
+      if (req.role !== 'member') {
 
         return res.status(403).json({
           error:
@@ -2179,24 +1704,23 @@ app.put(
       }
 
 
-      const r =
-        await pool.query(
-          `
-          UPDATE members
-          SET photo=$1
-          WHERE id=$2
-          RETURNING
-            id,
-            first_name,
-            last_name,
-            role,
-            photo
-          `,
-          [
-            req.body.photo || '',
-            req.member.id
-          ]
-        );
+      const r = await pool.query(
+        `
+        UPDATE members
+        SET photo=$1
+        WHERE id=$2
+        RETURNING
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        `,
+        [
+          req.body.photo || '',
+          req.member.id
+        ]
+      );
 
 
       res.json(
@@ -2268,15 +1792,14 @@ async function saveAttendance(
     }
 
 
-    const ev =
-      await pool.query(
-        `
-        SELECT id
-        FROM events
-        WHERE id=$1
-        `,
-        [eventId]
-      );
+    const ev = await pool.query(
+      `
+      SELECT id
+      FROM events
+      WHERE id=$1
+      `,
+      [eventId]
+    );
 
 
     if (!ev.rows[0]) {
@@ -2288,49 +1811,41 @@ async function saveAttendance(
     }
 
 
-    let memberName =
-      '';
+    let memberName = '';
 
 
-    if (
-      req.role === 'member'
-    ) {
+    if (req.role === 'member') {
 
       memberName =
-        `
-        ${req.member.first_name || ''}
-        ${req.member.last_name || ''}
-        `
+        `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim();
 
-    } else if (
-      req.body.member_id
-    ) {
+    }
 
-      const m =
-        await pool.query(
-          `
-          SELECT
-            first_name,
-            last_name
-          FROM members
-          WHERE id=$1
-          `,
-          [req.body.member_id]
-        );
+    else if (req.body.member_id) {
+
+      const m = await pool.query(
+        `
+        SELECT
+          first_name,
+          last_name
+        FROM members
+        WHERE id=$1
+        `,
+        [req.body.member_id]
+      );
 
 
       if (m.rows[0]) {
 
         memberName =
-          `
-          ${m.rows[0].first_name || ''}
-          ${m.rows[0].last_name || ''}
-          `
+          `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
             .trim();
       }
 
-    } else {
+    }
+
+    else {
 
       memberName =
         String(
@@ -2371,11 +1886,8 @@ async function saveAttendance(
       )
 
       DO UPDATE SET
-        status =
-          EXCLUDED.status,
-
-        created_at =
-          NOW()
+        status=EXCLUDED.status,
+        created_at=NOW()
       `,
       [
         eventId,
@@ -2387,14 +1899,11 @@ async function saveAttendance(
 
     res.json({
 
-      ok:
-        true,
+      ok: true,
 
-      event_id:
-        eventId,
+      event_id: eventId,
 
-      member_name:
-        memberName,
+      member_name: memberName,
 
       status
 
@@ -2402,38 +1911,27 @@ async function saveAttendance(
 
   } catch (e) {
 
-    console.error(
-      'BŁĄD zapisywania obecności:',
-      e
-    );
-
+    console.error(e);
 
     res.status(500).json({
-
       error:
-        'Nie udało się zapisać obecności.',
-
-      details:
-        process.env.NODE_ENV ===
-        'production'
-          ? undefined
-          : e.message
-
+        'Nie udało się zapisać obecności.'
     });
   }
 }
 
 
+/* CZŁONEK ZAPISUJE OBECNOŚĆ */
+
 app.post(
   '/api/attendance',
   auth,
   (req, res) =>
-    saveAttendance(
-      req,
-      res
-    )
+    saveAttendance(req, res)
 );
 
+
+/* CZŁONEK ZAPISUJE OBECNOŚĆ DLA ZBIÓRKI */
 
 app.post(
   '/api/attendance/:eventId',
@@ -2448,7 +1946,7 @@ app.post(
 
 
 /* =========================================================
-   POKAŻ OBECNOŚĆ
+   POKAŻ OBECNOŚĆ — DLA OPIEKUNA/ADMINA
 ========================================================= */
 
 app.get(
@@ -2460,9 +1958,7 @@ app.get(
     try {
 
       const eventId =
-        Number(
-          req.params.eventId
-        );
+        Number(req.params.eventId);
 
 
       if (
@@ -2477,18 +1973,17 @@ app.get(
       }
 
 
-      const eventCheck =
-        await pool.query(
-          `
-          SELECT id
-          FROM events
-          WHERE id=$1
-          `,
-          [eventId]
-        );
+      const ev = await pool.query(
+        `
+        SELECT id
+        FROM events
+        WHERE id=$1
+        `,
+        [eventId]
+      );
 
 
-      if (!eventCheck.rows[0]) {
+      if (!ev.rows[0]) {
 
         return res.status(404).json({
           error:
@@ -2497,121 +1992,66 @@ app.get(
       }
 
 
-      const r =
-        await pool.query(
-          `
-          SELECT
+      const r = await pool.query(
+        `
+        SELECT
 
-            m.id AS member_id,
+          m.id AS member_id,
 
-            COALESCE(
-              m.first_name,
-              ''
-            ) AS first_name,
+          m.first_name,
 
-            COALESCE(
-              m.last_name,
-              ''
-            ) AS last_name,
+          m.last_name,
 
-            COALESCE(
-              m.photo,
-              ''
-            ) AS photo,
+          m.photo,
 
-            TRIM(
-              CONCAT(
-                COALESCE(
-                  m.first_name,
-                  ''
-                ),
-                ' ',
-                COALESCE(
-                  m.last_name,
-                  ''
-                )
-              )
-            ) AS member_name,
+          TRIM(
+            COALESCE(m.first_name,'')
+            || ' ' ||
+            COALESCE(m.last_name,'')
+          ) AS member_name,
 
-            a.status,
+          a.status,
 
-            a.created_at
+          a.created_at
 
-          FROM members m
+        FROM members m
 
-          LEFT JOIN attendance a
+        LEFT JOIN attendance a
 
-            ON a.event_id = $1
+          ON a.event_id=$1
 
-            AND a.member_name =
+         AND LOWER(
+           TRIM(a.member_name)
+         )
 
-              TRIM(
-                CONCAT(
-                  COALESCE(
-                    m.first_name,
-                    ''
-                  ),
-                  ' ',
-                  COALESCE(
-                    m.last_name,
-                    ''
-                  )
-                )
-              )
+         =
 
-          WHERE
-            COALESCE(
-              m.role,
-              'member'
-            ) = 'member'
+         LOWER(
+           TRIM(
+             COALESCE(m.first_name,'')
+             || ' ' ||
+             COALESCE(m.last_name,'')
+           )
+         )
 
-          ORDER BY
-
-            LOWER(
-              TRIM(
-                CONCAT(
-                  COALESCE(
-                    m.first_name,
-                    ''
-                  ),
-                  ' ',
-                  COALESCE(
-                    m.last_name,
-                    ''
-                  )
-                )
-              )
-            ),
-
-            m.id
-          `,
-          [eventId]
-        );
-
-
-      return res.json(
-        r.rows
+        ORDER BY
+          m.first_name,
+          m.last_name,
+          m.id
+        `,
+        [eventId]
       );
+
+
+      res.json(r.rows);
 
     } catch (e) {
 
-      console.error(
-        'BŁĄD GET /api/attendance/:eventId:',
-        e
-      );
+      console.error(e);
 
-
-      return res.status(500).json({
-
+      res.status(500).json({
         error:
-          'Nie udało się pobrać obecności.',
-
-        details:
-          process.env.NODE_ENV ===
-          'production'
-            ? undefined
-            : e.message
-
+          'Nie udało się pobrać obecności.'
       });
     }
   }
@@ -2632,7 +2072,7 @@ app.get(
       if (
         req.role === 'member' &&
         String(req.member.id) !==
-          String(req.params.memberId)
+        String(req.params.memberId)
       ) {
 
         return res.status(403).json({
@@ -2642,20 +2082,19 @@ app.get(
       }
 
 
-      const m =
-        await pool.query(
-          `
-          SELECT
-            id,
-            first_name,
-            last_name,
-            role,
-            photo
-          FROM members
-          WHERE id=$1
-          `,
-          [req.params.memberId]
-        );
+      const m = await pool.query(
+        `
+        SELECT
+          id,
+          first_name,
+          last_name,
+          role,
+          photo
+        FROM members
+        WHERE id=$1
+        `,
+        [req.params.memberId]
+      );
 
 
       if (!m.rows[0]) {
@@ -2668,46 +2107,33 @@ app.get(
 
 
       const name =
-        `
-        ${m.rows[0].first_name || ''}
-        ${m.rows[0].last_name || ''}
-        `
+        `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
           .trim();
 
 
-      const r =
-        await pool.query(
-          `
-          SELECT
-            status,
-            COUNT(*)::int count
-          FROM attendance
-          WHERE member_name=$1
-          GROUP BY status
-          `,
-          [name]
-        );
+      const r = await pool.query(
+        `
+        SELECT
+          status,
+          COUNT(*)::int count
+        FROM attendance
+        WHERE member_name=$1
+        GROUP BY status
+        `,
+        [name]
+      );
 
 
       const s = {
-
-        yes:
-          0,
-
-        maybe:
-          0,
-
-        no:
-          0
-
+        yes: 0,
+        maybe: 0,
+        no: 0
       };
 
 
-      r.rows.forEach(
-        x =>
-          s[x.status] =
-            x.count
-      );
+      r.rows.forEach(x => {
+        s[x.status] = x.count;
+      });
 
 
       const confirmed =
@@ -2725,20 +2151,15 @@ app.get(
 
         stats: {
 
-          yes:
-            s.yes,
+          yes: s.yes,
 
-          no:
-            s.no,
+          no: s.no,
 
-          maybe:
-            s.maybe,
+          maybe: s.maybe,
 
-          attended:
-            s.yes,
+          attended: s.yes,
 
-          absent:
-            s.no,
+          absent: s.no,
 
           confirmed,
 
@@ -2748,8 +2169,8 @@ app.get(
             confirmed
               ? Math.round(
                   s.yes /
-                    confirmed *
-                    100
+                  confirmed *
+                  100
                 )
               : 0
 
@@ -2771,7 +2192,7 @@ app.get(
 
 
 /* =========================================================
-   GAZETY - POBIERANIE
+   GAZETY — POBIERANIE
 ========================================================= */
 
 app.get(
@@ -2799,7 +2220,7 @@ app.get(
 
 
 /* =========================================================
-   GAZETY - DODAWANIE GRUPY
+   DODAWANIE GRUPY GAZET
 ========================================================= */
 
 app.post(
@@ -2810,15 +2231,12 @@ app.post(
 
     try {
 
-      const b =
-        req.body;
-
+      const b = req.body;
 
       const name =
         String(
           b.name || ''
         ).trim();
-
 
       const region =
         String(
@@ -2826,10 +2244,7 @@ app.post(
         ).trim();
 
 
-      if (
-        !name ||
-        !region
-      ) {
+      if (!name || !region) {
 
         return res.status(400).json({
           error:
@@ -2839,14 +2254,10 @@ app.post(
 
 
       const ids =
-        Array.isArray(
-          b.memberIds
-        )
+        Array.isArray(b.memberIds)
           ? b.memberIds
               .map(Number)
-              .filter(
-                Number.isFinite
-              )
+              .filter(Number.isFinite)
           : [];
 
 
@@ -2866,19 +2277,15 @@ app.post(
               [ids]
             )
 
-          : {
-              rows: []
-            };
+          : { rows: [] };
 
 
       const names =
         m.rows
           .map(
             x =>
-              `
-              ${x.first_name || ''}
-              ${x.last_name || ''}
-              `.trim()
+              `${x.first_name || ''} ${x.last_name || ''}`
+                .trim()
           )
           .filter(Boolean);
 
@@ -2886,9 +2293,7 @@ app.post(
       const copies =
         Math.max(
           0,
-          Number(
-            b.copies || 0
-          )
+          Number(b.copies || 0)
         );
 
 
@@ -2918,32 +2323,22 @@ app.post(
           RETURNING *
           `,
           [
-
             name,
-
             region,
-
             b.color ||
               '#2878ff',
 
             JSON.stringify(
-              Array.isArray(
-                b.streets
-              )
+              Array.isArray(b.streets)
                 ? b.streets
                 : []
             ),
 
             copies,
 
-            JSON.stringify(
-              ids
-            ),
+            JSON.stringify(ids),
 
-            JSON.stringify(
-              names
-            )
-
+            JSON.stringify(names)
           ]
         );
 
@@ -3004,34 +2399,24 @@ app.put(
 
 
       const oldIds =
-        Array.isArray(
-          old.member_ids
-        )
+        Array.isArray(old.member_ids)
           ? old.member_ids.map(Number)
           : [];
 
 
       const oldNames =
-        Array.isArray(
-          old.member_names
-        )
+        Array.isArray(old.member_names)
           ? old.member_names.map(String)
           : [];
 
 
-      /* =====================================================
-         CZŁONEK
-      ===================================================== */
+      /* CZŁONEK */
 
-      if (
-        req.role === 'member'
-      ) {
+      if (req.role === 'member') {
 
         if (
           !oldIds.includes(
-            Number(
-              req.member.id
-            )
+            Number(req.member.id)
           )
         ) {
 
@@ -3044,9 +2429,7 @@ app.put(
 
         const delivered =
           Math.min(
-            Number(
-              old.copies
-            ),
+            Number(old.copies),
             Math.max(
               0,
               Number(
@@ -3058,20 +2441,14 @@ app.put(
 
 
         const started =
-          req.body.started ===
-          undefined
-
+          req.body.started === undefined
             ? !!old.started
-
             : !!req.body.started;
 
 
         const done =
-          req.body.done ===
-          undefined
-
+          req.body.done === undefined
             ? !!old.done
-
             : !!req.body.done;
 
 
@@ -3079,11 +2456,14 @@ app.put(
           await pool.query(
             `
             UPDATE newspaper_groups
+
             SET
               delivered=$1,
               started=$2,
               done=$3
+
             WHERE id=$4
+
             RETURNING *
             `,
             [
@@ -3101,10 +2481,9 @@ app.put(
           ).find(
             x =>
               x.id ===
-              Number(
-                req.params.id
-              )
-          ) ||
+              Number(req.params.id)
+          )
+          ||
           groupJson(
             r.rows[0]
           )
@@ -3112,13 +2491,9 @@ app.put(
       }
 
 
-      /* =====================================================
-         OPIEKUN / ADMIN
-      ===================================================== */
+      /* STAFF */
 
-      if (
-        !isStaff(req)
-      ) {
+      if (!isStaff(req)) {
 
         return res.status(403).json({
           error:
@@ -3131,11 +2506,11 @@ app.put(
         Array.isArray(
           req.body.memberIds
         )
+
           ? req.body.memberIds
               .map(Number)
-              .filter(
-                Number.isFinite
-              )
+              .filter(Number.isFinite)
+
           : oldIds;
 
 
@@ -3155,9 +2530,7 @@ app.put(
               [ids]
             )
 
-          : {
-              rows: []
-            };
+          : { rows: [] };
 
 
       const names =
@@ -3168,10 +2541,8 @@ app.put(
           ? m.rows
               .map(
                 x =>
-                  `
-                  ${x.first_name || ''}
-                  ${x.last_name || ''}
-                  `.trim()
+                  `${x.first_name || ''} ${x.last_name || ''}`
+                    .trim()
               )
               .filter(Boolean)
 
@@ -3205,6 +2576,7 @@ app.put(
         await pool.query(
           `
           UPDATE newspaper_groups
+
           SET
             name=$1,
             region=$2,
@@ -3216,7 +2588,9 @@ app.put(
             done=$8,
             member_ids=$9::jsonb,
             member_names=$10::jsonb
+
           WHERE id=$11
+
           RETURNING *
           `,
           [
@@ -3234,7 +2608,9 @@ app.put(
               Array.isArray(
                 req.body.streets
               )
+
                 ? req.body.streets
+
                 : (
                     Array.isArray(
                       old.streets
@@ -3258,16 +2634,11 @@ app.put(
               old.done
             ),
 
-            JSON.stringify(
-              ids
-            ),
+            JSON.stringify(ids),
 
-            JSON.stringify(
-              names
-            ),
+            JSON.stringify(names),
 
             req.params.id
-
           ]
         );
 
@@ -3293,7 +2664,7 @@ app.put(
 
 
 /* =========================================================
-   START GAZET
+   POSTĘP GAZET
 ========================================================= */
 
 app.post(
@@ -3301,8 +2672,7 @@ app.post(
   auth,
   async (req, res) => {
 
-    req.body.started =
-      true;
+    req.body.started = true;
 
     return updateGroupProgress(
       req,
@@ -3313,36 +2683,27 @@ app.post(
 );
 
 
-/* =========================================================
-   POSTĘP GAZET
-========================================================= */
-
 app.post(
   '/api/newspaper-groups/:id/progress',
   auth,
-  async (req, res) =>
-    updateGroupProgress(
+  async (req, res) => {
+
+    return updateGroupProgress(
       req,
       res,
       req.params.id
-    )
+    );
+  }
 );
 
-
-/* =========================================================
-   ZAKOŃCZENIE GAZET
-========================================================= */
 
 app.post(
   '/api/newspaper-groups/:id/complete',
   auth,
   async (req, res) => {
 
-    req.body.done =
-      true;
-
-    req.body.started =
-      true;
+    req.body.done = true;
+    req.body.started = true;
 
     return updateGroupProgress(
       req,
@@ -3386,9 +2747,7 @@ async function updateGroupProgress(
 
 
     const ids =
-      Array.isArray(
-        g.member_ids
-      )
+      Array.isArray(g.member_ids)
         ? g.member_ids.map(Number)
         : [];
 
@@ -3396,9 +2755,7 @@ async function updateGroupProgress(
     if (
       req.role === 'member' &&
       !ids.includes(
-        Number(
-          req.member.id
-        )
+        Number(req.member.id)
       )
     ) {
 
@@ -3423,9 +2780,7 @@ async function updateGroupProgress(
 
     const delivered =
       Math.min(
-        Number(
-          g.copies
-        ),
+        Number(g.copies),
         Math.max(
           0,
           Number(
@@ -3437,20 +2792,14 @@ async function updateGroupProgress(
 
 
     const started =
-      req.body.started ===
-      undefined
-
+      req.body.started === undefined
         ? !!g.started
-
         : !!req.body.started;
 
 
     const done =
-      req.body.done ===
-      undefined
-
+      req.body.done === undefined
         ? !!g.done
-
         : !!req.body.done;
 
 
@@ -3458,11 +2807,14 @@ async function updateGroupProgress(
       await pool.query(
         `
         UPDATE newspaper_groups
+
         SET
           delivered=$1,
           started=$2,
           done=$3
+
         WHERE id=$4
+
         RETURNING *
         `,
         [
@@ -3479,9 +2831,9 @@ async function updateGroupProgress(
         await getGroups()
       ).find(
         x =>
-          x.id ===
-          Number(id)
-      ) ||
+          x.id === Number(id)
+      )
+      ||
       groupJson(
         u.rows[0]
       )
@@ -3500,7 +2852,7 @@ async function updateGroupProgress(
 
 
 /* =========================================================
-   USUWANIE GRUPY GAZET
+   USUWANIE GRUPY
 ========================================================= */
 
 app.delete(
@@ -3536,7 +2888,7 @@ app.delete(
 
 
 /* =========================================================
-   RESET DOMYŚLNEGO PLANU
+   STARY RESET — ZOSTAWIONY
 ========================================================= */
 
 app.post(
@@ -3548,14 +2900,10 @@ app.post(
     try {
 
       await pool.query(
-        `
-        DELETE FROM newspaper_groups
-        `
+        'DELETE FROM newspaper_groups'
       );
 
-
       await seedNewspaperGroups();
-
 
       res.json(
         await getGroups()
@@ -3587,25 +2935,23 @@ app.get(
     try {
 
       const r =
-        await pool.query(
-          `
+        await pool.query(`
           SELECT
             id,
             month_key,
             month_label,
             saved_at,
             groups
+
           FROM newspaper_history
+
           ORDER BY
             month_key DESC,
             id DESC
-          `
-        );
+        `);
 
 
-      res.json(
-        r.rows
-      );
+      res.json(r.rows);
 
     } catch (e) {
 
@@ -3622,20 +2968,18 @@ app.get(
 
 /* =========================================================
    NOWY MIESIĄC GAZET
-
-   ZAPISUJE POPRZEDNI MIESIĄC.
-
-   NIE USUWA:
-   - grup
-   - nazw
-   - regionów
-   - ulic
-   - kolorów
-   - egzemplarzy
+   ZACHOWUJE:
+   - grupy
+   - nazwy
+   - regiony
+   - ulice
+   - kolory
+   - kopie
    - członków
-   - przypisań
+   - kolejność
+   - przypisania
 
-   ZERUJE TYLKO:
+   RESETUJE TYLKO:
    - delivered
    - started
    - done
@@ -3650,7 +2994,6 @@ app.post(
     const client =
       await pool.connect();
 
-
     try {
 
       await client.query(
@@ -3659,14 +3002,12 @@ app.post(
 
 
       const groupsResult =
-        await client.query(
-          `
+        await client.query(`
           SELECT *
           FROM newspaper_groups
           ORDER BY id
           FOR UPDATE
-          `
-        );
+        `);
 
 
       if (
@@ -3676,7 +3017,6 @@ app.post(
         await client.query(
           'ROLLBACK'
         );
-
 
         return res.status(400).json({
           error:
@@ -3696,10 +3036,7 @@ app.post(
       const month =
         String(
           now.getMonth() + 1
-        ).padStart(
-          2,
-          '0'
-        );
+        ).padStart(2, '0');
 
 
       const monthKey =
@@ -3710,73 +3047,68 @@ app.post(
         new Intl.DateTimeFormat(
           'pl-PL',
           {
-            month:
-              'long',
-
-            year:
-              'numeric'
+            month: 'long',
+            year: 'numeric'
           }
         ).format(now);
 
 
+      /* PEŁNY SNAPSHOT */
+
       const snapshot =
-        groupsResult.rows.map(
-          g => ({
+        groupsResult.rows.map(g => ({
 
-            id:
-              g.id,
+          id:
+            g.id,
 
-            name:
-              g.name,
+          name:
+            g.name,
 
-            region:
-              g.region,
+          region:
+            g.region,
 
-            color:
-              g.color,
+          color:
+            g.color,
 
-            streets:
-              Array.isArray(
-                g.streets
-              )
-                ? g.streets
-                : [],
+          streets:
+            Array.isArray(g.streets)
+              ? g.streets
+              : [],
 
-            copies:
-              Number(
-                g.copies || 0
-              ),
+          copies:
+            Number(
+              g.copies || 0
+            ),
 
-            delivered:
-              Number(
-                g.delivered || 0
-              ),
+          delivered:
+            Number(
+              g.delivered || 0
+            ),
 
-            started:
-              !!g.started,
+          started:
+            !!g.started,
 
-            done:
-              !!g.done,
+          done:
+            !!g.done,
 
-            memberIds:
-              Array.isArray(
-                g.member_ids
-              )
-                ? g.member_ids.map(
-                    Number
-                  )
-                : [],
+          memberIds:
+            Array.isArray(
+              g.member_ids
+            )
+              ? g.member_ids.map(Number)
+              : [],
 
-            memberNames:
-              Array.isArray(
-                g.member_names
-              )
-                ? g.member_names
-                : []
+          memberNames:
+            Array.isArray(
+              g.member_names
+            )
+              ? g.member_names
+              : []
 
-          })
-        );
+        }));
 
+
+      /* SPRAWDZAMY CZY MIESIĄC JUŻ ZAPISANO */
 
       const exists =
         await client.query(
@@ -3790,9 +3122,9 @@ app.post(
         );
 
 
-      if (
-        !exists.rows.length
-      ) {
+      /* ZAPIS HISTORII */
+
+      if (!exists.rows.length) {
 
         await client.query(
           `
@@ -3811,9 +3143,7 @@ app.post(
           `,
           [
             monthKey,
-
             monthLabel,
-
             JSON.stringify(
               snapshot
             )
@@ -3823,26 +3153,29 @@ app.post(
 
 
       /*
-       * BARDZO WAŻNE:
-       *
-       * Tutaj NIE MA DELETE.
-       * Nie kasujemy grup.
-       * Nie kasujemy ulic.
-       * Nie kasujemy członków.
-       * Nie kasujemy przypisań.
-       *
-       * Zerujemy wyłącznie postęp.
-       */
 
-      await client.query(
-        `
+        WAŻNE:
+
+        NIE USUWAMY GRUP.
+
+        NIE USUWAMY ULIC.
+
+        NIE USUWAMY CZŁONKÓW.
+
+        NIE USUWAMY KOLORÓW.
+
+        NIE ZMIENIAMY LICZBY KOPII.
+
+      */
+
+      await client.query(`
         UPDATE newspaper_groups
+
         SET
           delivered=0,
           started=FALSE,
           done=FALSE
-        `
-      );
+      `);
 
 
       await client.query(
@@ -3852,8 +3185,7 @@ app.post(
 
       res.json({
 
-        ok:
-          true,
+        ok: true,
 
         archivedMonth:
           monthLabel,
@@ -3863,13 +3195,10 @@ app.post(
 
       });
 
-
     } catch (e) {
 
       await client
-        .query(
-          'ROLLBACK'
-        )
+        .query('ROLLBACK')
         .catch(() => {});
 
 
@@ -3890,7 +3219,7 @@ app.post(
 
 
 /* =========================================================
-   PUSH - SUBSCRIBE
+   POWIADOMIENIA PUSH
 ========================================================= */
 
 app.post(
@@ -3904,9 +3233,7 @@ app.post(
         req.body;
 
 
-      if (
-        !s?.endpoint
-      ) {
+      if (!s?.endpoint) {
 
         return res.status(400).json({
           error:
@@ -3931,8 +3258,7 @@ app.post(
         ON CONFLICT(endpoint)
 
         DO UPDATE SET
-          subscription =
-            EXCLUDED.subscription
+          subscription=EXCLUDED.subscription
         `,
         [
           s.endpoint,
@@ -3958,18 +3284,12 @@ app.post(
 );
 
 
-/* =========================================================
-   PUSH - PUBLIC KEY
-========================================================= */
-
 app.get(
   '/api/push/public-key',
   auth,
   async (req, res) => {
 
-    if (
-      !VAPID_PUBLIC_KEY
-    ) {
+    if (!VAPID_PUBLIC_KEY) {
 
       return res.status(503).json({
         error:
@@ -3985,10 +3305,6 @@ app.get(
   }
 );
 
-
-/* =========================================================
-   PUSH - UNSUBSCRIBE
-========================================================= */
 
 app.post(
   '/api/push/unsubscribe',
@@ -4006,9 +3322,7 @@ app.post(
           DELETE FROM push_subscriptions
           WHERE endpoint=$1
           `,
-          [
-            req.body.endpoint
-          ]
+          [req.body.endpoint]
         );
       }
 
@@ -4027,10 +3341,6 @@ app.post(
   }
 );
 
-
-/* =========================================================
-   PUSH - TEST
-========================================================= */
 
 app.post(
   '/api/push/test',
@@ -4070,7 +3380,7 @@ app.post(
 
 
 /* =========================================================
-   HEALTH CHECK
+   HEALTH
 ========================================================= */
 
 app.get(
@@ -4101,7 +3411,7 @@ app.get(
 
 
 /* =========================================================
-   BRAK ENDPOINTU API
+   API 404
 ========================================================= */
 
 app.use(
@@ -4115,7 +3425,7 @@ app.use(
 
 
 /* =========================================================
-   SPA FALLBACK
+   SPA
 ========================================================= */
 
 app.use(
@@ -4146,6 +3456,7 @@ initDb()
     );
 
   })
+
   .catch(err => {
 
     console.error(
