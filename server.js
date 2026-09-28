@@ -20,8 +20,7 @@ const ADMIN_CODE = process.env.ADMIN_CODE || '0000';
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_EMAIL =
-  process.env.VAPID_EMAIL ||
-  'mailto:admin@example.com';
+  process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -300,6 +299,15 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS event_reminders (
+      id SERIAL PRIMARY KEY,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      last_sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(event_id, member_id)
+    );
+
     CREATE TABLE IF NOT EXISTS urgent_messages (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -350,44 +358,39 @@ async function initDb() {
     );
   `);
 
-  // ====================================================
-  // MIGRACJE
-  // ====================================================
+  await pool.query(
+    'ALTER TABLE events ADD COLUMN IF NOT EXISTS outfit TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS first_name TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS last_name TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS code_hash TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE members ADD COLUMN IF NOT EXISTS photo TEXT'
+  );
+
+  await pool.query(
+    'ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES members(id) ON DELETE CASCADE'
+  );
 
   await pool.query(`
-    ALTER TABLE events
-    ADD COLUMN IF NOT EXISTS outfit TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS first_name TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS last_name TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS code_hash TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE members
-    ADD COLUMN IF NOT EXISTS photo TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE push_subscriptions
-    ADD COLUMN IF NOT EXISTS member_id INTEGER
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS
-    push_subscriptions_member_id_idx
-    ON push_subscriptions(member_id)
+    CREATE TABLE IF NOT EXISTS event_reminders (
+      id SERIAL PRIMARY KEY,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      last_sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(event_id, member_id)
+    )
   `);
 
   await pool.query(`
@@ -551,36 +554,19 @@ async function sendPushToAll(payload) {
           'DELETE FROM push_subscriptions WHERE id=$1',
           [s.id]
         );
-      } else {
-        console.error(
-          'Błąd wysyłania push:',
-          e.message || e
-        );
       }
     }
   }
 }
 
-
-// ======================================================
-// PUSH — KONKRETNY CZŁONEK
-// ======================================================
-
 async function sendPushToMember(memberId, payload) {
-  if (
-    !VAPID_PUBLIC_KEY ||
-    !VAPID_PRIVATE_KEY ||
-    !memberId
-  ) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     return;
   }
 
   const r = await pool.query(
     `
-    SELECT
-      id,
-      endpoint,
-      subscription
+    SELECT id, endpoint, subscription
     FROM push_subscriptions
     WHERE member_id=$1
     `,
@@ -599,145 +585,166 @@ async function sendPushToMember(memberId, payload) {
         e.statusCode === 410
       ) {
         await pool.query(
-          `
-          DELETE FROM push_subscriptions
-          WHERE id=$1
-          `,
+          'DELETE FROM push_subscriptions WHERE id=$1',
           [s.id]
         );
       } else {
         console.error(
-          `Błąd push dla członka ${memberId}:`,
-          e.message || e
+          'Błąd push dla członka',
+          memberId,
+          e
         );
       }
     }
   }
 }
 
+function parseEventStart(event) {
+  if (!event?.event_date) return null;
 
-// ======================================================
-// PUSH — PRZYPOMNIENIA O ZBIÓRKACH
-// ======================================================
+  const date = String(event.event_date).trim();
+  const time = String(
+    event.event_time || '00:00'
+  ).trim();
 
-const REMINDER_INTERVAL_MS = 60 * 1000;
-const REMINDER_EVERY_MS = 30 * 60 * 1000;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
 
-async function sendAttendanceReminders() {
-  if (
-    !VAPID_PUBLIC_KEY ||
-    !VAPID_PRIVATE_KEY
-  ) {
+  if (!match) return null;
+
+  const parts = time.match(
+    /^(\d{1,2}):(\d{2})$/
+  );
+
+  const hour = parts
+    ? Number(parts[1])
+    : 0;
+
+  const minute = parts
+    ? Number(parts[2])
+    : 0;
+
+  const d = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    hour,
+    minute,
+    0,
+    0
+  );
+
+  return Number.isNaN(d.getTime())
+    ? null
+    : d;
+}
+
+async function sendNewEventPush(event) {
+  if (!event?.id) return;
+
+  const r = await pool.query(`
+    SELECT id
+    FROM members
+    WHERE role='member'
+    ORDER BY id
+  `);
+
+  const outfit = String(
+    event.outfit || ''
+  ).trim();
+
+  const bodyParts = [
+    event.title || 'Nowa zbiórka'
+  ];
+
+  if (event.event_date) {
+    bodyParts.push(`📅 ${event.event_date}`);
+  }
+
+  if (event.event_time) {
+    bodyParts.push(`🕐 ${event.event_time}`);
+  }
+
+  if (outfit) {
+    bodyParts.push(`👕 ${outfit}`);
+  }
+
+  for (const member of r.rows) {
+    try {
+      await sendPushToMember(
+        member.id,
+        {
+          title: '📅 Nowa zbiórka MDP',
+          body: bodyParts.join(' • '),
+          eventId: Number(event.id),
+          type: 'event-attendance',
+          url: '/'
+        }
+      );
+    } catch (e) {
+      console.error(
+        'Błąd wysyłania nowej zbiórki:',
+        e
+      );
+    }
+  }
+}
+
+async function processEventAttendanceReminders() {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     return;
   }
 
   try {
     const eventsResult = await pool.query(`
-      SELECT
-        id,
-        title,
-        event_date,
-        event_time,
-        place,
-        outfit
+      SELECT *
       FROM events
-      WHERE
-        event_date IS NOT NULL
+      WHERE event_date IS NOT NULL
         AND event_date <> ''
-    `);
-
-    if (!eventsResult.rows.length) {
-      return;
-    }
-
-    const membersResult = await pool.query(`
-      SELECT
-        id,
-        first_name,
-        last_name
-      FROM members
       ORDER BY id
     `);
-
-    const subscriptionsResult = await pool.query(`
-      SELECT
-        id,
-        member_id
-      FROM push_subscriptions
-      WHERE member_id IS NOT NULL
-    `);
-
-    const subscribedMembers = new Set(
-      subscriptionsResult.rows
-        .map(x => Number(x.member_id))
-        .filter(x => Number.isInteger(x) && x > 0)
-    );
-
-    if (!subscribedMembers.size) {
-      return;
-    }
 
     const now = new Date();
 
     for (const event of eventsResult.rows) {
-      const dateText =
-        String(event.event_date || '').trim();
+      const startsAt = parseEventStart(event);
 
-      const timeText =
-        String(event.event_time || '00:00').trim();
-
-      if (!dateText) continue;
-
-      const eventDate = new Date(
-        `${dateText}T${timeText || '00:00'}:00`
-      );
-
-      if (Number.isNaN(eventDate.getTime())) {
+      if (!startsAt || now >= startsAt) {
         continue;
       }
 
-      if (eventDate.getTime() <= now.getTime()) {
-        continue;
-      }
-
-      const attendanceResult =
-        await pool.query(
-          `
-          SELECT
-            member_name,
-            status
-          FROM attendance
-          WHERE event_id=$1
-          `,
-          [event.id]
-        );
-
-      const attendanceMap = new Map();
-
-      for (const a of attendanceResult.rows) {
-        attendanceMap.set(
-          String(a.member_name || '').trim(),
-          String(a.status || '').trim()
-        );
-      }
+      const membersResult = await pool.query(`
+        SELECT
+          m.id,
+          m.first_name,
+          m.last_name
+        FROM members m
+        WHERE m.role='member'
+        ORDER BY m.id
+      `);
 
       for (const member of membersResult.rows) {
-        const memberId = Number(member.id);
-
-        if (!subscribedMembers.has(memberId)) {
-          continue;
-        }
-
         const memberName =
           `${member.first_name || ''} ${member.last_name || ''}`
             .trim();
 
-        if (!memberName) {
-          continue;
-        }
+        if (!memberName) continue;
+
+        const attendanceResult = await pool.query(
+          `
+          SELECT status
+          FROM attendance
+          WHERE event_id=$1
+            AND member_name=$2
+          LIMIT 1
+          `,
+          [
+            event.id,
+            memberName
+          ]
+        );
 
         const status =
-          attendanceMap.get(memberName) || '';
+          attendanceResult.rows[0]?.status || null;
 
         if (
           status === 'yes' ||
@@ -746,82 +753,81 @@ async function sendAttendanceReminders() {
           continue;
         }
 
-        const msUntilEvent =
-          eventDate.getTime() -
-          now.getTime();
-
-        if (msUntilEvent <= 0) {
-          continue;
-        }
-
-        const key =
-          `${event.id}:${memberId}`;
+        const reminderResult = await pool.query(
+          `
+          SELECT last_sent_at
+          FROM event_reminders
+          WHERE event_id=$1
+            AND member_id=$2
+          LIMIT 1
+          `,
+          [
+            event.id,
+            member.id
+          ]
+        );
 
         const lastSent =
-          attendanceReminderMemory.get(key) || 0;
+          reminderResult.rows[0]?.last_sent_at
+            ? new Date(
+                reminderResult.rows[0].last_sent_at
+              )
+            : null;
+
+        const baseTime = lastSent
+          ? lastSent.getTime()
+          : new Date(event.created_at).getTime();
 
         if (
-          lastSent &&
-          now.getTime() - lastSent <
-            REMINDER_EVERY_MS
+          !Number.isFinite(baseTime) ||
+          now.getTime() - baseTime <
+            30 * 60 * 1000
         ) {
           continue;
         }
 
-        const outfitText =
-          String(event.outfit || '').trim();
+        const outfit = String(
+          event.outfit || ''
+        ).trim();
 
-        let body =
-          `Zbiórka „${event.title || 'MDP'}” — odpowiedz, czy będziesz.`;
-
-        if (status === 'maybe') {
-          body =
-            `Zbiórka „${event.title || 'MDP'}” — nadal masz odpowiedź „Może”. Potwierdź, czy będziesz.`;
-        }
-
-        if (outfitText) {
-          body += ` Ubiór: ${outfitText}.`;
-        }
+        const body = outfit
+          ? `Nie zapomnij odpowiedzieć na zbiórkę „${event.title}”. 👕 Ubiór: ${outfit}`
+          : `Nie zapomnij odpowiedzieć na zbiórkę „${event.title}”.`;
 
         try {
           await sendPushToMember(
-            memberId,
+            member.id,
             {
-              title: '🔔 Potwierdź obecność',
+              title: '⏰ Przypomnienie o zbiórce',
               body,
               eventId: Number(event.id),
-              type: 'attendance-reminder',
+              type: 'event-attendance-reminder',
               url: '/'
             }
           );
 
-          attendanceReminderMemory.set(
-            key,
-            now.getTime()
+          await pool.query(
+            `
+            INSERT INTO event_reminders
+            (event_id,member_id,last_sent_at)
+            VALUES($1,$2,NOW())
+            ON CONFLICT(event_id,member_id)
+            DO UPDATE SET
+              last_sent_at=NOW()
+            `,
+            [
+              event.id,
+              member.id
+            ]
           );
         } catch (e) {
           console.error(
-            'Błąd przypomnienia:',
+            'Błąd przypomnienia o zbiórce:',
             e
           );
         }
       }
     }
-
-    for (
-      const [
-        key,
-        timestamp
-      ] of attendanceReminderMemory.entries()
-    ) {
-      if (
-        now.getTime() - timestamp >
-        24 * 60 * 60 * 1000
-      ) {
-        attendanceReminderMemory.delete(key);
-      }
-    }
-
   } catch (e) {
     console.error(
       'Błąd automatycznych przypomnień:',
@@ -829,9 +835,6 @@ async function sendAttendanceReminders() {
     );
   }
 }
-
-const attendanceReminderMemory =
-  new Map();
 
 
 // ======================================================
@@ -854,10 +857,7 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    if (
-      role === 'guardian' &&
-      code === GUARDIAN_CODE
-    ) {
+    if (role === 'guardian' && code === GUARDIAN_CODE) {
       return res.json({
         role: 'guardian'
       });
@@ -884,8 +884,7 @@ app.post('/api/login', async (req, res) => {
 
       if (!m) {
         return res.status(401).json({
-          error:
-            'Nieprawidłowy kod członka.'
+          error: 'Nieprawidłowy kod członka.'
         });
       }
 
@@ -906,16 +905,14 @@ app.post('/api/login', async (req, res) => {
     }
 
     return res.status(401).json({
-      error:
-        'Nieprawidłowe dane logowania.'
+      error: 'Nieprawidłowe dane logowania.'
     });
 
   } catch (e) {
     console.error(e);
 
     res.status(500).json({
-      error:
-        'Błąd logowania.'
+      error: 'Błąd logowania.'
     });
   }
 });
@@ -985,8 +982,7 @@ app.get('/api/data', auth, async (req, res) => {
     console.error(e);
 
     res.status(500).json({
-      error:
-        'Nie udało się pobrać danych.'
+      error: 'Nie udało się pobrać danych.'
     });
   }
 });
@@ -1019,8 +1015,7 @@ app.get('/api/stats', auth, async (req, res) => {
 
   } catch (e) {
     res.status(500).json({
-      error:
-        'Błąd statystyk.'
+      error: 'Błąd statystyk.'
     });
   }
 });
@@ -1030,99 +1025,123 @@ app.get('/api/stats', auth, async (req, res) => {
 // EVENTS
 // ======================================================
 
-app.post(
-  '/api/events',
+app.post('/api/events', auth, staff, async (req, res) => {
+  try {
+    const b = req.body;
+
+    const title = String(
+      b.title ||
+      b.name ||
+      ''
+    ).trim();
+
+    if (!title) {
+      return res.status(400).json({
+        error: 'Podaj nazwę zbiórki.'
+      });
+    }
+
+    const outfit = String(
+      b.outfit ||
+      b.clothing ||
+      ''
+    ).trim();
+
+    const r = await pool.query(
+      `
+      INSERT INTO events
+      (title,event_date,event_time,place,description,outfit)
+      VALUES($1,$2,$3,$4,$5,$6)
+      RETURNING *
+      `,
+      [
+        title,
+        b.event_date || b.date || null,
+        b.event_time || b.time || null,
+        b.place ||
+          b.location ||
+          b.address ||
+          '',
+        b.description ||
+          b.desc ||
+          b.text ||
+          '',
+        outfit
+      ]
+    );
+
+    try {
+      await sendNewEventPush(r.rows[0]);
+    } catch (e) {
+      console.error(e);
+    }
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się dodać zbiórki.'
+    });
+  }
+});
+
+app.put(
+  '/api/events/:id',
   auth,
   staff,
   async (req, res) => {
     try {
       const b = req.body;
 
-      const title = String(
-        b.title ||
-        b.name ||
-        ''
-      ).trim();
-
-      if (!title) {
-        return res.status(400).json({
-          error:
-            'Podaj nazwę zbiórki.'
-        });
-      }
-
-      const outfit =
-        String(
-          b.outfit ||
-          b.clothing ||
-          ''
-        ).trim();
-
       const r = await pool.query(
         `
-        INSERT INTO events
-        (
-          title,
-          event_date,
-          event_time,
-          place,
-          description,
-          outfit
-        )
-        VALUES($1,$2,$3,$4,$5,$6)
+        UPDATE events
+        SET
+          title=COALESCE($1,title),
+          event_date=COALESCE($2,event_date),
+          event_time=COALESCE($3,event_time),
+          place=COALESCE($4,place),
+          description=COALESCE($5,description),
+          outfit=COALESCE($6,outfit)
+        WHERE id=$7
         RETURNING *
         `,
         [
-          title,
+          b.title !== undefined
+            ? String(b.title).trim()
+            : null,
 
-          b.event_date ||
-            b.date ||
-            null,
+          b.event_date !== undefined
+            ? b.event_date
+            : null,
 
-          b.event_time ||
-            b.time ||
-            null,
+          b.event_time !== undefined
+            ? b.event_time
+            : null,
 
-          b.place ||
-            b.location ||
-            b.address ||
-            '',
+          b.place !== undefined
+            ? b.place
+            : null,
 
-          b.description ||
-            b.desc ||
-            b.text ||
-            '',
+          b.description !== undefined
+            ? b.description
+            : null,
 
-          outfit
+          b.outfit !== undefined
+            ? String(b.outfit).trim()
+            : null,
+
+          req.params.id
         ]
       );
 
-      try {
-        let body =
-          title;
-
-        if (outfit) {
-          body +=
-            ` • Ubiór: ${outfit}`;
-        }
-
-        body +=
-          ' • Kliknij zbiórkę i potwierdź obecność.';
-
-        await sendPushToAll({
-          title:
-            '📅 Nowa zbiórka MDP',
-          body,
-          eventId:
-            Number(r.rows[0].id),
-          type:
-            'new-event',
-          url:
-            '/'
+      if (!r.rows[0]) {
+        return res.status(404).json({
+          error:
+            'Nie znaleziono zbiórki.'
         });
-
-      } catch (e) {
-        console.error(e);
       }
 
       res.json(r.rows[0]);
@@ -1132,7 +1151,7 @@ app.post(
 
       res.status(500).json({
         error:
-          'Nie udało się dodać zbiórki.'
+          'Nie udało się zmienić zbiórki.'
       });
     }
   }
@@ -1149,26 +1168,13 @@ app.delete(
         [req.params.id]
       );
 
-      for (
-        const key of attendanceReminderMemory.keys()
-      ) {
-        if (
-          key.startsWith(
-            `${Number(req.params.id)}:`
-          )
-        ) {
-          attendanceReminderMemory.delete(key);
-        }
-      }
-
       res.json({
         ok: true
       });
 
     } catch (e) {
       res.status(500).json({
-        error:
-          'Nie udało się usunąć zbiórki.'
+        error: 'Nie udało się usunąć zbiórki.'
       });
     }
   }
@@ -1179,66 +1185,57 @@ app.delete(
 // NEWS
 // ======================================================
 
-app.post(
-  '/api/news',
-  auth,
-  staff,
-  async (req, res) => {
-    try {
-      const b = req.body;
+app.post('/api/news', auth, staff, async (req, res) => {
+  try {
+    const b = req.body;
 
-      const title = String(
-        b.title ||
-        b.name ||
-        ''
-      ).trim();
+    const title = String(
+      b.title ||
+      b.name ||
+      ''
+    ).trim();
 
-      if (!title) {
-        return res.status(400).json({
-          error:
-            'Podaj tytuł ogłoszenia.'
-        });
-      }
-
-      const r = await pool.query(
-        `
-        INSERT INTO news(title,body)
-        VALUES($1,$2)
-        RETURNING *
-        `,
-        [
-          title,
-          b.body ||
-            b.content ||
-            b.description ||
-            b.text ||
-            ''
-        ]
-      );
-
-      try {
-        await sendPushToAll({
-          title:
-            'Nowe ogłoszenie MDP',
-          body:
-            title
-        });
-      } catch (e) {
-        console.error(e);
-      }
-
-      res.json(r.rows[0]);
-
-    } catch (e) {
-      console.error(e);
-
-      res.status(500).json({
-        error:
-          'Nie udało się dodać ogłoszenia.'
+    if (!title) {
+      return res.status(400).json({
+        error: 'Podaj tytuł ogłoszenia.'
       });
     }
+
+    const r = await pool.query(
+      `
+      INSERT INTO news(title,body)
+      VALUES($1,$2)
+      RETURNING *
+      `,
+      [
+        title,
+        b.body ||
+          b.content ||
+          b.description ||
+          b.text ||
+          ''
+      ]
+    );
+
+    try {
+      await sendPushToAll({
+        title: 'Nowe ogłoszenie MDP',
+        body: title
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      error: 'Nie udało się dodać ogłoszenia.'
+    });
   }
-);
+});
 
 app.delete(
   '/api/news/:id',
@@ -1287,8 +1284,7 @@ app.post(
 
       if (!title || !body) {
         return res.status(400).json({
-          error:
-            'Podaj tytuł i treść komunikatu.'
+          error: 'Podaj tytuł i treść komunikatu.'
         });
       }
 
@@ -1314,10 +1310,8 @@ app.post(
 
       try {
         await sendPushToAll({
-          title:
-            '🚨 PILNY KOMUNIKAT MDP',
-          body:
-            title
+          title: '🚨 PILNY KOMUNIKAT MDP',
+          body: title
         });
       } catch (e) {
         console.error(e);
@@ -1433,8 +1427,7 @@ app.post(
 
       if (!body) {
         return res.status(400).json({
-          error:
-            'Napisz treść zgłoszenia.'
+          error: 'Napisz treść zgłoszenia.'
         });
       }
 
@@ -1460,10 +1453,8 @@ app.post(
 
       try {
         await sendPushToAll({
-          title:
-            'Nowe zgłoszenie od członka',
-          body:
-            `${memberName}: ${type}`
+          title: 'Nowe zgłoszenie od członka',
+          body: `${memberName}: ${type}`
         });
       } catch (e) {
         console.error(e);
@@ -1766,8 +1757,7 @@ app.get(
 
     } catch (e) {
       res.status(500).json({
-        error:
-          'Błąd profilu.'
+        error: 'Błąd profilu.'
       });
     }
   }
@@ -1780,8 +1770,7 @@ app.put(
     try {
       if (req.role !== 'member') {
         return res.status(403).json({
-          error:
-            'Brak uprawnień.'
+          error: 'Brak uprawnień.'
         });
       }
 
@@ -1859,13 +1848,7 @@ async function saveAttendance(
     }
 
     const ev = await pool.query(
-      `
-      SELECT
-        id,
-        title
-      FROM events
-      WHERE id=$1
-      `,
+      'SELECT id FROM events WHERE id=$1',
       [eventId]
     );
 
@@ -1877,23 +1860,16 @@ async function saveAttendance(
     }
 
     let memberName = '';
-    let savedMemberId = null;
 
     if (req.role === 'member') {
       memberName =
         `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim();
 
-      savedMemberId =
-        Number(req.member.id);
-
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT
-          id,
-          first_name,
-          last_name
+        SELECT first_name,last_name
         FROM members
         WHERE id=$1
         `,
@@ -1904,9 +1880,6 @@ async function saveAttendance(
         memberName =
           `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
             .trim();
-
-        savedMemberId =
-          Number(m.rows[0].id);
       }
 
     } else {
@@ -1938,32 +1911,10 @@ async function saveAttendance(
       ]
     );
 
-    if (
-      savedMemberId &&
-      (
-        status === 'yes' ||
-        status === 'no'
-      )
-    ) {
-      attendanceReminderMemory.delete(
-        `${eventId}:${savedMemberId}`
-      );
-    }
-
-    if (
-      savedMemberId &&
-      status === 'maybe'
-    ) {
-      attendanceReminderMemory.delete(
-        `${eventId}:${savedMemberId}`
-      );
-    }
-
     res.json({
       ok: true,
       event_id: eventId,
       member_name: memberName,
-      member_id: savedMemberId,
       status
     });
 
@@ -2020,11 +1971,6 @@ app.get(
     }
   }
 );
-
-
-// ======================================================
-// FREKWENCJA CZŁONKA
-// ======================================================
 
 app.get(
   '/api/member-stats/:memberId',
@@ -2132,21 +2078,7 @@ app.get(
 
 
 // ======================================================
-// NOWE — FREKWENCJA ROCZNA
-// ======================================================
-//
-// Pokazuje wszystkich obecnych członków MDP.
-// Domyślnie liczy bieżący rok.
-// Można również podać ?year=2026.
-//
-// yes   = był
-// no    = nie było
-// maybe = nie jest liczone do procentu
-//
-// Świeżo dodany członek również pojawia się na liście.
-// Jeśli nie ma jeszcze żadnej zapisanej obecności,
-// otrzymuje 0% i 0 / 0.
-//
+// FREKWENCJA ROCZNA — WSZYSCY CZŁONKOWIE
 // ======================================================
 
 app.get(
@@ -2155,18 +2087,19 @@ app.get(
   staff,
   async (req, res) => {
     try {
-      const currentYear =
-        new Date().getFullYear();
+      const year = Number(
+        req.query.year || new Date().getFullYear()
+      );
 
-      const requestedYear =
-        Number(req.query.year);
-
-      const year =
-        Number.isInteger(requestedYear) &&
-        requestedYear >= 2000 &&
-        requestedYear <= 2100
-          ? requestedYear
-          : currentYear;
+      if (
+        !Number.isInteger(year) ||
+        year < 2000 ||
+        year > 2100
+      ) {
+        return res.status(400).json({
+          error: 'Nieprawidłowy rok.'
+        });
+      }
 
       const r = await pool.query(
         `
@@ -2180,7 +2113,8 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN a.status='yes'
+                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
+                 AND a.status='yes'
                 THEN 1
                 ELSE 0
               END
@@ -2191,7 +2125,8 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN a.status='no'
+                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
+                 AND a.status='no'
                 THEN 1
                 ELSE 0
               END
@@ -2202,7 +2137,8 @@ app.get(
           COALESCE(
             SUM(
               CASE
-                WHEN a.status='maybe'
+                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
+                 AND a.status='maybe'
                 THEN 1
                 ELSE 0
               END
@@ -2224,9 +2160,6 @@ app.get(
 
         LEFT JOIN events e
           ON e.id=a.event_id
-          AND e.event_date IS NOT NULL
-          AND e.event_date <> ''
-          AND LEFT(e.event_date,4)=$1
 
         GROUP BY
           m.id,
@@ -2243,59 +2176,36 @@ app.get(
         [String(year)]
       );
 
-      const members =
-        r.rows.map(m => {
-          const yes =
-            Number(m.yes || 0);
+      const members = r.rows.map(x => {
+        const yes = Number(x.yes || 0);
+        const no = Number(x.no || 0);
+        const maybe = Number(x.maybe || 0);
 
-          const no =
-            Number(m.no || 0);
+        const confirmed = yes + no;
+        const total = confirmed + maybe;
 
-          const maybe =
-            Number(m.maybe || 0);
+        return {
+          id: Number(x.id),
+          first_name: x.first_name || '',
+          last_name: x.last_name || '',
+          role: x.role || 'member',
+          photo: x.photo || '',
 
-          const confirmed =
-            yes + no;
+          yes,
+          no,
+          maybe,
 
-          const percentage =
-            confirmed > 0
-              ? Math.round(
-                  yes /
-                    confirmed *
-                    100
-                )
-              : 0;
+          attended: yes,
+          absent: no,
 
-          return {
-            id: Number(m.id),
+          confirmed,
+          total,
 
-            first_name:
-              m.first_name || '',
-
-            last_name:
-              m.last_name || '',
-
-            role:
-              m.role || 'member',
-
-            photo:
-              m.photo || '',
-
-            yes,
-            no,
-            maybe,
-
-            attended: yes,
-            absent: no,
-
-            confirmed,
-
-            total:
-              confirmed + maybe,
-
-            percentage
-          };
-        });
+          percentage: confirmed
+            ? Math.round(yes / confirmed * 100)
+            : 0
+        };
+      });
 
       res.json({
         year,
@@ -3423,7 +3333,7 @@ app.get(
 
 
 // ======================================================
-// PUSH — SUBSKRYPCJA
+// PUSH
 // ======================================================
 
 app.post(
@@ -3444,7 +3354,7 @@ app.post(
         req.role === 'member'
           ? Number(req.member.id)
           : (
-              s.memberId
+              s.memberId !== undefined
                 ? Number(s.memberId)
                 : null
             );
@@ -3452,21 +3362,21 @@ app.post(
       await pool.query(
         `
         INSERT INTO push_subscriptions
-        (
-          endpoint,
-          subscription,
-          member_id
-        )
+        (endpoint,subscription,member_id)
         VALUES($1,$2::jsonb,$3)
         ON CONFLICT(endpoint)
         DO UPDATE SET
           subscription=EXCLUDED.subscription,
-          member_id=EXCLUDED.member_id
+          member_id=COALESCE(
+            EXCLUDED.member_id,
+            push_subscriptions.member_id
+          )
         `,
         [
           s.endpoint,
           JSON.stringify(s),
-          Number.isInteger(memberId)
+          Number.isInteger(memberId) &&
+          memberId > 0
             ? memberId
             : null
         ]
@@ -3475,7 +3385,8 @@ app.post(
       res.json({
         ok: true,
         memberId:
-          Number.isInteger(memberId)
+          Number.isInteger(memberId) &&
+          memberId > 0
             ? memberId
             : null
       });
@@ -3544,8 +3455,7 @@ app.post(
   async (req, res) => {
     try {
       await sendPushToAll({
-        title:
-          'MDP Wiesiółka',
+        title: 'MDP Wiesiółka',
         body:
           req.body?.body ||
           'Testowe powiadomienie'
@@ -3561,6 +3471,53 @@ app.post(
       res.status(500).json({
         error:
           'Nie udało się wysłać powiadomienia.'
+      });
+    }
+  }
+);
+
+
+// ======================================================
+// CRON — AUTOMATYCZNE PRZYPOMNIENIA O ZBIÓRKACH
+// ======================================================
+
+app.post(
+  '/api/cron/attendance-reminders',
+  async (req, res) => {
+    try {
+      const secret = String(
+        process.env.CRON_SECRET || ''
+      );
+
+      const provided = String(
+        req.headers['x-cron-secret'] ||
+        req.body?.secret ||
+        req.query?.secret ||
+        ''
+      );
+
+      if (!secret || provided !== secret) {
+        return res.status(401).json({
+          error: 'Brak prawidłowego klucza CRON.'
+        });
+      }
+
+      await processEventAttendanceReminders();
+
+      res.json({
+        ok: true,
+        ranAt: new Date().toISOString()
+      });
+
+    } catch (e) {
+      console.error(
+        'Błąd CRON przypomnień:',
+        e
+      );
+
+      res.status(500).json({
+        error:
+          'Nie udało się uruchomić przypomnień.'
       });
     }
   }
@@ -3620,7 +3577,7 @@ app.use(
         'public',
         'index.html'
       )
-  )
+    )
 );
 
 
@@ -3638,15 +3595,19 @@ initDb()
         )
     );
 
-    setTimeout(() => {
-      sendAttendanceReminders()
-        .catch(console.error);
-    }, 10000);
+    // Sprawdzamy przypomnienia co minutę.
+    // Samo przypomnienie może zostać wysłane
+    // maksymalnie raz na 30 minut na osobę i zbiórkę.
+    setInterval(
+      processEventAttendanceReminders,
+      60 * 1000
+    );
 
-    setInterval(() => {
-      sendAttendanceReminders()
-        .catch(console.error);
-    }, REMINDER_INTERVAL_MS);
+    // Pierwsze sprawdzenie chwilę po uruchomieniu.
+    setTimeout(
+      processEventAttendanceReminders,
+      10 * 1000
+    );
   })
   .catch(err => {
     console.error(
