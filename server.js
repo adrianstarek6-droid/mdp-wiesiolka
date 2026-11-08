@@ -2283,6 +2283,7 @@ app.post(
 app.get(
   '/api/attendance/:eventId',
   auth,
+  staff,
   async (req, res) => {
     try {
       const eventId = Number(req.params.eventId);
