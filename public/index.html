@@ -2322,6 +2322,7 @@ let timingStartedAt = 0;
 let timingElapsedMs = 0;
 let timingInterval = null;
 let timingResults = [];
+let selectedTimingMemberId = null;
 
 function formatTiming(ms){
   const safe=Math.max(0,Number(ms)||0);
@@ -2372,18 +2373,86 @@ async function loadTimingResults(){
     renderTimingResults();
   }catch(e){$("timingHistory").innerHTML=`<div class="empty">Nie udało się pobrać wyników: ${escapeHtml(e.message)}</div>`;}
 }
+function openTimingMember(id){
+  selectedTimingMemberId=Number(id)||null;
+  renderTimingResults();
+}
+function backToTimingMembers(){
+  selectedTimingMemberId=null;
+  renderTimingResults();
+}
 function renderTimingResults(){
   const analysisHeading=$("timingAnalysisTitle");
+  const staff=["admin","guardian"].includes(state.role);
   if(analysisHeading) analysisHeading.textContent=state.role==="member"?"📊 Twoja analiza":"📊 Analiza wyników drużyny";
   const exercise=$("timingExercise")?.value.trim();
-  const rows=exercise?timingResults.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):timingResults;
-  const times=rows.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+  let rows=exercise?timingResults.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):timingResults;
+  if(state.role==="member") rows=rows.filter(r=>Number(r.member_id)===Number(state.memberId));
+  const validRows=rows.filter(r=>r.valid!==false && r.valid!==0);
+  const times=validRows.map(r=>Number(r.time_ms)).filter(Number.isFinite);
   const best=times.length?Math.min(...times):null;
   const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
-  $("timingStats").innerHTML=`<div class="stat"><b>${times.length}</b><span>Pomiarów${exercise?" w tej konkurencji":" łącznie"}</span></div><div class="stat"><b>${best===null?"—":formatTiming(best)}</b><span>Najlepszy czas</span></div><div class="stat"><b>${avg===null?"—":formatTiming(avg)}</b><span>Średni czas</span></div><div class="stat"><b>${rows.reduce((n,r)=>n+Number(r.errors||0),0)}</b><span>Błędy łącznie</span></div>`;
-  if(!rows.length){$("timingHistory").innerHTML='<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';return;}
-  const staff=["admin","guardian"].includes(state.role);
-  $("timingHistory").innerHTML=`<div class="section-title"><h3>Historia wyników</h3><small>${rows.length} ostatnich</small></div>`+rows.map(r=>`<article class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:start"><div><h3>${escapeHtml(r.exercise)}</h3><div class="muted">${escapeHtml(`${r.first_name||""} ${r.last_name||""}`.trim())} · ${escapeHtml(new Date(r.created_at).toLocaleString("pl-PL"))}</div></div><b style="font-size:23px;white-space:nowrap">${formatTiming(r.time_ms)}</b></div><div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span></div>${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}${staff?`<button class="btn danger" type="button" onclick="invalidateTimingResult(${Number(r.id)})">Unieważnij wynik</button>`:""}</article>`).join("");
+  $("timingStats").innerHTML=`<div class="stat"><b>${times.length}</b><span>Pomiarów${exercise?" w tej konkurencji":" łącznie"}</span></div><div class="stat"><b>${best===null?"—":formatTiming(best)}</b><span>Najlepszy czas</span></div><div class="stat"><b>${avg===null?"—":formatTiming(avg)}</b><span>Średni czas</span></div><div class="stat"><b>${validRows.reduce((n,r)=>n+Number(r.errors||0),0)}</b><span>Błędy łącznie</span></div>`;
+  if(!rows.length){
+    selectedTimingMemberId=null;
+    $("timingHistory").innerHTML='<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';
+    return;
+  }
+  const renderRecord=r=>{
+    const valid=r.valid!==false && r.valid!==0;
+    return `<article class="card" style="margin-bottom:10px;border-color:${valid?"#292929":"#713036"}">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
+        <div><h3>${escapeHtml(r.exercise||"Bez nazwy")}</h3><div class="muted">${escapeHtml(new Date(r.created_at).toLocaleString("pl-PL"))}</div></div>
+        <b style="font-size:23px;white-space:nowrap">${formatTiming(r.time_ms)}</b>
+      </div>
+      <div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span><span class="badge">${valid?"Ważny":"Unieważniony"}</span></div>
+      ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
+      ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
+      ${staff&&valid?`<button class="btn danger" type="button" onclick="invalidateTimingResult(${Number(r.id)})">Unieważnij wynik</button>`:""}
+    </article>`;
+  };
+  if(state.role!=="member" && selectedTimingMemberId!==null){
+    const memberRows=rows.filter(r=>Number(r.member_id)===selectedTimingMemberId);
+    const first=memberRows[0];
+    if(!first){selectedTimingMemberId=null;renderTimingResults();return;}
+    const memberName=`${first.first_name||""} ${first.last_name||""}`.trim()||"Członek MDP";
+    const memberValid=memberRows.filter(r=>r.valid!==false&&r.valid!==0);
+    const memberTimes=memberValid.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+    const memberBest=memberTimes.length?Math.min(...memberTimes):null;
+    const memberAvg=memberTimes.length?Math.round(memberTimes.reduce((a,b)=>a+b,0)/memberTimes.length):null;
+    $("timingHistory").innerHTML=`<button class="btn outline" type="button" onclick="backToTimingMembers()">← Wszyscy członkowie</button>
+      <div class="section-title"><h3>${escapeHtml(memberName)}</h3><small>${memberRows.length} wyników</small></div>
+      <div class="stats" style="margin-bottom:12px"><div class="stat"><strong>${memberTimes.length}</strong><span>Ważne pomiary</span></div><div class="stat"><strong>${memberBest===null?"—":formatTiming(memberBest)}</strong><span>Najlepszy czas</span></div><div class="stat"><strong>${memberAvg===null?"—":formatTiming(memberAvg)}</strong><span>Średni czas</span></div></div>
+      <h3>Historia, błędy i punkty karne</h3>${memberRows.map(renderRecord).join("")}`;
+    return;
+  }
+  if(state.role==="member"){
+    $("timingHistory").innerHTML=`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
+    return;
+  }
+  const grouped=new Map();
+  rows.forEach(r=>{
+    const id=Number(r.member_id)||0;
+    if(!grouped.has(id))grouped.set(id,[]);
+    grouped.get(id).push(r);
+  });
+  const groups=[...grouped.entries()].sort((a,b)=>{
+    const an=`${a[1][0].last_name||""} ${a[1][0].first_name||""}`.trim();
+    const bn=`${b[1][0].last_name||""} ${b[1][0].first_name||""}`.trim();
+    return an.localeCompare(bn,"pl");
+  });
+  $("timingHistory").innerHTML=`<div class="section-title"><h3>Wyniki członków</h3><small>${groups.length} osób</small></div>`+groups.map(([id,list])=>{
+    const first=list[0];
+    const name=`${first.first_name||""} ${first.last_name||""}`.trim()||"Członek MDP";
+    const valid=list.filter(r=>r.valid!==false&&r.valid!==0);
+    const memberBest=valid.length?Math.min(...valid.map(r=>Number(r.time_ms)).filter(Number.isFinite)):"—";
+    const bestText=memberBest==="—"?"—":formatTiming(memberBest);
+    const errorCount=valid.reduce((n,r)=>n+Number(r.errors||0),0);
+    return `<button class="card" type="button" onclick="openTimingMember(${id})" style="width:100%;text-align:left;color:inherit;cursor:pointer;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h3>${escapeHtml(name)}</h3><div class="muted">${list.length} wyników · ${valid.length} ważnych</div></div><b style="font-size:20px">›</b></div>
+      <div class="meta"><span class="badge">Najlepszy: ${bestText}</span><span class="badge">Błędy: ${errorCount}</span></div>
+    </button>`;
+  }).join("");
 }
 async function invalidateTimingResult(id){
   const reason=prompt("Podaj powód unieważnienia. Wynik zostanie zachowany w bazie, ale zniknie z aktywnej historii.");
