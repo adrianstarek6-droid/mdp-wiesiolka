@@ -764,6 +764,18 @@ body{background-color:#050505}
 }
 @media(prefers-reduced-motion:reduce){.hero-emblem,.screen.active{animation:none!important}}
 
+
+/* WIELKI TURNIEJ MDP */
+.tournament-hero{padding:22px;border:1px solid #68242b;border-radius:22px;background:radial-gradient(circle at 90% 0,rgba(215,25,32,.24),transparent 42%),linear-gradient(145deg,#1b171a,#0d1115);box-shadow:0 18px 45px rgba(0,0,0,.28)}
+.tournament-kicker{font-size:10px;letter-spacing:1.8px;font-weight:900;color:#ff5961}
+.tournament-hero h2{font-size:25px;margin:8px 0}.tournament-count{font-size:34px;font-weight:950;letter-spacing:-1px}
+.tournament-player{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #293039}
+.tournament-player:last-child{border-bottom:0}.tournament-medal{font-size:19px;width:28px}
+.tournament-status{display:inline-flex;padding:6px 10px;border-radius:999px;background:#241216;border:1px solid #68242b;color:#ff7279;font-size:11px;font-weight:900;letter-spacing:.5px}
+.tournament-question{padding:15px;border:1px solid #303943;border-radius:16px;background:#10151a;margin:12px 0}
+.tournament-option{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid #303943;border-radius:12px;margin-top:8px;background:#171d23}
+.tournament-option input{width:auto;margin:3px 0 0;accent-color:#e32630}
+.tournament-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -898,6 +910,19 @@ body{background-color:#050505}
     <div id="memberQuizList"><div class="card">Ładowanie quizów…</div></div>
   </section>
 
+  <section id="tournamentScreen" class="screen">
+    <div class="section-title"><h2>🏆 Wielki Turniej MDP</h2><small>Rywalizacja drużyny</small></div>
+    <div id="tournamentContent"><div class="card">Ładowanie turnieju…</div></div>
+    <div class="card" style="margin-top:14px">
+      <h3>🚒 Dane naszego Volvo</h3>
+      <div class="stats">
+        <div class="stat"><strong>2700 l</strong><span>WODY</span></div>
+        <div class="stat"><strong>300 l</strong><span>ŚRODKA PIANOTWÓRCZEGO</span></div>
+      </div>
+      <p class="muted" style="margin-bottom:0">Volvo FL280 GBA-RT · 689[S]15 · OSP Wiesiółka</p>
+    </div>
+  </section>
+
   <section id="profileScreen" class="screen">
     <div class="card">
       <div class="profile-head">
@@ -1006,6 +1031,17 @@ ul. Przykładowa 2"></textarea></div>
       <div id="newspaperManageList" style="margin-top:16px"></div>
     </div>
 
+    <div class="card" id="tournamentAdminCard">
+      <h3>🏆 Wielki Turniej MDP</h3>
+      <p class="muted">Utwórz turniej na podstawie aktywnego quizu. Członkowie dołączają do lobby, Ty zamykasz zapisy i ręcznie uruchamiasz start.</p>
+      <form id="tournamentCreateForm">
+        <div class="field"><label>Nazwa turnieju</label><input id="tournamentTitle" maxlength="120" required placeholder="Np. Wielki Turniej Wiedzy o Volvo"></div>
+        <div class="field"><label>Quiz / zestaw pytań</label><select id="tournamentQuizId" required><option value="">Ładowanie quizów…</option></select></div>
+        <button class="btn red" type="submit">➕ Utwórz turniej i otwórz lobby</button>
+      </form>
+      <div id="tournamentAdminPanel" style="margin-top:14px"></div>
+    </div>
+
     <div class="card" id="quizAdminCard">
       <h3>🧠 Quizy MDP</h3>
       <p class="muted">Twórz quizy, edytuj pytania i sprawdzaj wyniki członków. Wyniki zapisują się na serwerze.</p>
@@ -1044,6 +1080,7 @@ ul. Przykładowa 2"></textarea></div>
     <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
     <button class="nav-btn" data-screen="timingScreen"><b>⏱️</b>Stoper</button>
     <button class="nav-btn hidden" id="quizNavBtn" data-screen="quizScreen"><b>🧠</b>Quiz</button>
+    <button class="nav-btn" id="tournamentNavBtn" data-screen="tournamentScreen"><b>🏆</b>Turniej</button>
     <button class="nav-btn" data-screen="newsScreen"><b>📢</b>Ogłoszenia</button>
     <button class="nav-btn" data-screen="urgentScreen"><b>🚨</b>Pilne</button>
     <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
@@ -2713,6 +2750,52 @@ function openModal(html){
 
 function closeModal(){$("modalRoot").innerHTML=""}
 
+
+let tournamentPollTimer=null;
+let tournamentState=null;
+function tournamentStatusLabel(status,joinOpen){return status==='lobby'?(joinOpen?'LOBBY OTWARTE':'LOBBY ZAMKNIĘTE'):status==='running'?'TURNIEJ TRWA':'TURNIEJ ZAKOŃCZONY';}
+async function renderTournament(silent=false){
+  const root=$('tournamentContent');if(!root)return;
+  if(!silent)root.innerHTML='<div class="card">Ładowanie turnieju…</div>';
+  try{
+    const data=await api('/api/tournaments/current');tournamentState=data;
+    if(state.role==='admin')renderTournamentAdmin(data);
+    const t=data.tournament;
+    if(!t){root.innerHTML='<div class="empty">Nie ma teraz aktywnego turnieju. Wróć tutaj, gdy administrator otworzy lobby.</div>';return;}
+    const people=data.participants||[],joined=!!data.me?.joined;
+    let body='';
+    if(t.status==='lobby')body=state.role==='member'?(joined?'<div class="notice">✅ Jesteś w lobby. Poczekaj na zamknięcie zapisów i start.</div>':(t.joinOpen?'<button class="btn red" onclick="joinTournament('+Number(t.id)+')">DOŁĄCZAM</button>':'<div class="notice">Zapisy zostały zamknięte.</div>')):'<div class="notice">Członkowie dołączają do lobby. Gdy lista będzie gotowa, zamknij lobby.</div>';
+    else if(t.status==='running')body=state.role==='member'?(!joined?'<div class="notice">Turniej już trwa. Nie można dołączyć po starcie.</div>':(data.me?.submitted?'<div class="notice">✅ Odpowiedzi wysłane. Poczekaj na oficjalne wyniki.</div>':'<button class="btn red" onclick="startTournamentAttempt()">ROZPOCZNIJ ROZWIĄZYWANIE</button>')):'<div class="notice">Turniej trwa. Wyniki zostaną ujawnione po zakończeniu.</div>';
+    else{const rank=data.ranking||[];body='<h3>🏆 Oficjalna tabela wyników</h3>'+(rank.length?rank.map((p,i)=>'<div class="tournament-player"><span><b class="tournament-medal">'+(['🥇','🥈','🥉'][i]||((i+1)+'.'))+'</b> '+quizEsc(p.member_name||p.name||'Członek')+'</span><b>'+Number(p.score||0)+' / '+Number(p.total||0)+' pkt</b></div>').join(''):'<p class="muted">Brak wyników.</p>');}
+    const list=people.length?people.map((p,i)=>'<div class="tournament-player"><span><b class="tournament-medal">'+(i+1)+'.</b> '+quizEsc(p.name)+'</span><span class="badge">'+(p.submitted?'ODPOWIEDZI WYSŁANE':'W LOBBY')+'</span></div>').join(''):'<p class="muted">Nikt jeszcze nie dołączył.</p>';
+    root.innerHTML='<div class="tournament-hero"><div class="tournament-kicker">MDP WIESIÓŁKA · TURNIEJ</div><span class="tournament-status">'+tournamentStatusLabel(t.status,t.joinOpen)+'</span><h2>'+quizEsc(t.title)+'</h2><div class="tournament-count">'+people.length+' <span class="muted" style="font-size:15px">uczestników</span></div><div class="muted">'+Number(t.questionCount||0)+' pytań</div></div><div class="card"><h3>👥 Uczestnicy</h3>'+list+'</div><div class="card">'+body+'</div>';
+  }catch(e){if(!silent)root.innerHTML='<div class="card">Nie udało się pobrać turnieju: '+quizEsc(e.message)+'</div>';}
+}
+function renderTournamentAdmin(data){
+  const panel=$('tournamentAdminPanel'),select=$('tournamentQuizId');if(!panel)return;
+  const quizzes=data.availableQuizzes||[];
+  if(select){const current=select.value;select.innerHTML='<option value="">Wybierz quiz…</option>'+quizzes.map(q=>'<option value="'+Number(q.id)+'">'+quizEsc(q.title)+'</option>').join('');if(current)select.value=current;}
+  const t=data.tournament;if(!t){panel.innerHTML='<div class="empty">Nie ma aktywnego turnieju. Utwórz nowy powyżej.</div>';return;}
+  const count=(data.participants||[]).length;
+  const controls=t.status==='lobby'?(t.joinOpen?'<button class="btn yellow" onclick="closeTournamentLobby('+Number(t.id)+')">🔒 ZAMKNIJ LOBBY</button>':'<button class="btn green" onclick="startTournament('+Number(t.id)+')">🚀 START TURNIEJU</button>'):t.status==='running'?'<button class="btn danger" onclick="finishTournament('+Number(t.id)+')">🏁 ZAKOŃCZ I OPUBLIKUJ WYNIKI</button>':'<span class="badge">Wyniki zachowane w archiwum</span>';
+  panel.innerHTML='<div class="notice"><b>'+quizEsc(t.title)+'</b><br>'+tournamentStatusLabel(t.status,t.joinOpen)+' · '+count+' uczestników</div><div class="tournament-actions">'+controls+'</div>';
+}
+async function joinTournament(id){try{await api('/api/tournaments/'+Number(id)+'/join',{method:'POST',body:JSON.stringify({})});toast('Dołączono do lobby!');await renderTournament();}catch(e){toast(e.message,'error');await renderTournament(true);}}
+async function closeTournamentLobby(id){if(!confirm('Zamknąć lobby? Nikt nowy nie będzie mógł dołączyć.'))return;try{await api('/api/tournaments/'+Number(id)+'/close-lobby',{method:'POST',body:JSON.stringify({})});toast('Lobby zamknięte. Możesz uruchomić turniej.');await renderTournament();}catch(e){toast(e.message,'error');}}
+async function startTournament(id){if(!confirm('Uruchomić turniej dla wszystkich osób z lobby?'))return;try{await api('/api/tournaments/'+Number(id)+'/start',{method:'POST',body:JSON.stringify({})});toast('TURNIEJ ROZPOCZĘTY!');await renderTournament();}catch(e){toast(e.message,'error');}}
+async function finishTournament(id){if(!confirm('Zakończyć turniej i opublikować tabelę wyników?'))return;try{await api('/api/tournaments/'+Number(id)+'/finish',{method:'POST',body:JSON.stringify({})});toast('Turniej zakończony. Wyniki opublikowane!');await renderTournament();}catch(e){toast(e.message,'error');}}
+function startTournamentAttempt(){
+  const data=tournamentState,t=data?.tournament,qs=data?.questions||[];if(!t||t.status!=='running'||!qs.length)return;
+  openModal('<h2>🏆 '+quizEsc(t.title)+'</h2><p class="muted">Odpowiedz na wszystkie pytania. Po wysłaniu nie będzie można ich zmienić.</p><form id="tournamentAnswerForm">'+qs.map((q,i)=>'<div class="tournament-question"><b>'+(i+1)+'. '+quizEsc(q.text)+'</b>'+(q.options||[]).map((o,j)=>'<label class="tournament-option"><input type="radio" name="tq-'+i+'" value="'+j+'" required><span>'+quizEsc(o)+'</span></label>').join('')+'</div>').join('')+'<div class="tournament-actions"><button class="btn red" type="submit">WYŚLIJ ODPOWIEDZI</button><button class="btn outline" type="button" onclick="closeModal()">Wróć</button></div></form>');
+  $('tournamentAnswerForm').addEventListener('submit',async e=>{e.preventDefault();const answers=qs.map((q,i)=>({questionId:String(q.id),answerIndex:Number(new FormData(e.target).get('tq-'+i))}));const b=e.target.querySelector('button[type="submit"]');b.disabled=true;try{const r=await api('/api/tournaments/'+Number(t.id)+'/submit',{method:'POST',body:JSON.stringify({answers})});closeModal();toast('Wynik zapisany: '+r.score+'/'+r.total+' pkt');await renderTournament();}catch(err){b.disabled=false;toast(err.message,'error');}});
+}
+document.addEventListener('submit',async e=>{
+  if(e.target?.id!=='tournamentCreateForm')return;e.preventDefault();
+  const title=$('tournamentTitle').value.trim(),quizId=Number($('tournamentQuizId').value),b=e.target.querySelector('button[type="submit"]');b.disabled=true;
+  try{await api('/api/tournaments',{method:'POST',body:JSON.stringify({title,quizId})});$('tournamentTitle').value='';toast('Turniej utworzony. Lobby jest otwarte!');await renderTournament();}
+  catch(err){toast(err.message,'error');}finally{b.disabled=false;}
+});
+
 function openScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   const screen=$(id);
@@ -2726,6 +2809,8 @@ function openScreen(id){
   if(id==="quizScreen" && state.role!=="member"){
     openScreen("homeScreen");return;
   }
+  if(id==="tournamentScreen" && !state.role){openScreen("homeScreen");return;}
+
 
   // Gazety zawsze pobierają świeży stan z PostgreSQL.
   // Dzięki temu członek po zakończeniu miesiąca zobaczy od razu
@@ -2734,6 +2819,12 @@ function openScreen(id){
   if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
   if(id==="manageScreen" && ["admin","guardian"].includes(state.role)) renderQuizAdmin();
+  if(id==="tournamentScreen" || id==="manageScreen"){
+    renderTournament();
+    if(tournamentPollTimer)clearInterval(tournamentPollTimer);
+    tournamentPollTimer=setInterval(()=>{if($(id)?.classList.contains("active"))renderTournament(true);},4000);
+  }else if(tournamentPollTimer){clearInterval(tournamentPollTimer);tournamentPollTimer=null;}
+
   if(id==="newspapersScreen"){
     loadNewspaperGroupsFromServer()
       .then(()=>renderNewspapers())
