@@ -408,6 +408,7 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       invalidated_at TIMESTAMPTZ
     );
+    ALTER TABLE mdp_timing_results ADD COLUMN IF NOT EXISTS splits JSONB NOT NULL DEFAULT '[]'::jsonb;
     CREATE INDEX IF NOT EXISTS idx_mdp_timing_results_member_date
       ON mdp_timing_results(member_id, created_at DESC);
   `);
@@ -1074,7 +1075,7 @@ app.get('/api/timing-results', auth, async (req, res) => {
     }
     const result = await pool.query(`
       SELECT r.id, r.member_id, r.exercise, r.time_ms, r.errors,
-             r.penalty_points, r.notes, r.valid, r.invalid_reason,
+             r.penalty_points, r.notes, r.splits, r.valid, r.invalid_reason,
              r.invalidated_at, r.created_at, m.first_name, m.last_name
       FROM mdp_timing_results r
       JOIN members m ON m.id = r.member_id
@@ -1095,6 +1096,20 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
     const errors = Number(req.body.errors || 0);
     const penaltyPoints = Number(req.body.penalty_points || 0);
     const notes = String(req.body.notes || '').trim().slice(0, 1000);
+    const rawSplits = Array.isArray(req.body.splits) ? req.body.splits : [];
+    if (rawSplits.length > 30) return res.status(400).json({error: 'Maksymalnie 30 międzyczasów w jednym pomiarze.'});
+    const splits = [];
+    let previousSplit = 0;
+    for (let i = 0; i < rawSplits.length; i++) {
+      const item = rawSplits[i] || {};
+      const cumulative = Number(item.cumulative_ms);
+      const segment = Number(item.segment_ms);
+      if (!Number.isInteger(cumulative) || !Number.isInteger(segment) || cumulative <= previousSplit || segment <= 0 || cumulative > timeMs || cumulative - previousSplit !== segment) {
+        return res.status(400).json({error: 'Nieprawidłowe międzyczasy. Sprawdź kolejność odcinków.'});
+      }
+      splits.push({label: String(item.label || `Odcinek ${i + 1}`).trim().slice(0, 40) || `Odcinek ${i + 1}`, cumulative_ms: cumulative, segment_ms: segment});
+      previousSplit = cumulative;
+    }
     // Pomiar i zapis wyników są dostępne wyłącznie dla opiekuna i administratora.
     const targetId = Number(req.body.member_id);
     if (!exercise) return res.status(400).json({error: 'Wpisz nazwę konkurencji.'});
@@ -1105,10 +1120,10 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
     if (!member.rows[0]) return res.status(404).json({error: 'Nie znaleziono członka MDP.'});
     const inserted = await pool.query(`
       INSERT INTO mdp_timing_results
-        (member_id, exercise, time_ms, errors, penalty_points, notes, created_by_role, created_by_member_id)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING id, member_id, exercise, time_ms, errors, penalty_points, notes, created_at
-    `, [targetId, exercise, timeMs, errors, penaltyPoints, notes, req.role, req.memberId ? Number(req.memberId) : null]);
+        (member_id, exercise, time_ms, errors, penalty_points, notes, splits, created_by_role, created_by_member_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9)
+      RETURNING id, member_id, exercise, time_ms, errors, penalty_points, notes, splits, created_at
+    `, [targetId, exercise, timeMs, errors, penaltyPoints, notes, JSON.stringify(splits), req.role, req.memberId ? Number(req.memberId) : null]);
     res.status(201).json({result: {...inserted.rows[0], first_name: member.rows[0].first_name, last_name: member.rows[0].last_name}});
   } catch (e) {
     console.error('Błąd zapisu wyniku stopera:', e);
@@ -1503,7 +1518,7 @@ app.delete(
 // NEWS
 // ======================================================
 
-app.post('/api/news', auth, staff, async (req, res) => {
+app.post('/api/news', auth, adminOnly, async (req, res) => {
   try {
     const b = req.body;
 
@@ -1558,7 +1573,7 @@ app.post('/api/news', auth, staff, async (req, res) => {
 app.delete(
   '/api/news/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       await pool.query(
@@ -1587,7 +1602,7 @@ app.delete(
 app.post(
   '/api/urgent-messages',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const title = String(
@@ -1683,7 +1698,7 @@ app.get(
 app.delete(
   '/api/urgent-messages/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const result = await pool.query(
@@ -1885,7 +1900,7 @@ app.put(
 app.post(
   '/api/members',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const first = String(
@@ -1948,7 +1963,7 @@ app.post(
 app.put(
   '/api/members/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const b = req.body;
@@ -2268,6 +2283,7 @@ app.post(
 app.get(
   '/api/attendance/:eventId',
   auth,
+  staff,
   async (req, res) => {
     try {
       const eventId = Number(req.params.eventId);
@@ -2686,7 +2702,7 @@ app.get(
 app.post(
   '/api/newspaper-groups',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const b = req.body;
@@ -2827,6 +2843,7 @@ app.post(
 app.put(
   '/api/newspaper-groups/:id',
   auth,
+  adminOnly,
   async (req, res) => {
     try {
       const oldR = await pool.query(
@@ -3235,7 +3252,7 @@ async function updateGroupProgress(
 app.delete(
   '/api/newspaper-groups/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const r = await pool.query(
@@ -3350,7 +3367,8 @@ function cleanQuizQuestions(value) {
 
 app.get('/api/quizzes', auth, async (req, res) => {
   try {
-    const staffView = isStaff(req);
+    const staffView = req.role === 'admin';
+    if (req.role === 'guardian') return res.status(403).json({error:'Podgląd zarządzania quizami jest dostępny tylko dla administratora.'});
     if (staffView) {
       const [quizzes, members, submissions] = await Promise.all([
         pool.query('SELECT id,title,questions,questions_per_round,active,created_at,updated_at FROM quizzes ORDER BY created_at DESC,id DESC'),
@@ -3383,7 +3401,7 @@ app.get('/api/quizzes', auth, async (req, res) => {
   }
 });
 
-app.post('/api/quizzes', auth, staff, async (req,res) => {
+app.post('/api/quizzes', auth, adminOnly, async (req,res) => {
   try {
     const title=String(req.body?.title||'').trim();
     const questions=cleanQuizQuestions(req.body?.questions);
@@ -3394,7 +3412,7 @@ app.post('/api/quizzes', auth, staff, async (req,res) => {
   } catch(e) { console.error(e); res.status(500).json({error:'Nie udało się utworzyć quizu.'}); }
 });
 
-app.put('/api/quizzes/:id', auth, staff, async (req,res) => {
+app.put('/api/quizzes/:id', auth, adminOnly, async (req,res) => {
   try {
     const id=Number(req.params.id), title=String(req.body?.title||'').trim();
     const questions=cleanQuizQuestions(req.body?.questions);
@@ -3408,7 +3426,7 @@ app.put('/api/quizzes/:id', auth, staff, async (req,res) => {
 
 // Nowa runda bez kasowania historii: poprzedni quiz zostaje zarchiwizowany,
  // a nowa kopia otrzymuje osobne ID, więc członkowie mogą rozwiązać ją ponownie.
-app.post('/api/quizzes/:id/reset', auth, staff, async (req,res) => {
+app.post('/api/quizzes/:id/reset', auth, adminOnly, async (req,res) => {
   const id=Number(req.params.id);
   if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
   const client=await pool.connect();
@@ -3433,12 +3451,12 @@ app.post('/api/quizzes/:id/reset', auth, staff, async (req,res) => {
 
 // Trwałe usuwanie quizu jest zablokowane, ponieważ usunęłoby również
 // odpowiedzi i wyniki członków. Zamiast tego użyj archiwizacji.
-app.delete('/api/quizzes/:id/permanent', auth, staff, async (req,res) => {
+app.delete('/api/quizzes/:id/permanent', auth, adminOnly, async (req,res) => {
   return res.status(409).json({error:'Trwałe usuwanie quizów jest zablokowane, aby zachować wszystkie odpowiedzi i wyniki. Możesz zarchiwizować quiz.'});
 });
 
 // Archiwizujemy quiz zamiast usuwać wyniki członków.
-app.delete('/api/quizzes/:id', auth, staff, async (req,res) => {
+app.delete('/api/quizzes/:id', auth, adminOnly, async (req,res) => {
   try {
     const id=Number(req.params.id);
     const r=await pool.query('UPDATE quizzes SET active=FALSE,updated_at=NOW() WHERE id=$1 RETURNING id',[id]);
@@ -3518,7 +3536,7 @@ app.get(
 app.put(
   '/api/newspaper-history/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -3764,7 +3782,7 @@ async function archiveCurrentMonth(client) {
 app.post(
   '/api/newspaper-groups/save-month',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     const client =
       await pool.connect();
@@ -4115,7 +4133,7 @@ app.post(
 app.post(
   '/api/push/test',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       await sendPushToAll({

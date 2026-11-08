@@ -764,6 +764,36 @@ body{background-color:#050505}
 }
 @media(prefers-reduced-motion:reduce){.hero-emblem,.screen.active{animation:none!important}}
 
+
+/* ===== NOWA NAWIGACJA I CENTRUM MDP ===== */
+.bottom-nav{padding:7px 10px calc(8px + env(safe-area-inset-bottom))}
+.nav-inner{gap:5px;overflow:visible;justify-content:space-between}
+.bottom-nav .nav-btn{flex:1 1 0;min-width:0;height:58px;padding:5px 2px;font-size:10px}
+.bottom-nav .nav-btn b{font-size:20px}
+.home-quick-grid,.more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0 20px}
+.home-quick-card,.more-tile{min-width:0;text-align:left;padding:14px;border:1px solid #303943;border-radius:17px;background:linear-gradient(145deg,#1a2026,#111519);color:#f5f7f8;display:flex;flex-direction:column;gap:5px}
+.home-quick-card>span,.more-tile>span{font-size:23px}
+.home-quick-card b,.more-tile b{font-size:14px}
+.home-quick-card small,.more-tile small{font-size:11px;color:#9ba4ad;line-height:1.35}
+.home-quick-card:active,.more-tile:active{transform:scale(.97)}
+.more-note{margin-top:16px}
+.volvo-hero{position:relative;overflow:hidden;padding:24px 20px;border:1px solid #59242a;border-radius:23px;background:radial-gradient(circle at 90% 10%,rgba(221,28,38,.28),transparent 42%),linear-gradient(135deg,#171b20,#0c0e11 70%);margin-bottom:16px}
+.volvo-kicker{font-size:10px;letter-spacing:1.8px;color:#c0a5a7;font-weight:800}
+.volvo-hero h1{font-size:clamp(30px,8vw,42px);line-height:1;margin:12px 0 7px;letter-spacing:-1px}
+.volvo-hero h1 span{color:#f0444b}
+.volvo-hero p{margin:0;color:#c3c8cd}
+.volvo-mark{display:inline-block;margin-top:18px;padding:7px 10px;border:1px solid #743038;border-radius:8px;color:#fff;font-size:11px;font-weight:900;letter-spacing:1.5px}
+.volvo-spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.volvo-spec{padding:15px;border:1px solid #303943;border-radius:16px;background:linear-gradient(145deg,#1a2026,#111519);display:grid;gap:4px}
+.volvo-spec>span{font-size:19px}.volvo-spec strong{font-size:22px}.volvo-spec small{color:#9ba4ad;font-size:11px}
+.volvo-info p{line-height:1.55}
+.volvo-locker-list{display:grid;gap:8px;margin-top:14px}
+.volvo-locker-list>div{display:grid;grid-template-columns:34px 1fr;gap:2px 9px;align-items:center;padding:11px;border:1px solid #303943;border-radius:12px;background:#101418}
+.volvo-locker-list>div>b{grid-row:span 2;color:#f0444b;font-size:14px}
+.volvo-locker-list>div>span{font-size:13px;font-weight:750}
+.volvo-locker-list>div>small{font-size:10px;color:#9ba4ad}
+@media(max-width:360px){.bottom-nav .nav-btn{font-size:9px}.bottom-nav .nav-btn b{font-size:18px}.home-quick-grid,.more-grid{gap:8px}.home-quick-card,.more-tile{padding:11px}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -839,6 +869,12 @@ body{background-color:#050505}
       <div class="hero-foot"><span><b>01</b> RAZEM</span><span><b>02</b> ROZWÓJ</span><span><b>03</b> PASJA</span></div>
     </div>
     <div class="home-signature"><span class="signature-mark">W</span><div><b>WIESIÓŁKA</b><small>NASZA DRUŻYNA · NASZA SIŁA</small></div><span class="signature-line"></span><span class="signature-status"><i></i> MDP</span></div>
+    <div class="home-quick-grid">
+      <button class="home-quick-card" type="button" onclick="openScreen('eventsScreen')"><span>📅</span><b>Zbiórki</b><small>Terminy i obecność</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('newspapersScreen')"><span>📰</span><b>Gazety</b><small>Kolportaż Echo Łaz</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('volvoScreen')"><span>🚒</span><b>Nasze Volvo</b><small>Samochód i wyposażenie</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('moreScreen')"><span>☰</span><b>Więcej</b><small>Pozostałe funkcje</small></button>
+    </div>
 
     <div class="section-title"><h2>Najbliższe zbiórki</h2><small id="eventCount"></small></div>
     <div id="homeEvents"></div>
@@ -869,9 +905,11 @@ body{background-color:#050505}
       <div class="actions" style="justify-content:center">
         <button class="btn green" type="button" id="timingStartBtn" onclick="startTiming()">▶ Start</button>
         <button class="btn outline" type="button" id="timingStopBtn" onclick="stopTiming()" disabled>■ Stop</button>
+        <button class="btn yellow" type="button" id="timingSplitBtn" onclick="recordTimingSplit()" disabled>＋ Międzyczas</button>
         <button class="btn outline" type="button" onclick="resetTiming()">↺ Reset</button>
       </div>
-      <p class="muted">Reset dotyczy tylko bieżącego pomiaru. Zapisane wyniki pozostają w historii.</p>
+      <div id="timingSplitsList" class="muted" style="margin:10px 0"></div>
+      <p class="muted">Międzyczasy zapisują kolejne odcinki biegu lub ćwiczenia. Reset dotyczy tylko bieżącego pomiaru — zapisane wyniki pozostają w historii.</p>
       <form id="timingForm">
         <div class="field"><label>Konkurencja / ćwiczenie</label><input id="timingExercise" required maxlength="120" placeholder="Np. rozwinięcie bojowe"></div>
         <div class="field" id="timingMemberField"><label>Członek MDP</label><select id="timingMember" required></select></div>
@@ -883,6 +921,7 @@ body{background-color:#050505}
     </div>
     <div class="card">
       <h3 id="timingAnalysisTitle">📊 Twoja analiza</h3>
+      <div id="timingAnalysisControls" class="field" style="margin:12px 0"><label for="timingAnalysisFilter">Wybierz konkurencję / ćwiczenie</label><select id="timingAnalysisFilter" onchange="renderTimingResults()"><option value="">Wszystkie ćwiczenia</option></select></div>
       <div id="timingStats" class="stats-grid"><div class="muted">Ładowanie wyników…</div></div>
       <div id="timingHistory" style="margin-top:12px"></div>
     </div>
@@ -939,8 +978,49 @@ body{background-color:#050505}
     <div id="newspaperMemberView"></div>
   </section>
 
+  <section id="volvoScreen" class="screen">
+    <div class="volvo-hero">
+      <span class="volvo-kicker">POJAZD OSP WIESIÓŁKA</span>
+      <h1>VOLVO <span>689[S]15</span></h1>
+      <p>GBA-RT · Volvo FL280</p>
+      <div class="volvo-mark">OSP WIESIÓŁKA</div>
+    </div>
+    <div class="section-title"><h2>Dane samochodu</h2><small>Potwierdzone informacje</small></div>
+    <div class="volvo-spec-grid">
+      <div class="volvo-spec"><span>💧</span><strong>2700 l</strong><small>Woda</small></div>
+      <div class="volvo-spec"><span>🫧</span><strong>300 l</strong><small>Środek pianotwórczy</small></div>
+      <div class="volvo-spec"><span>🚒</span><strong>GBA-RT</strong><small>Rodzaj pojazdu</small></div>
+      <div class="volvo-spec"><span>🔧</span><strong>FL280</strong><small>Model podwozia</small></div>
+    </div>
+    <div class="card volvo-info">
+      <h3>Wyposażenie i skrytki</h3>
+      <p class="muted">Tutaj docelowo znajdzie się interaktywny widok samochodu. Zawartość każdej skrytki dodamy dopiero na podstawie rzeczywistych zdjęć i potwierdzonego spisu — bez zgadywania wyposażenia.</p>
+      <div class="volvo-locker-list">
+        <div><b>01</b><span>Skrytka lewa przednia</span><small>Spis do uzupełnienia</small></div>
+        <div><b>02</b><span>Skrytka lewa tylna</span><small>Spis do uzupełnienia</small></div>
+        <div><b>03</b><span>Skrytka prawa przednia</span><small>Spis do uzupełnienia</small></div>
+        <div><b>04</b><span>Skrytka prawa tylna</span><small>Spis do uzupełnienia</small></div>
+        <div><b>05</b><span>Dach pojazdu</span><small>Spis do uzupełnienia</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="moreScreen" class="screen">
+    <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
+    <div class="more-grid">
+      <button class="more-tile" type="button" onclick="openScreen('timingScreen')"><span>⏱️</span><b>Stoper</b><small>Pomiary i historia wyników</small></button>
+      <button id="quizNavBtn" class="more-tile hidden" type="button" onclick="openScreen('quizScreen')"><span>🧠</span><b>Quizy</b><small>Sprawdź swoją wiedzę</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('newsScreen')"><span>📢</span><b>Ogłoszenia</b><small>Informacje drużyny</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('urgentScreen')"><span>🚨</span><b>Pilne</b><small>Ważne komunikaty</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('reportsScreen')"><span>📝</span><b>Zgłoszenia</b><small>Pomysły i problemy</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('profileScreen')"><span>👤</span><b>Profil</b><small>Twoje konto</small></button>
+      <button id="manageNavBtn" class="more-tile hidden" type="button" onclick="openScreen('manageScreen')"><span>⚙️</span><b>Zarządzanie</b><small>Panel kadry</small></button>
+    </div>
+    <div class="card more-note"><b>Wszystko w jednym miejscu.</b><p class="muted">Zbiórki, obecności i Gazety pozostają bezpośrednio dostępne z dolnego menu.</p></div>
+  </section>
+
   <section id="manageScreen" class="screen">
-    <div class="section-title"><h2>Panel zarządzania</h2></div>
+    <div class="section-title"><h2>${state.role==="admin"?"Panel administratora":"Panel opiekuna"}</h2></div>
 
     <div class="card">
       <h3>➕ Dodaj zbiórkę</h3>
@@ -955,7 +1035,7 @@ body{background-color:#050505}
       </form>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>📢 Dodaj ogłoszenie</h3>
       <form id="newsForm">
         <div class="field"><label>Tytuł</label><input id="newsTitle" required placeholder="Tytuł ogłoszenia"></div>
@@ -965,7 +1045,7 @@ body{background-color:#050505}
     </div>
 
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>🚨 Pilne powiadomienia</h3>
       <p class="muted">Szybko wyślij ważną wiadomość do członków MDP.</p>
       <button class="btn red" type="button" onclick="openScreen('urgentScreen')">Otwórz Pilne</button>
@@ -977,7 +1057,7 @@ body{background-color:#050505}
       <button class="btn outline" type="button" onclick="openScreen('reportsScreen')">Otwórz zgłoszenia</button>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>📰 Kolportaż Echo Łaz</h3>
       <p class="muted">Twórz grupy, przypisuj członków i wpisuj ulice/regiony.</p>
       <form id="newspaperGroupForm">
@@ -1006,7 +1086,7 @@ ul. Przykładowa 2"></textarea></div>
       <div id="newspaperManageList" style="margin-top:16px"></div>
     </div>
 
-    <div class="card" id="quizAdminCard">
+    <div class="card" id="quizAdminCard" data-admin-only>
       <h3>🧠 Quizy MDP</h3>
       <p class="muted">Twórz quizy, edytuj pytania i sprawdzaj wyniki członków. Wyniki zapisują się na serwerze.</p>
       <form id="quizForm">
@@ -1024,7 +1104,7 @@ ul. Przykładowa 2"></textarea></div>
       <div id="quizResults" style="margin-top:16px"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>👥 Członkowie</h3>
       <form id="memberForm" style="margin-bottom:16px">
         <div class="field"><label>Imię</label><input id="memberFirstName" required placeholder="Np. Jan"></div>
@@ -1038,17 +1118,13 @@ ul. Przykładowa 2"></textarea></div>
   </section>
 </main>
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" aria-label="Główne menu">
   <div class="nav-inner">
     <button class="nav-btn active" data-screen="homeScreen"><b>⌂</b>Start</button>
     <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
-    <button class="nav-btn" data-screen="timingScreen"><b>⏱️</b>Stoper</button>
-    <button class="nav-btn hidden" id="quizNavBtn" data-screen="quizScreen"><b>🧠</b>Quiz</button>
-    <button class="nav-btn" data-screen="newsScreen"><b>📢</b>Ogłoszenia</button>
-    <button class="nav-btn" data-screen="urgentScreen"><b>🚨</b>Pilne</button>
     <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
-    <button class="nav-btn" data-screen="reportsScreen"><b>📝</b>Zgłoszenia</button>
-    <button class="nav-btn" data-screen="profileScreen"><b>👤</b>Profil</button>
+    <button class="nav-btn" data-screen="volvoScreen"><b>🚒</b>Volvo</button>
+    <button class="nav-btn" data-screen="moreScreen"><b>☰</b>Więcej</button>
   </div>
 </nav>
 </div>
@@ -1242,7 +1318,7 @@ function renderAll(){
   renderReports();
   if(state.role==="member") renderMemberQuizzes();
   if(["admin","guardian"].includes(state.role)){
-    renderQuizAdmin();
+    if(state.role==="admin")renderQuizAdmin();
     renderManage();
   }
 }
@@ -1360,7 +1436,7 @@ function newsCard(n){
     <h3>📢 ${escapeHtml(title)}</h3>
     ${n.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(n.created_at))}</span></div>`:""}
     <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(body)}</div>
-    ${["admin","guardian"].includes(state.role)?`
+    ${state.role==="admin"?`
       <div class="actions">
         <button class="btn danger" onclick="deleteNews(${Number(n.id)})">Usuń</button>
       </div>`:""}
@@ -1391,9 +1467,9 @@ function renderUrgent(){
     <h3>🚨 ${escapeHtml(x.title||"Pilne powiadomienie")}</h3>
     ${x.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(x.created_at))}</span></div>`:""}
     <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(x.body||"")}</div>
-    ${isStaff()?`<div class="actions"><button class="btn danger" onclick="deleteUrgent(${Number(x.id)})">Usuń</button></div>`:""}
+    ${state.role==="admin"?`<div class="actions"><button class="btn danger" onclick="deleteUrgent(${Number(x.id)})">Usuń</button></div>`:""}
   </article>`).join(""):`<div class="empty">Brak pilnych powiadomień.</div>`;
-  const manage=$("urgentManage"); if(manage)manage.classList.toggle("hidden",!isStaff());
+  const manage=$("urgentManage"); if(manage)manage.classList.toggle("hidden",state.role!=="admin");
 }
 
 async function deleteUrgent(id){
@@ -1487,7 +1563,7 @@ function renderProfile(){
     $("staffProfileArea").innerHTML=`
       <div class="card">
         <h3>Panel ${escapeHtml(roleName(state.role))}</h3>
-        <p class="muted">Masz dostęp do zarządzania zbiórkami, ogłoszeniami i członkami.</p>
+        <p class="muted">${state.role==="admin"?"Masz pełny dostęp do ustawień drużyny, kont członków, quizów i kolportażu.":"Możesz prowadzić zbiórki, sprawdzać obecność całej drużyny i obsługiwać zgłoszenia. Ustawienia kont i funkcje administratora są niedostępne."}</p>
         <button class="btn red" onclick="openScreen('manageScreen')">Otwórz panel zarządzania</button>
       </div>
       <div class="card">
@@ -2362,7 +2438,7 @@ async function removeUniformMember(id){
 
 function renderManage(){
   const members=state.data.members || [];
-  $("membersManage").innerHTML=members.length ? members.map(m=>`
+  $("membersManage").innerHTML=state.role==="admin" && members.length ? members.map(m=>`
     <div class="card" style="margin:8px 0;background:#101010">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
         <div>
@@ -2404,7 +2480,7 @@ function collectQuizForm(){
   return cards.map((card,i)=>({id:`q${i+1}`,text:card.querySelector('.quiz-q-text').value.trim(),options:[...card.querySelectorAll('.quiz-q-option')].map(x=>x.value.trim()),correctIndex:Number(card.querySelector('.quiz-q-correct').value)}));
 }
 async function renderQuizAdmin(){
-  if(!['admin','guardian'].includes(state.role))return;
+  if(state.role!=='admin')return;
   try{
     staffQuizCache=await api('/api/quizzes');
     const list=$('quizAdminList'),results=$('quizResults');if(!list||!results)return;
@@ -2718,7 +2794,9 @@ function openScreen(id){
   const screen=$(id);
   if(screen)screen.classList.add("active");
 
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));
+  const primaryScreens=["homeScreen","eventsScreen","newspapersScreen","volvoScreen"];
+  const activeNav=primaryScreens.includes(id)?id:"moreScreen";
+  document.querySelectorAll(".bottom-nav .nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===activeNav));
 
   if(id==="manageScreen" && !["admin","guardian"].includes(state.role)){
     openScreen("homeScreen");return;
@@ -2752,18 +2830,9 @@ function updateUIForRole(){
   const reportBtn=document.querySelector('[data-screen="reportsScreen"]');
   const quizBtn=document.getElementById("quizNavBtn");
   if(quizBtn) quizBtn.classList.toggle("hidden",state.role!=="member");
-
-  if(["admin","guardian"].includes(state.role)){
-    if(!manageBtn){
-      const nav=document.querySelector(".nav-inner");
-      const b=document.createElement("button");
-      b.className="nav-btn";
-      b.dataset.screen="manageScreen";
-      b.innerHTML="<b>⚙</b>Zarządzanie";
-      b.onclick=()=>openScreen("manageScreen");
-      nav.appendChild(b);
-    }else manageBtn.classList.remove("hidden");
-  }
+  document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
+  const manageTile=document.getElementById("manageNavBtn");
+  if(manageTile)manageTile.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
 }
 
 async function login(role,code,firstName,lastName){
@@ -2851,6 +2920,7 @@ $("logoutBtn").addEventListener("click",()=>{
 let timingStartedAt = 0;
 let timingElapsedMs = 0;
 let timingInterval = null;
+let timingSplits = [];
 let timingResults = [];
 let selectedTimingMemberId = null;
 
@@ -2868,18 +2938,31 @@ function startTiming(){
   timingStartedAt=performance.now();
   $("timingStartBtn").disabled=true;$("timingStopBtn").disabled=false;
   if(timingInterval)clearInterval(timingInterval);
-  timingInterval=setInterval(paintTimingClock,20);paintTimingClock();
+  timingInterval=setInterval(paintTimingClock,20);$("timingSplitBtn").disabled=false;paintTimingClock();
 }
 function stopTiming(){
   if(!timingStartedAt)return;
   timingElapsedMs+=performance.now()-timingStartedAt;timingStartedAt=0;
   if(timingInterval)clearInterval(timingInterval);timingInterval=null;
-  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;paintTimingClock();
+  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;$("timingSplitBtn").disabled=true;paintTimingClock();
 }
 function resetTiming(){
   if(timingInterval)clearInterval(timingInterval);timingInterval=null;
-  timingStartedAt=0;timingElapsedMs=0;
-  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;paintTimingClock();
+  timingStartedAt=0;timingElapsedMs=0;timingSplits=[];
+  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;$("timingSplitBtn").disabled=true;renderTimingSplits();paintTimingClock();
+}
+function recordTimingSplit(){
+  if(!timingStartedAt)return;
+  const cumulative=Math.round(currentTimingMs());
+  const previous=timingSplits.length?timingSplits[timingSplits.length-1].cumulative_ms:0;
+  if(cumulative<=previous)return;
+  const index=timingSplits.length+1;
+  timingSplits.push({label:`Odcinek ${index}`,cumulative_ms:cumulative,segment_ms:cumulative-previous});
+  renderTimingSplits();
+}
+function renderTimingSplits(){
+  const root=$("timingSplitsList");if(!root)return;
+  root.innerHTML=timingSplits.length?`<b>Międzyczasy:</b> ${timingSplits.map(s=>`${escapeHtml(s.label)}: ${formatTiming(s.segment_ms)} (łącznie ${formatTiming(s.cumulative_ms)})`).join(" · ")}`:"Międzyczasy: jeszcze nie zapisano żadnego odcinka.";
 }
 function renderTimingMemberOptions(){
   const sel=$("timingMember");if(!sel)return;
@@ -2915,8 +2998,16 @@ function renderTimingResults(){
   const analysisHeading=$("timingAnalysisTitle");
   const staff=["admin","guardian"].includes(state.role);
   if(analysisHeading) analysisHeading.textContent=state.role==="member"?"📊 Twoja analiza":"📊 Analiza wyników drużyny";
-  const exercise=$("timingExercise")?.value.trim();
-  let rows=exercise?timingResults.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):timingResults;
+  const memberBase=state.role==="member"?timingResults.filter(r=>Number(r.member_id)===Number(state.memberId)):timingResults;
+  const filter=$("timingAnalysisFilter");
+  if(filter){
+    const selected=filter.value;
+    const names=[...new Set(memberBase.map(r=>String(r.exercise||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pl"));
+    filter.innerHTML=`<option value="">Wszystkie ćwiczenia</option>${names.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}`;
+    if(names.includes(selected))filter.value=selected;
+  }
+  const exercise=filter?.value||"";
+  let rows=exercise?memberBase.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):memberBase;
   if(state.role==="member") rows=rows.filter(r=>Number(r.member_id)===Number(state.memberId));
   const validRows=rows.filter(r=>r.valid!==false && r.valid!==0);
   const times=validRows.map(r=>Number(r.time_ms)).filter(Number.isFinite);
@@ -2925,7 +3016,7 @@ function renderTimingResults(){
   $("timingStats").innerHTML=`<div class="stat"><b>${times.length}</b><span>Pomiarów${exercise?" w tej konkurencji":" łącznie"}</span></div><div class="stat"><b>${best===null?"—":formatTiming(best)}</b><span>Najlepszy czas</span></div><div class="stat"><b>${avg===null?"—":formatTiming(avg)}</b><span>Średni czas</span></div><div class="stat"><b>${validRows.reduce((n,r)=>n+Number(r.errors||0),0)}</b><span>Błędy łącznie</span></div>`;
   if(!rows.length){
     selectedTimingMemberId=null;
-    $("timingHistory").innerHTML='<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';
+    $("timingHistory").innerHTML=state.role==="member"?'<div class="empty">Nie ma jeszcze Twoich zapisanych wyników. Po treningu kadra może zapisać pomiar, a tutaj zobaczysz historię i analizę postępów.</div>':'<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';
     return;
   }
   const renderRecord=r=>{
@@ -2936,6 +3027,7 @@ function renderTimingResults(){
         <b style="font-size:23px;white-space:nowrap">${formatTiming(r.time_ms)}</b>
       </div>
       <div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span><span class="badge">${valid?"Ważny":"Unieważniony"}</span></div>
+      ${Array.isArray(r.splits)&&r.splits.length?`<div class="card" style="margin:9px 0;padding:10px;background:#101820"><b>Międzyczasy</b>${r.splits.map((s,i)=>`<div class="meta"><span>${escapeHtml(s.label||`Odcinek ${i+1}`)}</span><span class="badge">Odcinek: ${formatTiming(s.segment_ms)}</span><span class="badge">Łącznie: ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}</div>`:""}
       ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
       ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
       ${staff&&valid?`<button class="btn danger" type="button" onclick="invalidateTimingResult(${Number(r.id)})">Unieważnij wynik</button>`:""}
@@ -2957,7 +3049,18 @@ function renderTimingResults(){
     return;
   }
   if(state.role==="member"){
-    $("timingHistory").innerHTML=`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
+    const ordered=[...validRows].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const latest=ordered[ordered.length-1]||null, previous=ordered[ordered.length-2]||null;
+    const delta=latest&&previous?Number(latest.time_ms)-Number(previous.time_ms):null;
+    const deltaText=delta===null?"Brak wcześniejszej próby":delta<0?`Szybciej o ${formatTiming(Math.abs(delta))}`:delta>0?`Wolniej o ${formatTiming(delta)}`:"Taki sam czas";
+    const splitRows=ordered.filter(r=>Array.isArray(r.splits)&&r.splits.length);
+    const recent=ordered.slice(-6);
+    const progress=recent.length?`<div class="card" style="margin-top:12px"><h3>📈 Ostatnie próby</h3>${recent.map(r=>{const pct=best?Math.max(8,Math.round(best/Number(r.time_ms)*100)):0;return `<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>${escapeHtml(new Date(r.created_at).toLocaleDateString("pl-PL"))}</span><b>${formatTiming(r.time_ms)}</b></div><div style="height:8px;background:#252b32;border-radius:99px;overflow:hidden;margin-top:5px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#b71922,#ff4a52);border-radius:99px"></div></div></div>`}).join("")}</div>`:"";
+    const lastSplits=latest&&Array.isArray(latest.splits)?latest.splits:[];
+    const fastest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)<=Number(b.segment_ms)?a:b):null;
+    const slowest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)>=Number(b.segment_ms)?a:b):null;
+    const analysis=`<div class="card" style="margin-top:12px"><h3>🏃 Analiza biegu i ćwiczenia</h3><div class="stats"><div class="stat"><strong>${latest?formatTiming(latest.time_ms):"—"}</strong><span>Ostatnia próba</span></div><div class="stat"><strong>${delta===null?"—":delta===0?"0":formatTiming(Math.abs(delta))}</strong><span>${delta===null?"Porównanie":delta<0?"Poprawa":delta>0?"Różnica — wolniej":"Bez zmiany"}</span></div><div class="stat"><strong>${splitRows.length}</strong><span>Prób z międzyczasami</span></div></div><p class="muted" style="margin:10px 0">${escapeHtml(deltaText)} względem poprzedniego ważnego pomiaru w wybranej konkurencji.</p>${lastSplits.length?`<h4>Międzyczasy z ostatniej próby</h4>${lastSplits.map((s,i)=>`<div class="calendar-event-row"><b>${escapeHtml(s.label||`Odcinek ${i+1}`)}</b><span>${formatTiming(s.segment_ms)} · łącznie ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}<div class="meta"><span class="badge">Najszybszy odcinek: ${escapeHtml(fastest.label||"—")} · ${formatTiming(fastest.segment_ms)}</span><span class="badge">Najwolniejszy: ${escapeHtml(slowest.label||"—")} · ${formatTiming(slowest.segment_ms)}</span></div>`:`<div class="notice">Nie zapisano jeszcze międzyczasów. Opiekun może zmierzyć kolejne odcinki przyciskiem „Międzyczas” podczas pomiaru. Wtedy zobaczysz, na którym fragmencie biegu przyspieszasz lub zwalniasz.</div>`}<p class="muted">Tempo na kilometr i prędkość pokażemy dopiero wtedy, gdy pomiar będzie miał przypisany dystans — nie zgadujemy odległości.</p></div>`;
+    $("timingHistory").innerHTML=analysis+progress+`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
     return;
   }
   const grouped=new Map();
@@ -2998,7 +3101,7 @@ $("timingForm").addEventListener("submit",async e=>{
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
   try{
-    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors:Number($("timingErrors").value),penalty_points:Number($("timingPenalties").value),notes:$("timingNotes").value.trim()})});
+    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors:Number($("timingErrors").value),penalty_points:Number($("timingPenalties").value),notes:$("timingNotes").value.trim(),splits:timingSplits})});
     toast("Wynik zapisany.");resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
