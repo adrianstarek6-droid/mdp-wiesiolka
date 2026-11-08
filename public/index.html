@@ -672,6 +672,98 @@ input:focus,textarea:focus,select:focus{border-color:#f12b38!important;box-shado
  .btn:active{transform:scale(.97)}
 }
 
+
+/* ===== PREMIUM IDENTITY / MDP WIESIÓŁKA ===== */
+:root{--premium-red:#f21c2b;--premium-deep:#710812;--premium-line:rgba(255,66,78,.24);--premium-glass:rgba(255,255,255,.035)}
+html{scrollbar-color:#6e111a #050505}
+body{background-color:#050505}
+.app{max-width:1040px}
+.topbar{height:78px}
+.brand{gap:15px}
+.brand b{font-size:15px;font-weight:950;letter-spacing:.5px}
+.brand small{display:block;margin-top:4px;font-size:9px;letter-spacing:2px;color:#ff5963}
+.logo{width:49px;height:51px;border-radius:15px 15px 18px 18px;font-size:12px;font-weight:1000;letter-spacing:1px}
+.hero{
+ position:relative;display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;
+ min-height:330px!important;padding:25px 27px 20px!important;margin:10px 0 18px!important;
+ overflow:hidden;border-radius:28px!important;border:1px solid rgba(255,70,82,.42)!important;
+ background:radial-gradient(ellipse at 82% 44%,rgba(214,14,31,.24),transparent 34%),linear-gradient(125deg,#101012 0%,#090809 47%,#25070b 100%)!important;
+ box-shadow:0 28px 75px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08),0 0 42px rgba(183,0,17,.11)!important;
+}
+.hero:before{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.055);border-radius:21px;pointer-events:none;z-index:-1}
+.hero:after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#ff747b,#f21c2b 55%,#62000a);box-shadow:0 0 25px rgba(242,28,43,.8);z-index:-1}
+.hero-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:2}
+.hero-topline>span:first-child{display:flex;align-items:center;gap:8px;color:#ff6972;font-size:10px;font-weight:950;letter-spacing:2.3px}
+.hero-topline i,.signature-status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3442;box-shadow:0 0 12px #ff3442}
+.hero-edition{padding:7px 10px;border:1px solid rgba(255,90,100,.25);border-radius:99px;color:#bba5a7;font-size:8px;font-weight:900;letter-spacing:1.3px;background:rgba(0,0,0,.22)}
+.hero-copy{position:relative;z-index:2;margin:26px 0 20px;max-width:68%}
+.hero-overline{display:block;color:#ff6972;font-size:9px;font-weight:950;letter-spacing:2px;margin-bottom:12px}
+.hero h1{max-width:none!important;margin:0 0 10px!important;font-size:clamp(38px,8vw,58px)!important;line-height:.98!important;letter-spacing:-2.8px!important;font-weight:1000!important}
+.hero h1:before{display:none!important}
+.hero h1 span{display:block;color:#ff3342!important;text-shadow:0 0 28px rgba(255,31,48,.22)}
+.hero p{font-size:13px!important;line-height:1.6!important;color:#c7bfc0!important;max-width:330px}
+.hero-emblem{position:absolute;right:5%;top:50%;transform:translateY(-51%);width:clamp(112px,31vw,205px);color:#ff3544;opacity:.9;filter:drop-shadow(0 0 24px rgba(242,28,43,.28));z-index:1;animation:emblemFloat 6s ease-in-out infinite}
+.hero-emblem:before{content:"";position:absolute;inset:10%;border-radius:50%;background:rgba(227,14,32,.12);filter:blur(30px);z-index:-1}
+.hero-emblem svg{display:block;width:100%;height:auto}
+.hero-foot{display:flex;gap:clamp(12px,4vw,35px);padding-top:14px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:2}
+.hero-foot span{font-size:9px;letter-spacing:1.4px;font-weight:900;color:#a99b9d}
+.hero-foot b{color:#ff4a56;margin-right:5px;font-size:9px}
+.home-signature{display:flex;align-items:center;gap:11px;padding:0 5px 12px;margin-bottom:22px}
+.signature-mark{width:35px;height:35px;display:grid;place-items:center;border:1px solid #70202a;background:linear-gradient(145deg,#3b0b11,#100809);clip-path:polygon(50% 0,94% 16%,87% 75%,50% 100%,13% 75%,6% 16%);font-weight:1000;color:#ff5a64}
+.home-signature>div{display:flex;flex-direction:column;gap:3px}
+.home-signature>div b{font-size:10px;letter-spacing:1.8px}
+.home-signature>div small{font-size:8px;letter-spacing:1.15px;color:#8f7e81}
+.signature-line{height:1px;flex:1;background:linear-gradient(90deg,#4b171e,transparent)}
+.signature-status{display:flex;align-items:center;gap:6px;color:#ad999c;font-size:8px;font-weight:900;letter-spacing:1.5px}
+.section-title{margin:28px 2px 13px!important;border:0!important;padding:0 0 0 13px!important;position:relative}
+.section-title:before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:3px;border-radius:5px;background:linear-gradient(180deg,#ff6872,#a4000d);box-shadow:0 0 12px rgba(255,35,49,.5)}
+.section-title h2{font-size:18px!important;font-weight:950!important;letter-spacing:-.5px}
+.section-title small{font-size:10px;letter-spacing:.6px}
+.card{border-radius:20px!important;transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease}
+.card h3{font-weight:900}
+.btn{min-height:45px;border-radius:13px!important}
+.bottom-nav{padding-top:10px!important}
+.nav-btn{height:64px!important;border-radius:15px!important;transition:transform .2s ease,background .2s ease,border-color .2s ease}
+.nav-btn b{display:block;font-size:21px!important;margin-bottom:2px}
+.nav-btn.active{position:relative}
+.nav-btn.active:after{content:"";position:absolute;top:-10px;left:25%;right:25%;height:2px;border-radius:4px;background:#ff3442;box-shadow:0 0 12px #ff3442}
+.login-wrap{min-height:100svh!important;display:flex;align-items:center;justify-content:center;padding:28px 18px!important;position:relative;overflow:hidden}
+.login-wrap:before,.login-wrap:after{content:"";position:fixed;width:310px;height:310px;border:1px solid rgba(255,55,68,.09);border-radius:50%;pointer-events:none}
+.login-wrap:before{top:-175px;right:-140px;box-shadow:0 0 0 24px rgba(255,40,55,.018),0 0 0 50px rgba(255,40,55,.012)}
+.login-wrap:after{bottom:-220px;left:-170px;width:390px;height:390px}
+.login-card{width:min(100%,470px)!important;padding:30px!important;border-radius:28px!important;position:relative;z-index:1}
+.login-brandline{display:flex;align-items:center;gap:15px;padding-bottom:23px;border-bottom:1px solid rgba(255,255,255,.09)}
+.login-logo{width:62px;height:68px;flex:0 0 62px;display:grid;place-items:center;position:relative;clip-path:polygon(50% 0,94% 16%,87% 75%,50% 100%,13% 75%,6% 16%)!important;border-radius:0!important;font-size:14px;font-weight:1000;letter-spacing:1px}
+.login-logo i{position:absolute;inset:5px;border:1px solid rgba(255,255,255,.35);clip-path:polygon(50% 0,94% 16%,87% 75%,50% 100%,13% 75%,6% 16%)}
+.login-brandcopy{display:flex;flex-direction:column;gap:5px}
+.login-brandcopy small{font-size:8px;letter-spacing:1.5px;color:#ff6972;font-weight:900}
+.login-brandcopy b{font-size:22px;letter-spacing:1.5px;font-weight:1000}
+.login-brandcopy span{font-size:8px;letter-spacing:1.5px;color:#9d8d90}
+.login-intro{padding:26px 0 20px}
+.login-overline{font-size:8px;letter-spacing:1.7px;color:#ff626c;font-weight:950}
+.login-intro h1{font-size:34px!important;line-height:1.03;letter-spacing:-1.4px;margin:10px 0!important}
+.login-intro h1 em{font-style:normal;color:#ff3442}
+.login-intro p{font-size:12px;line-height:1.6;color:#aa9b9d!important}
+.login-card .role-tabs{margin-top:3px}
+.login-card form{margin-top:16px}
+.login-card form>.btn{margin-top:5px}
+@keyframes emblemFloat{0%,100%{transform:translateY(-51%) rotate(-2deg)}50%{transform:translateY(-55%) rotate(2deg)}}
+@keyframes premiumEnter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.screen.active{animation:premiumEnter .38s cubic-bezier(.2,.8,.2,1) both}
+@media(max-width:430px){
+ .hero{min-height:315px!important;padding:21px 19px 17px!important;border-radius:23px!important}
+ .hero-copy{max-width:76%;margin:27px 0 19px}
+ .hero h1{font-size:39px!important;letter-spacing:-2px!important}
+ .hero-emblem{right:1%;width:36vw;opacity:.78}
+ .hero-foot{gap:11px}
+ .hero-foot span,.hero-foot b{font-size:8px;letter-spacing:.8px}
+ .hero-edition{font-size:7px;letter-spacing:.8px;padding:6px 7px}
+ .home-signature{margin-bottom:18px}
+ .login-card{padding:23px!important}
+ .login-intro h1{font-size:31px!important}
+}
+@media(prefers-reduced-motion:reduce){.hero-emblem,.screen.active{animation:none!important}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -680,9 +772,11 @@ input:focus,textarea:focus,select:focus{border-color:#f12b38!important;box-shado
 <body>
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">MDP</div>
-    <h1>MDP Wiesiółka</h1>
-    <p>Gotowi. Czujni. Razem.</p>
+    <div class="login-brandline">
+      <div class="login-logo"><span>MDP</span><i></i></div>
+      <div class="login-brandcopy"><small>OFICJALNA APLIKACJA DRUŻYNY</small><b>WIESIÓŁKA</b><span>GOTOWI. CZUJNI. RAZEM.</span></div>
+    </div>
+    <div class="login-intro"><span class="login-overline">MŁODZIEŻOWA DRUŻYNA POŻARNICZA</span><h1>Witaj w <em>naszej</em><br> drużynie.</h1><p>Zaloguj się, aby być na bieżąco z życiem MDP Wiesiółka.</p></div>
 
     <div class="role-tabs">
       <button type="button" class="role-tab active" data-role="member">Członek</button>
@@ -727,9 +821,24 @@ input:focus,textarea:focus,select:focus{border-color:#f12b38!important;box-shado
 <main>
   <section id="homeScreen" class="screen active">
     <div class="hero">
-      <h1>MDP <span>Wiesiółka</span></h1>
-      <p>Informacje, zbiórki, obecność i najważniejsze sprawy naszej drużyny.</p>
+      <div class="hero-topline"><span><i></i> MDP WIESIÓŁKA</span><span class="hero-edition">OFICJALNA APLIKACJA</span></div>
+      <div class="hero-emblem" aria-hidden="true">
+        <svg viewBox="0 0 180 200" role="img">
+          <path d="M90 7 163 34 153 119Q145 163 90 190 35 163 27 119L17 34Z" fill="none" stroke="currentColor" stroke-width="3"/>
+          <path d="M90 19 151 42 142 116Q135 153 90 176 45 153 38 116L29 42Z" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"/>
+          <path d="M90 47c-8 17-25 26-25 48 0 17 11 29 25 29s25-12 25-29c0-13-8-23-15-31 0 13-5 18-10 21 2-17-2-28 0-38Z" fill="currentColor"/>
+          <path d="M57 139h66" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <text x="90" y="158" text-anchor="middle" fill="currentColor" font-size="11" font-weight="900" letter-spacing="3">MDP</text>
+        </svg>
+      </div>
+      <div class="hero-copy">
+        <span class="hero-overline">MŁODZIEŻOWA DRUŻYNA POŻARNICZA</span>
+        <h1>MDP <span>Wiesiółka</span></h1>
+        <p>Jedna drużyna. Wspólny cel. Gotowość do działania.</p>
+      </div>
+      <div class="hero-foot"><span><b>01</b> RAZEM</span><span><b>02</b> ROZWÓJ</span><span><b>03</b> PASJA</span></div>
     </div>
+    <div class="home-signature"><span class="signature-mark">W</span><div><b>WIESIÓŁKA</b><small>NASZA DRUŻYNA · NASZA SIŁA</small></div><span class="signature-line"></span><span class="signature-status"><i></i> MDP</span></div>
 
     <div class="section-title"><h2>Najbliższe zbiórki</h2><small id="eventCount"></small></div>
     <div id="homeEvents"></div>
