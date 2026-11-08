@@ -393,6 +393,34 @@ async function initDb() {
     );
 
 
+    -- Tabele additive modułu turniejowego; dotychczasowe quizy i wyniki pozostają nietknięte.
+    CREATE TABLE IF NOT EXISTS mdp_tournaments (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE RESTRICT,
+      questions_snapshot JSONB NOT NULL DEFAULT '[]'::jsonb,
+      status TEXT NOT NULL DEFAULT 'lobby' CHECK (status IN ('lobby','running','finished')),
+      join_open BOOLEAN NOT NULL DEFAULT TRUE,
+      created_by_role TEXT NOT NULL DEFAULT 'admin',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      started_at TIMESTAMPTZ,
+      finished_at TIMESTAMPTZ
+    );
+    CREATE TABLE IF NOT EXISTS mdp_tournament_players (
+      id SERIAL PRIMARY KEY,
+      tournament_id INTEGER NOT NULL REFERENCES mdp_tournaments(id) ON DELETE RESTRICT,
+      member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+      member_name TEXT NOT NULL,
+      joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      answers JSONB NOT NULL DEFAULT '[]'::jsonb,
+      score INTEGER NOT NULL DEFAULT 0,
+      total INTEGER NOT NULL DEFAULT 0,
+      submitted_at TIMESTAMPTZ,
+      UNIQUE(tournament_id,member_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_tournament_players_tournament
+      ON mdp_tournament_players(tournament_id,joined_at);
+
     CREATE TABLE IF NOT EXISTS mdp_timing_results (
       id SERIAL PRIMARY KEY,
       member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -419,23 +447,49 @@ async function initDb() {
   await pool.query("ALTER TABLE quiz_submissions ADD COLUMN IF NOT EXISTS questions_snapshot JSONB NOT NULL DEFAULT '[]'::jsonb");
   await pool.query("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS questions_per_round INTEGER NOT NULL DEFAULT 10");
 
+  // Wąska korekta istniejących quizów startowych: tylko pytania o pojemność Volvo.
+  // Pozostałe pytania, quizy użytkowników i wszystkie wyniki pozostają bez zmian.
+  await pool.query(`
+    UPDATE quizzes q SET questions=(
+      SELECT jsonb_agg(CASE
+        WHEN z.item->>'id'='q4' THEN jsonb_set(jsonb_set(z.item,'{options}','["2000 litrów","2500 litrów","2700 litrów","3500 litrów"]'::jsonb),'{correctIndex}','2'::jsonb)
+        WHEN z.item->>'id'='q8' THEN jsonb_set(jsonb_set(z.item,'{options}','["Zbiornik 1600 l i autopompa 300 l/min","Zbiornik 300 l i autopompa 1600 l/min","Samochód lekki z napędem 4×4","Zbiornik wody 2700 l i środek pianotwórczy 300 l"]'::jsonb),'{correctIndex}','3'::jsonb)
+        WHEN z.item->>'id'='q14' THEN jsonb_set(jsonb_set(z.item,'{options}','["Woda 2000 l, środek pianotwórczy 200 l","Woda 2700 l, środek pianotwórczy 300 l","Woda 3500 l, środek pianotwórczy 500 l","Woda 1600 l, środek pianotwórczy 300 l"]'::jsonb),'{correctIndex}','1'::jsonb)
+        ELSE z.item END ORDER BY z.ord)
+      FROM jsonb_array_elements(q.questions) WITH ORDINALITY AS z(item,ord)
+    )
+    WHERE q.title='Wyposażenie Volvo 689[S]15 — quiz MDP'
+      AND EXISTS (SELECT 1 FROM jsonb_array_elements(q.questions) AS z(item) WHERE z.item->>'id' IN ('q4','q8','q14'))
+  `);
+  await pool.query(`
+    UPDATE quizzes q SET questions=(
+      SELECT jsonb_agg(CASE WHEN z.item->>'id'='pp11'
+        THEN jsonb_set(jsonb_set(z.item,'{options}','["2000 litrów","2700 litrów","3500 litrów","5000 litrów"]'::jsonb),'{correctIndex}','1'::jsonb)
+        ELSE z.item END ORDER BY z.ord)
+      FROM jsonb_array_elements(q.questions) WITH ORDINALITY AS z(item,ord)
+    )
+    WHERE q.title='MDP Wiesiółka — pierwsza pomoc i Volvo'
+      AND EXISTS (SELECT 1 FROM jsonb_array_elements(q.questions) AS z(item) WHERE z.item->>'id'='pp11')
+  `);
+
+
   // Jednorazowo dodajemy quiz startowy. Nie czyścimy ani nie nadpisujemy istniejących quizów ani wyników.
   const starterQuizTitle = 'Wyposażenie Volvo 689[S]15 — quiz MDP';
   const starterQuestions = [
     {id:'q1',text:'Jaki model samochodu pożarniczego ma OSP Wiesiółka?',options:['Volvo FL 280 4×4','Scania P 320 4×2','MAN TGM 18.340','Mercedes-Benz Atego 1329'],correctIndex:0},
     {id:'q2',text:'Jaki numer operacyjny ma nasze Volvo?',options:['689[S]16','689[S]15','689[S]19','689[S]05'],correctIndex:1},
     {id:'q3',text:'Jaka firma wykonała zabudowę naszego Volvo?',options:['Stolarczyk','WISS','Bocar','Szczęśniak'],correctIndex:2},
-    {id:'q4',text:'Jaka jest pojemność zbiornika wody w naszym Volvo?',options:['2000 litrów','2500 litrów','3500 litrów','3000 litrów'],correctIndex:3},
+    {id:'q4',text:'Jaka jest pojemność zbiornika wody w naszym Volvo?',options:['2000 litrów','2500 litrów','2700 litrów','3500 litrów'],correctIndex:2},
     {id:'q5',text:'Jaka jest pojemność zbiornika środka pianotwórczego?',options:['300 litrów','100 litrów','200 litrów','500 litrów'],correctIndex:0},
     {id:'q6',text:'Jaka jest wydajność autopompy podawana dla naszego Volvo?',options:['800 l/min','1600 l/min','2400 l/min','3200 l/min'],correctIndex:1},
     {id:'q7',text:'Przy jakim ciśnieniu podawana jest wydajność autopompy 1600 l/min?',options:['6 bar','10 bar','8 bar','12 bar'],correctIndex:2},
-    {id:'q8',text:'Co oznacza oznaczenie GBA 3/16 w przypadku naszego samochodu?',options:['Zbiornik 1600 l i autopompa 300 l/min','Zbiornik 300 l i autopompa 1600 l/min','Samochód lekki z napędem 4×4','Zbiornik 3000 l i autopompa 1600 l/min'],correctIndex:3},
+    {id:'q8',text:'Który zestaw danych odpowiada naszemu Volvo?',options:['Zbiornik 1600 l i autopompa 300 l/min','Zbiornik 300 l i autopompa 1600 l/min','Samochód lekki z napędem 4×4','Zbiornik wody 2700 l i środek pianotwórczy 300 l'],correctIndex:3},
     {id:'q9',text:'Który zestaw składa się wyłącznie z wyposażenia potwierdzonego na naszym Volvo?',options:['Prądownice, węże pożarnicze, radiotelefon i maszt oświetleniowy','Wyciągarka, kamera termowizyjna, dron i agregat','Łódź, ponton, silnik zaburtowy i kamizelki','Piła do betonu, podnośnik koszowy, drabina mechaniczna i wózek'],correctIndex:0},
     {id:'q10',text:'Do czego służy prądownica podczas działań gaśniczych?',options:['Do mierzenia temperatury pomieszczeń','Do kierowania i formowania strumienia wody lub środka gaśniczego','Do ładowania radiotelefonu','Do podnoszenia ciężkich elementów'],correctIndex:1},
     {id:'q11',text:'Do czego przede wszystkim służy radiotelefon strażacki?',options:['Do pomiaru ciśnienia w wężu','Do oświetlania miejsca działań','Do łączności między strażakami i stanowiskami','Do uzupełniania zbiornika wody'],correctIndex:2},
     {id:'q12',text:'Jaki jest główny cel masztu oświetleniowego na samochodzie ratowniczym?',options:['Zwiększanie pojemności zbiornika','Zasilanie autopompy wodą','Holowanie innych pojazdów','Oświetlenie miejsca działań po zmroku lub w słabych warunkach widoczności'],correctIndex:3},
     {id:'q13',text:'Do czego służą węże pożarnicze używane podczas akcji?',options:['Do przesyłania wody lub roztworu środka gaśniczego','Do komunikacji radiowej','Do stabilizowania pojazdu','Do wykrywania gazów'],correctIndex:0},
-    {id:'q14',text:'Która para pojemności jest zgodna z danymi naszego Volvo?',options:['Woda 2000 l, środek pianotwórczy 200 l','Woda 3000 l, środek pianotwórczy 300 l','Woda 3500 l, środek pianotwórczy 500 l','Woda 1600 l, środek pianotwórczy 300 l'],correctIndex:1}
+    {id:'q14',text:'Która para pojemności jest zgodna z danymi naszego Volvo?',options:['Woda 2000 l, środek pianotwórczy 200 l','Woda 2700 l, środek pianotwórczy 300 l','Woda 3500 l, środek pianotwórczy 500 l','Woda 1600 l, środek pianotwórczy 300 l'],correctIndex:1}
   ];
   await pool.query(
     'INSERT INTO quizzes(title,questions,active) SELECT $1,$2::jsonb,TRUE WHERE NOT EXISTS (SELECT 1 FROM quizzes WHERE title=$1)',
@@ -455,7 +509,7 @@ async function initDb() {
       {id:'pp8',text:'Do czego służy prądownica strażacka?',options:['Do mierzenia ciśnienia krwi','Do łączności radiowej','Do oświetlania drogi','Do kierowania strumieniem wody lub środka gaśniczego'],correctIndex:3},
       {id:'pp9',text:'Do czego służy radiotelefon podczas działań?',options:['Do komunikacji między ratownikami i stanowiskami','Do pompowania wody','Do cięcia metalu','Do pomiaru temperatury'],correctIndex:0},
       {id:'pp10',text:'Jaki numer operacyjny ma Volvo OSP Wiesiółka według quizu wyposażenia?',options:['689[S]16','689[S]19','689[S]15','689[S]05'],correctIndex:2},
-      {id:'pp11',text:'Jaka jest pojemność zbiornika wody w Volvo OSP Wiesiółka według quizu wyposażenia?',options:['2000 litrów','3000 litrów','3500 litrów','5000 litrów'],correctIndex:1},
+      {id:'pp11',text:'Jaka jest pojemność zbiornika wody w Volvo OSP Wiesiółka?',options:['2000 litrów','2700 litrów','3500 litrów','5000 litrów'],correctIndex:1},
       {id:'pp12',text:'Co powinien zrobić świadek wypadku, jeśli potrzebna jest pilna pomoc?',options:['Czekać, aż ktoś inny zauważy zdarzenie','Publikować nagranie w internecie','Odejść, jeśli nie zna poszkodowanego','Wezwać służby ratunkowe i przekazać jasne informacje'],correctIndex:3},
       {id:'pp13',text:'Co oznacza skrót RKO?',options:['Resuscytacja krążeniowo-oddechowa','Ratownicza kontrola obiektu','Rozpoznanie kierunku ognia','Rejestracja kontaktów operacyjnych'],correctIndex:0},
       {id:'pp14',text:'Po co strażacy sprawdzają bezpieczeństwo miejsca zdarzenia?',options:['Żeby opóźnić pomoc','Żeby zrobić dokumentację do zdjęć','Żeby nie narażać siebie ani innych na kolejne niebezpieczeństwo','Żeby ustalić, kto jest winny'],correctIndex:2}
@@ -3347,6 +3401,103 @@ function cleanQuizQuestions(value) {
   if (!questions.length || questions.some(q => !q.text || q.options.length !== 4 || q.options.some(o => !o) || !Number.isInteger(q.correctIndex) || q.correctIndex < 0 || q.correctIndex > 3)) return null;
   return questions;
 }
+
+
+/* WIELKI TURNIEJ MDP */
+app.post('/api/tournaments',auth,adminOnly,async(req,res)=>{
+  const title=String(req.body?.title||'').trim().slice(0,120),quizId=Number(req.body?.quizId);
+  if(!title||!Number.isInteger(quizId)||quizId<=0)return res.status(400).json({error:'Podaj nazwę turnieju i wybierz quiz.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(74192026)');
+    const active=await client.query("SELECT id FROM mdp_tournaments WHERE status IN ('lobby','running') LIMIT 1");
+    if(active.rowCount){await client.query('ROLLBACK');return res.status(409).json({error:'Jest już aktywny turniej. Zakończ go przed utworzeniem następnego.'});}
+    const q=await client.query('SELECT id,questions,questions_per_round FROM quizzes WHERE id=$1 AND active=TRUE',[quizId]);
+    if(!q.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'Wybrany quiz nie jest aktywny.'});}
+    const all=Array.isArray(q.rows[0].questions)?q.rows[0].questions:[];
+    if(!all.length){await client.query('ROLLBACK');return res.status(400).json({error:'Wybrany quiz nie ma pytań.'});}
+    const shuffled=all.slice();for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+    const count=Math.max(1,Math.min(Number(q.rows[0].questions_per_round)||10,shuffled.length));
+    const questions=shuffled.slice(0,count).map((x,i)=>({...x,id:String(x.id||'q'+(i+1))}));
+    const created=await client.query("INSERT INTO mdp_tournaments(title,quiz_id,questions_snapshot,status,join_open) VALUES($1,$2,$3::jsonb,'lobby',TRUE) RETURNING id,title,status,join_open,created_at",[title,quizId,JSON.stringify(questions)]);
+    await client.query('COMMIT');res.status(201).json({ok:true,tournament:created.rows[0]});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się utworzyć turnieju.'});}
+  finally{client.release();}
+});
+app.get('/api/tournaments/current',auth,async(req,res)=>{
+  try{
+    const r=await pool.query("SELECT id,title,status,join_open,created_at,started_at,finished_at,questions_snapshot FROM mdp_tournaments ORDER BY CASE WHEN status IN ('lobby','running') THEN 0 ELSE 1 END,id DESC LIMIT 1");
+    const availableQuizzes=isStaff(req)?(await pool.query("SELECT id,title FROM quizzes WHERE active=TRUE ORDER BY title")).rows:[];
+    if(!r.rowCount)return res.json({tournament:null,participants:[],availableQuizzes});
+    const t=r.rows[0],people=(await pool.query("SELECT member_id,member_name,joined_at,submitted_at,score,total FROM mdp_tournament_players WHERE tournament_id=$1 ORDER BY joined_at,id",[t.id])).rows;
+    const me=people.find(p=>Number(p.member_id)===Number(req.memberId))||null;
+    const questions=req.role==='member'&&t.status==='running'&&me&&!me.submitted_at?(t.questions_snapshot||[]).map(q=>({id:String(q.id),text:q.text,options:q.options})):[];
+    const ranking=t.status==='finished'?people.slice().sort((a,b)=>Number(b.score)-Number(a.score)||new Date(a.submitted_at||a.joined_at)-new Date(b.submitted_at||b.joined_at)):[];
+    res.json({
+      tournament:{id:t.id,title:t.title,status:t.status,joinOpen:t.join_open,createdAt:t.created_at,startedAt:t.started_at,finishedAt:t.finished_at,questionCount:(t.questions_snapshot||[]).length},
+      participants:people.map(p=>({memberId:p.member_id,name:p.member_name,joinedAt:p.joined_at,submitted:!!p.submitted_at,...(t.status==='finished'?{score:p.score,total:p.total}:{})})),
+      me:me?{joined:true,submitted:!!me.submitted_at,score:t.status==='finished'?me.score:null,total:t.status==='finished'?me.total:null}:null,
+      questions,ranking,availableQuizzes
+    });
+  }catch(e){console.error(e);res.status(500).json({error:'Nie udało się pobrać turnieju.'});}
+});
+app.post('/api/tournaments/:id/join',auth,async(req,res)=>{
+  if(req.role!=='member')return res.status(403).json({error:'Do lobby mogą dołączać tylko członkowie MDP.'});
+  const id=Number(req.params.id),memberId=Number(req.memberId);
+  if(!Number.isInteger(id)||id<=0||!Number.isInteger(memberId)||memberId<=0)return res.status(400).json({error:'Nieprawidłowy turniej lub członek.'});
+  try{
+    const t=await pool.query("SELECT status,join_open FROM mdp_tournaments WHERE id=$1",[id]);
+    if(!t.rowCount||t.rows[0].status!=='lobby')return res.status(409).json({error:'Ten turniej już się rozpoczął albo został zakończony.'});
+    if(!t.rows[0].join_open)return res.status(409).json({error:'Lobby zostało zamknięte przez administratora.'});
+    const m=req.member,name=(`${m.first_name||''} ${m.last_name||''}`).trim()||'Członek';
+    await pool.query('INSERT INTO mdp_tournament_players(tournament_id,member_id,member_name) VALUES($1,$2,$3) ON CONFLICT(tournament_id,member_id) DO NOTHING',[id,memberId,name]);
+    res.json({ok:true});
+  }catch(e){console.error(e);res.status(500).json({error:'Nie udało się dołączyć do lobby.'});}
+});
+app.post('/api/tournaments/:id/close-lobby',auth,adminOnly,async(req,res)=>{
+  const id=Number(req.params.id);if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy turniej.'});
+  try{const r=await pool.query("UPDATE mdp_tournaments SET join_open=FALSE WHERE id=$1 AND status='lobby' RETURNING id");if(!r.rowCount)return res.status(409).json({error:'Nie można zamknąć lobby tego turnieju.'});res.json({ok:true});}
+  catch(e){console.error(e);res.status(500).json({error:'Nie udało się zamknąć lobby.'});}
+});
+app.post('/api/tournaments/:id/start',auth,adminOnly,async(req,res)=>{
+  const id=Number(req.params.id);if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy turniej.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');const t=await client.query("SELECT id,status,join_open FROM mdp_tournaments WHERE id=$1 FOR UPDATE",[id]);
+    if(!t.rowCount||t.rows[0].status!=='lobby'){await client.query('ROLLBACK');return res.status(409).json({error:'Turniej nie znajduje się już w lobby.'});}
+    if(t.rows[0].join_open){await client.query('ROLLBACK');return res.status(409).json({error:'Najpierw zamknij lobby.'});}
+    const c=await client.query('SELECT COUNT(*)::int AS n FROM mdp_tournament_players WHERE tournament_id=$1',[id]);
+    if(!c.rows[0].n){await client.query('ROLLBACK');return res.status(409).json({error:'Nie ma jeszcze uczestników w lobby.'});}
+    await client.query("UPDATE mdp_tournaments SET status='running',started_at=NOW() WHERE id=$1",[id]);await client.query('COMMIT');res.json({ok:true});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się rozpocząć turnieju.'});}
+  finally{client.release();}
+});
+app.post('/api/tournaments/:id/submit',auth,async(req,res)=>{
+  if(req.role!=='member')return res.status(403).json({error:'Tylko członek MDP może wysłać odpowiedzi.'});
+  const id=Number(req.params.id),memberId=Number(req.memberId),submitted=Array.isArray(req.body?.answers)?req.body.answers:[];
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');const t=await client.query("SELECT status,questions_snapshot FROM mdp_tournaments WHERE id=$1 FOR SHARE",[id]);
+    if(!t.rowCount||t.rows[0].status!=='running'){await client.query('ROLLBACK');return res.status(409).json({error:'Turniej nie jest teraz aktywny.'});}
+    const p=await client.query('SELECT id,submitted_at FROM mdp_tournament_players WHERE tournament_id=$1 AND member_id=$2 FOR UPDATE',[id,memberId]);
+    if(!p.rowCount){await client.query('ROLLBACK');return res.status(403).json({error:'Nie jesteś uczestnikiem tego turnieju.'});}
+    if(p.rows[0].submitted_at){await client.query('ROLLBACK');return res.status(409).json({error:'Odpowiedzi zostały już wysłane.'});}
+    const qs=Array.isArray(t.rows[0].questions_snapshot)?t.rows[0].questions_snapshot:[];
+    if(!qs.length||submitted.length!==qs.length){await client.query('ROLLBACK');return res.status(400).json({error:'Odpowiedz na wszystkie pytania.'});}
+    const byId=new Map(qs.map((q,i)=>[String(q.id||'q'+(i+1)),q])),ids=new Set();
+    const answers=submitted.map(a=>({questionId:String(a.questionId||''),answerIndex:Number(a.answerIndex)}));
+    for(const a of answers){if(!byId.has(a.questionId)||ids.has(a.questionId)||!Number.isInteger(a.answerIndex)||a.answerIndex<0||a.answerIndex>3){await client.query('ROLLBACK');return res.status(400).json({error:'Nieprawidłowe odpowiedzi.'});}ids.add(a.questionId);}
+    const score=answers.reduce((n,a)=>n+(a.answerIndex===Number(byId.get(a.questionId).correctIndex)?100:0),0);
+    await client.query('UPDATE mdp_tournament_players SET answers=$1::jsonb,score=$2,total=$3,submitted_at=NOW() WHERE id=$4',[JSON.stringify(answers),score,qs.length*100,p.rows[0].id]);
+    await client.query('COMMIT');res.json({ok:true,score,total:qs.length*100});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się zapisać odpowiedzi.'});}
+  finally{client.release();}
+});
+app.post('/api/tournaments/:id/finish',auth,adminOnly,async(req,res)=>{
+  const id=Number(req.params.id);if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy turniej.'});
+  try{const r=await pool.query("UPDATE mdp_tournaments SET status='finished',finished_at=NOW() WHERE id=$1 AND status='running' RETURNING id");if(!r.rowCount)return res.status(409).json({error:'Turniej nie jest w trakcie rozgrywki.'});res.json({ok:true});}
+  catch(e){console.error(e);res.status(500).json({error:'Nie udało się zakończyć turnieju.'});}
+});
 
 app.get('/api/quizzes', auth, async (req, res) => {
   try {
