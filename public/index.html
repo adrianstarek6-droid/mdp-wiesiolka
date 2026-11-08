@@ -905,9 +905,11 @@ body{background-color:#050505}
       <div class="actions" style="justify-content:center">
         <button class="btn green" type="button" id="timingStartBtn" onclick="startTiming()">▶ Start</button>
         <button class="btn outline" type="button" id="timingStopBtn" onclick="stopTiming()" disabled>■ Stop</button>
+        <button class="btn yellow" type="button" id="timingSplitBtn" onclick="recordTimingSplit()" disabled>＋ Międzyczas</button>
         <button class="btn outline" type="button" onclick="resetTiming()">↺ Reset</button>
       </div>
-      <p class="muted">Reset dotyczy tylko bieżącego pomiaru. Zapisane wyniki pozostają w historii.</p>
+      <div id="timingSplitsList" class="muted" style="margin:10px 0"></div>
+      <p class="muted">Międzyczasy zapisują kolejne odcinki biegu lub ćwiczenia. Reset dotyczy tylko bieżącego pomiaru — zapisane wyniki pozostają w historii.</p>
       <form id="timingForm">
         <div class="field"><label>Konkurencja / ćwiczenie</label><input id="timingExercise" required maxlength="120" placeholder="Np. rozwinięcie bojowe"></div>
         <div class="field" id="timingMemberField"><label>Członek MDP</label><select id="timingMember" required></select></div>
@@ -919,6 +921,7 @@ body{background-color:#050505}
     </div>
     <div class="card">
       <h3 id="timingAnalysisTitle">📊 Twoja analiza</h3>
+      <div id="timingAnalysisControls" class="field" style="margin:12px 0"><label for="timingAnalysisFilter">Wybierz konkurencję / ćwiczenie</label><select id="timingAnalysisFilter" onchange="renderTimingResults()"><option value="">Wszystkie ćwiczenia</option></select></div>
       <div id="timingStats" class="stats-grid"><div class="muted">Ładowanie wyników…</div></div>
       <div id="timingHistory" style="margin-top:12px"></div>
     </div>
@@ -1032,7 +1035,7 @@ body{background-color:#050505}
       </form>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>📢 Dodaj ogłoszenie</h3>
       <form id="newsForm">
         <div class="field"><label>Tytuł</label><input id="newsTitle" required placeholder="Tytuł ogłoszenia"></div>
@@ -1042,7 +1045,7 @@ body{background-color:#050505}
     </div>
 
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>🚨 Pilne powiadomienia</h3>
       <p class="muted">Szybko wyślij ważną wiadomość do członków MDP.</p>
       <button class="btn red" type="button" onclick="openScreen('urgentScreen')">Otwórz Pilne</button>
@@ -1054,7 +1057,7 @@ body{background-color:#050505}
       <button class="btn outline" type="button" onclick="openScreen('reportsScreen')">Otwórz zgłoszenia</button>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>📰 Kolportaż Echo Łaz</h3>
       <p class="muted">Twórz grupy, przypisuj członków i wpisuj ulice/regiony.</p>
       <form id="newspaperGroupForm">
@@ -1083,7 +1086,7 @@ ul. Przykładowa 2"></textarea></div>
       <div id="newspaperManageList" style="margin-top:16px"></div>
     </div>
 
-    <div class="card" id="quizAdminCard">
+    <div class="card" id="quizAdminCard" data-admin-only>
       <h3>🧠 Quizy MDP</h3>
       <p class="muted">Twórz quizy, edytuj pytania i sprawdzaj wyniki członków. Wyniki zapisują się na serwerze.</p>
       <form id="quizForm">
@@ -1101,7 +1104,7 @@ ul. Przykładowa 2"></textarea></div>
       <div id="quizResults" style="margin-top:16px"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-admin-only>
       <h3>👥 Członkowie</h3>
       <form id="memberForm" style="margin-bottom:16px">
         <div class="field"><label>Imię</label><input id="memberFirstName" required placeholder="Np. Jan"></div>
@@ -1315,7 +1318,7 @@ function renderAll(){
   renderReports();
   if(state.role==="member") renderMemberQuizzes();
   if(["admin","guardian"].includes(state.role)){
-    renderQuizAdmin();
+    if(state.role==="admin")renderQuizAdmin();
     renderManage();
   }
 }
@@ -1433,7 +1436,7 @@ function newsCard(n){
     <h3>📢 ${escapeHtml(title)}</h3>
     ${n.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(n.created_at))}</span></div>`:""}
     <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(body)}</div>
-    ${["admin","guardian"].includes(state.role)?`
+    ${state.role==="admin"?`
       <div class="actions">
         <button class="btn danger" onclick="deleteNews(${Number(n.id)})">Usuń</button>
       </div>`:""}
@@ -1464,9 +1467,9 @@ function renderUrgent(){
     <h3>🚨 ${escapeHtml(x.title||"Pilne powiadomienie")}</h3>
     ${x.created_at?`<div class="meta"><span class="badge">${escapeHtml(formatCreated(x.created_at))}</span></div>`:""}
     <div style="line-height:1.55;white-space:pre-wrap">${escapeHtml(x.body||"")}</div>
-    ${isStaff()?`<div class="actions"><button class="btn danger" onclick="deleteUrgent(${Number(x.id)})">Usuń</button></div>`:""}
+    ${state.role==="admin"?`<div class="actions"><button class="btn danger" onclick="deleteUrgent(${Number(x.id)})">Usuń</button></div>`:""}
   </article>`).join(""):`<div class="empty">Brak pilnych powiadomień.</div>`;
-  const manage=$("urgentManage"); if(manage)manage.classList.toggle("hidden",!isStaff());
+  const manage=$("urgentManage"); if(manage)manage.classList.toggle("hidden",state.role!=="admin");
 }
 
 async function deleteUrgent(id){
@@ -2435,7 +2438,7 @@ async function removeUniformMember(id){
 
 function renderManage(){
   const members=state.data.members || [];
-  $("membersManage").innerHTML=members.length ? members.map(m=>`
+  $("membersManage").innerHTML=state.role==="admin" && members.length ? members.map(m=>`
     <div class="card" style="margin:8px 0;background:#101010">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
         <div>
@@ -2477,7 +2480,7 @@ function collectQuizForm(){
   return cards.map((card,i)=>({id:`q${i+1}`,text:card.querySelector('.quiz-q-text').value.trim(),options:[...card.querySelectorAll('.quiz-q-option')].map(x=>x.value.trim()),correctIndex:Number(card.querySelector('.quiz-q-correct').value)}));
 }
 async function renderQuizAdmin(){
-  if(!['admin','guardian'].includes(state.role))return;
+  if(state.role!=='admin')return;
   try{
     staffQuizCache=await api('/api/quizzes');
     const list=$('quizAdminList'),results=$('quizResults');if(!list||!results)return;
@@ -2827,9 +2830,10 @@ function updateUIForRole(){
   const reportBtn=document.querySelector('[data-screen="reportsScreen"]');
   const quizBtn=document.getElementById("quizNavBtn");
   if(quizBtn) quizBtn.classList.toggle("hidden",state.role!=="member");
-
+  document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
   const manageTile=document.getElementById("manageNavBtn");
   if(manageTile)manageTile.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
+  document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
 }
 
 async function login(role,code,firstName,lastName){
@@ -2917,6 +2921,7 @@ $("logoutBtn").addEventListener("click",()=>{
 let timingStartedAt = 0;
 let timingElapsedMs = 0;
 let timingInterval = null;
+let timingSplits = [];
 let timingResults = [];
 let selectedTimingMemberId = null;
 
@@ -2934,18 +2939,31 @@ function startTiming(){
   timingStartedAt=performance.now();
   $("timingStartBtn").disabled=true;$("timingStopBtn").disabled=false;
   if(timingInterval)clearInterval(timingInterval);
-  timingInterval=setInterval(paintTimingClock,20);paintTimingClock();
+  timingInterval=setInterval(paintTimingClock,20);$("timingSplitBtn").disabled=false;paintTimingClock();
 }
 function stopTiming(){
   if(!timingStartedAt)return;
   timingElapsedMs+=performance.now()-timingStartedAt;timingStartedAt=0;
   if(timingInterval)clearInterval(timingInterval);timingInterval=null;
-  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;paintTimingClock();
+  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;$("timingSplitBtn").disabled=true;paintTimingClock();
 }
 function resetTiming(){
   if(timingInterval)clearInterval(timingInterval);timingInterval=null;
-  timingStartedAt=0;timingElapsedMs=0;
-  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;paintTimingClock();
+  timingStartedAt=0;timingElapsedMs=0;timingSplits=[];
+  $("timingStartBtn").disabled=false;$("timingStopBtn").disabled=true;$("timingSplitBtn").disabled=true;renderTimingSplits();paintTimingClock();
+}
+function recordTimingSplit(){
+  if(!timingStartedAt)return;
+  const cumulative=Math.round(currentTimingMs());
+  const previous=timingSplits.length?timingSplits[timingSplits.length-1].cumulative_ms:0;
+  if(cumulative<=previous)return;
+  const index=timingSplits.length+1;
+  timingSplits.push({label:`Odcinek ${index}`,cumulative_ms:cumulative,segment_ms:cumulative-previous});
+  renderTimingSplits();
+}
+function renderTimingSplits(){
+  const root=$("timingSplitsList");if(!root)return;
+  root.innerHTML=timingSplits.length?`<b>Międzyczasy:</b> ${timingSplits.map(s=>`${escapeHtml(s.label)}: ${formatTiming(s.segment_ms)} (łącznie ${formatTiming(s.cumulative_ms)})`).join(" · ")}`:"Międzyczasy: jeszcze nie zapisano żadnego odcinka.";
 }
 function renderTimingMemberOptions(){
   const sel=$("timingMember");if(!sel)return;
@@ -2981,8 +2999,16 @@ function renderTimingResults(){
   const analysisHeading=$("timingAnalysisTitle");
   const staff=["admin","guardian"].includes(state.role);
   if(analysisHeading) analysisHeading.textContent=state.role==="member"?"📊 Twoja analiza":"📊 Analiza wyników drużyny";
-  const exercise=$("timingExercise")?.value.trim();
-  let rows=exercise?timingResults.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):timingResults;
+  const memberBase=state.role==="member"?timingResults.filter(r=>Number(r.member_id)===Number(state.memberId)):timingResults;
+  const filter=$("timingAnalysisFilter");
+  if(filter){
+    const selected=filter.value;
+    const names=[...new Set(memberBase.map(r=>String(r.exercise||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pl"));
+    filter.innerHTML=`<option value="">Wszystkie ćwiczenia</option>${names.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}`;
+    if(names.includes(selected))filter.value=selected;
+  }
+  const exercise=filter?.value||"";
+  let rows=exercise?memberBase.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):memberBase;
   if(state.role==="member") rows=rows.filter(r=>Number(r.member_id)===Number(state.memberId));
   const validRows=rows.filter(r=>r.valid!==false && r.valid!==0);
   const times=validRows.map(r=>Number(r.time_ms)).filter(Number.isFinite);
@@ -3002,6 +3028,7 @@ function renderTimingResults(){
         <b style="font-size:23px;white-space:nowrap">${formatTiming(r.time_ms)}</b>
       </div>
       <div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span><span class="badge">${valid?"Ważny":"Unieważniony"}</span></div>
+      ${Array.isArray(r.splits)&&r.splits.length?`<div class="card" style="margin:9px 0;padding:10px;background:#101820"><b>Międzyczasy</b>${r.splits.map((s,i)=>`<div class="meta"><span>${escapeHtml(s.label||`Odcinek ${i+1}`)}</span><span class="badge">Odcinek: ${formatTiming(s.segment_ms)}</span><span class="badge">Łącznie: ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}</div>`:""}
       ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
       ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
       ${staff&&valid?`<button class="btn danger" type="button" onclick="invalidateTimingResult(${Number(r.id)})">Unieważnij wynik</button>`:""}
@@ -3023,7 +3050,18 @@ function renderTimingResults(){
     return;
   }
   if(state.role==="member"){
-    $("timingHistory").innerHTML=`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
+    const ordered=[...validRows].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const latest=ordered[ordered.length-1]||null, previous=ordered[ordered.length-2]||null;
+    const delta=latest&&previous?Number(latest.time_ms)-Number(previous.time_ms):null;
+    const deltaText=delta===null?"Brak wcześniejszej próby":delta<0?`Szybciej o ${formatTiming(Math.abs(delta))}`:delta>0?`Wolniej o ${formatTiming(delta)}`:"Taki sam czas";
+    const splitRows=ordered.filter(r=>Array.isArray(r.splits)&&r.splits.length);
+    const recent=ordered.slice(-6);
+    const progress=recent.length?`<div class="card" style="margin-top:12px"><h3>📈 Ostatnie próby</h3>${recent.map(r=>{const pct=best?Math.max(8,Math.round(best/Number(r.time_ms)*100)):0;return `<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>${escapeHtml(new Date(r.created_at).toLocaleDateString("pl-PL"))}</span><b>${formatTiming(r.time_ms)}</b></div><div style="height:8px;background:#252b32;border-radius:99px;overflow:hidden;margin-top:5px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#b71922,#ff4a52);border-radius:99px"></div></div></div>`}).join("")}</div>`:"";
+    const lastSplits=latest&&Array.isArray(latest.splits)?latest.splits:[];
+    const fastest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)<=Number(b.segment_ms)?a:b):null;
+    const slowest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)>=Number(b.segment_ms)?a:b):null;
+    const analysis=`<div class="card" style="margin-top:12px"><h3>🏃 Analiza biegu i ćwiczenia</h3><div class="stats"><div class="stat"><strong>${latest?formatTiming(latest.time_ms):"—"}</strong><span>Ostatnia próba</span></div><div class="stat"><strong>${delta===null?"—":delta===0?"0":formatTiming(Math.abs(delta))}</strong><span>${delta===null?"Porównanie":delta<0?"Poprawa":delta>0?"Różnica — wolniej":"Bez zmiany"}</span></div><div class="stat"><strong>${splitRows.length}</strong><span>Prób z międzyczasami</span></div></div><p class="muted" style="margin:10px 0">${escapeHtml(deltaText)} względem poprzedniego ważnego pomiaru w wybranej konkurencji.</p>${lastSplits.length?`<h4>Międzyczasy z ostatniej próby</h4>${lastSplits.map((s,i)=>`<div class="calendar-event-row"><b>${escapeHtml(s.label||`Odcinek ${i+1}`)}</b><span>${formatTiming(s.segment_ms)} · łącznie ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}<div class="meta"><span class="badge">Najszybszy odcinek: ${escapeHtml(fastest.label||"—")} · ${formatTiming(fastest.segment_ms)}</span><span class="badge">Najwolniejszy: ${escapeHtml(slowest.label||"—")} · ${formatTiming(slowest.segment_ms)}</span></div>`:`<div class="notice">Nie zapisano jeszcze międzyczasów. Opiekun może zmierzyć kolejne odcinki przyciskiem „Międzyczas” podczas pomiaru. Wtedy zobaczysz, na którym fragmencie biegu przyspieszasz lub zwalniasz.</div>`}<p class="muted">Tempo na kilometr i prędkość pokażemy dopiero wtedy, gdy pomiar będzie miał przypisany dystans — nie zgadujemy odległości.</p></div>`;
+    $("timingHistory").innerHTML=analysis+progress+`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
     return;
   }
   const grouped=new Map();
@@ -3064,7 +3102,7 @@ $("timingForm").addEventListener("submit",async e=>{
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
   try{
-    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors:Number($("timingErrors").value),penalty_points:Number($("timingPenalties").value),notes:$("timingNotes").value.trim()})});
+    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors:Number($("timingErrors").value),penalty_points:Number($("timingPenalties").value),notes:$("timingNotes").value.trim(),splits:timingSplits})});
     toast("Wynik zapisany.");resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
