@@ -777,7 +777,7 @@ async function sendNewEventPush(event) {
   const r = await pool.query(`
     SELECT id
     FROM members
-    WHERE role='member'
+    WHERE role='member' AND archived_at IS NULL
     ORDER BY id
   `);
 
@@ -851,7 +851,7 @@ async function processEventAttendanceReminders() {
           m.first_name,
           m.last_name
         FROM members m
-        WHERE m.role='member'
+        WHERE m.role='member' AND m.archived_at IS NULL
         ORDER BY m.id
       `);
 
@@ -1485,7 +1485,7 @@ app.put(
 app.delete(
   '/api/events/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const id=Number(req.params.id);
@@ -2020,7 +2020,7 @@ app.put(
 app.delete(
   '/api/members/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const id=Number(req.params.id);
@@ -2313,6 +2313,7 @@ app.get(
            TRIM(COALESCE(m.name,''))
          )
         WHERE COALESCE(m.role,'member')='member'
+          AND m.archived_at IS NULL
         ORDER BY LOWER(
           COALESCE(
             NULLIF(TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))), ''),
@@ -2363,6 +2364,7 @@ app.post(
         SELECT id, first_name, last_name
         FROM members
         WHERE COALESCE(role,'member')='member'
+          AND archived_at IS NULL
         ORDER BY id
       `);
 
