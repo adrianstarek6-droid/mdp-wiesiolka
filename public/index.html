@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="MDP Wiesiółka">
 <meta name="description" content="MDP Wiesiółka – informacje, zbiórki i obecność">
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icon-192.png">
+<link rel="icon" type="image/png" href="/icon-192-2.png">
 <title>MDP Wiesiółka</title>
 
 <style>
@@ -1869,7 +1869,7 @@ async function renderQuizAdmin(){
     list.innerHTML='<h3>📚 Twoje quizy</h3>'+ (quizzes.length?quizzes.map(q=>{
       const qs=Array.isArray(q.questions)?q.questions:[];
       const count=submissions.filter(s=>Number(s.quiz_id)===Number(q.id)).length;
-      return `<div class="card" style="margin:10px 0;background:#101010"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap"><div><b>${quizEsc(q.title)}</b><div class="muted">Pula: ${qs.length} pytań · losuje ${Math.min(Number(q.questions_per_round)||10,qs.length)} na podejście · ${count} wyników · ${q.active?'Aktywny':'Zakończony'}</div></div><div class="actions"><button class="btn outline" type="button" onclick="editQuiz(${Number(q.id)})">Edytuj</button><button class="btn green" type="button" onclick="resetQuizRound(${Number(q.id)})">↻ Resetuj / nowa runda</button>${q.active?`<button class="btn danger" type="button" onclick="archiveQuiz(${Number(q.id)})">Zakończ</button>`:''}<button class="btn danger" type="button" onclick="deleteQuizPermanently(${Number(q.id)})">Usuń na stałe</button></div></div></div>`;
+      return `<div class="card" style="margin:10px 0;background:#101010"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap"><div><b>${quizEsc(q.title)}</b><div class="muted">Pula: ${qs.length} pytań · losuje ${Math.min(Number(q.questions_per_round)||10,qs.length)} na podejście · ${count} wyników · ${q.active?'Aktywny':'Zakończony'}</div></div><div class="actions"><button class="btn outline" type="button" onclick="editQuiz(${Number(q.id)})">Edytuj</button><button class="btn green" type="button" onclick="resetQuizRound(${Number(q.id)})">↻ Resetuj / nowa runda</button>${q.active?`<button class="btn danger" type="button" onclick="archiveQuiz(${Number(q.id)})">Zakończ</button>`:''}</div></div></div>`;
     }).join(''):'<div class="empty">Nie ma jeszcze żadnych quizów.</div>');
     results.innerHTML='<h3>📊 Wyniki członków</h3>'+(quizzes.length?quizzes.map(q=>{
       const quizSubs=submissions.filter(s=>Number(s.quiz_id)===Number(q.id));
@@ -1899,21 +1899,14 @@ async function resetQuizRound(id){
   const q=(staffQuizCache.quizzes||[]).find(x=>Number(x.id)===Number(id));
   const title=q?.title||'ten quiz';
   const count=(staffQuizCache.submissions||[]).filter(x=>Number(x.quiz_id)===Number(id)).length;
-  if(!confirm(`Rozpocząć nową rundę quizu „${title}”? Zostanie ponownie udostępniony członkom, a ${count} dotychczasowych wyników tego quizu zostanie wyczyszczonych. Pytania i inne dane aplikacji pozostaną bez zmian.`))return;
-  try{await api(`/api/quizzes/${id}/reset`,{method:'POST',body:JSON.stringify({})});toast('Nowa runda gotowa. Wyniki quizu wyzerowane.');await renderQuizAdmin();}
-  catch(e){toast('Nie udało się zresetować quizu: '+e.message,'error')}
+  if(!confirm(`Utworzyć nową rundę quizu „${title}”? Poprzednia runda i jej ${count} wyników zostaną zachowane w historii. Powstanie nowa kopia quizu, którą członkowie będą mogli rozwiązać ponownie.`))return;
+  try{await api(`/api/quizzes/${id}/reset`,{method:'POST',body:JSON.stringify({})});toast('Nowa runda utworzona. Poprzednie wyniki zachowane.');await renderQuizAdmin();}
+  catch(e){toast('Nie udało się utworzyć nowej rundy: '+e.message,'error')}
 }
 async function archiveQuiz(id){
   if(!confirm('Zakończyć quiz? Zniknie członkom z listy, ale zapisane wyniki pozostaną.'))return;
   try{await api(`/api/quizzes/${id}`,{method:'DELETE'});toast('Quiz zakończony; wyniki zachowane.');await renderQuizAdmin();}
   catch(e){toast(e.message,'error')}
-}
-async function deleteQuizPermanently(id){
-  const q=(staffQuizCache.quizzes||[]).find(x=>Number(x.id)===Number(id));
-  const title=q?.title||'ten quiz';
-  if(!confirm(`Usunąć na stałe quiz „${title}”? Usunięte zostaną też wszystkie zapisane wyniki i odpowiedzi członków. Tej operacji nie można cofnąć.`))return;
-  try{await api(`/api/quizzes/${id}/permanent`,{method:'DELETE'});toast('Quiz i jego zapisane wyniki zostały usunięte.');await renderQuizAdmin();}
-  catch(e){toast('Nie udało się usunąć quizu: '+e.message,'error')}
 }
 async function showQuizSubmission(submissionId){
   const sub=(staffQuizCache.submissions||[]).find(x=>Number(x.id)===Number(submissionId));if(!sub)return;

@@ -1056,7 +1056,9 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/timing-results', auth, async (req, res) => {
   try {
     const values = [];
-    let where = 'WHERE r.valid = TRUE';
+    // Nie filtrujemy r.valid: historia ma pokazywać również unieważnione pomiary.
+    // Członek nadal widzi wyłącznie własne rekordy.
+    let where = 'WHERE TRUE';
     if (req.role === 'member') {
       values.push(Number(req.memberId));
       where += ` AND r.member_id = $${values.length}`;
@@ -1066,12 +1068,12 @@ app.get('/api/timing-results', auth, async (req, res) => {
     }
     const result = await pool.query(`
       SELECT r.id, r.member_id, r.exercise, r.time_ms, r.errors,
-             r.penalty_points, r.notes, r.created_at, m.first_name, m.last_name
+             r.penalty_points, r.notes, r.valid, r.invalid_reason,
+             r.invalidated_at, r.created_at, m.first_name, m.last_name
       FROM mdp_timing_results r
       JOIN members m ON m.id = r.member_id
       ${where}
       ORDER BY r.created_at DESC, r.id DESC
-      LIMIT 500
     `, values);
     res.json({results: result.rows, staff: isStaff(req)});
   } catch (e) {
@@ -1476,21 +1478,11 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    try {
-      await pool.query(
-        'DELETE FROM events WHERE id=$1',
-        [req.params.id]
-      );
-
-      res.json({
-        ok: true
-      });
-
-    } catch (e) {
-      res.status(500).json({
-        error: 'Nie udało się usunąć zbiórki.'
-      });
-    }
+    // Zbiórka może mieć historię obecności. Nie usuwamy jej fizycznie,
+    // ponieważ FK ON DELETE CASCADE skasowałby również obecności.
+    return res.status(409).json({
+      error: 'Usuwanie zbiórek jest zablokowane, aby zachować historię i obecności. Możesz edytować zbiórkę lub oznaczyć ją jako zakończoną.'
+    });
   }
 );
 
@@ -2018,22 +2010,11 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    try {
-      await pool.query(
-        'DELETE FROM members WHERE id=$1',
-        [req.params.id]
-      );
-
-      res.json({
-        ok: true
-      });
-
-    } catch (e) {
-      res.status(500).json({
-        error:
-          'Nie udało się usunąć członka.'
-      });
-    }
+    // Usunięcie członka kaskadowo usuwałoby m.in. jego wyniki stopera,
+    // quizy, ewidencję i subskrypcje. Zachowujemy konto oraz historię.
+    return res.status(409).json({
+      error: 'Usuwanie członków jest zablokowane, aby zachować konta i całą historię danych.'
+    });
   }
 );
 
@@ -3408,36 +3389,35 @@ app.put('/api/quizzes/:id', auth, staff, async (req,res) => {
   } catch(e) { console.error(e); res.status(500).json({error:'Nie udało się zapisać zmian quizu.'}); }
 });
 
-// Reset nowej rundy: aktywuje ten sam quiz i czyści wyłącznie wyniki tego quizu.
+// Nowa runda bez kasowania historii: poprzedni quiz zostaje zarchiwizowany,
+ // a nowa kopia otrzymuje osobne ID, więc członkowie mogą rozwiązać ją ponownie.
 app.post('/api/quizzes/:id/reset', auth, staff, async (req,res) => {
   const id=Number(req.params.id);
   if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
   const client=await pool.connect();
   try {
     await client.query('BEGIN');
-    const q=await client.query('SELECT id,title FROM quizzes WHERE id=$1 FOR UPDATE',[id]);
+    const q=await client.query('SELECT id,title,questions,questions_per_round FROM quizzes WHERE id=$1 FOR UPDATE',[id]);
     if(!q.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono quizu.'});}
-    await client.query('DELETE FROM quiz_submissions WHERE quiz_id=$1',[id]);
-    await client.query('UPDATE quizzes SET active=TRUE,updated_at=NOW() WHERE id=$1',[id]);
+    const previous=q.rows[0];
+    const baseTitle=String(previous.title||'Quiz').replace(/ — nowa runda \(.+\)$/,'');
+    const stamp=new Date().toLocaleString('pl-PL',{dateStyle:'short',timeStyle:'short'});
+    const nextTitle=`${baseTitle} — nowa runda (${stamp})`;
+    await client.query('UPDATE quizzes SET active=FALSE,updated_at=NOW() WHERE id=$1',[id]);
+    const created=await client.query(
+      'INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,TRUE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',
+      [nextTitle,JSON.stringify(previous.questions||[]),Number(previous.questions_per_round)||10]
+    );
     await client.query('COMMIT');
-    res.json({ok:true,title:q.rows[0].title,reset:true});
-  } catch(e) { await client.query('ROLLBACK').catch(()=>{}); console.error('Błąd resetu quizu:',e); res.status(500).json({error:'Nie udało się zresetować quizu.'}); }
+    res.status(201).json({ok:true,reset:true,preservedPreviousResults:true,previousQuizId:id,quiz:created.rows[0]});
+  } catch(e) { await client.query('ROLLBACK').catch(()=>{}); console.error('Błąd tworzenia nowej rundy quizu:',e); res.status(500).json({error:'Nie udało się utworzyć nowej rundy quizu.'}); }
   finally { client.release(); }
 });
 
-// Usunięcie quizu na stałe; ON DELETE CASCADE usuwa wyłącznie wyniki przypisane do tego quizu.
+// Trwałe usuwanie quizu jest zablokowane, ponieważ usunęłoby również
+// odpowiedzi i wyniki członków. Zamiast tego użyj archiwizacji.
 app.delete('/api/quizzes/:id/permanent', auth, staff, async (req,res) => {
-  const id=Number(req.params.id);
-  if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
-  const client=await pool.connect();
-  try{
-    await client.query('BEGIN');
-    const r=await client.query('DELETE FROM quizzes WHERE id=$1 RETURNING id,title',[id]);
-    if(!r.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono quizu.'});}
-    await client.query('COMMIT');
-    res.json({ok:true,title:r.rows[0].title});
-  }catch(e){await client.query('ROLLBACK');console.error('Błąd trwałego usuwania quizu:',e);res.status(500).json({error:'Nie udało się usunąć quizu.'});}
-  finally{client.release();}
+  return res.status(409).json({error:'Trwałe usuwanie quizów jest zablokowane, aby zachować wszystkie odpowiedzi i wyniki. Możesz zarchiwizować quiz.'});
 });
 
 // Archiwizujemy quiz zamiast usuwać wyniki członków.

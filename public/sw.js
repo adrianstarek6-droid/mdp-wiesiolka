@@ -1,9 +1,11 @@
-const CACHE_NAME = "mdp-wiesiolka-v2";
+const CACHE_NAME = "mdp-wiesiolka-v3";
 
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
-  "/manifest.json"
+  "/manifest.json",
+  "/icon-192-2.png",
+  "/icon-512-3.png"
 ];
 
 self.addEventListener("install", event => {
