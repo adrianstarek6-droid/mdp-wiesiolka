@@ -1020,7 +1020,7 @@ body{background-color:#050505}
   </section>
 
   <section id="manageScreen" class="screen">
-    <div class="section-title"><h2>Panel zarządzania</h2></div>
+    <div class="section-title"><h2>${state.role==="admin"?"Panel administratora":"Panel opiekuna"}</h2></div>
 
     <div class="card">
       <h3>➕ Dodaj zbiórkę</h3>
@@ -1563,7 +1563,7 @@ function renderProfile(){
     $("staffProfileArea").innerHTML=`
       <div class="card">
         <h3>Panel ${escapeHtml(roleName(state.role))}</h3>
-        <p class="muted">Masz dostęp do zarządzania zbiórkami, ogłoszeniami i członkami.</p>
+        <p class="muted">${state.role==="admin"?"Masz pełny dostęp do ustawień drużyny, kont członków, quizów i kolportażu.":"Możesz prowadzić zbiórki, sprawdzać obecność całej drużyny i obsługiwać zgłoszenia. Ustawienia kont i funkcje administratora są niedostępne."}</p>
         <button class="btn red" onclick="openScreen('manageScreen')">Otwórz panel zarządzania</button>
       </div>
       <div class="card">
@@ -2833,7 +2833,6 @@ function updateUIForRole(){
   document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
   const manageTile=document.getElementById("manageNavBtn");
   if(manageTile)manageTile.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
-  document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
 }
 
 async function login(role,code,firstName,lastName){
@@ -3017,7 +3016,7 @@ function renderTimingResults(){
   $("timingStats").innerHTML=`<div class="stat"><b>${times.length}</b><span>Pomiarów${exercise?" w tej konkurencji":" łącznie"}</span></div><div class="stat"><b>${best===null?"—":formatTiming(best)}</b><span>Najlepszy czas</span></div><div class="stat"><b>${avg===null?"—":formatTiming(avg)}</b><span>Średni czas</span></div><div class="stat"><b>${validRows.reduce((n,r)=>n+Number(r.errors||0),0)}</b><span>Błędy łącznie</span></div>`;
   if(!rows.length){
     selectedTimingMemberId=null;
-    $("timingHistory").innerHTML='<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';
+    $("timingHistory").innerHTML=state.role==="member"?'<div class="empty">Nie ma jeszcze Twoich zapisanych wyników. Po treningu kadra może zapisać pomiar, a tutaj zobaczysz historię i analizę postępów.</div>':'<div class="empty">Brak zapisanych wyników. Wykonaj pomiar i zapisz pierwszy rekord.</div>';
     return;
   }
   const renderRecord=r=>{
