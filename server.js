@@ -204,7 +204,7 @@ async function auth(req, res, next) {
           photo,
           code_hash
         FROM members
-        WHERE id=$1
+        WHERE id=$1 AND archived_at IS NULL
         `,
         [memberId]
       );
@@ -270,6 +270,7 @@ async function initDb() {
       outfit TEXT,
       completed BOOLEAN NOT NULL DEFAULT FALSE,
       completed_at TIMESTAMPTZ,
+      archived_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -288,7 +289,8 @@ async function initDb() {
       first_name TEXT,
       last_name TEXT,
       code_hash TEXT,
-      photo TEXT
+      photo TEXT,
+      archived_at TIMESTAMPTZ
     );
 
     CREATE TABLE IF NOT EXISTS attendance (
@@ -409,6 +411,10 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_mdp_timing_results_member_date
       ON mdp_timing_results(member_id, created_at DESC);
   `);
+
+  // Addytywne znaczniki archiwizacji — bez usuwania rekordów i powiązanej historii.
+  await pool.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
+  await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
 
   await pool.query("ALTER TABLE quiz_submissions ADD COLUMN IF NOT EXISTS questions_snapshot JSONB NOT NULL DEFAULT '[]'::jsonb");
   await pool.query("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS questions_per_round INTEGER NOT NULL DEFAULT 10");
@@ -1004,7 +1010,7 @@ app.post('/api/login', async (req, res) => {
           role,
           photo
         FROM members
-        WHERE code_hash=$1
+        WHERE code_hash=$1 AND archived_at IS NULL
         ORDER BY id
         LIMIT 1
         `,
@@ -1142,6 +1148,7 @@ app.get('/api/data', auth, async (req, res) => {
       pool.query(`
         SELECT *
         FROM events
+        WHERE archived_at IS NULL
         ORDER BY
           event_date ASC NULLS LAST,
           event_time ASC NULLS LAST,
@@ -1165,6 +1172,7 @@ app.get('/api/data', auth, async (req, res) => {
           created_at
           ${['guardian','admin'].includes(req.role) ? ', address, phone, guardian_phone' : ''}
         FROM members
+        WHERE archived_at IS NULL
         ORDER BY first_name,last_name,id
       `),
 
@@ -1213,7 +1221,8 @@ app.get('/api/member-records', auth, async (req, res) => {
       SELECT id, first_name, last_name, role, photo, name,
              address, phone, guardian_phone, created_at
       FROM members
-      WHERE role = 'member' OR role IS NULL
+      WHERE (role = 'member' OR role IS NULL)
+        AND archived_at IS NULL
       ORDER BY first_name, last_name, id
     `);
     res.json({ members: r.rows });
@@ -1478,11 +1487,14 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    // Zbiórka może mieć historię obecności. Nie usuwamy jej fizycznie,
-    // ponieważ FK ON DELETE CASCADE skasowałby również obecności.
-    return res.status(409).json({
-      error: 'Usuwanie zbiórek jest zablokowane, aby zachować historię i obecności. Możesz edytować zbiórkę lub oznaczyć ją jako zakończoną.'
-    });
+    try {
+      const id=Number(req.params.id);
+      if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy identyfikator zbiórki.'});
+      const archived=await pool.query('UPDATE events SET archived_at=NOW() WHERE id=$1 AND archived_at IS NULL RETURNING id',[id]);
+      if(!archived.rows.length)return res.status(404).json({error:'Nie znaleziono aktywnej zbiórki.'});
+      // Rekord zbiórki i wszystkie obecności pozostają w bazie.
+      return res.json({ok:true,archived:true,id});
+    } catch(e) {console.error('Błąd archiwizacji zbiórki:',e);return res.status(500).json({error:'Nie udało się zarchiwizować zbiórki.'})}
   }
 );
 
@@ -2010,11 +2022,14 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    // Usunięcie członka kaskadowo usuwałoby m.in. jego wyniki stopera,
-    // quizy, ewidencję i subskrypcje. Zachowujemy konto oraz historię.
-    return res.status(409).json({
-      error: 'Usuwanie członków jest zablokowane, aby zachować konta i całą historię danych.'
-    });
+    try {
+      const id=Number(req.params.id);
+      if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy identyfikator członka.'});
+      const archived=await pool.query("UPDATE members SET archived_at=NOW() WHERE id=$1 AND archived_at IS NULL AND COALESCE(role,'member')='member' RETURNING id",[id]);
+      if(!archived.rows.length)return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
+      // Konto jest wyłączone w logowaniu, ale rekord i cała historia pozostają.
+      return res.json({ok:true,archived:true,id});
+    } catch(e) {console.error('Błąd archiwizacji członka:',e);return res.status(500).json({error:'Nie udało się zarchiwizować członka.'})}
   }
 );
 
