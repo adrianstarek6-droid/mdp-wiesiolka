@@ -764,6 +764,36 @@ body{background-color:#050505}
 }
 @media(prefers-reduced-motion:reduce){.hero-emblem,.screen.active{animation:none!important}}
 
+
+/* ===== NOWA NAWIGACJA I CENTRUM MDP ===== */
+.bottom-nav{padding:7px 10px calc(8px + env(safe-area-inset-bottom))}
+.nav-inner{gap:5px;overflow:visible;justify-content:space-between}
+.bottom-nav .nav-btn{flex:1 1 0;min-width:0;height:58px;padding:5px 2px;font-size:10px}
+.bottom-nav .nav-btn b{font-size:20px}
+.home-quick-grid,.more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0 20px}
+.home-quick-card,.more-tile{min-width:0;text-align:left;padding:14px;border:1px solid #303943;border-radius:17px;background:linear-gradient(145deg,#1a2026,#111519);color:#f5f7f8;display:flex;flex-direction:column;gap:5px}
+.home-quick-card>span,.more-tile>span{font-size:23px}
+.home-quick-card b,.more-tile b{font-size:14px}
+.home-quick-card small,.more-tile small{font-size:11px;color:#9ba4ad;line-height:1.35}
+.home-quick-card:active,.more-tile:active{transform:scale(.97)}
+.more-note{margin-top:16px}
+.volvo-hero{position:relative;overflow:hidden;padding:24px 20px;border:1px solid #59242a;border-radius:23px;background:radial-gradient(circle at 90% 10%,rgba(221,28,38,.28),transparent 42%),linear-gradient(135deg,#171b20,#0c0e11 70%);margin-bottom:16px}
+.volvo-kicker{font-size:10px;letter-spacing:1.8px;color:#c0a5a7;font-weight:800}
+.volvo-hero h1{font-size:clamp(30px,8vw,42px);line-height:1;margin:12px 0 7px;letter-spacing:-1px}
+.volvo-hero h1 span{color:#f0444b}
+.volvo-hero p{margin:0;color:#c3c8cd}
+.volvo-mark{display:inline-block;margin-top:18px;padding:7px 10px;border:1px solid #743038;border-radius:8px;color:#fff;font-size:11px;font-weight:900;letter-spacing:1.5px}
+.volvo-spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.volvo-spec{padding:15px;border:1px solid #303943;border-radius:16px;background:linear-gradient(145deg,#1a2026,#111519);display:grid;gap:4px}
+.volvo-spec>span{font-size:19px}.volvo-spec strong{font-size:22px}.volvo-spec small{color:#9ba4ad;font-size:11px}
+.volvo-info p{line-height:1.55}
+.volvo-locker-list{display:grid;gap:8px;margin-top:14px}
+.volvo-locker-list>div{display:grid;grid-template-columns:34px 1fr;gap:2px 9px;align-items:center;padding:11px;border:1px solid #303943;border-radius:12px;background:#101418}
+.volvo-locker-list>div>b{grid-row:span 2;color:#f0444b;font-size:14px}
+.volvo-locker-list>div>span{font-size:13px;font-weight:750}
+.volvo-locker-list>div>small{font-size:10px;color:#9ba4ad}
+@media(max-width:360px){.bottom-nav .nav-btn{font-size:9px}.bottom-nav .nav-btn b{font-size:18px}.home-quick-grid,.more-grid{gap:8px}.home-quick-card,.more-tile{padding:11px}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -839,6 +869,12 @@ body{background-color:#050505}
       <div class="hero-foot"><span><b>01</b> RAZEM</span><span><b>02</b> ROZWÓJ</span><span><b>03</b> PASJA</span></div>
     </div>
     <div class="home-signature"><span class="signature-mark">W</span><div><b>WIESIÓŁKA</b><small>NASZA DRUŻYNA · NASZA SIŁA</small></div><span class="signature-line"></span><span class="signature-status"><i></i> MDP</span></div>
+    <div class="home-quick-grid">
+      <button class="home-quick-card" type="button" onclick="openScreen('eventsScreen')"><span>📅</span><b>Zbiórki</b><small>Terminy i obecność</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('newspapersScreen')"><span>📰</span><b>Gazety</b><small>Kolportaż Echo Łaz</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('volvoScreen')"><span>🚒</span><b>Nasze Volvo</b><small>Samochód i wyposażenie</small></button>
+      <button class="home-quick-card" type="button" onclick="openScreen('moreScreen')"><span>☰</span><b>Więcej</b><small>Pozostałe funkcje</small></button>
+    </div>
 
     <div class="section-title"><h2>Najbliższe zbiórki</h2><small id="eventCount"></small></div>
     <div id="homeEvents"></div>
@@ -937,6 +973,47 @@ body{background-color:#050505}
   <section id="newspapersScreen" class="screen">
     <div class="section-title"><h2>📰 Gazety</h2><small>Echo Łaz</small></div>
     <div id="newspaperMemberView"></div>
+  </section>
+
+  <section id="volvoScreen" class="screen">
+    <div class="volvo-hero">
+      <span class="volvo-kicker">POJAZD OSP WIESIÓŁKA</span>
+      <h1>VOLVO <span>689[S]15</span></h1>
+      <p>GBA-RT · Volvo FL280</p>
+      <div class="volvo-mark">OSP WIESIÓŁKA</div>
+    </div>
+    <div class="section-title"><h2>Dane samochodu</h2><small>Potwierdzone informacje</small></div>
+    <div class="volvo-spec-grid">
+      <div class="volvo-spec"><span>💧</span><strong>2700 l</strong><small>Woda</small></div>
+      <div class="volvo-spec"><span>🫧</span><strong>300 l</strong><small>Środek pianotwórczy</small></div>
+      <div class="volvo-spec"><span>🚒</span><strong>GBA-RT</strong><small>Rodzaj pojazdu</small></div>
+      <div class="volvo-spec"><span>🔧</span><strong>FL280</strong><small>Model podwozia</small></div>
+    </div>
+    <div class="card volvo-info">
+      <h3>Wyposażenie i skrytki</h3>
+      <p class="muted">Tutaj docelowo znajdzie się interaktywny widok samochodu. Zawartość każdej skrytki dodamy dopiero na podstawie rzeczywistych zdjęć i potwierdzonego spisu — bez zgadywania wyposażenia.</p>
+      <div class="volvo-locker-list">
+        <div><b>01</b><span>Skrytka lewa przednia</span><small>Spis do uzupełnienia</small></div>
+        <div><b>02</b><span>Skrytka lewa tylna</span><small>Spis do uzupełnienia</small></div>
+        <div><b>03</b><span>Skrytka prawa przednia</span><small>Spis do uzupełnienia</small></div>
+        <div><b>04</b><span>Skrytka prawa tylna</span><small>Spis do uzupełnienia</small></div>
+        <div><b>05</b><span>Dach pojazdu</span><small>Spis do uzupełnienia</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="moreScreen" class="screen">
+    <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
+    <div class="more-grid">
+      <button class="more-tile" type="button" onclick="openScreen('timingScreen')"><span>⏱️</span><b>Stoper</b><small>Pomiary i historia wyników</small></button>
+      <button id="quizNavBtn" class="more-tile hidden" type="button" onclick="openScreen('quizScreen')"><span>🧠</span><b>Quizy</b><small>Sprawdź swoją wiedzę</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('newsScreen')"><span>📢</span><b>Ogłoszenia</b><small>Informacje drużyny</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('urgentScreen')"><span>🚨</span><b>Pilne</b><small>Ważne komunikaty</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('reportsScreen')"><span>📝</span><b>Zgłoszenia</b><small>Pomysły i problemy</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('profileScreen')"><span>👤</span><b>Profil</b><small>Twoje konto</small></button>
+      <button id="manageNavBtn" class="more-tile hidden" type="button" onclick="openScreen('manageScreen')"><span>⚙️</span><b>Zarządzanie</b><small>Panel kadry</small></button>
+    </div>
+    <div class="card more-note"><b>Wszystko w jednym miejscu.</b><p class="muted">Zbiórki, obecności i Gazety pozostają bezpośrednio dostępne z dolnego menu.</p></div>
   </section>
 
   <section id="manageScreen" class="screen">
@@ -1038,17 +1115,13 @@ ul. Przykładowa 2"></textarea></div>
   </section>
 </main>
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" aria-label="Główne menu">
   <div class="nav-inner">
     <button class="nav-btn active" data-screen="homeScreen"><b>⌂</b>Start</button>
     <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
-    <button class="nav-btn" data-screen="timingScreen"><b>⏱️</b>Stoper</button>
-    <button class="nav-btn hidden" id="quizNavBtn" data-screen="quizScreen"><b>🧠</b>Quiz</button>
-    <button class="nav-btn" data-screen="newsScreen"><b>📢</b>Ogłoszenia</button>
-    <button class="nav-btn" data-screen="urgentScreen"><b>🚨</b>Pilne</button>
     <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
-    <button class="nav-btn" data-screen="reportsScreen"><b>📝</b>Zgłoszenia</button>
-    <button class="nav-btn" data-screen="profileScreen"><b>👤</b>Profil</button>
+    <button class="nav-btn" data-screen="volvoScreen"><b>🚒</b>Volvo</button>
+    <button class="nav-btn" data-screen="moreScreen"><b>☰</b>Więcej</button>
   </div>
 </nav>
 </div>
@@ -2718,7 +2791,9 @@ function openScreen(id){
   const screen=$(id);
   if(screen)screen.classList.add("active");
 
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));
+  const primaryScreens=["homeScreen","eventsScreen","newspapersScreen","volvoScreen"];
+  const activeNav=primaryScreens.includes(id)?id:"moreScreen";
+  document.querySelectorAll(".bottom-nav .nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===activeNav));
 
   if(id==="manageScreen" && !["admin","guardian"].includes(state.role)){
     openScreen("homeScreen");return;
@@ -2753,17 +2828,8 @@ function updateUIForRole(){
   const quizBtn=document.getElementById("quizNavBtn");
   if(quizBtn) quizBtn.classList.toggle("hidden",state.role!=="member");
 
-  if(["admin","guardian"].includes(state.role)){
-    if(!manageBtn){
-      const nav=document.querySelector(".nav-inner");
-      const b=document.createElement("button");
-      b.className="nav-btn";
-      b.dataset.screen="manageScreen";
-      b.innerHTML="<b>⚙</b>Zarządzanie";
-      b.onclick=()=>openScreen("manageScreen");
-      nav.appendChild(b);
-    }else manageBtn.classList.remove("hidden");
-  }
+  const manageTile=document.getElementById("manageNavBtn");
+  if(manageTile)manageTile.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
 }
 
 async function login(role,code,firstName,lastName){
