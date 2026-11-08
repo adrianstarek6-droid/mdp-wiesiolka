@@ -1021,30 +1021,73 @@ body{background-color:#050505}
   </section>
 
 
+  
   <section id="trainingCenterScreen" class="screen">
     <div class="section-title"><h2>🏃 Centrum ćwiczeń MDP</h2><small>Przygotowanie do zawodów</small></div>
     <div class="hero" style="min-height:0;margin-top:0">
       <span class="hero-overline">MDP WIESIÓŁKA · TRENING</span>
       <h1 style="max-width:none!important;font-size:clamp(30px,7vw,42px)!important">Pracujemy na <span>wynik.</span></h1>
-      <p>Wyniki, ćwiczenia i terminy przygotowań w jednym miejscu. Dane pochodzą z zapisów drużyny.</p>
+      <p>Twoje ćwiczenia, cele i postępy w jednym miejscu. Zapisuj próby, a kadra może planować kolejne etapy przygotowań.</p>
     </div>
     <div id="trainingCenterSummary"></div>
-    <div class="section-title"><h2>📈 Twoje / drużynowe wyniki</h2><small id="trainingCenterCount"></small></div>
+
+    <div class="card" id="trainingCenterStaffGoalForm" style="display:none">
+      <h3>🎯 Wyznacz cel treningowy</h3>
+      <p class="muted">Cel może dotyczyć całej drużyny albo konkretnego członka. Nie jest rankingiem — służy do śledzenia własnego postępu.</p>
+      <form id="trainingGoalForm" onsubmit="saveTrainingGoal(event)">
+        <div class="field"><label for="trainingGoalTitle">Nazwa celu</label><input id="trainingGoalTitle" maxlength="120" required placeholder="Np. poprawa techniki biegu"></div>
+        <div class="field"><label for="trainingGoalExercise">Ćwiczenie / konkurencja</label><input id="trainingGoalExercise" maxlength="120" placeholder="Np. bieg, rozwinięcie bojowe"></div>
+        <div class="field"><label for="trainingGoalDescription">Opis i wskazówki</label><textarea id="trainingGoalDescription" maxlength="1000" placeholder="Co ćwiczymy i na co zwrócić uwagę…"></textarea></div>
+        <div class="field"><label for="trainingGoalMember">Dla kogo?</label><select id="trainingGoalMember"><option value="">Cała drużyna MDP</option></select></div>
+        <div class="grid-2">
+          <div class="field"><label for="trainingGoalValue">Wartość celu (opcjonalnie)</label><input id="trainingGoalValue" type="number" min="0" step="0.01" placeholder="Np. 60"></div>
+          <div class="field"><label for="trainingGoalUnit">Jednostka</label><input id="trainingGoalUnit" maxlength="30" placeholder="np. sekund, metrów"></div>
+        </div>
+        <div class="field"><label for="trainingGoalDate">Termin (opcjonalnie)</label><input id="trainingGoalDate" type="date"></div>
+        <button class="btn red" type="submit">＋ Zapisz cel</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📝 Zapisz ćwiczenie</h3>
+      <p class="muted">Członek zapisuje własną aktywność. Opiekun lub administrator może dodać pomiar członkowi. Wyniki stopera zawodów nadal zapisuje się w Stoperze.</p>
+      <form id="trainingLogForm" onsubmit="saveTrainingLog(event)">
+        <div class="field" id="trainingLogMemberField"><label for="trainingLogMember">Członek MDP</label><select id="trainingLogMember" required></select></div>
+        <div class="field"><label for="trainingLogExercise">Ćwiczenie</label><input id="trainingLogExercise" maxlength="120" required placeholder="Np. bieg, ćwiczenia ogólnorozwojowe"></div>
+        <div class="field"><label for="trainingLogCategory">Rodzaj</label><select id="trainingLogCategory"><option value="bieg">Bieg / kondycja</option><option value="sprawność">Sprawność</option><option value="ćwiczenia bojowe">Ćwiczenia bojowe</option><option value="technika">Technika</option><option value="ogólne">Inne ćwiczenie</option></select></div>
+        <div class="field"><label for="trainingLogGoal">Powiąż z celem (opcjonalnie)</label><select id="trainingLogGoal"><option value="">Bez przypisanego celu</option></select></div>
+        <div class="grid-2">
+          <div class="field"><label for="trainingLogDuration">Czas w sekundach</label><input id="trainingLogDuration" type="number" min="0" step="1" placeholder="Np. 75"></div>
+          <div class="field"><label for="trainingLogDistance">Dystans w metrach</label><input id="trainingLogDistance" type="number" min="0" step="1" placeholder="Np. 400"></div>
+        </div>
+        <div class="field"><label for="trainingLogReps">Liczba powtórzeń (opcjonalnie)</label><input id="trainingLogReps" type="number" min="0" step="1" placeholder="Np. 10"></div>
+        <div class="field"><label for="trainingLogNotes">Notatka</label><textarea id="trainingLogNotes" maxlength="1000" placeholder="Jak poszło? Co warto poprawić?"></textarea></div>
+        <button class="btn red" type="submit">💾 Zapisz ćwiczenie</button>
+      </form>
+    </div>
+
+    <div class="section-title"><h2>🎯 Cele treningowe</h2><small>Aktywne i zakończone</small></div>
+    <div id="trainingCenterGoals"><div class="empty">Ładowanie celów…</div></div>
+
+    <div class="section-title"><h2>📓 Dziennik ćwiczeń</h2><small id="trainingCenterLogCount"></small></div>
+    <div id="trainingCenterLogs"><div class="empty">Ładowanie dziennika…</div></div>
+
+    <div class="section-title"><h2>⏱️ Wyniki stopera</h2><small>Oficjalne pomiary kadry</small></div>
     <div id="trainingCenterResults"><div class="empty">Ładowanie wyników…</div></div>
-    <div class="section-title"><h2>📅 Plan przygotowań</h2><small>Zbiórki i ćwiczenia</small></div>
+    <div class="card">
+      <h3>📊 Szczegółowa analiza biegu</h3>
+      <p class="muted">Pełna historia prób, średnia, rekord i międzyczasy pozostają w dotychczasowym module.</p>
+      <button class="btn outline" type="button" onclick="openScreen('timingScreen')">Otwórz stoper i analizę</button>
+    </div>
+
+    <div class="section-title"><h2>📅 Plan przygotowań</h2><small>Nadchodzące zbiórki</small></div>
     <div id="trainingCenterCalendar"></div>
     <div class="section-title"><h2>🧠 Wiedza MDP</h2><small>Quizy</small></div>
     <div class="card">
-      <h3>Sprawdź wiedzę przed zawodami</h3>
-      <p class="muted">Quizy MDP pozostają w osobnej funkcji. Centrum ćwiczeń prowadzi do nich bez tworzenia drugiej, niezależnej historii wyników.</p>
+      <p class="muted">Quizy MDP i ich historia wyników pozostają w dotychczasowym module — bez tworzenia drugiej historii.</p>
       <button class="btn red" type="button" onclick="openScreen('quizScreen')">Otwórz quizy MDP</button>
     </div>
-    <div class="card" id="trainingCenterStaffTools" style="display:none">
-      <h3>🛠️ Praca kadry</h3>
-      <p class="muted">Nowe próby i międzyczasy zapisuj dotychczasowym stoperem. Dzięki temu wszystkie wyniki pozostają w jednej historii.</p>
-      <button class="btn red" type="button" onclick="openScreen('timingScreen')">⏱️ Otwórz stoper i zapisz próbę</button>
-    </div>
-    <div class="notice">Wyniki nie są kasowane ani przenoszone. Członek widzi wyłącznie własne pomiary, a opiekun i administrator — wyniki drużyny.</div>
+    <div class="notice">Członek widzi tylko swoje cele i wpisy. Opiekun i administrator mogą prowadzić cele i dziennik całej drużyny. Wpisów nie kasujemy — zachowują historię.</div>
   </section>
 
   <section id="manageScreen" class="screen">
@@ -3484,6 +3527,109 @@ async function loadTrainingCenter(){
   }
   const upcoming=(state.data.events||[]).filter(e=>!e.completed).sort((a,b)=>eventDateTime(a)-eventDateTime(b));
   calendar.innerHTML=upcoming.length?upcoming.slice(0,8).map(e=>`<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(e.title||"Zbiórka")}</b><span class="badge">${escapeHtml(formatDate(e.event_date||e.date))}</span></div><div class="muted" style="margin-top:6px">${escapeHtml(e.event_time||e.time||"Godzina nieustalona")} · ${escapeHtml(e.place||e.location||"Miejsce nieustalone")}</div>${e.description?`<p class="muted">${escapeHtml(e.description)}</p>`:""}</div>`).join(""):'<div class="empty">Nie ma zaplanowanych zbiórek. Terminy ćwiczeń pojawią się tutaj po dodaniu ich w kalendarzu zbiórek.</div>';
+}
+
+
+function trainingDateLabel(value){
+  if(!value)return "Bez terminu";
+  const d=new Date(String(value).slice(0,10)+"T12:00:00");
+  return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat("pl-PL",{day:"2-digit",month:"long",year:"numeric"}).format(d);
+}
+function trainingMetricText(row){
+  const bits=[];
+  if(row.duration_seconds!==null&&row.duration_seconds!==undefined)bits.push(`⏱️ ${Number(row.duration_seconds)} s`);
+  if(row.distance_m!==null&&row.distance_m!==undefined)bits.push(`📏 ${Number(row.distance_m)} m`);
+  if(row.repetitions!==null&&row.repetitions!==undefined)bits.push(`🔁 ${Number(row.repetitions)} powt.`);
+  return bits.join(" · ")||"Dodano notatkę";
+}
+async function loadTrainingCenter(){
+  const summary=$("trainingCenterSummary"),goalsRoot=$("trainingCenterGoals"),logsRoot=$("trainingCenterLogs"),resultsRoot=$("trainingCenterResults"),calendar=$("trainingCenterCalendar");
+  if(!summary||!goalsRoot||!logsRoot||!resultsRoot||!calendar)return;
+  const staff=["admin","guardian"].includes(state.role);
+  const goalForm=$("trainingCenterStaffGoalForm"),memberField=$("trainingLogMemberField");
+  if(goalForm)goalForm.style.display=staff?"":"none";
+  if(memberField)memberField.style.display=staff?"":"none";
+  const memberOptions=(state.data.members||[]).filter(m=>(m.role||"member")==="member").map(m=>`<option value="${Number(m.id)}">${escapeHtml(memberFullName(m)||"Członek MDP")}</option>`).join("");
+  if(staff){
+    $("trainingGoalMember").innerHTML='<option value="">Cała drużyna MDP</option>'+memberOptions;
+    $("trainingLogMember").innerHTML='<option value="">Wybierz członka…</option>'+memberOptions;
+  }
+  summary.innerHTML='<div class="card">Pobieram dane treningowe…</div>';
+  try{
+    const [data,timing]=await Promise.all([api("/api/training-center"),api("/api/timing-results")]);
+    const goals=Array.isArray(data.goals)?data.goals:[],logs=Array.isArray(data.logs)?data.logs:[];
+    const results=Array.isArray(timing.results)?timing.results:[];
+    const activeGoals=goals.filter(g=>g.status==="active"),valid=results.filter(r=>r.valid!==false&&r.valid!==0);
+    const times=valid.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+    const best=times.length?Math.min(...times):null;
+    const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
+    summary.innerHTML=`<div class="stats">
+      <div class="stat"><strong>${activeGoals.length}</strong><span>Aktywne cele</span></div>
+      <div class="stat"><strong>${logs.length}</strong><span>Wpisy w dzienniku</span></div>
+      <div class="stat"><strong>${valid.length}</strong><span>Ważne pomiary</span></div>
+    </div><div class="stats" style="margin-top:9px">
+      <div class="stat"><strong>${best===null?"—":formatTiming(best)}</strong><span>Najlepszy czas</span></div>
+      <div class="stat"><strong>${avg===null?"—":formatTiming(avg)}</strong><span>Średni czas</span></div>
+      <div class="stat"><strong>${goals.filter(g=>g.status==="completed").length}</strong><span>Ukończone cele</span></div>
+    </div>`;
+    const goalSelect=$("trainingLogGoal");
+    if(goalSelect)goalSelect.innerHTML='<option value="">Bez przypisanego celu</option>'+activeGoals.map(g=>`<option value="${Number(g.id)}">${escapeHtml(g.title)}${g.member_id?"": " · cała drużyna"}</option>`).join("");
+    goalsRoot.innerHTML=goals.length?goals.map(g=>{
+      const name=g.member_id?`${g.first_name||""} ${g.last_name||""}`.trim():"Cała drużyna";
+      const status=g.status==="completed"?"✅ Ukończony":g.status==="archived"?"Archiwum":"🟡 Aktywny";
+      const target=g.target_value!==null&&g.target_value!==undefined?`<div class="muted">Cel: <b>${Number(g.target_value)} ${escapeHtml(g.target_unit||"")}</b></div>`:"";
+      return `<div class="card" style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><h3>${escapeHtml(g.title)}</h3><span class="badge">${status}</span></div>
+        <div class="muted">${escapeHtml(name)} · ${escapeHtml(g.exercise||"Ćwiczenie ogólne")}</div>
+        ${g.description?`<p>${escapeHtml(g.description)}</p>`:""}${target}
+        <div class="muted">Termin: ${trainingDateLabel(g.target_date)}</div>
+        ${staff&&g.status==="active"?`<div class="actions"><button class="btn outline" type="button" onclick="updateTrainingGoalStatus(${Number(g.id)},'completed')">Oznacz jako ukończony</button><button class="btn outline" type="button" onclick="updateTrainingGoalStatus(${Number(g.id)},'archived')">Archiwizuj</button></div>`:""}
+        ${staff&&g.status==="completed"?`<div class="actions"><button class="btn outline" type="button" onclick="updateTrainingGoalStatus(${Number(g.id)},'active')">Przywróć cel</button></div>`:""}
+      </div>`;
+    }).join(""):'<div class="empty">Nie ma jeszcze celów treningowych. Kadra może dodać pierwszy cel.</div>';
+    $("trainingCenterLogCount").textContent=`${logs.length} zapisanych ćwiczeń`;
+    logsRoot.innerHTML=logs.length?logs.map(l=>{
+      const name=`${l.first_name||""} ${l.last_name||""}`.trim();
+      return `<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(l.exercise)}</b><span class="badge">${escapeHtml(l.category)}</span></div>
+        ${staff?`<div class="muted">${escapeHtml(name||"Członek MDP")}</div>`:""}
+        <div style="margin-top:8px;font-weight:700">${trainingMetricText(l)}</div>
+        ${l.notes?`<p class="muted">${escapeHtml(l.notes)}</p>`:""}
+        <div class="muted">${escapeHtml(formatCreated(l.created_at))}${l.recorded_by_role==="member"?" · wpis członka":" · wpis kadry"}</div>
+      </div>`;
+    }).join(""):'<div class="empty">Dziennik jest pusty. Zapisz pierwsze ćwiczenie, aby rozpocząć historię.</div>';
+    if(staff){
+      const grouped=results.reduce((map,r)=>{const n=`${r.first_name||""} ${r.last_name||""}`.trim()||"Członek MDP";(map[n]??=[]).push(r);return map;},{});
+      resultsRoot.innerHTML=Object.entries(grouped).map(([name,list])=>`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(name)}</b>${list.slice(0,3).map(r=>`<div class="calendar-event-row"><span>${escapeHtml(r.exercise)} <small class="muted">${escapeHtml(formatCreated(r.created_at))}</small></span><strong>${formatTiming(r.time_ms)}</strong></div>`).join("")}</div>`).join("")||'<div class="empty">Nie ma jeszcze pomiarów stoperem.</div>';
+    }else{
+      resultsRoot.innerHTML=results.slice(0,5).map(r=>`<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(r.exercise)}</b><strong>${formatTiming(r.time_ms)}</strong></div><div class="muted">${escapeHtml(formatCreated(r.created_at))} · błędy: ${Number(r.errors)||0}</div>${Array.isArray(r.splits)&&r.splits.length?`<div class="muted">Międzyczasy: ${r.splits.length}</div>`:""}</div>`).join("")||'<div class="empty">Nie ma jeszcze zapisanych pomiarów.</div>';
+    }
+  }catch(e){
+    summary.innerHTML=`<div class="empty">${escapeHtml(e.message)}</div>`;
+    goalsRoot.innerHTML='<div class="empty">Nie udało się pobrać celów.</div>';
+    logsRoot.innerHTML='<div class="empty">Nie udało się pobrać dziennika.</div>';
+    resultsRoot.innerHTML='<div class="empty">Nie udało się pobrać pomiarów.</div>';
+  }
+  const upcoming=(state.data.events||[]).filter(e=>!e.completed).sort((a,b)=>String(a.event_date||"").localeCompare(String(b.event_date||"")));
+  calendar.innerHTML=upcoming.length?upcoming.slice(0,8).map(e=>`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(e.title||"Zbiórka")}</b><div class="muted">${trainingDateLabel(e.event_date)} · ${escapeHtml(e.event_time||"Godzina nieustalona")} · ${escapeHtml(e.place||"Miejsce nieustalone")}</div>${e.description?`<p class="muted">${escapeHtml(e.description)}</p>`:""}</div>`).join(""):'<div class="empty">Nie ma obecnie zaplanowanych zbiórek.</div>';
+}
+async function saveTrainingGoal(e){
+  e.preventDefault();
+  const memberValue=$("trainingGoalMember").value;
+  const payload={title:$("trainingGoalTitle").value.trim(),exercise:$("trainingGoalExercise").value.trim(),description:$("trainingGoalDescription").value.trim(),member_id:memberValue?Number(memberValue):null,target_value:$("trainingGoalValue").value===""?null:Number($("trainingGoalValue").value),target_unit:$("trainingGoalUnit").value.trim(),target_date:$("trainingGoalDate").value||null};
+  try{await api("/api/training-goals",{method:"POST",body:JSON.stringify(payload)});$("trainingGoalForm").reset();toast("Cel treningowy zapisany.");await loadTrainingCenter();}
+  catch(err){toast("Nie udało się zapisać celu: "+err.message,"error");}
+}
+async function saveTrainingLog(e){
+  e.preventDefault();
+  const staff=["admin","guardian"].includes(state.role);
+  const payload={member_id:staff?Number($("trainingLogMember").value):Number(state.memberId),exercise:$("trainingLogExercise").value.trim(),category:$("trainingLogCategory").value,goal_id:$("trainingLogGoal").value?Number($("trainingLogGoal").value):null,duration_seconds:$("trainingLogDuration").value===""?null:Number($("trainingLogDuration").value),distance_m:$("trainingLogDistance").value===""?null:Number($("trainingLogDistance").value),repetitions:$("trainingLogReps").value===""?null:Number($("trainingLogReps").value),notes:$("trainingLogNotes").value.trim()};
+  try{await api("/api/training-logs",{method:"POST",body:JSON.stringify(payload)});$("trainingLogForm").reset();toast("Ćwiczenie zapisane w dzienniku.");await loadTrainingCenter();}
+  catch(err){toast("Nie udało się zapisać ćwiczenia: "+err.message,"error");}
+}
+async function updateTrainingGoalStatus(id,status){
+  const label=status==="completed"?"ukończyć":status==="archived"?"zarchiwizować":"przywrócić";
+  if(!confirm(`Na pewno ${label} ten cel?`))return;
+  try{await api(`/api/training-goals/${Number(id)}`,{method:"PATCH",body:JSON.stringify({status})});toast("Status celu zmieniony.");await loadTrainingCenter();}
+  catch(err){toast(err.message,"error");}
 }
 
 </script>
