@@ -3389,36 +3389,35 @@ app.put('/api/quizzes/:id', auth, staff, async (req,res) => {
   } catch(e) { console.error(e); res.status(500).json({error:'Nie udało się zapisać zmian quizu.'}); }
 });
 
-// Reset nowej rundy: aktywuje ten sam quiz i czyści wyłącznie wyniki tego quizu.
+// Nowa runda bez kasowania historii: poprzedni quiz zostaje zarchiwizowany,
+ // a nowa kopia otrzymuje osobne ID, więc członkowie mogą rozwiązać ją ponownie.
 app.post('/api/quizzes/:id/reset', auth, staff, async (req,res) => {
   const id=Number(req.params.id);
   if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
   const client=await pool.connect();
   try {
     await client.query('BEGIN');
-    const q=await client.query('SELECT id,title FROM quizzes WHERE id=$1 FOR UPDATE',[id]);
+    const q=await client.query('SELECT id,title,questions,questions_per_round FROM quizzes WHERE id=$1 FOR UPDATE',[id]);
     if(!q.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono quizu.'});}
-    await client.query('DELETE FROM quiz_submissions WHERE quiz_id=$1',[id]);
-    await client.query('UPDATE quizzes SET active=TRUE,updated_at=NOW() WHERE id=$1',[id]);
+    const previous=q.rows[0];
+    const baseTitle=String(previous.title||'Quiz').replace(/ — nowa runda \(.+\)$/,'');
+    const stamp=new Date().toLocaleString('pl-PL',{dateStyle:'short',timeStyle:'short'});
+    const nextTitle=`${baseTitle} — nowa runda (${stamp})`;
+    await client.query('UPDATE quizzes SET active=FALSE,updated_at=NOW() WHERE id=$1',[id]);
+    const created=await client.query(
+      'INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,TRUE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',
+      [nextTitle,JSON.stringify(previous.questions||[]),Number(previous.questions_per_round)||10]
+    );
     await client.query('COMMIT');
-    res.json({ok:true,title:q.rows[0].title,reset:true});
-  } catch(e) { await client.query('ROLLBACK').catch(()=>{}); console.error('Błąd resetu quizu:',e); res.status(500).json({error:'Nie udało się zresetować quizu.'}); }
+    res.status(201).json({ok:true,reset:true,preservedPreviousResults:true,previousQuizId:id,quiz:created.rows[0]});
+  } catch(e) { await client.query('ROLLBACK').catch(()=>{}); console.error('Błąd tworzenia nowej rundy quizu:',e); res.status(500).json({error:'Nie udało się utworzyć nowej rundy quizu.'}); }
   finally { client.release(); }
 });
 
-// Usunięcie quizu na stałe; ON DELETE CASCADE usuwa wyłącznie wyniki przypisane do tego quizu.
+// Trwałe usuwanie quizu jest zablokowane, ponieważ usunęłoby również
+// odpowiedzi i wyniki członków. Zamiast tego użyj archiwizacji.
 app.delete('/api/quizzes/:id/permanent', auth, staff, async (req,res) => {
-  const id=Number(req.params.id);
-  if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
-  const client=await pool.connect();
-  try{
-    await client.query('BEGIN');
-    const r=await client.query('DELETE FROM quizzes WHERE id=$1 RETURNING id,title',[id]);
-    if(!r.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono quizu.'});}
-    await client.query('COMMIT');
-    res.json({ok:true,title:r.rows[0].title});
-  }catch(e){await client.query('ROLLBACK');console.error('Błąd trwałego usuwania quizu:',e);res.status(500).json({error:'Nie udało się usunąć quizu.'});}
-  finally{client.release();}
+  return res.status(409).json({error:'Trwałe usuwanie quizów jest zablokowane, aby zachować wszystkie odpowiedzi i wyniki. Możesz zarchiwizować quiz.'});
 });
 
 // Archiwizujemy quiz zamiast usuwać wyniki członków.
