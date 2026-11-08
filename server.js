@@ -1056,7 +1056,9 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/timing-results', auth, async (req, res) => {
   try {
     const values = [];
-    let where = 'WHERE r.valid = TRUE';
+    // Nie filtrujemy r.valid: historia ma pokazywać również unieważnione pomiary.
+    // Członek nadal widzi wyłącznie własne rekordy.
+    let where = 'WHERE TRUE';
     if (req.role === 'member') {
       values.push(Number(req.memberId));
       where += ` AND r.member_id = $${values.length}`;
@@ -1066,12 +1068,12 @@ app.get('/api/timing-results', auth, async (req, res) => {
     }
     const result = await pool.query(`
       SELECT r.id, r.member_id, r.exercise, r.time_ms, r.errors,
-             r.penalty_points, r.notes, r.created_at, m.first_name, m.last_name
+             r.penalty_points, r.notes, r.valid, r.invalid_reason,
+             r.invalidated_at, r.created_at, m.first_name, m.last_name
       FROM mdp_timing_results r
       JOIN members m ON m.id = r.member_id
       ${where}
       ORDER BY r.created_at DESC, r.id DESC
-      LIMIT 500
     `, values);
     res.json({results: result.rows, staff: isStaff(req)});
   } catch (e) {
@@ -1476,21 +1478,11 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    try {
-      await pool.query(
-        'DELETE FROM events WHERE id=$1',
-        [req.params.id]
-      );
-
-      res.json({
-        ok: true
-      });
-
-    } catch (e) {
-      res.status(500).json({
-        error: 'Nie udało się usunąć zbiórki.'
-      });
-    }
+    // Zbiórka może mieć historię obecności. Nie usuwamy jej fizycznie,
+    // ponieważ FK ON DELETE CASCADE skasowałby również obecności.
+    return res.status(409).json({
+      error: 'Usuwanie zbiórek jest zablokowane, aby zachować historię i obecności. Możesz edytować zbiórkę lub oznaczyć ją jako zakończoną.'
+    });
   }
 );
 
@@ -2018,22 +2010,11 @@ app.delete(
   auth,
   staff,
   async (req, res) => {
-    try {
-      await pool.query(
-        'DELETE FROM members WHERE id=$1',
-        [req.params.id]
-      );
-
-      res.json({
-        ok: true
-      });
-
-    } catch (e) {
-      res.status(500).json({
-        error:
-          'Nie udało się usunąć członka.'
-      });
-    }
+    // Usunięcie członka kaskadowo usuwałoby m.in. jego wyniki stopera,
+    // quizy, ewidencję i subskrypcje. Zachowujemy konto oraz historię.
+    return res.status(409).json({
+      error: 'Usuwanie członków jest zablokowane, aby zachować konta i całą historię danych.'
+    });
   }
 );
 
