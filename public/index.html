@@ -3549,6 +3549,7 @@ async function loadTrainingCenter(){
   const goalForm=$("trainingCenterStaffGoalForm"),memberField=$("trainingLogMemberField");
   if(goalForm)goalForm.style.display=staff?"":"none";
   if(memberField)memberField.style.display=staff?"":"none";
+  if($("trainingLogMember")){$("trainingLogMember").required=staff;$("trainingLogMember").disabled=!staff;}
   const memberOptions=(state.data.members||[]).filter(m=>(m.role||"member")==="member").map(m=>`<option value="${Number(m.id)}">${escapeHtml(memberFullName(m)||"Członek MDP")}</option>`).join("");
   if(staff){
     $("trainingGoalMember").innerHTML='<option value="">Cała drużyna MDP</option>'+memberOptions;
