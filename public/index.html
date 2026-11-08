@@ -297,6 +297,214 @@ input,textarea,select{background:#0c1014;border-color:#303943}input:focus,textar
 @media(max-width:380px){.calendar-panel{padding:12px}.calendar-weekdays,.calendar-grid{gap:3px}.calendar-day{min-height:39px;border-radius:9px}.calendar-controls strong{min-width:88px}}
 @media(prefers-reduced-motion:no-preference){.card{transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}.card:hover{border-color:#414b56}}
 
+
+
+/* =========================================================
+   MDP WIESIÓŁKA — FIREHOUSE REDESIGN
+   Warstwa wizualna. Bez zmian w logice i danych aplikacji.
+========================================================= */
+:root{
+  --bg:#07090d;
+  --card:#111720;
+  --card2:#17212c;
+  --line:#293541;
+  --red:#e32630;
+  --red2:#ff4650;
+  --white:#f4f6f8;
+  --muted:#9ba8b5;
+  --green:#22c77a;
+  --yellow:#f2bd4b;
+  --blue:#5ca6ff;
+  --fire-shadow:0 18px 50px rgba(0,0,0,.34);
+}
+html,body{
+  background:
+    radial-gradient(ellipse at 50% -18%,rgba(145,20,29,.24),transparent 42%),
+    linear-gradient(180deg,#090c11 0%,#07090d 48%,#090c11 100%);
+  color:var(--white);
+}
+body:before{
+  content:"";
+  position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.16;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:34px 34px;
+}
+.app{max-width:980px}
+header{
+  background:rgba(7,10,14,.88);
+  border-bottom:1px solid rgba(255,255,255,.075);
+  box-shadow:0 8px 32px rgba(0,0,0,.22);
+}
+.topbar{height:76px;padding:11px 18px}
+.brand{gap:13px}
+.logo{
+  position:relative;width:48px;height:52px;border:0;border-radius:15px 15px 18px 18px;
+  background:linear-gradient(145deg,#ff4a52 0%,#bd111d 58%,#650d14 100%);
+  color:#fff;font-size:13px;letter-spacing:.7px;
+  clip-path:polygon(50% 0,94% 15%,88% 76%,50% 100%,12% 76%,6% 15%);
+  filter:drop-shadow(0 5px 12px rgba(226,27,35,.28));
+}
+.logo:after{
+  content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.48);
+  clip-path:polygon(50% 0,94% 15%,88% 76%,50% 100%,12% 76%,6% 15%);
+}
+.brand b{font-size:16px;letter-spacing:.15px}
+.brand small{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#aeb9c4}
+.icon-btn{
+  width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#19232e,#10161e);
+  border-color:#34414e;color:#f5f7fa;
+}
+main{padding:18px 16px 116px}
+.hero{
+  min-height:220px;padding:28px 25px 26px;margin:12px 0 28px;
+  border:1px solid rgba(255,90,99,.36);border-radius:26px;
+  background:
+    linear-gradient(105deg,rgba(9,13,19,.98) 0%,rgba(35,12,18,.96) 58%,rgba(100,13,22,.88) 100%);
+  box-shadow:0 24px 65px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.09);
+}
+.hero:before{
+  content:"OSP";position:absolute;right:24px;top:28px;width:126px;height:146px;
+  display:grid;place-items:center;
+  color:rgba(255,255,255,.07);font-size:29px;font-weight:1000;letter-spacing:3px;
+  border:2px solid rgba(255,255,255,.075);
+  clip-path:polygon(50% 0,94% 16%,87% 75%,50% 100%,13% 75%,6% 16%);
+  background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,0));
+}
+.hero:after{
+  content:"";position:absolute;left:0;top:22px;bottom:22px;width:4px;border-radius:0 5px 5px 0;
+  background:linear-gradient(180deg,#ff6870,#c81320);
+  box-shadow:0 0 22px rgba(255,48,56,.55);
+}
+.hero h1{position:relative;z-index:1;font-size:clamp(32px,7vw,46px);line-height:1.02;letter-spacing:-1.7px;max-width:70%;margin:0 0 12px}
+.hero h1:before{
+  content:"MŁODZIEŻOWA DRUŻYNA POŻARNICZA";
+  display:block;margin-bottom:13px;color:#ff7279;font-size:9px;letter-spacing:2.3px;font-weight:900;
+}
+.hero h1 span{color:#ff4b55}
+.hero p{position:relative;z-index:1;max-width:390px;color:#c2cbd4;font-size:13px;line-height:1.65}
+.section-title{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:27px 2px 13px;padding-left:12px;border-left:3px solid var(--red);
+}
+.section-title h2{font-size:17px;letter-spacing:-.35px;font-weight:850}
+.section-title small{color:#94a1ae;font-size:11px}
+.card{
+  background:linear-gradient(145deg,rgba(24,34,45,.98),rgba(14,20,28,.98));
+  border:1px solid #2b3947;border-radius:19px;
+  box-shadow:0 12px 30px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.035);
+}
+.card h3{letter-spacing:-.25px}
+.card .muted,.muted{color:#9aa8b5}
+.btn{
+  min-height:44px;border-radius:13px;padding:11px 16px;font-weight:800;
+  letter-spacing:.1px;transition:transform .16s,border-color .16s,filter .16s;
+}
+.btn.red{
+  background:linear-gradient(135deg,#ff4b54 0%,#d91c28 54%,#a70e19 100%);
+  border:1px solid rgba(255,125,132,.48);color:#fff;
+  box-shadow:0 8px 22px rgba(207,24,35,.25),inset 0 1px rgba(255,255,255,.2);
+}
+.btn.outline,.btn:not(.red):not(.danger){
+  border-color:#3b4b5a;background:linear-gradient(145deg,#1d2935,#121a23);color:#e8edf2;
+}
+.btn.danger{background:linear-gradient(135deg,#8e1a23,#541018);border:1px solid #a8323b;color:#fff}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+  outline:2px solid #ff5962;outline-offset:3px;
+}
+input,textarea,select{
+  background:#0d141c!important;border:1px solid #334250!important;border-radius:12px!important;color:#f4f6f8!important;
+}
+input::placeholder,textarea::placeholder{color:#778593}
+.field label{color:#c3ccd5;font-size:12px;font-weight:750;letter-spacing:.2px}
+.stat{
+  background:linear-gradient(145deg,#1c2935,#111820);border-color:#344351;border-radius:17px;
+  box-shadow:inset 0 1px rgba(255,255,255,.045);
+}
+.stat strong,.stat b{color:#fff}
+.stat span{color:#a5b0ba}
+.bottom-nav{
+  background:rgba(8,12,17,.94);border-top:1px solid #2c3946;
+  box-shadow:0 -14px 40px rgba(0,0,0,.48);
+  padding:9px 8px calc(9px + env(safe-area-inset-bottom));
+}
+.nav-inner{max-width:980px;gap:6px}
+.nav-btn{
+  flex:1 0 72px;min-width:68px;height:62px;border-radius:15px;
+  color:#8794a1;font-size:10px;font-weight:800;
+}
+.nav-btn b{font-size:21px;line-height:24px;filter:none}
+.nav-btn.active{
+  color:#fff;border-color:rgba(255,73,83,.38);
+  background:linear-gradient(155deg,rgba(174,23,34,.42),rgba(75,15,22,.32));
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 5px 18px rgba(190,20,32,.14);
+}
+.nav-btn.active b{filter:none}
+.calendar-panel{
+  background:linear-gradient(145deg,#17222d,#0e151d);
+  border-color:#354452;border-radius:21px;padding:18px;
+}
+.calendar-top h3{font-size:18px}
+.calendar-controls strong{color:#f4f6f8}
+.calendar-day{
+  background:#101821;border:1px solid #2d3b48;color:#dce3e9;border-radius:11px;
+}
+.calendar-day.has-events:after{background:#ff4c56;box-shadow:0 0 10px rgba(255,76,86,.75)}
+.calendar-day.selected{background:linear-gradient(145deg,#d92531,#75121b);border-color:#ff5962}
+.empty{background:rgba(18,27,36,.58);border-color:#354351;color:#9eabb7}
+.badge{border:1px solid #3b4b59;background:#1b2732;color:#dce4eb}
+.toast{background:#18232e;border:1px solid #3b4a58;color:#fff;box-shadow:var(--fire-shadow)}
+.login-wrap{
+  background:
+    radial-gradient(ellipse at 50% 15%,rgba(178,21,32,.25),transparent 36%),
+    linear-gradient(180deg,#0c1118,#07090d 75%);
+}
+.login-card{
+  position:relative;overflow:hidden;background:linear-gradient(145deg,#18232e,#0d131a);
+  border:1px solid #394958;border-radius:27px;box-shadow:0 28px 85px rgba(0,0,0,.58);
+}
+.login-card:before{
+  content:"";position:absolute;top:-105px;right:-80px;width:230px;height:230px;
+  border:1px solid rgba(255,255,255,.055);border-radius:50%;
+  box-shadow:0 0 0 20px rgba(255,255,255,.018),0 0 0 42px rgba(255,255,255,.012);
+  pointer-events:none;
+}
+.login-logo{
+  position:relative;background:linear-gradient(145deg,#ff4b54,#a70f1b);
+  border:0;color:#fff;clip-path:polygon(50% 0,94% 16%,87% 75%,50% 100%,13% 75%,6% 16%);
+  border-radius:0;filter:drop-shadow(0 8px 16px rgba(226,27,35,.35));
+}
+.login-card h1{letter-spacing:-.8px}
+.login-card p{color:#aeb9c4}
+.role-tab{background:#111a23;border-color:#344250;color:#aab6c1;border-radius:12px}
+.role-tab.active{background:linear-gradient(145deg,#9e1c26,#4c1018);border-color:#f04b55;color:#fff}
+.att-btn{background:#17222d;border-color:#354452;color:#e4eaf0;border-radius:12px}
+.att-btn.active.yes{background:#10583b;border-color:#1b9863}
+.att-btn.active.maybe{background:#655018;border-color:#bd9228}
+.att-btn.active.no{background:#681a22;border-color:#b53540}
+.outfit-box{background:rgba(139,28,37,.13);border-color:#613039;border-radius:13px}
+@media(min-width:700px){
+  main{padding:25px 24px 120px}
+  .hero{padding:36px 34px;min-height:245px}
+  .hero:before{right:45px;width:150px;height:172px}
+}
+@media(max-width:430px){
+  main{padding:12px 12px 112px}
+  .topbar{height:70px;padding:9px 13px}
+  .hero{min-height:205px;padding:24px 19px 22px;margin:8px 0 24px;border-radius:22px}
+  .hero h1{max-width:76%;font-size:32px}
+  .hero:before{right:12px;top:36px;width:98px;height:116px;font-size:22px}
+  .hero h1:before{font-size:8px;letter-spacing:1.5px;max-width:230px}
+  .section-title{margin-top:23px}
+  .calendar-panel{padding:14px}
+  .nav-btn{flex-basis:68px;min-width:64px;height:59px;font-size:9px}
+  .nav-btn b{font-size:20px}
+}
+@media(prefers-reduced-motion:no-preference){
+  .btn:active{transform:scale(.975)}
+  .card:hover{transform:translateY(-2px);border-color:#536576;box-shadow:0 18px 36px rgba(0,0,0,.28)}
+  .nav-btn:active{transform:scale(.95)}
+}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
