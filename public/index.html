@@ -821,7 +821,24 @@ body{background-color:#050505}
 
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
+<style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+/* Profil członka — edytor zdjęcia i podsumowanie */
+.profile-photo-editor{display:grid;grid-template-columns:112px 1fr;gap:16px;align-items:center}
+.profile-photo-preview{width:112px;height:112px;border-radius:50%;overflow:hidden;border:3px solid #e21b23;background:#191919;display:flex;align-items:center;justify-content:center}
+.profile-photo-preview img{width:100%;height:100%;object-fit:cover;transform-origin:center}
+.profile-photo-controls{display:grid;gap:10px;min-width:0}
+.profile-photo-controls input[type=file]{max-width:100%;font-size:13px}
+.profile-photo-controls input[type=range]{width:100%;accent-color:#e21b23}
+.profile-photo-actions{display:flex;gap:8px;flex-wrap:wrap}
+.profile-photo-actions button{flex:1;min-width:120px}
+.profile-insight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.profile-insight{background:#171717;border:1px solid #303030;border-radius:13px;padding:13px}
+.profile-insight strong{display:block;font-size:22px;color:#fff}
+.profile-insight span{font-size:12px;color:#aaa}
+.profile-activity-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #292929}
+.profile-activity-item:last-child{border-bottom:0}
+@media(max-width:420px){.profile-photo-editor{grid-template-columns:1fr;justify-items:center}.profile-photo-controls{width:100%}}
+</style>
 </head>
 
 <body>
@@ -1633,12 +1650,35 @@ function renderProfile(){
     $("memberProfileArea").innerHTML=`
       <div class="section-title"><h2>Moja obecność</h2></div>
       <div id="myStats"><div class="empty">Ładowanie statystyk...</div></div>
-      <div class="card">
-        <h3>📷 Zdjęcie profilowe</h3>
+      <div class="card profile-photo-card">
+        <h3>📷 Twoje zdjęcie profilowe</h3>
+        <p class="muted">Wybierz zdjęcie z galerii, ustaw kadr i zatwierdź. Podgląd pokaże dokładnie, jak będzie wyglądać zdjęcie.</p>
         <form id="photoForm">
-          <div class="field"><label>Link do zdjęcia</label><input id="photoUrl" value="${escapeHtml(state.photo)}" placeholder="https://..."></div>
-          <button class="btn red" type="submit">Zapisz zdjęcie</button>
+          <div class="profile-photo-editor">
+            <div class="profile-photo-preview" id="photoCropPreview">
+              ${state.photo?'<img src="'+escapeHtml(state.photo)+'" alt="Podgląd zdjęcia">':'<span class="muted">Brak zdjęcia</span>'}
+            </div>
+            <div class="profile-photo-controls">
+              <label for="photoFile">Wybierz zdjęcie z galerii</label>
+              <input id="photoFile" type="file" accept="image/*">
+              <label for="photoZoom">Przybliżenie</label>
+              <input id="photoZoom" type="range" min="1" max="3" step="0.05" value="1">
+              <label for="photoX">Przesunięcie poziome</label>
+              <input id="photoX" type="range" min="-100" max="100" value="0">
+              <label for="photoY">Przesunięcie pionowe</label>
+              <input id="photoY" type="range" min="-100" max="100" value="0">
+            </div>
+          </div>
+          <div class="profile-photo-actions" style="margin-top:14px">
+            <button class="btn outline" type="button" id="photoReset">↺ Reset kadru</button>
+            <button class="btn red" type="submit">💾 Zapisz zdjęcie</button>
+          </div>
+          <div class="muted" id="photoEditorStatus" style="margin-top:8px;font-size:12px">Obsługiwane są zdjęcia z galerii telefonu.</div>
         </form>
+      </div>
+      <div class="card">
+        <h3>📊 Moje podsumowanie</h3>
+        <div id="profileInsights"><div class="empty">Ładowanie statystyk...</div></div>
       </div>
       <div class="card">
         <h3>🔔 Powiadomienia</h3>
@@ -1653,6 +1693,7 @@ function renderProfile(){
       </div>`;
     $("staffProfileArea").innerHTML="";
     loadMyStats();
+    loadProfileInsights();
     updatePushStatus();
   }else{
     $("memberProfileArea").innerHTML="";
@@ -3307,26 +3348,105 @@ $("newsForm").addEventListener("submit",async e=>{
   }
 });
 
+let profilePhotoSource=null;
+let profilePhotoObjectUrl=null;
+function updatePhotoCropPreview(){
+  const root=$("photoCropPreview");
+  if(!root)return;
+  const img=root.querySelector("img");
+  if(!img)return;
+  const zoom=Number($("photoZoom")?.value||1);
+  const x=Number($("photoX")?.value||0);
+  const y=Number($("photoY")?.value||0);
+  img.style.transform=`scale(${zoom}) translate(${x/2}%,${y/2}%)`;
+}
+document.addEventListener("change",e=>{
+  if(e.target.id!=="photoFile")return;
+  const file=e.target.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith("image/")){toast("Wybierz plik graficzny.","error");return;}
+  if(file.size>12*1024*1024){toast("Zdjęcie jest za duże. Wybierz plik do 12 MB.","error");e.target.value="";return;}
+  if(profilePhotoObjectUrl)URL.revokeObjectURL(profilePhotoObjectUrl);
+  profilePhotoObjectUrl=URL.createObjectURL(file);
+  const root=$("photoCropPreview");
+  root.innerHTML='<img alt="Podgląd wybranego zdjęcia">';
+  root.querySelector("img").src=profilePhotoObjectUrl;
+  profilePhotoSource=new Image();
+  profilePhotoSource.onload=()=>updatePhotoCropPreview();
+  profilePhotoSource.src=profilePhotoObjectUrl;
+});
+["photoZoom","photoX","photoY"].forEach(id=>document.addEventListener("input",e=>{
+  if(e.target.id===id)updatePhotoCropPreview();
+}));
+document.addEventListener("click",e=>{
+  if(e.target.id!=="photoReset")return;
+  ["photoZoom","photoX","photoY"].forEach((id,i)=>{const el=$(id);if(el)el.value=i===0?"1":"0";});
+  updatePhotoCropPreview();
+});
 document.addEventListener("submit",async e=>{
   if(e.target.id!=="photoForm")return;
   e.preventDefault();
-
-  const photo=$("photoUrl").value.trim();
-
+  const status=$("photoEditorStatus");
   try{
-    const data=await api("/api/profile",{
-      method:"PUT",
-      body:JSON.stringify({photo})
-    });
-
-    state.photo=data?.member?.photo ?? data?.photo ?? photo;
+    let photo=state.photo||"";
+    if(profilePhotoSource){
+      const source=profilePhotoSource;
+      const side=Math.min(source.naturalWidth,source.naturalHeight);
+      const zoom=Number($("photoZoom").value||1);
+      const cropSide=side/zoom;
+      const maxX=Math.max(0,source.naturalWidth-cropSide);
+      const maxY=Math.max(0,source.naturalHeight-cropSide);
+      const x=maxX*(Number($("photoX").value||0)+100)/200;
+      const y=maxY*(Number($("photoY").value||0)+100)/200;
+      const canvas=document.createElement("canvas");
+      canvas.width=512;canvas.height=512;
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(source,x,y,cropSide,cropSide,0,0,512,512);
+      photo=canvas.toDataURL("image/jpeg",0.82);
+    }else if(!photo){
+      toast("Najpierw wybierz zdjęcie z galerii.","error");return;
+    }
+    if(status)status.textContent="Zapisywanie zdjęcia…";
+    const data=await api("/api/profile",{method:"PUT",body:JSON.stringify({photo})});
+    state.photo=data?.member?.photo??data?.photo??photo;
     localStorage.setItem("mdp_photo",state.photo);
+    profilePhotoSource=null;
+    if(profilePhotoObjectUrl){URL.revokeObjectURL(profilePhotoObjectUrl);profilePhotoObjectUrl=null;}
     renderProfile();
-    toast("Zdjęcie zapisane.");
+    toast("Zdjęcie profilowe zapisane.");
   }catch(err){
+    if(status)status.textContent="Nie udało się zapisać zdjęcia.";
     toast("Nie udało się zapisać zdjęcia: "+err.message,"error");
   }
 });
+
+async function loadProfileInsights(){
+  if(state.role!=="member")return;
+  const root=$("profileInsights");if(!root)return;
+  try{
+    const [timing,training]=await Promise.all([
+      api("/api/timing-results"),
+      api("/api/training-center")
+    ]);
+    const results=Array.isArray(timing?.results)?timing.results:[];
+    const valid=results.filter(r=>r.valid!==false&&r.valid!==0);
+    const best=valid.length?Math.min(...valid.map(r=>Number(r.time_ms)).filter(Number.isFinite)):null;
+    const goals=Array.isArray(training?.goals)?training.goals:[];
+    const logs=Array.isArray(training?.logs)?training.logs:[];
+    const active=goals.filter(g=>g.status==="active").length;
+    const completed=goals.filter(g=>g.status==="completed").length;
+    const fmt=ms=>{const n=Number(ms);return Number.isFinite(n)?(n/1000).toFixed(2)+" s":"—";};
+    const recent=logs.slice(0,4).map(log=>`<div class="profile-activity-item"><span><b>${escapeHtml(log.exercise||"Ćwiczenie")}</b><br><small class="muted">${escapeHtml(log.category||"ogólne")}</small></span><span class="muted">${log.duration_seconds?Math.round(Number(log.duration_seconds)/60)+" min":log.distance_m?Number(log.distance_m)+" m":log.repetitions?Number(log.repetitions)+" powt.":"Zapisane"}</span></div>`).join("");
+    root.innerHTML=`<div class="profile-insight-grid">
+      <div class="profile-insight"><strong>${valid.length}</strong><span>Ważne wyniki stopera</span></div>
+      <div class="profile-insight"><strong>${best===null?"—":fmt(best)}</strong><span>Najlepszy czas</span></div>
+      <div class="profile-insight"><strong>${active}</strong><span>Aktywne cele</span></div>
+      <div class="profile-insight"><strong>${completed}</strong><span>Ukończone cele</span></div>
+      <div class="profile-insight"><strong>${logs.length}</strong><span>Zapisane ćwiczenia</span></div>
+      <div class="profile-insight"><strong>${goals.length}</strong><span>Wszystkie cele</span></div>
+    </div><h3 style="margin-top:18px">Ostatnia aktywność</h3>${recent||'<p class="muted">Nie ma jeszcze zapisanych ćwiczeń.</p>'}`;
+  }catch(err){root.innerHTML=`<div class="empty">${escapeHtml(err.message||"Nie udało się pobrać podsumowania.")}</div>`;}
+}
 
 async function ensurePushSubscription(){
   if(state.role!=="member") return;
