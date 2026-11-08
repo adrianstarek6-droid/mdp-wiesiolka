@@ -413,6 +413,51 @@ async function initDb() {
       ON mdp_timing_results(member_id, created_at DESC);
   `);
 
+
+  // Centrum ćwiczeń — tabele dodatnie, niezależne od historii stopera i obecności.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mdp_training_goals (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      exercise TEXT NOT NULL DEFAULT '',
+      target_value NUMERIC(10,2),
+      target_unit TEXT NOT NULL DEFAULT '',
+      target_date DATE,
+      member_id INTEGER REFERENCES members(id) ON DELETE RESTRICT,
+      status TEXT NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active','completed','archived')),
+      created_by_role TEXT NOT NULL,
+      created_by_member_id INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      archived_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_goals_member_status
+      ON mdp_training_goals(member_id,status,target_date);
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_goals_created
+      ON mdp_training_goals(created_at DESC);
+    CREATE TABLE IF NOT EXISTS mdp_training_logs (
+      id SERIAL PRIMARY KEY,
+      member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+      goal_id INTEGER REFERENCES mdp_training_goals(id) ON DELETE RESTRICT,
+      exercise TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'ogólne',
+      duration_seconds INTEGER CHECK (duration_seconds IS NULL OR duration_seconds >= 0),
+      distance_m INTEGER CHECK (distance_m IS NULL OR distance_m >= 0),
+      repetitions INTEGER CHECK (repetitions IS NULL OR repetitions >= 0),
+      notes TEXT NOT NULL DEFAULT '',
+      recorded_by_role TEXT NOT NULL,
+      recorded_by_member_id INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      archived_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_logs_member_date
+      ON mdp_training_logs(member_id,created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_logs_goal
+      ON mdp_training_logs(goal_id,created_at DESC);
+  `);
+
   // Addytywne znaczniki archiwizacji — bez usuwania rekordów i powiązanej historii.
   await pool.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
@@ -1145,6 +1190,130 @@ app.delete('/api/timing-results/:id', auth, staff, async (req, res) => {
   } catch (e) {
     console.error('Błąd unieważniania wyniku:', e);
     res.status(500).json({error: 'Nie udało się unieważnić wyniku.'});
+  }
+});
+
+
+ // ======================================================
+ // CENTRUM ĆWICZEŃ MDP — cele i dziennik
+ // ======================================================
+
+app.get('/api/training-center', auth, async (req, res) => {
+  try {
+    const requestedId = req.role === 'member'
+      ? Number(req.member.id)
+      : (req.query.memberId && Number.isInteger(Number(req.query.memberId)) ? Number(req.query.memberId) : null);
+    const goals = await pool.query(`
+      SELECT g.*, m.first_name, m.last_name
+      FROM mdp_training_goals g
+      LEFT JOIN members m ON m.id=g.member_id
+      WHERE g.archived_at IS NULL
+        AND ($1::int IS NULL OR g.member_id IS NULL OR g.member_id=$1)
+      ORDER BY CASE WHEN g.status='active' THEN 0 WHEN g.status='completed' THEN 1 ELSE 2 END,
+               g.target_date ASC NULLS LAST, g.created_at DESC
+    `, [requestedId]);
+    const logs = await pool.query(`
+      SELECT l.*, m.first_name, m.last_name
+      FROM mdp_training_logs l
+      JOIN members m ON m.id=l.member_id
+      WHERE l.archived_at IS NULL
+        AND ($1::int IS NULL OR l.member_id=$1)
+      ORDER BY l.created_at DESC,l.id DESC
+      LIMIT 250
+    `, [requestedId]);
+    res.json({goals:goals.rows,logs:logs.rows,staff:isStaff(req)});
+  } catch (e) {
+    console.error('Błąd Centrum ćwiczeń:',e);
+    res.status(500).json({error:'Nie udało się pobrać Centrum ćwiczeń.'});
+  }
+});
+
+app.post('/api/training-goals', auth, staff, async (req, res) => {
+  try {
+    const title=String(req.body?.title||'').trim().slice(0,120);
+    const description=String(req.body?.description||'').trim().slice(0,1000);
+    const exercise=String(req.body?.exercise||'').trim().slice(0,120);
+    const targetUnit=String(req.body?.target_unit||'').trim().slice(0,30);
+    const rawValue=req.body?.target_value;
+    const targetValue=rawValue===null||rawValue===undefined||rawValue===''?null:Number(rawValue);
+    const targetDate=String(req.body?.target_date||'').trim()||null;
+    const memberId=req.body?.member_id===null||req.body?.member_id===undefined||req.body?.member_id===''?null:Number(req.body.member_id);
+    if(!title)return res.status(400).json({error:'Wpisz nazwę celu.'});
+    if(targetValue!==null&&(!Number.isFinite(targetValue)||targetValue<0||targetValue>10000000))return res.status(400).json({error:'Nieprawidłowa wartość celu.'});
+    if(targetDate&&!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return res.status(400).json({error:'Nieprawidłowy termin celu.'});
+    if(memberId!==null&&(!Number.isInteger(memberId)||memberId<1))return res.status(400).json({error:'Nieprawidłowy członek MDP.'});
+    if(memberId!==null){
+      const member=await pool.query("SELECT id FROM members WHERE id=$1 AND COALESCE(role,'member')='member' AND archived_at IS NULL",[memberId]);
+      if(!member.rows[0])return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
+    }
+    const r=await pool.query(`
+      INSERT INTO mdp_training_goals
+        (title,description,exercise,target_value,target_unit,target_date,member_id,created_by_role,created_by_member_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING *
+    `,[title,description,exercise,targetValue,targetUnit,targetDate,memberId,req.role,req.memberId?Number(req.memberId):null]);
+    res.status(201).json({goal:r.rows[0]});
+  } catch(e) {
+    console.error('Błąd tworzenia celu treningowego:',e);
+    res.status(500).json({error:'Nie udało się zapisać celu.'});
+  }
+});
+
+app.patch('/api/training-goals/:id', auth, staff, async (req, res) => {
+  try {
+    const id=Number(req.params.id),status=String(req.body?.status||'');
+    if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'Nieprawidłowe ID celu.'});
+    if(!['active','completed','archived'].includes(status))return res.status(400).json({error:'Nieprawidłowy status celu.'});
+    const r=await pool.query(`
+      UPDATE mdp_training_goals
+      SET status=$2,archived_at=CASE WHEN $2='archived' THEN NOW() ELSE NULL END,updated_at=NOW()
+      WHERE id=$1 AND archived_at IS NULL
+      RETURNING *
+    `,[id,status]);
+    if(!r.rows[0])return res.status(404).json({error:'Nie znaleziono aktywnego celu.'});
+    res.json({goal:r.rows[0]});
+  } catch(e) {
+    console.error('Błąd aktualizacji celu treningowego:',e);
+    res.status(500).json({error:'Nie udało się zmienić celu.'});
+  }
+});
+
+app.post('/api/training-logs', auth, async (req, res) => {
+  try {
+    const memberId=req.role==='member'?Number(req.member.id):Number(req.body?.member_id);
+    const exercise=String(req.body?.exercise||'').trim().slice(0,120);
+    const category=String(req.body?.category||'ogólne').trim().slice(0,60)||'ogólne';
+    const notes=String(req.body?.notes||'').trim().slice(0,1000);
+    const nullableInt=value=>{
+      if(value===null||value===undefined||value==='')return null;
+      const n=Number(value);
+      return Number.isInteger(n)&&n>=0&&n<=10000000?n:NaN;
+    };
+    const duration=nullableInt(req.body?.duration_seconds);
+    const distance=nullableInt(req.body?.distance_m);
+    const repetitions=nullableInt(req.body?.repetitions);
+    const goalId=req.body?.goal_id===null||req.body?.goal_id===undefined||req.body?.goal_id===''?null:Number(req.body.goal_id);
+    if(!Number.isInteger(memberId)||memberId<1)return res.status(400).json({error:'Wybierz członka MDP.'});
+    if(!exercise)return res.status(400).json({error:'Wpisz nazwę ćwiczenia.'});
+    if([duration,distance,repetitions].some(Number.isNaN))return res.status(400).json({error:'Czas, dystans i liczba powtórzeń muszą być nieujemnymi liczbami całkowitymi.'});
+    if(duration===null&&distance===null&&repetitions===null&&!notes)return res.status(400).json({error:'Dodaj przynajmniej jeden wynik albo notatkę.'});
+    const member=await pool.query("SELECT id FROM members WHERE id=$1 AND COALESCE(role,'member')='member' AND archived_at IS NULL",[memberId]);
+    if(!member.rows[0])return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
+    if(goalId!==null){
+      if(!Number.isInteger(goalId)||goalId<1)return res.status(400).json({error:'Nieprawidłowy cel.'});
+      const goal=await pool.query("SELECT id,member_id FROM mdp_training_goals WHERE id=$1 AND status='active' AND archived_at IS NULL",[goalId]);
+      if(!goal.rows[0]||(goal.rows[0].member_id!==null&&Number(goal.rows[0].member_id)!==memberId))return res.status(400).json({error:'Wybrany cel nie jest dostępny dla tego członka.'});
+    }
+    const r=await pool.query(`
+      INSERT INTO mdp_training_logs
+        (member_id,goal_id,exercise,category,duration_seconds,distance_m,repetitions,notes,recorded_by_role,recorded_by_member_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *
+    `,[memberId,goalId,exercise,category,duration,distance,repetitions,notes,req.role,req.memberId?Number(req.memberId):null]);
+    res.status(201).json({log:r.rows[0]});
+  } catch(e) {
+    console.error('Błąd zapisu dziennika ćwiczeń:',e);
+    res.status(500).json({error:'Nie udało się zapisać ćwiczenia.'});
   }
 });
 
