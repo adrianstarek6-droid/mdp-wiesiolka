@@ -794,6 +794,31 @@ body{background-color:#050505}
 .volvo-locker-list>div>small{font-size:10px;color:#9ba4ad}
 @media(max-width:360px){.bottom-nav .nav-btn{font-size:9px}.bottom-nav .nav-btn b{font-size:18px}.home-quick-grid,.more-grid{gap:8px}.home-quick-card,.more-tile{padding:11px}}
 
+
+/* Kartoteka członków — czytelny widok kadry */
+.member-roster-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
+.member-roster-head h4{margin:0 0 4px;font-size:17px}
+.member-roster-head p{margin:0;font-size:12px}
+.member-count,.member-record-id{font-size:11px;font-weight:800;color:#ff747b;background:#35171c;border:1px solid #693039;border-radius:999px;padding:6px 10px;white-space:nowrap}
+.member-search{margin:14px 0}
+.member-roster-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.member-record-card{min-width:0;padding:15px;border:1px solid #33414e;border-radius:17px;background:linear-gradient(145deg,#1a242e,#10161d);box-shadow:0 10px 25px rgba(0,0,0,.18)}
+.member-record-top{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.member-roster-avatar{width:52px;height:52px;flex:0 0 52px;border-radius:15px;object-fit:cover;border:1px solid #45515d;background:#202a34}
+.member-roster-initials{display:grid;place-items:center;color:#fff;font-size:17px;font-weight:900;background:linear-gradient(145deg,#8e2029,#35151b)}
+.member-record-name{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.member-record-name b{font-size:15px;overflow-wrap:anywhere}
+.member-record-name span{font-size:11px;color:#9eabb7}
+.member-record-name span i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#27c47b;margin-right:5px}
+.member-record-id{padding:4px 8px;color:#b6c0ca;background:#202a34;border-color:#3b4a58}
+.member-record-fields{display:grid;grid-template-columns:1fr;gap:10px}
+.member-record-fields label{display:flex;flex-direction:column;gap:5px;color:#c5ced7;font-size:11px;font-weight:800}
+.member-record-fields input{width:100%;min-width:0;padding:11px!important}
+.member-record-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:13px;padding-top:12px;border-top:1px solid #2b3742}
+.member-record-actions .muted{font-size:10px}
+.member-record-actions .btn{flex:0 0 auto}
+@media(min-width:620px){.member-roster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.member-record-fields{grid-template-columns:1fr 1fr}.member-record-fields label:first-child{grid-column:1/-1}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -2415,6 +2440,15 @@ async function loadStaffUniformRecords(){
   }
 }
 
+function filterStaffMemberCards(value){
+  const query=String(value||'').trim().toLocaleLowerCase('pl');
+  const cards=[...document.querySelectorAll('#staffMemberCards .member-record-card')];
+  let visible=0;
+  cards.forEach(card=>{const match=!query||(card.dataset.search||'').includes(query);card.style.display=match?'':'none';if(match)visible++;});
+  const empty=$('staffMemberSearchEmpty');
+  if(empty)empty.style.display=cards.length&&visible===0?'':'none';
+}
+
 function showStaffMembersTab(tab){
   if(!['guardian','admin'].includes(state.role)) return;
   staffMembersTab=tab==='uniform'?'uniform':'data';
@@ -2425,21 +2459,30 @@ function renderStaffMembersArea(){
   const box=$('staffMembersData');
   if(!box) return;
   if(staffMembersTab==='data'){
+    const initials=m=>String((m.first_name||m.name||'').trim().charAt(0)+(m.last_name||'').trim().charAt(0)).toUpperCase();
     box.innerHTML=`
-      <h4>👥 Dane członków</h4>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:760px">
-          <thead><tr><th style="text-align:left;padding:8px">Członek</th><th style="text-align:left;padding:8px">Adres zamieszkania</th><th style="text-align:left;padding:8px">Telefon członka</th><th style="text-align:left;padding:8px">Telefon opiekuna</th><th></th></tr></thead>
-          <tbody>${staffMemberRecords.length?staffMemberRecords.map(m=>`
-            <tr>
-              <td style="padding:8px"><b>${escapeHtml(`${m.first_name||m.name||''} ${m.last_name||''}`.trim())}</b></td>
-              <td style="padding:8px"><input id="addr_${m.id}" value="${escapeHtml(m.address||'')}" placeholder="Adres"></td>
-              <td style="padding:8px"><input id="phone_${m.id}" value="${escapeHtml(m.phone||'')}" placeholder="Telefon"></td>
-              <td style="padding:8px"><input id="gphone_${m.id}" value="${escapeHtml(m.guardian_phone||'')}" placeholder="Telefon opiekuna"></td>
-              <td style="padding:8px"><button class="btn red" type="button" onclick="saveMemberRecord(${Number(m.id)})">💾 Zapisz</button></td>
-            </tr>`).join(''):`<tr><td colspan="5" class="empty">Brak członków.</td></tr>`}</tbody>
-        </table>
-      </div>`;
+      <div class="member-roster-head">
+        <div><h4>👥 Kartoteka członków</h4><p class="muted">Dane kontaktowe i podstawowe informacje kadry.</p></div>
+        <span class="member-count">${staffMemberRecords.length} osób</span>
+      </div>
+      <div class="field member-search"><label for="staffMemberSearch">🔎 Znajdź członka</label><input id="staffMemberSearch" type="search" placeholder="Wpisz imię, nazwisko lub telefon..." oninput="filterStaffMemberCards(this.value)"></div>
+      <div class="member-roster-grid" id="staffMemberCards">
+        ${staffMemberRecords.length?staffMemberRecords.map(m=>{
+          const fullName=`${m.first_name||m.name||''} ${m.last_name||''}`.trim();
+          const photo=m.photo?'<img class="member-roster-avatar" src="'+escapeHtml(m.photo)+'" alt="">':'<div class="member-roster-avatar member-roster-initials">'+escapeHtml(initials(m))+'</div>';
+          return `
+            <article class="member-record-card" data-search="${escapeHtml(`${fullName} ${m.phone||''} ${m.guardian_phone||''} ${m.address||''}`.toLowerCase())}">
+              <div class="member-record-top">${photo}<div class="member-record-name"><b>${escapeHtml(fullName)}</b><span><i></i> Aktywny członek MDP</span></div><span class="member-record-id">#${Number(m.id)}</span></div>
+              <div class="member-record-fields">
+                <label>📍 Adres zamieszkania<input id="addr_${m.id}" value="${escapeHtml(m.address||'')}" placeholder="Nie podano"></label>
+                <label>📱 Telefon członka<input id="phone_${m.id}" type="tel" value="${escapeHtml(m.phone||'')}" placeholder="Nie podano"></label>
+                <label>👨‍👩‍👧 Telefon opiekuna<input id="gphone_${m.id}" type="tel" value="${escapeHtml(m.guardian_phone||'')}" placeholder="Nie podano"></label>
+              </div>
+              <div class="member-record-actions"><span class="muted">Zmiany zapisują się po kliknięciu</span><button class="btn red" type="button" onclick="saveMemberRecord(${Number(m.id)})">💾 Zapisz dane</button></div>
+            </article>`;
+        }).join(''):`<div class="empty">Brak aktywnych członków.</div>`}
+      </div>
+      <div id="staffMemberSearchEmpty" class="empty" style="display:none">Nie znaleziono członka o takiej nazwie lub numerze.</div>`;
   }else{
     const items=[['koszula','Koszula'],['krawat','Krawat'],['czapka_czerwona','Czapka czerwona'],['czapka_czarna','Czapka czarna'],['czapka_zimowa','Czapka zimowa'],['czarna_koszulka','Czarna koszulka'],['czerwona_koszulka','Czerwona koszulka'],['bluza_koszaru','Bluza koszaru'],['spodnie_koszaru','Spodnie koszaru'],['bandama','Bandama'],['kamizelka','Kamizelka']];
     const assigned=new Map(staffUniformRecords.map(x=>[Number(x.id),x]));
