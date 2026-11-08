@@ -268,6 +268,35 @@ button,.card,.nav-btn,.stat,.badge,.att-btn,.group-card,.icon-btn{
 /* Zbiórki: aktywne na górze, zakończone w zwijanej historii */
 #eventsList details>summary::-webkit-details-marker{color:var(--red)}
 #eventsList details>summary{user-select:none}
+
+/* ===== STRAŻACKI REDESIGN — MDP WIESIÓŁKA ===== */
+:root{--bg:#08090b;--card:#121519;--card2:#181d22;--line:#293039;--red:#d71920;--red2:#f12b32;--white:#f5f7f8;--muted:#9ba4ad;--green:#25bd78;--yellow:#e9b949;--blue:#4a91e8}
+html,body{background:radial-gradient(ellipse at 50% -18%,rgba(164,18,25,.19),transparent 44%),linear-gradient(180deg,#0a0c0f 0%,#08090b 55%,#090a0c 100%)}
+header{background:rgba(9,11,14,.91);border-bottom:1px solid rgba(255,255,255,.075)}
+.topbar{height:72px}
+.logo,.login-logo{background:linear-gradient(145deg,#211316,#101215);border:1px solid #6a252b;color:#ff4b52;box-shadow:inset 0 1px rgba(255,255,255,.07),0 7px 20px rgba(0,0,0,.28)}
+.brand b{letter-spacing:.15px}.brand small{letter-spacing:1.1px;text-transform:uppercase;font-size:9px}
+main{padding-top:20px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(112deg,rgba(10,12,15,.97) 0%,rgba(31,13,16,.96) 62%,rgba(75,12,18,.94) 100%);border:1px solid #512329;border-radius:25px;box-shadow:0 20px 55px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.06)}
+.hero:after{content:"";position:absolute;right:-34px;top:-62px;width:190px;height:190px;border:1px solid rgba(255,255,255,.07);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.018),0 0 0 38px rgba(255,255,255,.014);pointer-events:none}
+.hero h1{font-size:clamp(28px,7vw,36px);letter-spacing:-1px}.hero h1 span{color:#ff4149}.hero p{max-width:460px;color:#c0c2c5}
+.section-title{margin-top:25px}.section-title h2{letter-spacing:-.25px}
+.card{background:linear-gradient(150deg,rgba(23,28,33,.98),rgba(15,18,22,.98));border:1px solid #2a323b;border-radius:19px;box-shadow:0 12px 28px rgba(0,0,0,.19),inset 0 1px rgba(255,255,255,.025)}
+.card h3{letter-spacing:-.25px}.btn{border-radius:12px;letter-spacing:.05px}.btn.red{background:linear-gradient(135deg,#f02a32,#b90f18);box-shadow:0 6px 18px rgba(215,25,32,.18)}.btn.danger{background:#631a20;border:1px solid #8a252d}.btn.outline{border-color:#3a4652;background:rgba(255,255,255,.025)}
+input,textarea,select{background:#0c1014;border-color:#303943}input:focus,textarea:focus,select:focus{border-color:#d71920;box-shadow:0 0 0 3px rgba(215,25,32,.12)}
+.bottom-nav{background:rgba(9,11,14,.93);border-top-color:#252b32}.nav-btn.active{background:linear-gradient(145deg,#401217,#211014);border-color:#74232b;box-shadow:0 5px 20px rgba(215,25,32,.16)}.nav-btn.active b{color:#ff4b52}
+.stat{background:linear-gradient(145deg,#1b2127,#13171b);border-color:#303943}.badge{background:#1a2026;border-color:#343d47}.outfit-box{background:linear-gradient(110deg,#201316,#17191c);border-color:#52242a}
+.login-card{background:linear-gradient(155deg,#171b20,#0e1114);border-color:#3b3033}.login-card p{letter-spacing:.2px}.login-card .btn.red{width:100%;padding:14px}
+.calendar-panel{padding:16px;margin:20px 0 14px}.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.calendar-top h3{margin:3px 0 0;font-size:19px}.eyebrow{font-size:9px;font-weight:900;letter-spacing:1.5px;color:#f05259}
+.calendar-controls{display:flex;align-items:center;gap:8px}.calendar-controls strong{font-size:12px;min-width:104px;text-align:center;text-transform:capitalize}.calendar-controls .icon-btn{width:34px;height:34px;border-radius:10px;font-size:22px;line-height:1}
+.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.calendar-weekdays{margin-bottom:7px}.calendar-weekdays span{text-align:center;color:#7f8993;font-size:10px;font-weight:800;padding:5px 0}
+.calendar-day{position:relative;min-height:43px;border:1px solid transparent;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#171c21;color:#d9dee3;font-size:12px;font-weight:700}
+.calendar-day.muted-day{opacity:.28;background:transparent}.calendar-day.today{border-color:#8a343b;color:#fff}.calendar-day.has-events:after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:#ff4149;box-shadow:0 0 8px rgba(255,65,73,.5)}
+.calendar-day.selected{background:linear-gradient(145deg,#8f1820,#501117);border-color:#f04a52;color:#fff}.calendar-day.selected:after{background:#fff}.calendar-day:disabled{cursor:default}
+.calendar-day-events{border-top:1px solid #293039;margin-top:13px;padding-top:12px;font-size:12px;line-height:1.5}.calendar-event-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #252c33}.calendar-event-row:last-child{border-bottom:0}.calendar-event-row b{font-size:12px}.calendar-event-row span{color:#aab3bc;font-size:11px;white-space:nowrap}
+@media(max-width:380px){.calendar-panel{padding:12px}.calendar-weekdays,.calendar-grid{gap:3px}.calendar-day{min-height:39px;border-radius:9px}.calendar-controls strong{min-width:88px}}
+@media(prefers-reduced-motion:no-preference){.card{transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}.card:hover{border-color:#414b56}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
@@ -336,6 +365,15 @@ button,.card,.nav-btn,.stat,.badge,.att-btn,.group-card,.icon-btn{
 
   <section id="eventsScreen" class="screen">
     <div class="section-title"><h2>Zbiórki</h2><small id="eventsCount"></small></div>
+    <div class="calendar-panel card">
+      <div class="calendar-top"><div><span class="eyebrow">PLAN DRUŻYNY</span><h3>Kalendarz zbiórek</h3></div>
+        <div class="calendar-controls"><button class="icon-btn" type="button" onclick="shiftCalendar(-1)" aria-label="Poprzedni miesiąc">‹</button><strong id="calendarMonth"></strong><button class="icon-btn" type="button" onclick="shiftCalendar(1)" aria-label="Następny miesiąc">›</button></div>
+      </div>
+      <div class="calendar-weekdays"><span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span></div>
+      <div id="eventsCalendar" class="calendar-grid"></div>
+      <div id="calendarDayEvents" class="calendar-day-events"><span class="muted">Wybierz dzień, aby zobaczyć zaplanowane zbiórki.</span></div>
+    </div>
+    <div class="section-title"><h2>Lista zbiórek</h2><small id="eventsListCaption"></small></div>
     <div id="eventsList"></div>
   </section>
 
@@ -788,8 +826,28 @@ function renderHome(){
     `<div class="empty">Brak ogłoszeń.</div>`;
 }
 
+
+let calendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let selectedCalendarDay=new Date().toISOString().slice(0,10);
+function shiftCalendar(amount){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+amount,1);renderCalendar()}
+function renderCalendar(){
+ const root=$("eventsCalendar"),label=$("calendarMonth"),dayBox=$("calendarDayEvents");if(!root||!label||!dayBox)return;
+ const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),offset=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+ label.textContent=calendarCursor.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});
+ const today=new Date().toISOString().slice(0,10),byDate=new Map();
+ (state.data.events||[]).forEach(ev=>{const date=String(ev.event_date||ev.date||"").slice(0,10);if(date){if(!byDate.has(date))byDate.set(date,[]);byDate.get(date).push(ev)}});
+ const cells=[];for(let i=0;i<42;i++){const d=i-offset+1;if(d<1||d>days){cells.push('<div class="calendar-day muted-day"></div>');continue}
+ const key=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),has=byDate.has(key);
+ cells.push(`<button type="button" class="calendar-day ${key===today?'today':''} ${has?'has-events':''} ${key===selectedCalendarDay?'selected':''}" onclick="selectCalendarDay('${key}')">${d}</button>`)}
+ root.innerHTML=cells.join("");const chosen=byDate.get(selectedCalendarDay)||[];
+ if(chosen.length){dayBox.innerHTML=`<div class="eyebrow">${new Date(selectedCalendarDay+"T12:00:00").toLocaleDateString("pl-PL",{weekday:"long",day:"numeric",month:"long"})}</div>`+chosen.map(ev=>`<div class="calendar-event-row"><b>${escapeHtml(ev.title||"Zbiórka")}</b><span>${escapeHtml(ev.event_time||ev.time||"Godzina nieustalona")}${ev.completed?" · zakończona":""}</span></div>`).join("")}
+ else dayBox.innerHTML=`<span class="muted">${new Date(selectedCalendarDay+"T12:00:00").toLocaleDateString("pl-PL",{weekday:"long",day:"numeric",month:"long"})} — brak zaplanowanych zbiórek.</span>`;
+}
+function selectCalendarDay(day){selectedCalendarDay=day;renderCalendar()}
+
 function renderEvents(){
   const all=[...state.data.events];
+  renderCalendar();
   const active=all.filter(e=>!e.completed).sort((a,b)=>eventDateTime(a)-eventDateTime(b));
   const completed=all.filter(e=>!!e.completed).sort((a,b)=>eventDateTime(b)-eventDateTime(a));
 
@@ -807,6 +865,7 @@ function renderEvents(){
     </details>` : "";
 
   $("eventsList").innerHTML=activeHtml+historyHtml;
+  const caption=$("eventsListCaption");if(caption)caption.textContent=active.length+" aktywne · "+completed.length+" w historii";
 }
 
 function newsCard(n){
@@ -2107,12 +2166,9 @@ async function completeEvent(id){
 }
 
 async function deleteEvent(id){
-  if(!confirm("Na pewno usunąć tę zbiórkę?"))return;
-  try{
-    await api(`/api/events/${id}`,{method:"DELETE"});
-    toast("Zbiórka usunięta.");
-    await loadData();
-  }catch(e){toast(e.message,"error")}
+  if(!confirm("Przenieść tę zbiórkę do archiwum?\n\nZniknie z aktywnego planu, ale jej obecności i historia zostaną zachowane."))return;
+  try{await api(`/api/events/${id}`,{method:"DELETE"});toast("Zbiórka została zarchiwizowana.");await loadData()}
+  catch(e){toast(e.message,"error")}
 }
 
 async function deleteNews(id){
@@ -2156,12 +2212,9 @@ async function addMember(e){
 }
 
 async function deleteMember(id){
-  if(!confirm("Na pewno usunąć tego członka?"))return;
-  try{
-    await api(`/api/members/${id}`,{method:"DELETE"});
-    toast("Członek usunięty.");
-    await loadData();
-  }catch(e){toast(e.message,"error")}
+  if(!confirm("Przenieść tego członka do archiwum?\n\nKonto zostanie wyłączone, ale obecności, wyniki stopera i pozostała historia nie zostaną skasowane."))return;
+  try{await api(`/api/members/${id}`,{method:"DELETE"});toast("Członek został zarchiwizowany. Historia pozostała w systemie.");await loadData()}
+  catch(e){toast(e.message,"error")}
 }
 
 function openModal(html){
