@@ -805,7 +805,7 @@ function eventCard(e, compact=false){
       <div class="actions">
         <button class="btn outline" onclick="showAttendance(${Number(id)})">👥 ${e.completed ? 'Edytuj obecność / historię' : 'Pokaż i edytuj obecność'}</button>
         ${e.completed ? '' : `<button class="btn green" onclick="completeEvent(${Number(id)})">✅ Zakończ zbiórkę</button>`}
-        <button class="btn danger" onclick="deleteEvent(${Number(id)})">Usuń</button>
+        ${state.role==="admin" ? `<button class="btn danger" onclick="deleteEvent(${Number(id)})">Archiwizuj</button>` : ""}
       </div>
     `:""}
   </article>`;
@@ -1885,7 +1885,7 @@ function renderManage(){
           <b>${escapeHtml(m.first_name || m.name || "")} ${escapeHtml(m.last_name || "")}</b>
           <div class="muted">${escapeHtml(m.role || "member")}</div>
         </div>
-        <button class="btn danger" onclick="deleteMember(${Number(m.id)})">Usuń</button>
+        ${state.role==="admin" ? `<button class="btn danger" onclick="deleteMember(${Number(m.id)})">Archiwizuj</button>` : ""}
       </div>
     </div>
   `).join("") : `<div class="empty">Brak członków.</div>`;
