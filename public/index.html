@@ -1048,7 +1048,7 @@ body{background-color:#050505}
       </form>
     </div>
 
-    <div class="card">
+    <div class="card" id="trainingCenterStaffLogForm" style="display:none">
       <h3>📝 Zapisz ćwiczenie</h3>
       <p class="muted">Członek zapisuje własną aktywność. Opiekun lub administrator może dodać pomiar członkowi. Wyniki stopera zawodów nadal zapisuje się w Stoperze.</p>
       <form id="trainingLogForm" onsubmit="saveTrainingLog(event)">
@@ -3546,8 +3546,9 @@ async function loadTrainingCenter(){
   const summary=$("trainingCenterSummary"),goalsRoot=$("trainingCenterGoals"),logsRoot=$("trainingCenterLogs"),resultsRoot=$("trainingCenterResults"),calendar=$("trainingCenterCalendar");
   if(!summary||!goalsRoot||!logsRoot||!resultsRoot||!calendar)return;
   const staff=["admin","guardian"].includes(state.role);
-  const goalForm=$("trainingCenterStaffGoalForm"),memberField=$("trainingLogMemberField");
+  const goalForm=$("trainingCenterStaffGoalForm"),logForm=$("trainingCenterStaffLogForm"),memberField=$("trainingLogMemberField");
   if(goalForm)goalForm.style.display=staff?"":"none";
+  if(logForm)logForm.style.display=staff?"":"none";
   if(memberField)memberField.style.display=staff?"":"none";
   if($("trainingLogMember")){$("trainingLogMember").required=staff;$("trainingLogMember").disabled=!staff;}
   const memberOptions=(state.data.members||[]).filter(m=>(m.role||"member")==="member").map(m=>`<option value="${Number(m.id)}">${escapeHtml(memberFullName(m)||"Członek MDP")}</option>`).join("");
