@@ -1208,7 +1208,7 @@ app.get('/api/training-center', auth, async (req, res) => {
       FROM mdp_training_goals g
       LEFT JOIN members m ON m.id=g.member_id
       WHERE g.archived_at IS NULL
-        AND ($1::int IS NULL OR g.member_id IS NULL OR g.member_id=$1)
+        AND ($1::int IS NULL OR g.member_id=$1)
       ORDER BY CASE WHEN g.status='active' THEN 0 WHEN g.status='completed' THEN 1 ELSE 2 END,
                g.target_date ASC NULLS LAST, g.created_at DESC
     `, [requestedId]);
