@@ -3366,7 +3366,8 @@ function cleanQuizQuestions(value) {
 
 app.get('/api/quizzes', auth, async (req, res) => {
   try {
-    const staffView = isStaff(req);
+    const staffView = req.role === 'admin';
+    if (req.role === 'guardian') return res.status(403).json({error:'Podgląd zarządzania quizami jest dostępny tylko dla administratora.'});
     if (staffView) {
       const [quizzes, members, submissions] = await Promise.all([
         pool.query('SELECT id,title,questions,questions_per_round,active,created_at,updated_at FROM quizzes ORDER BY created_at DESC,id DESC'),
