@@ -1008,6 +1008,7 @@ body{background-color:#050505}
   <section id="moreScreen" class="screen">
     <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
     <div class="more-grid">
+      <button class="more-tile" type="button" onclick="openScreen('trainingCenterScreen')"><span>🏃</span><b>Centrum ćwiczeń</b><small>Przygotowanie do zawodów i postępy</small></button>
       <button class="more-tile" type="button" onclick="openScreen('timingScreen')"><span>⏱️</span><b>Stoper</b><small>Pomiary i historia wyników</small></button>
       <button id="quizNavBtn" class="more-tile hidden" type="button" onclick="openScreen('quizScreen')"><span>🧠</span><b>Quizy</b><small>Sprawdź swoją wiedzę</small></button>
       <button class="more-tile" type="button" onclick="openScreen('newsScreen')"><span>📢</span><b>Ogłoszenia</b><small>Informacje drużyny</small></button>
@@ -1017,6 +1018,33 @@ body{background-color:#050505}
       <button id="manageNavBtn" class="more-tile hidden" type="button" onclick="openScreen('manageScreen')"><span>⚙️</span><b>Zarządzanie</b><small>Panel kadry</small></button>
     </div>
     <div class="card more-note"><b>Wszystko w jednym miejscu.</b><p class="muted">Zbiórki, obecności i Gazety pozostają bezpośrednio dostępne z dolnego menu.</p></div>
+  </section>
+
+
+  <section id="trainingCenterScreen" class="screen">
+    <div class="section-title"><h2>🏃 Centrum ćwiczeń MDP</h2><small>Przygotowanie do zawodów</small></div>
+    <div class="hero" style="min-height:0;margin-top:0">
+      <span class="hero-overline">MDP WIESIÓŁKA · TRENING</span>
+      <h1 style="max-width:none!important;font-size:clamp(30px,7vw,42px)!important">Pracujemy na <span>wynik.</span></h1>
+      <p>Wyniki, ćwiczenia i terminy przygotowań w jednym miejscu. Dane pochodzą z zapisów drużyny.</p>
+    </div>
+    <div id="trainingCenterSummary"></div>
+    <div class="section-title"><h2>📈 Twoje / drużynowe wyniki</h2><small id="trainingCenterCount"></small></div>
+    <div id="trainingCenterResults"><div class="empty">Ładowanie wyników…</div></div>
+    <div class="section-title"><h2>📅 Plan przygotowań</h2><small>Zbiórki i ćwiczenia</small></div>
+    <div id="trainingCenterCalendar"></div>
+    <div class="section-title"><h2>🧠 Wiedza MDP</h2><small>Quizy</small></div>
+    <div class="card">
+      <h3>Sprawdź wiedzę przed zawodami</h3>
+      <p class="muted">Quizy MDP pozostają w osobnej funkcji. Centrum ćwiczeń prowadzi do nich bez tworzenia drugiej, niezależnej historii wyników.</p>
+      <button class="btn red" type="button" onclick="openScreen('quizScreen')">Otwórz quizy MDP</button>
+    </div>
+    <div class="card" id="trainingCenterStaffTools" style="display:none">
+      <h3>🛠️ Praca kadry</h3>
+      <p class="muted">Nowe próby i międzyczasy zapisuj dotychczasowym stoperem. Dzięki temu wszystkie wyniki pozostają w jednej historii.</p>
+      <button class="btn red" type="button" onclick="openScreen('timingScreen')">⏱️ Otwórz stoper i zapisz próbę</button>
+    </div>
+    <div class="notice">Wyniki nie są kasowane ani przenoszone. Członek widzi wyłącznie własne pomiary, a opiekun i administrator — wyniki drużyny.</div>
   </section>
 
   <section id="manageScreen" class="screen">
@@ -2810,6 +2838,7 @@ function openScreen(id){
   // wyzerowane rozdane/rozpoczęte/gotowe, ale zachowane grupy,
   // ulice, członków, kolory i liczbę gazet.
   if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
+  if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
   if(id==="manageScreen" && ["admin","guardian"].includes(state.role)) renderQuizAdmin();
   if(id==="newspapersScreen"){
@@ -3408,6 +3437,54 @@ start();
     if(!btn.title)btn.title=btn.textContent.trim();
   });
 })();
+
+
+async function loadTrainingCenter(){
+  const summary=$("trainingCenterSummary"),resultsRoot=$("trainingCenterResults"),calendar=$("trainingCenterCalendar");
+  if(!summary||!resultsRoot||!calendar)return;
+  const staff=["admin","guardian"].includes(state.role);
+  const staffTools=$("trainingCenterStaffTools");if(staffTools)staffTools.style.display=staff?"":"none";
+  summary.innerHTML='<div class="card">Pobieram podsumowanie…</div>';
+  resultsRoot.innerHTML='<div class="empty">Ładowanie wyników…</div>';
+  try{
+    const data=await api("/api/timing-results");
+    const all=Array.isArray(data?.results)?data.results:[];
+    const rows=staff?all:all.filter(r=>Number(r.member_id)===Number(state.memberId));
+    const valid=rows.filter(r=>r.valid!==false&&r.valid!==0);
+    const times=valid.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+    const best=times.length?Math.min(...times):null;
+    const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
+    const errors=valid.reduce((n,r)=>n+Number(r.errors||0),0);
+    summary.innerHTML=`<div class="stats">
+      <div class="stat"><strong>${valid.length}</strong><span>Ważne próby</span></div>
+      <div class="stat"><strong>${best===null?"—":formatTiming(best)}</strong><span>Najlepszy czas</span></div>
+      <div class="stat"><strong>${avg===null?"—":formatTiming(avg)}</strong><span>Średni czas</span></div>
+    </div><div class="stats" style="margin-top:9px">
+      <div class="stat"><strong>${errors}</strong><span>Błędy w próbach</span></div>
+      <div class="stat"><strong>${rows.length}</strong><span>Wszystkie wpisy</span></div>
+      <div class="stat"><strong>${rows.filter(r=>r.valid===false||r.valid===0).length}</strong><span>Unieważnione</span></div>
+    </div>`;
+    $("trainingCenterCount").textContent=staff?"Cała drużyna": "Twoja historia";
+    if(!rows.length){
+      resultsRoot.innerHTML='<div class="empty">Nie ma jeszcze zapisanych prób. Gdy kadra zapisze pomiar, zobaczysz go tutaj.</div>';
+    }else{
+      const grouped=staff?rows.reduce((map,r)=>{const name=(`${r.first_name||""} ${r.last_name||""}`.trim()||"Członek MDP");(map[name]??=[]).push(r);return map;},{}):{"Twoje próby":rows};
+      resultsRoot.innerHTML=Object.entries(grouped).map(([name,list])=>{
+        const usable=list.filter(r=>r.valid!==false&&r.valid!==0);
+        const latest=[...list].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5);
+        return `<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h3>${escapeHtml(name)}</h3><span class="badge">${usable.length} ważnych prób</span></div>
+          ${latest.map(r=>`<div class="calendar-event-row"><div><b>${escapeHtml(r.exercise||"Ćwiczenie")}</b><div class="muted">${escapeHtml(formatCreated(r.created_at))} · błędy: ${Number(r.errors)||0}</div></div><strong>${formatTiming(r.time_ms)}</strong></div>`).join("")}
+          <button class="btn outline" type="button" onclick="openScreen('timingScreen')">Pełna analiza i międzyczasy</button>
+        </div>`;
+      }).join("");
+    }
+  }catch(e){
+    summary.innerHTML='<div class="empty">Nie udało się pobrać podsumowania.</div>';
+    resultsRoot.innerHTML=`<div class="empty">${escapeHtml(e.message)}</div>`;
+  }
+  const upcoming=(state.data.events||[]).filter(e=>!e.completed).sort((a,b)=>eventDateTime(a)-eventDateTime(b));
+  calendar.innerHTML=upcoming.length?upcoming.slice(0,8).map(e=>`<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(e.title||"Zbiórka")}</b><span class="badge">${escapeHtml(formatDate(e.event_date||e.date))}</span></div><div class="muted" style="margin-top:6px">${escapeHtml(e.event_time||e.time||"Godzina nieustalona")} · ${escapeHtml(e.place||e.location||"Miejsce nieustalone")}</div>${e.description?`<p class="muted">${escapeHtml(e.description)}</p>`:""}</div>`).join(""):'<div class="empty">Nie ma zaplanowanych zbiórek. Terminy ćwiczeń pojawią się tutaj po dodaniu ich w kalendarzu zbiórek.</div>';
+}
 
 </script>
 </body>
