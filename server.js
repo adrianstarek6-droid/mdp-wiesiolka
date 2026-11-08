@@ -3445,14 +3445,17 @@ app.post('/api/tournaments/:id/join',auth,async(req,res)=>{
   if(req.role!=='member')return res.status(403).json({error:'Do lobby mogą dołączać tylko członkowie MDP.'});
   const id=Number(req.params.id),memberId=Number(req.memberId);
   if(!Number.isInteger(id)||id<=0||!Number.isInteger(memberId)||memberId<=0)return res.status(400).json({error:'Nieprawidłowy turniej lub członek.'});
+  const client=await pool.connect();
   try{
-    const t=await pool.query("SELECT status,join_open FROM mdp_tournaments WHERE id=$1",[id]);
-    if(!t.rowCount||t.rows[0].status!=='lobby')return res.status(409).json({error:'Ten turniej już się rozpoczął albo został zakończony.'});
-    if(!t.rows[0].join_open)return res.status(409).json({error:'Lobby zostało zamknięte przez administratora.'});
+    await client.query('BEGIN');
+    const t=await client.query("SELECT status,join_open FROM mdp_tournaments WHERE id=$1 FOR UPDATE",[id]);
+    if(!t.rowCount||t.rows[0].status!=='lobby'){await client.query('ROLLBACK');return res.status(409).json({error:'Ten turniej już się rozpoczął albo został zakończony.'});}
+    if(!t.rows[0].join_open){await client.query('ROLLBACK');return res.status(409).json({error:'Lobby zostało zamknięte przez administratora.'});}
     const m=req.member,name=(`${m.first_name||''} ${m.last_name||''}`).trim()||'Członek';
-    await pool.query('INSERT INTO mdp_tournament_players(tournament_id,member_id,member_name) VALUES($1,$2,$3) ON CONFLICT(tournament_id,member_id) DO NOTHING',[id,memberId,name]);
-    res.json({ok:true});
-  }catch(e){console.error(e);res.status(500).json({error:'Nie udało się dołączyć do lobby.'});}
+    await client.query('INSERT INTO mdp_tournament_players(tournament_id,member_id,member_name) VALUES($1,$2,$3) ON CONFLICT(tournament_id,member_id) DO NOTHING',[id,memberId,name]);
+    await client.query('COMMIT');res.json({ok:true});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się dołączyć do lobby.'});}
+  finally{client.release();}
 });
 app.post('/api/tournaments/:id/close-lobby',auth,adminOnly,async(req,res)=>{
   const id=Number(req.params.id);if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy turniej.'});
