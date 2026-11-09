@@ -3819,7 +3819,21 @@ async function updateTrainingGoalStatus(id,status){
 let volvo3d={scene:null,camera:null,renderer:null,group:null,doors:[],raycaster:null,pointer:null,raf:0,drag:false,lastX:0,lastY:0,opened:null,loading:false};
 function volvo3dInfo(title,desc){const el=$("volvo3dInfo");if(el)el.innerHTML='<b>'+title+'</b><p class="muted" style="margin:6px 0 0">'+desc+'</p>';}
 function volvoMat(color,metalness=0,roughness=.62){return new THREE.MeshStandardMaterial({color,metalness,roughness});}
-function volvoBox(parent,w,h,d,x,y,z,color,metal=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),volvoMat(color,metal));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function volvoBox(parent,w,h,d,x,y,z,color,metal=0){
+ // Zaokrąglona geometria zamiast ostrych pudełek: delikatne promienie na panelach,
+ // drzwiach skrytek, zderzakach i detalach. Promień skaluje się do najmniejszego wymiaru.
+ const radius=Math.max(.001,Math.min(w,h,d)*.18);
+ const shape=new THREE.Shape();
+ const x0=-w/2,y0=-h/2,r=Math.min(radius,w/2-.0001,h/2-.0001);
+ shape.moveTo(x0+r,y0);shape.lineTo(x0+w-r,y0);shape.quadraticCurveTo(x0+w,y0,x0+w,y0+r);
+ shape.lineTo(x0+w,y0+h-r);shape.quadraticCurveTo(x0+w,y0+h,x0+w-r,y0+h);
+ shape.lineTo(x0+r,y0+h);shape.quadraticCurveTo(x0,y0+h,x0,y0+h-r);
+ shape.lineTo(x0,y0+r);shape.quadraticCurveTo(x0,y0,x0+r,y0);shape.closePath();
+ const bevel=Math.min(radius*.42,d*.16);
+ const geometry=new THREE.ExtrudeGeometry(shape,{depth:Math.max(.001,d-bevel*2),bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:5});
+ geometry.translate(0,0,-d/2+bevel);
+ const m=new THREE.Mesh(geometry,volvoMat(color,metal,.48));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
 function volvoShape(parent,points,z,depth,color,bevel=.06){
  const sh=new THREE.Shape();sh.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)sh.lineTo(points[i][0],points[i][1]);sh.closePath();
  const geo=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
