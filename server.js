@@ -2666,7 +2666,7 @@ app.get(
         });
       }
 
-      if (COALESCE(m.rows[0].role,'member') !== 'member') {
+      if (String(m.rows[0].role || 'member') !== 'member') {
         return res.json({
           member: m.rows[0],
           stats: {
