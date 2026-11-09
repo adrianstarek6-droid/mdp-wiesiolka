@@ -2300,7 +2300,7 @@ async function initNewspaperMap(active,groups){
 async function startNewspaper(id){
   const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
   try{
-    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true})});
+    const updated=await api(`/api/newspaper-groups/${Number(id)}/start`,{method:"POST",body:JSON.stringify({})});
     state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
     renderNewspapers(); toast("Kolportaż rozpoczęty.");
   }catch(e){toast(e.message,"error")}
@@ -2309,7 +2309,7 @@ async function startNewspaper(id){
 async function setNewspaperDone(id){
   const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
   try{
-    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true,done:true,delivered:Number(g.copies||0)})});
+    const updated=await api(`/api/newspaper-groups/${Number(id)}/complete`,{method:"POST",body:JSON.stringify({delivered:Number(g.copies||0)})});
     state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
     renderNewspapers(); toast("Kolportaż oznaczony jako gotowy.");
   }catch(e){toast(e.message,"error")}
@@ -2319,7 +2319,7 @@ async function addDelivered(id){
   const g=state.newspapers.find(x=>Number(x.id)===Number(id)); if(!g)return;
   const delivered=Math.min(Number(g.copies||0),Number(g.delivered||0)+10);
   try{
-    const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify({started:true,delivered,done:delivered>=Number(g.copies||0)&&Number(g.copies||0)>0})});
+    const updated=await api(`/api/newspaper-groups/${Number(id)}/progress`,{method:"POST",body:JSON.stringify({started:true,delivered,done:delivered>=Number(g.copies||0)&&Number(g.copies||0)>0})});
     state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
     renderNewspapers();
   }catch(e){toast(e.message,"error")}
