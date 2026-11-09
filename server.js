@@ -2949,7 +2949,7 @@ app.get(
 app.post(
   '/api/newspaper-groups',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const b = req.body;
@@ -3093,7 +3093,7 @@ app.post(
 app.put(
   '/api/newspaper-groups/:id',
   auth,
-  staff,
+  adminOnly,
   async (req, res) => {
     try {
       const oldR = await pool.query(
