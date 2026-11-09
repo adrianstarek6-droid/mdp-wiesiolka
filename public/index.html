@@ -1035,25 +1035,29 @@ body{background-color:#050505}
       <div class="volvo-spec"><span>🔧</span><strong>FL280</strong><small>Model podwozia</small></div>
     </div>
     <div class="card volvo-info">
-      <h3>🚒 Volvo 689[S]15 — model interaktywny</h3>
-      <p class="muted">Obracaj pojazd palcem, przybliżaj dwoma palcami. Dotknij skrytki lub tylnego stanowiska, aby wyświetlić opis. Model jest rekonstrukcją poglądową, a nie skanem 1:1.</p>
-      <div id="volvo3dStage" style="position:relative;width:100%;height:360px;background:radial-gradient(ellipse at 50% 45%,#292929,#090909 75%);border:1px solid #343434;border-radius:16px;overflow:hidden">
-        <div id="volvo3dLoading" style="position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font-size:13px;z-index:1">Uruchamianie modelu 3D…</div>
-        <canvas id="volvo3dCanvas" style="width:100%;height:100%;display:block;touch-action:none"></canvas>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div><h3 style="margin:0">📸 Galeria Volvo 689[S]15</h3><p class="muted" style="margin:5px 0 0">Zamiast niedziałającego modelu 3D — zdjęcia i opisy elementów wozu.</p></div>
+        <span class="badge">GALERIA</span>
       </div>
-      <div class="actions" style="margin-top:10px">
-        <button class="btn outline" type="button" onclick="volvo3dReset()">↺ Widok początkowy</button>
-        <button class="btn outline" type="button" onclick="volvo3dShowRear()">Tył pojazdu</button>
-        <button class="btn outline" type="button" onclick="volvo3dRetry()">↻ Uruchom ponownie 3D</button>
+      <div style="display:grid;gap:12px;margin-top:14px">
+        <article style="overflow:hidden;border:1px solid #343434;border-radius:14px;background:#101010">
+          <img src="https://img.czerwonesamochody.com/data/media/953/DSC_0214.jpg" alt="Volvo FL280 Bocar — widok z boku, zdjęcie poglądowe podobnego pojazdu" loading="lazy" style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover">
+          <div style="padding:12px"><b>1. Kabina i zabudowa</b><p class="muted" style="margin:5px 0 0">Zdjęcie poglądowe innego Volvo FL280 z zabudową Bocar. Widać kabinę załogi, przednią część podwozia i zamknięte aluminiowe żaluzje skrytek. Nie jest to fotografia 689[S]15.</p></div>
+        </article>
+        <article style="overflow:hidden;border:1px solid #343434;border-radius:14px;background:#101010">
+          <img src="https://www.czerwonesamochody.com/data/media/953/IMG_1472.jpg" alt="Volvo FL280 Bocar — otwarte skrytki, zdjęcie poglądowe" loading="lazy" style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover">
+          <div style="padding:12px"><b>2. Skrytki sprzętowe</b><p class="muted" style="margin:5px 0 0">Zdjęcie poglądowe podobnej zabudowy. Otwarta przestrzeń skrytek pokazuje półki, uchwyty, mocowania oraz uporządkowane rozmieszczenie wyposażenia.</p></div>
+        </article>
+        <article style="overflow:hidden;border:1px solid #343434;border-radius:14px;background:#101010">
+          <img src="https://img.czerwonesamochody.com/data/media/953/417s30n_mw_5.JPG" alt="Volvo FL280 Bocar — wnętrze skrytek, zdjęcie poglądowe" loading="lazy" style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover">
+          <div style="padding:12px"><b>3. Organizacja wyposażenia</b><p class="muted" style="margin:5px 0 0">Zdjęcie poglądowe podobnego Volvo FL280. Widać, jak sprzęt jest rozdzielony na osobne miejsca i zabezpieczony w skrytkach.</p></div>
+        </article>
       </div>
-      <div id="volvo3dInfo" class="card" style="margin:12px 0 0;background:#0c0c0c">
-        <b>Wybierz element samochodu</b>
-        <p class="muted" style="margin:6px 0 0">Kliknij jedną ze skrytek albo tylną autopompę COMBI-M.</p>
-      </div>
-      <p class="muted" style="font-size:11px;margin:10px 2px 0">Dokładne odwzorowanie 1:1 wymaga pełnego zestawu zdjęć z każdej strony i wnętrza albo skanu 3D. Nie będę udawać, że sam model poglądowy jest takim skanem.</p>
-      <div style="display:grid;gap:8px;margin:12px 0 2px">
-        <a href="https://www.czerwonesamochody.com/details.php?image_id=149943" target="_blank" rel="noopener" style="display:block;padding:11px 13px;border:1px solid #353535;border-radius:12px;background:#151515;color:#f1f1f1;text-decoration:none;font-size:13px;font-weight:700">📷 Oryginalne zdjęcie 689[S]15 z 04.08.2025</a>
-        <a href="https://bos-fahrzeuge.info/einsatzfahrzeuge/207331/Wiesiolka_-_OSP_-_TLF_-_689S15" target="_blank" rel="noopener" style="display:block;padding:11px 13px;border:1px solid #353535;border-radius:12px;background:#151515;color:#f1f1f1;text-decoration:none;font-size:13px;font-weight:700">📋 Karta pojazdu i opis zabudowy</a>
+      <div class="card" style="background:#101010;margin:12px 0 0">
+        <b>🚒 Oryginalne materiały 689[S]15</b>
+        <p class="muted" style="margin:6px 0 10px">Nie udało się pobrać zdjęć bezpośrednio z Facebooka OSP. Poniższy odnośnik prowadzi do fotografii dokładnie Waszego pojazdu; zdjęcia wyżej są wyłącznie poglądowe i nie przedstawiają wyposażenia Wiesiółki.</p>
+        <a href="https://www.czerwonesamochody.com/details.php?image_id=149943" target="_blank" rel="noopener" style="display:block;padding:12px;border:1px solid #8d252b;border-radius:12px;background:#241012;color:#fff;text-decoration:none;font-weight:700;text-align:center">Otwórz zdjęcie Volvo 689[S]15 ↗</a>
+        <a href="https://bos-fahrzeuge.info/einsatzfahrzeuge/207331/Wiesiolka_-_OSP_-_TLF_-_689S15" target="_blank" rel="noopener" style="display:block;margin-top:8px;padding:12px;border:1px solid #353535;border-radius:12px;background:#151515;color:#f1f1f1;text-decoration:none;font-weight:700;text-align:center">Karta pojazdu ↗</a>
       </div>
     </div>
     <div class="card"><h3>📚 Poznaj wyposażenie Volvo</h3><p class="muted">Wybierz skrytkę, kabinę, dach lub stanowisko autopompy.</p>
@@ -2980,7 +2984,7 @@ function openScreen(id){
   // Dzięki temu członek po zakończeniu miesiąca zobaczy od razu
   // wyzerowane rozdane/rozpoczęte/gotowe, ale zachowane grupy,
   // ulice, członków, kolory i liczbę gazet.
-  if(id==="volvoScreen") setTimeout(()=>{try{initVolvo3D();}catch(e){volvo3dShowError(e);}},120);
+  // Galeria Volvo nie wymaga WebGL ani zewnętrznej biblioteki 3D.
   if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
   if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
@@ -3815,233 +3819,7 @@ async function updateTrainingGoalStatus(id,status){
 }
 
 
-/* Model Volvo FL280 689[S]15 — szczegółowa bryła i interaktywne skrytki */
-let volvo3d={scene:null,camera:null,renderer:null,group:null,doors:[],raycaster:null,pointer:null,raf:0,drag:false,lastX:0,lastY:0,opened:null,loading:false};
-function volvo3dInfo(title,desc){const el=$("volvo3dInfo");if(el)el.innerHTML='<b>'+title+'</b><p class="muted" style="margin:6px 0 0">'+desc+'</p>';}
-function volvoMat(color,metalness=0,roughness=.62){return new THREE.MeshStandardMaterial({color,metalness,roughness});}
-function volvoBox(parent,w,h,d,x,y,z,color,metal=0){
- // Zaokrąglona geometria zamiast ostrych pudełek: delikatne promienie na panelach,
- // drzwiach skrytek, zderzakach i detalach. Promień skaluje się do najmniejszego wymiaru.
- const radius=Math.max(.001,Math.min(w,h,d)*.18);
- const shape=new THREE.Shape();
- const x0=-w/2,y0=-h/2,r=Math.min(radius,w/2-.0001,h/2-.0001);
- shape.moveTo(x0+r,y0);shape.lineTo(x0+w-r,y0);shape.quadraticCurveTo(x0+w,y0,x0+w,y0+r);
- shape.lineTo(x0+w,y0+h-r);shape.quadraticCurveTo(x0+w,y0+h,x0+w-r,y0+h);
- shape.lineTo(x0+r,y0+h);shape.quadraticCurveTo(x0,y0+h,x0,y0+h-r);
- shape.lineTo(x0,y0+r);shape.quadraticCurveTo(x0,y0,x0+r,y0);shape.closePath();
- const bevel=Math.min(radius*.42,d*.16);
- const geometry=new THREE.ExtrudeGeometry(shape,{depth:Math.max(.001,d-bevel*2),bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:5});
- geometry.translate(0,0,-d/2+bevel);
- const m=new THREE.Mesh(geometry,volvoMat(color,metal,.48));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
-}
-function volvoShape(parent,points,z,depth,color,bevel=.06){
- const sh=new THREE.Shape();sh.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)sh.lineTo(points[i][0],points[i][1]);sh.closePath();
- const geo=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
- geo.translate(0,0,z);const mesh=new THREE.Mesh(geo,volvoMat(color,.12,.5));mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-}
-function volvoCabProfile(parent,z,depth,color){
- const sh=new THREE.Shape();sh.moveTo(.88,.99);sh.lineTo(.88,2.18);sh.quadraticCurveTo(.9,2.43,1.12,2.58);sh.quadraticCurveTo(1.28,2.76,1.52,2.76);sh.lineTo(2.25,2.76);sh.quadraticCurveTo(2.48,2.75,2.58,2.55);sh.lineTo(2.94,1.58);sh.quadraticCurveTo(3.04,1.39,3.04,1.16);sh.lineTo(3.04,.99);sh.closePath();
- const geo=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelSegments:5,steps:1,bevelSize:.085,bevelThickness:.075,curveSegments:20});geo.translate(0,0,z);const mesh=new THREE.Mesh(geo,volvoMat(color,.08,.38));mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-}
-function volvoRoundedBody(parent){
- const sh=new THREE.Shape();sh.moveTo(-2.46,1.04);sh.lineTo(-2.46,2.46);sh.quadraticCurveTo(-2.46,2.76,-2.16,2.78);sh.lineTo(.55,2.78);sh.quadraticCurveTo(.92,2.78,.96,2.43);sh.lineTo(.96,1.12);sh.quadraticCurveTo(.96,.99,.78,.99);sh.lineTo(-2.25,.99);sh.quadraticCurveTo(-2.46,.99,-2.46,1.04);sh.closePath();
- const geo=new THREE.ExtrudeGeometry(sh,{depth:1.82,bevelEnabled:true,bevelSegments:5,steps:1,bevelSize:.075,bevelThickness:.07,curveSegments:20});geo.translate(0,0,-.91);const mesh=new THREE.Mesh(geo,volvoMat(0xb70f1b,.12,.4));mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-}
-function volvoCylinder(parent,r1,r2,len,x,y,z,color,axis="z",metal=.25){
- const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,len,32),volvoMat(color,metal,.45));
- if(axis==="z")m.rotation.x=Math.PI/2;else if(axis==="x")m.rotation.z=Math.PI/2;
- m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m;
-}
-function volvo3dShowError(error){
- const loading=$("volvo3dLoading");
- if(loading){loading.style.display="grid";loading.style.color="#ffb4b4";loading.innerHTML='<div style="max-width:260px;padding:18px;text-align:center"><b>Nie udało się uruchomić modelu 3D</b><div style="margin-top:7px;font-size:12px;color:#c9b8b8">'+String(error?.message||"Błąd renderowania")+'</div><div style="margin-top:12px;font-size:12px;color:#aaa">Użyj przycisku „Uruchom ponownie 3D”.</div></div>';}
- console.error("Volvo 3D:",error);
-}
-function volvo3dRetry(){
- if(volvo3d.renderer){try{volvo3d.renderer.dispose();}catch(e){}volvo3d.renderer=null;}
- volvo3d.loading=false;
- const loading=$("volvo3dLoading");
- if(loading){loading.style.display="grid";loading.style.color="#aaa";loading.textContent="Ponowne uruchamianie 3D…";}
- initVolvo3D();
-}
-function initVolvo3D(){
- const canvas=$("volvo3dCanvas"),stage=$("volvo3dStage");if(!canvas||!stage||volvo3d.renderer||volvo3d.loading)return;
- if(!window.THREE){
-  volvo3d.loading=true;
-  const loading=$("volvo3dLoading");if(loading)loading.textContent="Pobieranie silnika 3D…";
-  const sources=["https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js","https://unpkg.com/three@0.128.0/build/three.min.js"];
-  let settled=false;
-  const load=(index)=>{
-   if(window.THREE){settled=true;volvo3d.loading=false;initVolvo3D();return;}
-   if(index>=sources.length){settled=true;volvo3d.loading=false;volvo3dShowError(new Error("Biblioteka 3D jest niedostępna. Sprawdź internet i spróbuj ponownie."));return;}
-   const script=document.createElement("script");let finished=false;
-   const next=()=>{if(finished||settled)return;finished=true;load(index+1);};
-   script.src=sources[index];script.async=true;
-   script.onload=()=>{if(finished||settled)return;finished=true;if(window.THREE){settled=true;volvo3d.loading=false;initVolvo3D();}else load(index+1);};
-   script.onerror=next;document.head.appendChild(script);setTimeout(next,7000);
-  };
-  load(0);return;
- }
- try{
- const w=Math.max(320,stage.clientWidth||600),h=Math.max(260,stage.clientHeight||360);
- const scene=new THREE.Scene();scene.background=new THREE.Color(0x101318);
- const camera=new THREE.PerspectiveCamera(34,w/h,.1,100);camera.position.set(7.4,4.5,8.8);camera.lookAt(0,1.25,0);
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));renderer.setSize(w,h,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
- scene.add(new THREE.HemisphereLight(0xeaf2ff,0x29252a,2.1));
- const key=new THREE.DirectionalLight(0xffffff,2.5);key.position.set(4,9,7);key.castShadow=true;scene.add(key);
- const rim=new THREE.DirectionalLight(0xffd4c5,1.1);rim.position.set(-5,4,-6);scene.add(rim);
- const group=new THREE.Group();scene.add(group);
- // Podwozie, zbiornik i zabudowa Bocar o wydłużonych, zaokrąglonych proporcjach.
- volvoBox(group,5.55,.34,1.62,-.05,.72,0,0x202328,.55);
- volvoBox(group,4.9,.22,1.48,-.12,.94,0,0x34383d,.55);
- volvoBox(group,2.9,.9,1.32,-.52,1.43,0,0x777b7d,.65); // zbiornik pod zabudową
- // Zabudowa: główna bryła, górne zaokrąglenie i tylna rama.
- volvoRoundedBody(group);
- volvoBox(group,3.15,.08,1.78,-.68,2.84,0,0x8e1018);
- // Górne listwy i obrys zabudowy.
- [-.86,.86].forEach(z=>{volvoBox(group,3.25,.055,.045,-.69,2.73,z,0xd7dadd,.6);volvoBox(group,3.1,.045,.045,-.68,1.05,z,0x777b80,.65);});
- // Kabina z pochyloną szybą, maską i dachem — bryła profilu zamiast pudełka.
- volvoCabProfile(group,-.91,1.82,0xc31824);
- // Maska, grill, zderzak i przedni pas.
- volvoShape(group,[[2.45,1.48],[3.16,1.48],[3.16,1.08],[2.68,1.08]],-.94,1.88,0xb91520,.025);
- volvoBox(group,.12,.58,1.7,3.17,1.2,0,0x282d32,.7);
- volvoBox(group,.07,.39,1.05,3.245,1.25,0,0x171b20,.25);
- for(let z=-.34;z<=.35;z+=.17)volvoBox(group,.025,.29,.025,3.29,1.25,z,0x8b969e,.8);
- // Szyba przednia i boczne okna w kształcie trapezów.
- const glass=volvoMat(0x8fb5c8,.25,.2);glass.side=THREE.DoubleSide;
- const frontGlass=new THREE.Mesh(new THREE.PlaneGeometry(1.05,.72),glass);frontGlass.position.set(2.66,2.19,0);frontGlass.rotation.y=Math.PI/2-.22;frontGlass.rotation.z=-.23;group.add(frontGlass);
- [-1,1].forEach(side=>{
-  const win=new THREE.Mesh(new THREE.PlaneGeometry(1.12,.72),glass);win.position.set(1.88,2.19,side*.923);win.rotation.y=side*Math.PI/2;win.rotation.z=-.05;group.add(win);
-  const small=new THREE.Mesh(new THREE.PlaneGeometry(.35,.55),glass);small.position.set(2.62,2.15,side*.925);small.rotation.y=side*Math.PI/2;small.rotation.z=-.18;group.add(small);
-  // Lusterka i ramiona.
-  volvoBox(group,.06,.06,.42,2.65,1.96,side*1.13,0x25292d,.6);
-  volvoBox(group,.18,.28,.12,2.67,2.02,side*1.34,0x171a1d,.5);
-  // Stopnie wejściowe.
-  volvoBox(group,.58,.09,.28,1.15,.91,side*1.02,0x343a40,.8);
- });
- // Charakterystyczny pas przedni Volvo FL: grill z żebrami i centralnym emblematem.
- volvoBox(group,.055,.53,1.43,3.255,1.55,0,0x15191d,.15);
- for(let yy=1.34;yy<=1.78;yy+=.09)volvoBox(group,.025,.025,1.28,3.29,yy,0,0x777f85,.7);
- volvoBox(group,.045,.16,.28,3.305,1.91,0,0xd8dadd,.75);
- volvoBox(group,.045,.09,.17,3.31,1.91,0,0xb70f1b,.15);
- // Drzwi kabiny, klamki, emblematy i oznaczenia.
- [-1,1].forEach(side=>{
-  volvoBox(group,.78,.035,.018,1.83,1.53,side*.925,0x8d1018);
-  volvoBox(group,.19,.045,.035,2.28,1.65,side*.95,0xd4d7da,.8);
-  volvoBox(group,.38,.09,.025,1.82,1.28,side*.94,0xf0d52d);
- });
- // Oświetlenie przednie, kierunkowskazy i reflektory.
- [-.62,.62].forEach(z=>{
-  const lamp=volvoBox(group,.08,.25,.34,3.22,1.08,z,0xe8edf0,.2);
-  const amber=volvoBox(group,.085,.1,.16,3.225,1.42,z,0xff9b22,.1);
- });
- // LED-bar i sygnały na dachu, dodatkowe trąby sygnałowe.
- volvoBox(group,.72,.12,.24,1.83,2.79,0,0x20242a,.7);
- [-.28,.28].forEach(z=>{volvoBox(group,.25,.14,.18,1.83,2.88,z,0x2478d5,.25);volvoBox(group,.11,.12,.12,1.83,2.88,z,0x9bd8ff,.2);});
- [-.48,.48].forEach(z=>{volvoCylinder(group,.055,.08,.3,1.18,2.88,z,0xaaaeb2,"y",.8);});
- // Żółte pasy odblaskowe i boczne napisy.
- [-1,1].forEach(side=>{
-  volvoBox(group,3.0,.09,.025,-.68,1.28,side*.932,0xf2d12b,.15);
-  volvoBox(group,1.65,.075,.025,-.57,2.47,side*.935,0xe7e8e9,.2);
-  volvoBox(group,.78,.07,.03,-.58,2.3,side*.936,0x24272b,.15);
-  // Skrytki: obramowania, osobne drzwi, uchwyty i zawiasy.
- });
- // Osobne klosze reflektorów i kierunkowskazów.
- [-.72,.72].forEach(z=>{volvoBox(group,.055,.24,.34,3.25,.99,z,0x24292e,.3);volvoBox(group,.065,.13,.29,3.29,1.02,z,0xe8edf0,.1);volvoBox(group,.07,.07,.18,3.295,1.36,z,0xffa12b,.1);});
- // Koła z oponami, felgami, piastami i nadkolami.
- const wheelXs=[-1.72,2.08];
- wheelXs.forEach((x,idx)=>[-1,1].forEach(side=>{
-  const z=side*.91;
-  const tire=new THREE.Mesh(new THREE.CylinderGeometry(.59,.59,.38,48),volvoMat(0x111315,0,.98));tire.rotation.x=Math.PI/2;tire.position.set(x,.58,z);tire.castShadow=true;group.add(tire);
-  const sidewall=new THREE.Mesh(new THREE.TorusGeometry(.47,.095,12,48),volvoMat(0x24282b,0,.92));sidewall.position.set(x,.58,z+side*.205);group.add(sidewall);
-  const rim=volvoCylinder(group,.355,.355,.39,x,.58,z,0xaeb5ba,"z",.9);
-  volvoCylinder(group,.22,.22,.36,x,.58,z,0x42484e,"z",.8);
-  for(let a=0;a<10;a++){const ang=a*Math.PI/5;volvoCylinder(group,.026,.026,.405,x+Math.cos(ang)*.285,.58+Math.sin(ang)*.285,z+side*.012,0xd6d9dc,"z",.85);}
-  for(let a=0;a<28;a++){const ang=a*Math.PI*2/28;const lug=volvoBox(group,.105,.075,.035,x+Math.cos(ang)*.565,.58+Math.sin(ang)*.565,z+side*.16,0x30363b,.1);lug.rotation.z=ang;}
-  // łuk nadkola z metalowej krzywej.
-  const pts=[];for(let a=Math.PI*.08;a<=Math.PI*.92;a+=Math.PI/24)pts.push(new THREE.Vector3(x+Math.cos(a)*.61, .58+Math.sin(a)*.61, z+side*.02));
-  const curve=new THREE.CatmullRomCurve3(pts);const arch=new THREE.Mesh(new THREE.TubeGeometry(curve,32,.055,8,false),volvoMat(0x24282d,.65,.5));group.add(arch);
- }));
- // Skrytki boczne G1–G6: sześć paneli w dwóch rzędach na obu bokach.
- // Zabudowa Bocar: trzy szerokie, aluminiowe żaluzje na każdym boku.
- // Sześć stref G1–G6 pozostaje klikalnych, ale wizualnie odpowiadają dużym skrytkom
- // typowym dla tej zabudowy, a nie małym czarnym prostokątom.
- const lockerDefs=[{id:"G1",name:"Skrytka G1",x:-1.68,z:-.955},{id:"G2",name:"Skrytka G2",x:-.62,z:-.955},{id:"G3",name:"Skrytka G3",x:.43,z:-.955},{id:"G4",name:"Skrytka G4",x:-1.68,z:.955},{id:"G5",name:"Skrytka G5",x:-.62,z:.955},{id:"G6",name:"Skrytka G6",x:.43,z:.955}];
- lockerDefs.forEach((d,i)=>{
-  const side=d.z<0?-1:1;
-  const panel=new THREE.Group();panel.position.set(d.x,1.91,d.z);group.add(panel);
-  const data={kind:"locker",id:d.id,name:d.name,description:"Skrytka "+d.id+" w zabudowie Bocar. Kliknij, aby zobaczyć przypisany spis wyposażenia. Dokładne rozmieszczenie wewnątrz nie jest odtwarzane bez zdjęć konkretnego egzemplarza."};
-  const frame=volvoBox(panel,1.00,1.54,.075,0,0,0,0x6c747a,.72);
-  const dark=volvoBox(panel,.91,1.43,.035,0,0,side*.045,0x30363b,.35);
-  const shutter=volvoBox(panel,.85,1.34,.045,0,0,side*.073,0xb7bec3,.82);
-  const slats=[];
-  for(let yy=-.61;yy<=.61;yy+=.085){
-   const slat=volvoBox(panel,.82,.045,.035,0,yy,side*.105,yy>.57?0xd6dadd:0xaeb6bc,.82);
-   slats.push(slat);
-  }
-  // Prowadnice i dolna listwa żaluzji.
-  const rails=[
-   volvoBox(panel,.045,1.40,.055,-.445,0,side*.11,0x555e65,.75),
-   volvoBox(panel,.045,1.40,.055,.445,0,side*.11,0x555e65,.75),
-   volvoBox(panel,.88,.075,.06,0,-.69,side*.13,0x68727a,.8),
-   volvoBox(panel,.11,.20,.07,.31,.02,side*.15,0x343a40,.65)
-  ];
-  const marker=volvoBox(panel,.25,.10,.035,-.24,.68,side*.13,0xe6e8e9,.25);
-  [frame,dark,shutter,...slats,...rails,marker].forEach(o=>o.userData=data);
-  panel.userData={...data,open:false,side};
-  volvo3d.doors.push(panel);
- });
- // Tył pojazdu: drzwi żaluzjowe, lampy, stopień i stanowisko COMBI-M.
- volvoBox(group,.08,1.52,1.68,-2.46,1.9,0,0x8f1019,.45);
- for(let y=1.25;y<2.6;y+=.16)volvoBox(group,.025,.025,1.38,-2.51,y,0,0x4b5055,.75);
- volvoBox(group,.16,.13,1.8,-2.55,1.02,0,0x33383d,.8);
- [-.65,.65].forEach(z=>{volvoBox(group,.06,.22,.25,-2.57,1.18,z,0xff2929,.1);volvoBox(group,.06,.13,.22,-2.57,1.43,z,0xffa52d,.1);});
- const pump=new THREE.Group();pump.position.set(-2.27,1.65,0);group.add(pump);
- const pbase=volvoBox(pump,.42,.55,1.18,0,0,0,0x272c31,.7);
- const pbody=volvoCylinder(pump,.28,.28,.62,0,.05,0,0x9a252c,"x",.65);
- const gauge=volvoCylinder(pump,.12,.12,.08,.25,.23,-.28,0xd7dadd,"x",.8);
- const pumpData={kind:"pump",name:"Autopompa COMBI-M",description:"Tylne stanowisko autopompy COMBI-M. Nazwa została potwierdzona przez jednostkę. Parametrów technicznych i układu sterowania nie dopisuję bez dokumentacji konkretnego egzemplarza."};
- [pbase,pbody,gauge].forEach(o=>o.userData=pumpData);
- // Zderzak tylny i zaczep.
- volvoBox(group,.18,.18,1.8,-2.58,.78,0,0x454b51,.8);
- volvoCylinder(group,.11,.11,.35,-2.7,.55,0,0x777d82,"x",.8);
- // Przedni zderzak terenowy i centralna wyciągarka — detale sylwetki FL 4x4.
- volvoBox(group,.22,.24,2.02,3.23,.76,0xd7dadd,.72);
- volvoBox(group,.18,.12,.72,3.38,.78,0x262b30,.8);
- volvoCylinder(group,.12,.12,.66,3.39,.82,0,0x555d64,"z",.85);
- volvoCylinder(group,.045,.045,.72,3.39,.82,0,0x9ca3a9,"z",.9);
- volvoBox(group,.12,.12,.22,3.48,.69,0,0x9a9fa4,.8);
- // Dodatkowe stopnie i osłony nadkoli.
- [-1,1].forEach(side=>{
-   volvoBox(group,.62,.08,.34,1.18,.77,side*1.05,0x8b9298,.8);
-   volvoBox(group,.42,.42,.035,-1.72,.47,side*1.13,0x202429,.2);
-   volvoBox(group,.42,.42,.035,2.08,.47,side*1.13,0x202429,.2);
- });
- // Drabina dachowa: dwie podłużnice i szczeble.
- [-.34,.34].forEach(z=>volvoBox(group,2.55,.075,.07,-.72,2.96,z,0xb9c0c5,.85));
- for(let x=-1.88;x<=.45;x+=.24)volvoBox(group,.055,.045,.78,x,2.96,0,0x8f989f,.85);
- // Drabinka z tyłu zabudowy.
- [-.73,.73].forEach(z=>volvoBox(group,.07,1.35,.07,-2.57,1.82,z,0xb8c0c6,.85));
- for(let y=1.2;y<=2.43;y+=.2)volvoBox(group,.06,.045,1.48,-2.57,y,0,0x9ba4ab,.85);
- // Lusterko, wycieraczki, klamki i drobne detale przodu.
- [-.38,.38].forEach(z=>volvoBox(group,.025,.025,.42,2.91,1.86,z,0x24282d,.8));
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),volvoMat(0x202328,0,.95));floor.rotation.x=-Math.PI/2;floor.position.y=-.03;scene.add(floor);
- volvo3d.group=group;volvo3d.scene=scene;volvo3d.camera=camera;volvo3d.renderer=renderer;volvo3d.raycaster=new THREE.Raycaster();volvo3d.pointer=new THREE.Vector2();
- let down=null;
- canvas.addEventListener("pointerdown",e=>{volvo3d.drag=true;down={x:e.clientX,y:e.clientY};volvo3d.lastX=e.clientX;volvo3d.lastY=e.clientY;canvas.setPointerCapture?.(e.pointerId);});
- canvas.addEventListener("pointerup",e=>{volvo3d.drag=false;if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);if(moved<7){const rect=canvas.getBoundingClientRect();volvo3d.pointer.x=((e.clientX-rect.left)/rect.width)*2-1;volvo3d.pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;volvo3d.raycaster.setFromCamera(volvo3d.pointer,camera);const objs=[];group.traverse(o=>{if(o.isMesh&&o.userData?.kind)objs.push(o)});const hit=volvo3d.raycaster.intersectObjects(objs,false)[0];if(hit){const d=hit.object.userData;if(d.kind==="locker"){const panel=volvo3d.doors.find(x=>x.userData.id===d.id);if(panel){panel.userData.open=!panel.userData.open;panel.rotation.y=panel.userData.open?(panel.userData.side<0?-1.35:1.35):0;}volvo3dInfo(d.name,d.description+" Wybierz tę skrytkę również na liście poniżej, aby zobaczyć spis.");}else if(d.kind==="pump")volvo3dInfo(d.name,d.description);}}down=null;});
- canvas.addEventListener("pointercancel",()=>{volvo3d.drag=false;down=null;});
- canvas.addEventListener("pointermove",e=>{if(!volvo3d.drag||!down)return;const dx=e.clientX-volvo3d.lastX,dy=e.clientY-volvo3d.lastY;group.rotation.y+=dx*.008;camera.position.y=Math.max(2.2,Math.min(7,camera.position.y-dy*.012));camera.lookAt(0,1.35,0);volvo3d.lastX=e.clientX;volvo3d.lastY=e.clientY;});
- canvas.addEventListener("wheel",e=>{e.preventDefault();camera.position.multiplyScalar(e.deltaY>0?1.07:.93);camera.position.clampLength(5.8,15);camera.lookAt(0,1.35,0);},{passive:false});
- const resize=()=>{if(!volvo3d.renderer||!stage.isConnected)return;const nw=Math.max(1,stage.clientWidth),nh=Math.max(1,stage.clientHeight);camera.aspect=nw/nh;camera.updateProjectionMatrix();renderer.setSize(nw,nh,false);};
- if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);else window.addEventListener("resize",resize);
- const animate=()=>{if(!volvo3d.renderer)return;volvo3d.raf=requestAnimationFrame(animate);renderer.render(scene,camera);};animate();
- const loading=$("volvo3dLoading");if(loading)loading.style.display="none";
- volvo3dInfo("Volvo FL280 · 689[S]15","Obracaj model gestem. Kliknij drzwi G1–G6 lub tylne stanowisko COMBI-M. To szczegółowa rekonstrukcja poglądowa; do wiernego modelu 1:1 potrzebny jest komplet zdjęć lub skan pojazdu.");
- }catch(error){volvo3dShowError(error);}
-}
-function volvo3dReset(){if(!volvo3d.group)return;volvo3d.group.rotation.set(0,0,0);volvo3d.camera.position.set(7.4,4.5,8.8);volvo3d.camera.lookAt(0,1.25,0);volvo3d.doors.forEach(d=>{d.userData.open=false;d.rotation.y=0;});}
-function volvo3dShowRear(){if(!volvo3d.group)return;volvo3d.group.rotation.y=Math.PI;volvo3dInfo("Tył pojazdu","Tylne stanowisko autopompy COMBI-M. Kliknij jego element na modelu, aby zobaczyć opis.");}
+/* Model 3D zastąpiony lekką galerią zdjęć. */
 const VOLVO_EQUIPMENT_INFO={
 G1:["G1 — sprzęt ochronny i podręczny",["Wodery i kalosze","Kamizelki asekuracyjne","Koc gaśniczy","Podręczny sprzęt gaśniczy","Liny i linki","Woda pitna"],"Zestaw zabezpieczający ratowników i wspierający działania pomocnicze."],
 G2:["G2 — zasilanie i wentylacja",["Wentylator oddymiający","Przenośny agregat prądotwórczy","Kanister paliwa","Bębny przedłużaczy 230 V","Pachołki drogowe","Flary ostrzegawcze"],"Sprzęt do zasilania urządzeń i zabezpieczenia miejsca działań."],
