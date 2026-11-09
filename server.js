@@ -2409,12 +2409,18 @@ async function saveAttendance(
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT first_name,last_name
+        SELECT first_name,last_name,role
         FROM members
         WHERE id=$1
         `,
         [req.body.member_id]
       );
+
+      if (m.rows[0] && COALESCE(m.rows[0].role,'member') !== 'member') {
+        return res.status(400).json({
+          error: 'Frekwencja jest prowadzona wyłącznie dla członków MDP.'
+        });
+      }
 
       if (m.rows[0]) {
         memberName =
@@ -2660,6 +2666,17 @@ app.get(
         });
       }
 
+      if (COALESCE(m.rows[0].role,'member') !== 'member') {
+        return res.json({
+          member: m.rows[0],
+          stats: {
+            yes: 0, no: 0, maybe: 0,
+            attended: 0, absent: 0,
+            confirmed: 0, total: 0, percentage: 0
+          }
+        });
+      }
+
       const name =
         `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
           .trim();
@@ -2811,6 +2828,8 @@ app.get(
 
         LEFT JOIN events e
           ON e.id=a.event_id
+
+        WHERE COALESCE(m.role,'member')='member'
 
         GROUP BY
           m.id,
