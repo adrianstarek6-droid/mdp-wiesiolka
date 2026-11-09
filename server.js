@@ -3424,6 +3424,16 @@ async function updateGroupProgress(
     }
 
     if (
+      req.role === 'guardian' &&
+      !g.guardian_assigned
+    ) {
+      return res.status(403).json({
+        error:
+          'To konto opiekunów nie jest przypisane do tej grupy.'
+      });
+    }
+
+    if (
       !isStaff(req) &&
       req.role !== 'member'
     ) {
