@@ -578,6 +578,43 @@ async function initDb() {
     ON newspaper_history(month_key)
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mdp_inventory_items (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      code TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL DEFAULT 'Inne',
+      quantity NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+      unit TEXT NOT NULL DEFAULT 'szt.',
+      min_quantity NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (min_quantity >= 0),
+      condition TEXT NOT NULL DEFAULT 'Nieustalony',
+      status TEXT NOT NULL DEFAULT 'available' CHECK (status IN ('available','maintenance','missing')),
+      location TEXT NOT NULL DEFAULT '',
+      serial_number TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      created_by_role TEXT NOT NULL DEFAULT 'admin',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      archived_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_inventory_items_active
+      ON mdp_inventory_items(archived_at,category,name);
+    CREATE TABLE IF NOT EXISTS mdp_inventory_movements (
+      id SERIAL PRIMARY KEY,
+      item_id INTEGER REFERENCES mdp_inventory_items(id) ON DELETE SET NULL,
+      item_name TEXT NOT NULL,
+      action TEXT NOT NULL,
+      quantity_change NUMERIC(12,2),
+      quantity_after NUMERIC(12,2),
+      note TEXT NOT NULL DEFAULT '',
+      actor_role TEXT NOT NULL,
+      actor_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_inventory_movements_item_date
+      ON mdp_inventory_movements(item_id,created_at DESC);
+  `);
+
   const c = await pool.query(
     'SELECT COUNT(*)::int AS count FROM newspaper_groups'
   );
@@ -4400,6 +4437,157 @@ app.get(
     }
   }
 );
+
+
+// ======================================================
+// MAGAZYN MDP — ewidencja, stany i historia operacji
+// ======================================================
+const inventoryActionLabels = {
+  in: 'Przyjęcie na stan',
+  out: 'Wydanie ze stanu',
+  set: 'Korekta ilości',
+  maintenance: 'Przekazano do kontroli / naprawy',
+  available: 'Przywrócono jako dostępne',
+  missing: 'Oznaczono jako brak / zagubione',
+  created: 'Dodano pozycję',
+  updated: 'Edytowano dane pozycji',
+  archived: 'Zarchiwizowano pozycję'
+};
+
+app.get('/api/inventory', auth, async (req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT id,name,code,category,quantity,unit,min_quantity,condition,status,
+             location,serial_number,notes,created_at,updated_at
+      FROM mdp_inventory_items
+      WHERE archived_at IS NULL
+      ORDER BY category,name,id
+    `);
+    res.json({items:r.rows});
+  } catch(e) {
+    console.error('Błąd magazynu MDP:',e);
+    res.status(500).json({error:'Nie udało się pobrać magazynu.'});
+  }
+});
+
+app.post('/api/inventory', auth, staff, async (req, res) => {
+  const b=req.body||{};
+  const name=String(b.name||'').trim().slice(0,140);
+  const quantity=Number(b.quantity);
+  const minimum=Number(b.min_quantity||0);
+  if(!name||!Number.isFinite(quantity)||quantity<0||!Number.isFinite(minimum)||minimum<0)
+    return res.status(400).json({error:'Podaj nazwę oraz prawidłową ilość i stan minimalny.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const r=await client.query(`
+      INSERT INTO mdp_inventory_items
+      (name,code,category,quantity,unit,min_quantity,condition,status,location,serial_number,notes,created_by_role)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      RETURNING *
+    `,[name,String(b.code||'').trim().slice(0,40),String(b.category||'Inne').slice(0,60),quantity,String(b.unit||'szt.').trim().slice(0,20),minimum,String(b.condition||'Nieustalony').slice(0,40),['available','maintenance','missing'].includes(b.status)?b.status:'available',String(b.location||'').trim().slice(0,120),String(b.serial_number||'').trim().slice(0,120),String(b.notes||'').trim().slice(0,1500),req.role]);
+    await client.query(`
+      INSERT INTO mdp_inventory_movements(item_id,item_name,action,quantity_change,quantity_after,note,actor_role,actor_member_id)
+      VALUES($1,$2,'created',$3,$3,'Dodanie pozycji do ewidencji',$4,$5)
+    `,[r.rows[0].id,name,quantity,req.role,req.memberId?Number(req.memberId):null]);
+    await client.query('COMMIT');
+    res.status(201).json({item:r.rows[0]});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się dodać pozycji.'});}
+  finally{client.release();}
+});
+
+app.put('/api/inventory/:id', auth, staff, async (req, res) => {
+  const id=Number(req.params.id),b=req.body||{};
+  const name=String(b.name||'').trim().slice(0,140);
+  const quantity=Number(b.quantity),minimum=Number(b.min_quantity||0);
+  if(!Number.isInteger(id)||id<1||!name||!Number.isFinite(quantity)||quantity<0||!Number.isFinite(minimum)||minimum<0)
+    return res.status(400).json({error:'Nieprawidłowe dane pozycji.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const old=await client.query('SELECT * FROM mdp_inventory_items WHERE id=$1 AND archived_at IS NULL FOR UPDATE',[id]);
+    if(!old.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono pozycji.'});}
+    const prev=old.rows[0];
+    const r=await client.query(`
+      UPDATE mdp_inventory_items SET
+        name=$1,code=$2,category=$3,quantity=$4,unit=$5,min_quantity=$6,
+        condition=$7,status=$8,location=$9,serial_number=$10,notes=$11,updated_at=NOW()
+      WHERE id=$12 RETURNING *
+    `,[name,String(b.code||'').trim().slice(0,40),String(b.category||'Inne').slice(0,60),quantity,String(b.unit||'szt.').trim().slice(0,20),minimum,String(b.condition||'Nieustalony').slice(0,40),['available','maintenance','missing'].includes(b.status)?b.status:'available',String(b.location||'').trim().slice(0,120),String(b.serial_number||'').trim().slice(0,120),String(b.notes||'').trim().slice(0,1500),id]);
+    await client.query(`
+      INSERT INTO mdp_inventory_movements(item_id,item_name,action,quantity_change,quantity_after,note,actor_role,actor_member_id)
+      VALUES($1,$2,'updated',$3,$4,'Aktualizacja danych pozycji',$5,$6)
+    `,[id,name,quantity-Number(prev.quantity),quantity,req.role,req.memberId?Number(req.memberId):null]);
+    await client.query('COMMIT');res.json({item:r.rows[0]});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się zaktualizować pozycji.'});}
+  finally{client.release();}
+});
+
+app.post('/api/inventory/:id/movement', auth, staff, async (req, res) => {
+  const id=Number(req.params.id),b=req.body||{},type=String(b.type||'');
+  if(!Number.isInteger(id)||id<1||!['in','out','set','maintenance','available','missing'].includes(type))
+    return res.status(400).json({error:'Nieprawidłowa operacja magazynowa.'});
+  const note=String(b.note||'').trim().slice(0,500);
+  if(!note)return res.status(400).json({error:'Opisz powód zmiany.'});
+  const qty=b.quantity===null||b.quantity===undefined?null:Number(b.quantity);
+  if(['in','out','set'].includes(type)&&(!Number.isFinite(qty)||qty<0))
+    return res.status(400).json({error:'Podaj prawidłową ilość.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const found=await client.query('SELECT * FROM mdp_inventory_items WHERE id=$1 AND archived_at IS NULL FOR UPDATE',[id]);
+    if(!found.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono pozycji.'});}
+    const item=found.rows[0],before=Number(item.quantity);
+    let after=before,status=item.status,delta=0;
+    if(type==='in'){after=before+qty;delta=qty;}
+    if(type==='out'){if(qty>before){await client.query('ROLLBACK');return res.status(409).json({error:'Nie można wydać więcej, niż wynosi aktualny stan.'});}after=before-qty;delta=-qty;}
+    if(type==='set'){after=qty;delta=after-before;}
+    if(type==='maintenance')status='maintenance';
+    if(type==='available')status='available';
+    if(type==='missing')status='missing';
+    await client.query('UPDATE mdp_inventory_items SET quantity=$1,status=$2,updated_at=NOW() WHERE id=$3',[after,status,id]);
+    await client.query(`
+      INSERT INTO mdp_inventory_movements(item_id,item_name,action,quantity_change,quantity_after,note,actor_role,actor_member_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+    `,[id,item.name,type,['in','out','set'].includes(type)?delta:null,after,note,req.role,req.memberId?Number(req.memberId):null]);
+    await client.query('COMMIT');res.json({ok:true,quantity:after,status});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się zapisać operacji magazynowej.'});}
+  finally{client.release();}
+});
+
+app.delete('/api/inventory/:id', auth, staff, async (req, res) => {
+  const id=Number(req.params.id);
+  if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'Nieprawidłowe ID pozycji.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const r=await client.query('UPDATE mdp_inventory_items SET archived_at=NOW(),updated_at=NOW() WHERE id=$1 AND archived_at IS NULL RETURNING id,name,quantity',[id]);
+    if(!r.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'Nie znaleziono aktywnej pozycji.'});}
+    await client.query(`
+      INSERT INTO mdp_inventory_movements(item_id,item_name,action,quantity_change,quantity_after,note,actor_role,actor_member_id)
+      VALUES($1,$2,'archived',0,$3,'Archiwizacja pozycji — rekord pozostaje w historii',$4,$5)
+    `,[id,r.rows[0].name,Number(r.rows[0].quantity),req.role,req.memberId?Number(req.memberId):null]);
+    await client.query('COMMIT');res.json({ok:true,archived:true});
+  }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error(e);res.status(500).json({error:'Nie udało się zarchiwizować pozycji.'});}
+  finally{client.release();}
+});
+
+app.get('/api/inventory/history', auth, staff, async (req, res) => {
+  try{
+    const itemId=req.query.item_id?Number(req.query.item_id):null;
+    if(itemId!==null&&(!Number.isInteger(itemId)||itemId<1))return res.status(400).json({error:'Nieprawidłowe ID pozycji.'});
+    const r=await pool.query(`
+      SELECT h.id,h.item_id,h.item_name,h.action,h.quantity_change,h.quantity_after,h.note,h.actor_role,h.created_at,
+        CASE WHEN h.actor_role='member' THEN COALESCE(m.first_name||' '||m.last_name,'Członek') ELSE CASE WHEN h.actor_role='admin' THEN 'Administrator' ELSE 'Opiekun' END END AS actor_name
+      FROM mdp_inventory_movements h
+      LEFT JOIN members m ON m.id=h.actor_member_id
+      WHERE ($1::int IS NULL OR h.item_id=$1)
+      ORDER BY h.created_at DESC,h.id DESC
+      LIMIT 250
+    `,[itemId]);
+    res.json(r.rows.map(x=>({...x,action_label:inventoryActionLabels[x.action]||x.action})));
+  }catch(e){console.error(e);res.status(500).json({error:'Nie udało się pobrać historii magazynu.'});}
+});
 
 
 // ======================================================
