@@ -1991,7 +1991,7 @@ async function showAnnualAttendance(){
       <div class="empty">Pobieram dane ze zbiórek...</div>
     `);
 
-    const members = Array.isArray(state.data.members) ? state.data.members : [];
+    const members = (Array.isArray(state.data.members) ? state.data.members : []).filter(m=>(m.role||"member")==="member");
     const events = Array.isArray(state.data.events) ? state.data.events : [];
 
     const currentYear = new Date().getFullYear();
