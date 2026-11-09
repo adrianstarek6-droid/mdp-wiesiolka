@@ -3828,7 +3828,14 @@ function volvoCylinder(parent,r1,r2,len,x,y,z,color,axis="z",metal=.25){
 function volvo3dShowError(error){const loading=$("volvo3dLoading");if(loading){loading.style.display="grid";loading.textContent="Model 3D nie wystartował: "+(error?.message||"błąd renderowania");loading.style.color="#ffb4b4";}console.error("Volvo 3D:",error);}
 function initVolvo3D(){
  const canvas=$("volvo3dCanvas"),stage=$("volvo3dStage");if(!canvas||!stage||volvo3d.renderer||volvo3d.loading)return;
- if(!window.THREE){volvo3d.loading=true;const loading=$("volvo3dLoading");if(loading)loading.textContent="Ładowanie silnika 3D…";return;}
+ if(!window.THREE){
+  if(volvo3d.loading)return;
+  volvo3d.loading=true;
+  const loading=$("volvo3dLoading");if(loading)loading.textContent="Ładowanie silnika 3D…";
+  const sources=["https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"];
+  const load=(index)=>{if(window.THREE){volvo3d.loading=false;initVolvo3D();return;}if(index>=sources.length){volvo3d.loading=false;volvo3dShowError(new Error("Nie udało się pobrać biblioteki 3D. Sprawdź połączenie i odśwież aplikację."));return;}const script=document.createElement("script");script.src=sources[index];script.onload=()=>{volvo3d.loading=false;if(window.THREE)initVolvo3D();else load(index+1);};script.onerror=()=>load(index+1);document.head.appendChild(script);};
+  load(0);return;
+ }
  try{
  const w=Math.max(320,stage.clientWidth||600),h=Math.max(260,stage.clientHeight||360);
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x101318);
