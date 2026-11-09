@@ -2552,7 +2552,23 @@ app.get(
         [eventId]
       );
 
-      res.json(r.rows);
+      // Jedno wspólne konto kadry jest widoczne na liście obecności,
+      // ale nie jest rekordem członka i nie trafia do statystyk frekwencji.
+      const guardianAttendance = await pool.query(
+        'SELECT status,created_at FROM attendance WHERE event_id=$1 AND member_name=$2',
+        [eventId, 'Opiekunowie']
+      );
+      res.json([
+        ...r.rows,
+        {
+          member_id: null,
+          member_name: 'Opiekunowie',
+          role: 'guardian',
+          is_non_counting: true,
+          status: guardianAttendance.rows[0]?.status || null,
+          created_at: guardianAttendance.rows[0]?.created_at || null
+        }
+      ]);
 
     } catch (e) {
       console.error('Błąd pobierania listy obecności:', e);
