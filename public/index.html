@@ -2975,6 +2975,7 @@ function openScreen(id){
   // Dzięki temu członek po zakończeniu miesiąca zobaczy od razu
   // wyzerowane rozdane/rozpoczęte/gotowe, ale zachowane grupy,
   // ulice, członków, kolory i liczbę gazet.
+  if(id==="volvoScreen") setTimeout(()=>{try{initVolvo3D();}catch(e){volvo3dShowError(e);}},120);
   if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
   if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
@@ -3813,8 +3814,27 @@ async function updateTrainingGoalStatus(id,status){
 let volvo3d={scene:null,camera:null,renderer:null,group:null,doors:[],raycaster:null,pointer:null,raf:0,drag:false,lastX:0,lastY:0,opened:null};
 function volvo3dInfo(title,desc){const el=$("volvo3dInfo");if(el)el.innerHTML='<b>'+title+'</b><p class="muted" style="margin:6px 0 0">'+desc+'</p>';}
 function volvo3dBox(parent,w,h,d,x,y,z,color,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.72,metalness:opts.metal||0}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function volvo3dShowError(error){
+ const loading=$("volvo3dLoading");
+ if(loading){loading.style.display="grid";loading.textContent="Nie udało się uruchomić modelu 3D: "+(error&&error.message?error.message:"nieznany błąd");loading.style.color="#ffb4b4";}
+ console.error("Volvo 3D:",error);
+}
 function initVolvo3D(){
- const canvas=$("volvo3dCanvas");if(!canvas||!window.THREE||volvo3d.renderer)return;
+ const canvas=$("volvo3dCanvas");
+ if(!canvas||volvo3d.renderer)return;
+ if(!window.THREE){
+  const loading=$("volvo3dLoading");
+  if(volvo3d.loading)return;
+  volvo3d.loading=true;
+  if(loading){loading.style.display="grid";loading.textContent="Ładowanie biblioteki 3D…";}
+  const script=document.createElement("script");
+  script.src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js";
+  script.onload=()=>{volvo3d.loading=false;try{initVolvo3D();}catch(e){volvo3dShowError(e);}};
+  script.onerror=()=>{volvo3d.loading=false;volvo3dShowError(new Error("Nie udało się pobrać biblioteki 3D. Sprawdź połączenie internetowe."));};
+  document.head.appendChild(script);
+  setTimeout(()=>{if(volvo3d.loading&&!window.THREE){volvo3d.loading=false;volvo3dShowError(new Error("Biblioteka 3D nie odpowiada. Spróbuj odświeżyć aplikację."));}},12000);
+  return;
+ }
  const stage=$("volvo3dStage"),w=stage.clientWidth||600,h=stage.clientHeight||360;
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x101010);
  const camera=new THREE.PerspectiveCamera(38,w/h,.1,100);camera.position.set(5.7,3.4,7.2);camera.lookAt(0,1,0);
