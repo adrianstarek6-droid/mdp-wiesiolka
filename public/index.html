@@ -1339,6 +1339,7 @@ body{background-color:#050505}
         <div class="field"><label>Ulice (każda w osobnej linii)</label><textarea id="newspaperStreets" required placeholder="ul. Przykładowa 1
 ul. Przykładowa 2"></textarea></div>
         <div class="field"><label>Członkowie grupy</label><div id="newspaperMemberChecks"></div></div>
+        <label style="display:flex;gap:9px;align-items:center;margin:10px 0"><input id="newspaperGuardianAssigned" type="checkbox"> <span>👤 Przypisz wspólne konto Opiekunowie</span></label>
         <div class="field"><label>Liczba gazet</label><input id="newspaperCopies" type="number" min="0" value="0"></div>
         <button class="btn red" type="submit">➕ Dodaj grupę</button>
         <button class="btn outline" type="button" onclick="loadPaperPlan()">↻ Wczytaj plan z kartki</button>
@@ -2189,6 +2190,7 @@ async function loadNewspaperGroupsFromServer(){
 function memberFullName(m){return `${m?.first_name||m?.name||""} ${m?.last_name||""}`.trim();}
 function normName(s){return String(s||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>({ą:"a",ć:"c",ę:"e",ł:"l",ń:"n",ó:"o",ś:"s",ź:"z",ż:"z"}[c]||c)).replace(/[^a-z0-9]+/g," ").trim();}
 function groupHasMember(g){
+  if(state.role==="guardian") return !!g.guardianAssigned;
   if(state.role!=="member") return false;
   const me=normName(`${state.firstName} ${state.lastName}`);
   if((g.memberIds||[]).map(String).includes(String(state.memberId))) return true;
@@ -2209,6 +2211,7 @@ function newspaperGroupCard(g, isMember){
   const pct=copies>0?Math.min(100,Math.round(delivered/copies*100)):0;
   const members=(g.memberIds||[]).map(id=>state.data.members.find(m=>String(m.id)===String(id))).filter(Boolean);
   const names=[...new Set([...(members.map(memberFullName)),...(g.memberNames||[])])].filter(Boolean);
+  if(g.guardianAssigned) names.push("👤 Opiekunowie");
   return `<article class="card group-card" style="border-left:4px solid ${escapeHtml(g.color)}">
     <h3><span class="group-color" style="background:${escapeHtml(g.color)}"></span>${escapeHtml(g.name)}</h3>
     <div class="meta"><span class="badge">📍 ${escapeHtml(g.region)}</span><span class="badge">📰 ${copies} gazet</span></div>
@@ -2236,11 +2239,11 @@ function renderNewspapers(){
   if(monthButton) monthButton.style.display=state.role==="admin"?"":"none";
   const memberView=$("newspaperMemberView"); if(!memberView)return;
 
-  if(state.role==="member"){
+  if(state.role==="member"||state.role==="guardian"){
     const mine=groups.filter(groupHasMember);
     const total=mine.reduce((s,g)=>s+Number(g.copies||0),0);
     const done=mine.filter(g=>g.done).length;
-    memberView.innerHTML=`<div class="card"><h3>📰 Echo Łaz</h3><p class="muted">Twój kolportaż. Wybierz swoją grupę, rozpocznij, sprawdź region na mapie i po rozniesieniu kliknij „Gotowe”.</p><div class="stats"><div class="stat"><strong>${mine.length}</strong><span>Twoje grupy</span></div><div class="stat"><strong>${total}</strong><span>Gazet</span></div><div class="stat"><strong>${done}</strong><span>Gotowe</span></div></div></div>${mine.length?mine.map(g=>newspaperGroupCard(g,true)).join(""): `<div class="empty">Nie znaleziono Twojej grupy. Sprawdź, czy Twoje imię i nazwisko jest przypisane do kolportażu.</div>`}`;
+    memberView.innerHTML=`<div class="card"><h3>📰 Echo Łaz</h3><p class="muted">${state.role==="guardian"?"Grupy przypisane do wspólnego konta Opiekunowie.":"Twój kolportaż. Wybierz swoją grupę, rozpocznij, sprawdź region na mapie i po rozniesieniu kliknij „Gotowe”."}</p><div class="stats"><div class="stat"><strong>${mine.length}</strong><span>Twoje grupy</span></div><div class="stat"><strong>${total}</strong><span>Gazet</span></div><div class="stat"><strong>${done}</strong><span>Gotowe</span></div></div></div>${mine.length?mine.map(g=>newspaperGroupCard(g,true)).join(""): `<div class="empty">Nie znaleziono Twojej grupy. Sprawdź, czy Twoje imię i nazwisko jest przypisane do kolportażu.</div>`}`;
   }else{
     const total=groups.reduce((s,g)=>s+Number(g.copies||0),0), delivered=groups.reduce((s,g)=>s+Number(g.delivered||0),0);
     memberView.innerHTML=`<div class="card"><h3>📰 Centrum kolportażu</h3><p class="muted">${groups.length} grup · ${delivered}/${total} gazet · ${groups.filter(g=>g.done).length}/${groups.length} grup gotowych</p></div>`;
@@ -2599,13 +2602,14 @@ function editNewspaperGroup(id){
       </select></div>
       <div class="field"><label>Ulice — każda w osobnej linii</label><textarea id="editNewspaperStreets" required>${escapeHtml((g.streets||[]).join("\n"))}</textarea></div>
       <div class="field"><label>Członkowie grupy</label><div>${checks||`<span class="muted">Brak członków.</span>`}</div></div>
+      <label style="display:flex;gap:9px;align-items:center;margin:10px 0"><input id="editNewspaperGuardianAssigned" type="checkbox" ${g.guardianAssigned?"checked":""}> <span>👤 Przypisz wspólne konto Opiekunowie</span></label>
       <div class="field"><label>Liczba gazet</label><input id="editNewspaperCopies" type="number" min="0" value="${Number(g.copies||0)}"></div>
       <div class="actions"><button class="btn outline" type="button" onclick="closeModal()">Anuluj</button><button class="btn red" type="submit">💾 Zapisz zmiany</button></div>
     </form>`);
   $("editNewspaperForm").addEventListener("submit",async e=>{
     e.preventDefault();
     const memberIds=[...document.querySelectorAll(".editNewspaperMember:checked")].map(x=>Number(x.value));
-    const body={name:$("editNewspaperName").value.trim(),region:$("editNewspaperRegion").value.trim(),color:$("editNewspaperColor").value,streets:$("editNewspaperStreets").value.split("\n").map(x=>x.trim()).filter(Boolean),copies:Number($("editNewspaperCopies").value||0),memberIds};
+    const body={name:$("editNewspaperName").value.trim(),region:$("editNewspaperRegion").value.trim(),color:$("editNewspaperColor").value,streets:$("editNewspaperStreets").value.split("\n").map(x=>x.trim()).filter(Boolean),copies:Number($("editNewspaperCopies").value||0),memberIds,guardianAssigned:!!$("editNewspaperGuardianAssigned")?.checked};
     try{
       const updated=await api(`/api/newspaper-groups/${Number(id)}`,{method:"PUT",body:JSON.stringify(body)});
       state.newspapers=state.newspapers.map(x=>Number(x.id)===Number(id)?updated:x);
@@ -3466,7 +3470,8 @@ $("newspaperGroupForm").addEventListener("submit",async e=>{
     color:$("newspaperColor").value,
     streets:$("newspaperStreets").value.split("\n").map(x=>x.trim()).filter(Boolean),
     copies:Number($("newspaperCopies").value||0),
-    memberIds:checks
+    memberIds:checks,
+    guardianAssigned:!!$("newspaperGuardianAssigned")?.checked
   };
   try{
     const group=await api("/api/newspaper-groups",{method:"POST",body:JSON.stringify(body)});
