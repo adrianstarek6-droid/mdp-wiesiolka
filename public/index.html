@@ -1049,8 +1049,12 @@ body{background-color:#050505}
         <b>Wybierz element samochodu</b>
         <p class="muted" style="margin:6px 0 0">Kliknij jedną ze skrytek albo tylną autopompę COMBI-M.</p>
       </div>
-      <p class="muted" style="font-size:11px;margin:10px 2px 0">Model poglądowy 3D. Dokładne rozmieszczenie i wyposażenie dopracujemy na podstawie zdjęć wszystkich stron pojazdu.</p>
+      <p class="muted" style="font-size:11px;margin:10px 2px 0">Model 3D jest poglądowy. Spis bazuje na publicznej karcie pojazdu i wymaga potwierdzenia z aktualnym wyposażeniem jednostki.</p>
     </div>
+    <div class="card"><h3>📚 Poznaj wyposażenie Volvo</h3><p class="muted">Wybierz skrytkę, kabinę, dach lub stanowisko autopompy.</p>
+    <div class="volvo-locker-list">
+    <button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G1')"><b>G1</b><span>Sprzęt ochronny i podręczny</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G2')"><b>G2</b><span>Zasilanie i wentylacja</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G3')"><b>G3</b><span>Narzędzia</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G4')"><b>G4</b><span>Węże i armatura</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G5')"><b>G5</b><span>Ratownictwo medyczne</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('G6')"><b>G6</b><span>Sprzęt wodno-pianowy</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('GR')"><b>GR</b><span>Stanowisko obsługi autopompy</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('CAB')"><b>CAB</b><span>Kabina załogi</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('ROOF')"><b>ROOF</b><span>Dach pojazdu</span><small>Dotknij, aby zobaczyć opis</small></button><button class="volvo-equip-btn" type="button" onclick="volvoShowEquipment('PUMP')"><b>PUMP</b><span>Autopompa COMBI-M</span><small>Dotknij, aby zobaczyć opis</small></button>
+    </div><div id="volvoEquipmentDetail" class="card" style="background:#101010;margin-top:12px"><b>Wybierz element</b><p class="muted">Opisy informacyjne; sprzęt obsługuj wyłącznie podczas zajęć pod nadzorem opiekuna.</p></div></div>
   </section>
 
   <section id="moreScreen" class="screen">
@@ -3879,6 +3883,20 @@ function volvo3dReset(){if(!volvo3d.group)return;volvo3d.group.rotation.set(0,0,
 function volvo3dShowRear(){if(!volvo3d.group)return;volvo3d.group.rotation.y=Math.PI;volvo3dInfo("Tył pojazdu","Z tyłu znajduje się autopompa COMBI-M. Kliknij ją na modelu, aby zobaczyć opis.");}
 
 document.addEventListener('DOMContentLoaded',()=>{const b=document.querySelector('[data-screen="volvoScreen"]');if(b)b.addEventListener('click',()=>setTimeout(initVolvo3D,80));});
+
+const VOLVO_EQUIPMENT_INFO={
+G1:["G1 — sprzęt ochronny i podręczny",["Wodery i kalosze","Kamizelki asekuracyjne","Koc gaśniczy","Podręczny sprzęt gaśniczy","Liny i linki","Woda pitna"],"Zestaw zabezpieczający ratowników i wspierający działania pomocnicze."],
+G2:["G2 — zasilanie i wentylacja",["Wentylator oddymiający","Przenośny agregat prądotwórczy","Kanister paliwa","Bębny przedłużaczy 230 V","Pachołki drogowe","Flary ostrzegawcze"],"Sprzęt do zasilania urządzeń i zabezpieczenia miejsca działań."],
+G3:["G3 — narzędzia",["Nożyce do prętów","Narzędzie wielofunkcyjne","Młoty","Kilof i łopata","Siekiera i topór strażacki","Stojak hydrantowy i klucz","Gaśnice proszkowe"],"Narzędzia do prac pomocniczych i obsługi infrastruktury."],
+G4:["G4 — węże i armatura",["Skrzynki z drobnym osprzętem","Węże tłoczne W-75","Węże tłoczne W-52"],"Elementy do budowania linii gaśniczych."],
+G5:["G5 — ratownictwo medyczne",["Deska ortopedyczna z unieruchomieniem głowy","Kamizelka do ewakuacji","Torba medyczna PSP-R1","Kołnierze ortopedyczne","Materac próżniowy","Pompa do wody brudnej","Tablica higieniczna i sorbent"],"Wyposażenie do działań z zakresu ratownictwa medycznego."],
+G6:["G6 — sprzęt wodno-pianowy",["Prądownice pianowe","Dozownik środka pianotwórczego","Pompa pływająca","Prądownice wodne","Rozdzielacze i redukcje","Zbieracz","Przepływomierz","Szybkie natarcie"],"Elementy układu podawania wody i środka pianotwórczego."],
+GR:["GR — stanowisko autopompy",["Panel sterowania autopompą","Elementy kontrolne i przyłącza"],"Dokładny układ panelu wymaga zdjęcia Waszego stanowiska. To nie jest instrukcja obsługi."],
+CAB:["Kabina załogi",["Radiotelefony przenośne","Latarki","Aparaty ochrony dróg oddechowych","Butle powietrzne","Kamizelki ostrzegawcze"],"Publiczna karta pojazdu wymienia wyposażenie dla załogi; aktualną konfigurację trzeba potwierdzić."],
+ROOF:["Dach pojazdu",["Drabina nasadkowa","Drabina wysuwana","Węże ssawne","Mostki przejazdowe","Szczotki i łopaty"],"Lista na podstawie opublikowanej karty pojazdu."],
+PUMP:["Autopompa COMBI-M",["Autopompa oznaczona przez jednostkę jako COMBI-M","Umiejscowienie: tylna część samochodu","Stanowisko obsługi opisane osobno jako GR"],"Nie podaję wydajności ani parametrów bez potwierdzenia tabliczki znamionowej i dokumentacji Waszego egzemplarza."]
+};
+function volvoShowEquipment(key){const d=VOLVO_EQUIPMENT_INFO[key],el=$("volvoEquipmentDetail");if(!d||!el)return;el.innerHTML='<b>'+d[0]+'</b><ul style="padding-left:20px;margin:8px 0">'+d[1].map(x=>'<li style="margin:4px 0">'+x+'</li>').join('')+'</ul><p class="muted">'+d[2]+'</p>';}
 </script>
 </body>
 </html>
