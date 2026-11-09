@@ -1035,15 +1035,21 @@ body{background-color:#050505}
       <div class="volvo-spec"><span>🔧</span><strong>FL280</strong><small>Model podwozia</small></div>
     </div>
     <div class="card volvo-info">
-      <h3>Wyposażenie i skrytki</h3>
-      <p class="muted">Tutaj docelowo znajdzie się interaktywny widok samochodu. Zawartość każdej skrytki dodamy dopiero na podstawie rzeczywistych zdjęć i potwierdzonego spisu — bez zgadywania wyposażenia.</p>
-      <div class="volvo-locker-list">
-        <div><b>01</b><span>Skrytka lewa przednia</span><small>Spis do uzupełnienia</small></div>
-        <div><b>02</b><span>Skrytka lewa tylna</span><small>Spis do uzupełnienia</small></div>
-        <div><b>03</b><span>Skrytka prawa przednia</span><small>Spis do uzupełnienia</small></div>
-        <div><b>04</b><span>Skrytka prawa tylna</span><small>Spis do uzupełnienia</small></div>
-        <div><b>05</b><span>Dach pojazdu</span><small>Spis do uzupełnienia</small></div>
+      <h3>🚒 Interaktywne Volvo 3D</h3>
+      <p class="muted">Przeciągaj, aby obracać samochód. Przybliżaj dwoma palcami albo kółkiem. Dotknij skrytki lub autopompy, aby zobaczyć informacje.</p>
+      <div id="volvo3dStage" style="position:relative;width:100%;height:360px;background:radial-gradient(ellipse at 50% 45%,#292929,#090909 75%);border:1px solid #343434;border-radius:16px;overflow:hidden">
+        <div id="volvo3dLoading" style="position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font-size:13px;z-index:1">Ładowanie modelu 3D…</div>
+        <canvas id="volvo3dCanvas" style="width:100%;height:100%;display:block;touch-action:none"></canvas>
       </div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn outline" type="button" onclick="volvo3dReset()">↺ Widok początkowy</button>
+        <button class="btn outline" type="button" onclick="volvo3dShowRear()">Tył pojazdu</button>
+      </div>
+      <div id="volvo3dInfo" class="card" style="margin:12px 0 0;background:#0c0c0c">
+        <b>Wybierz element samochodu</b>
+        <p class="muted" style="margin:6px 0 0">Kliknij jedną ze skrytek albo tylną autopompę COMBI-M.</p>
+      </div>
+      <p class="muted" style="font-size:11px;margin:10px 2px 0">Model poglądowy 3D. Dokładne rozmieszczenie i wyposażenie dopracujemy na podstawie zdjęć wszystkich stron pojazdu.</p>
     </div>
   </section>
 
@@ -1254,6 +1260,7 @@ ul. Przykładowa 2"></textarea></div>
 
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 "use strict";
 
@@ -3797,6 +3804,81 @@ async function updateTrainingGoalStatus(id,status){
   catch(err){toast(err.message,"error");}
 }
 
+
+/* Interaktywny, poglądowy model 3D Volvo FL280 689[S]15 */
+let volvo3d={scene:null,camera:null,renderer:null,group:null,doors:[],raycaster:null,pointer:null,raf:0,drag:false,lastX:0,lastY:0,opened:null};
+function volvo3dInfo(title,desc){const el=$("volvo3dInfo");if(el)el.innerHTML='<b>'+title+'</b><p class="muted" style="margin:6px 0 0">'+desc+'</p>';}
+function volvo3dBox(parent,w,h,d,x,y,z,color,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.72,metalness:opts.metal||0}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function initVolvo3D(){
+ const canvas=$("volvo3dCanvas");if(!canvas||!window.THREE||volvo3d.renderer)return;
+ const stage=$("volvo3dStage"),w=stage.clientWidth||600,h=stage.clientHeight||360;
+ const scene=new THREE.Scene();scene.background=new THREE.Color(0x101010);
+ const camera=new THREE.PerspectiveCamera(38,w/h,.1,100);camera.position.set(5.7,3.4,7.2);camera.lookAt(0,1,0);
+ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(w,h,false);renderer.shadowMap.enabled=true;
+ scene.add(new THREE.HemisphereLight(0xffffff,0x343434,2));
+ const light=new THREE.DirectionalLight(0xffffff,2.2);light.position.set(4,8,6);scene.add(light);
+ const group=new THREE.Group();scene.add(group);
+ // Rama i podwozie
+ volvo3dBox(group,5.2,.34,1.55,-.05,.72,0,0x242424);
+ // Czerwony zabudowany korpus
+ volvo3dBox(group,3.45,1.75,1.72,-.62,1.75,0,0xb5121b);
+ // Kabina z przodu
+ volvo3dBox(group,1.65,1.9,1.78,2.05,1.72,0,0xc51b24);
+ volvo3dBox(group,1.25,.62,1.81,2.12,2.48,0,0x9fc3d4);
+ // Przedni zderzak i dach
+ volvo3dBox(group,.28,.3,1.95,2.95,.85,0,0xbfc3c7,{metal:.5});
+ volvo3dBox(group,3.6,.12,1.8,-.62,2.67,0,0x9e111a);
+ // Żółte pasy
+ volvo3dBox(group,3.5,.09,1.76,-.62,2.42,0,0xf2d12c);
+ // Koła
+ [-1.72,2.12].forEach(x=>[-.91,.91].forEach(z=>{const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.53,.53,.28,24),new THREE.MeshStandardMaterial({color:0x171717,roughness:1}));wheel.rotation.x=Math.PI/2;wheel.position.set(x,.55,z);wheel.castShadow=true;group.add(wheel);const hub=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.3,20),new THREE.MeshStandardMaterial({color:0x777777,metalness:.7,roughness:.4}));hub.rotation.x=Math.PI/2;hub.position.set(x,.55,z);group.add(hub);}));
+ // Skrytki po obu stronach — drzwi klikane
+ const lockerDefs=[
+  {id:"L1",name:"Lewa skrytka przednia",x:.48,z:-.89},
+  {id:"L2",name:"Lewa skrytka tylna",x:-1.28,z:-.89},
+  {id:"P1",name:"Prawa skrytka przednia",x:.48,z:.89},
+  {id:"P2",name:"Prawa skrytka tylna",x:-1.28,z:.89}
+ ];
+ lockerDefs.forEach((d,i)=>{
+  const inner=volvo3dBox(group,1.45,1.12,.045,d.x,1.78,d.z*0.96,0x20252a);
+  const door= new THREE.Group();door.position.set(d.x+.72,1.78,d.z);group.add(door);
+  const panel=volvo3dBox(door,1.43,1.1,.075,-.715,0,0,0xbfc3c7,{metal:.65});
+  panel.userData={kind:"locker",id:d.id,name:d.name,description:"Skrytka '+d.name+'. Drzwi można otworzyć kliknięciem. Dokładny spis sprzętu dodamy po otrzymaniu zdjęć i potwierdzeniu wyposażenia."};
+  const stripe=volvo3dBox(door,1.36,.07,.09,-.715,.42,.01,0xd51b25);
+  stripe.userData=panel.userData;
+  const handle=volvo3dBox(door,.08,.28,.1,-.12,0,.07,0x333333);handle.userData=panel.userData;
+  door.userData={...panel.userData,door,closedZ:d.z,open:false};volvo3d.doors.push(door);
+ });
+ // Tylna pompa COMBI-M — oddzielny, klikalny zespół
+ const pump=new THREE.Group();pump.position.set(-2.55,1.25,0);group.add(pump);
+ const base=volvo3dBox(pump,.78,.55,1.05,0,0,0,0x282828,{metal:.4});
+ const pumpBody=volvo3dBox(pump,.58,.42,.78,0,.38,0,0x9b2525,{metal:.45});
+ const reel=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.12,24),new THREE.MeshStandardMaterial({color:0x777777,metalness:.7}));reel.rotation.x=Math.PI/2;reel.position.set(-.08,.42,.48);pump.add(reel);
+ pumpBody.userData={kind:"pump",name:"Autopompa COMBI-M",description:"Autopompa COMBI-M umieszczona w tylnej części pojazdu. To oznaczenie i lokalizacja zostały wskazane przez użytkownika. Szczegółowy opis parametrów i obsługi uzupełnimy po potwierdzeniu danych konkretnego egzemplarza."};
+ base.userData=pumpBody.userData;reel.userData=pumpBody.userData;
+ // Detale tylne, lampy i oznaczenie
+ volvo3dBox(group,.12,.55,1.78,-2.38,1.65,0,0x777777,{metal:.6});
+ volvo3dBox(group,.08,.22,.3,-2.46,1.1,-.65,0xff2929);
+ volvo3dBox(group,.08,.22,.3,-2.46,1.1,.65,0xff2929);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x202020,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.02;scene.add(floor);
+ volvo3d.group=group;volvo3d.scene=scene;volvo3d.camera=camera;volvo3d.renderer=renderer;volvo3d.raycaster=new THREE.Raycaster();volvo3d.pointer=new THREE.Vector2();
+ const hit=(e)=>{const rect=canvas.getBoundingClientRect();volvo3d.pointer.x=((e.clientX-rect.left)/rect.width)*2-1;volvo3d.pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;volvo3d.raycaster.setFromCamera(volvo3d.pointer,camera);const objs=[];group.traverse(o=>{if(o.isMesh)objs.push(o)});const found=volvo3d.raycaster.intersectObjects(objs,false)[0];if(!found)return;const data=found.object.userData;if(!data||!data.kind)return;if(data.kind==="locker"){const door=data.door||found.object.parent;if(door.userData&&!door.userData.door){}const target=door.userData.door||door;target.userData.open=!target.userData.open;target.rotation.y=target.userData.open?(target.position.z<0?-1.15:1.15):0;volvo3dInfo(data.name,target.userData.open?"Skrytka otwarta. "+data.description:data.description);}else if(data.kind==="pump"){volvo3dInfo("Autopompa COMBI-M",data.description);}};
+ canvas.addEventListener("click",hit);
+ canvas.addEventListener("pointerdown",e=>{volvo3d.drag=true;volvo3d.lastX=e.clientX;volvo3d.lastY=e.clientY;});
+ canvas.addEventListener("pointerup",()=>volvo3d.drag=false);
+ canvas.addEventListener("pointerleave",()=>volvo3d.drag=false);
+ canvas.addEventListener("pointermove",e=>{if(!volvo3d.drag)return;const dx=e.clientX-volvo3d.lastX,dy=e.clientY-volvo3d.lastY;group.rotation.y+=dx*.009;camera.position.y=Math.max(1.4,Math.min(6,camera.position.y-dy*.012));camera.lookAt(0,1,0);volvo3d.lastX=e.clientX;volvo3d.lastY=e.clientY;});
+ canvas.addEventListener("wheel",e=>{e.preventDefault();camera.position.multiplyScalar(e.deltaY>0?1.08:.92);camera.position.clampLength(4,13);camera.lookAt(0,1,0);},{passive:false});
+ const resize=()=>{if(!volvo3d.renderer||!stage.isConnected)return;const nw=stage.clientWidth,nh=stage.clientHeight;camera.aspect=nw/nh;camera.updateProjectionMatrix();renderer.setSize(nw,nh,false);};
+ if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);else window.addEventListener("resize",resize);
+ const animate=()=>{volvo3d.raf=requestAnimationFrame(animate);renderer.render(scene,camera);};animate();
+ const loading=$("volvo3dLoading");if(loading)loading.style.display="none";
+ volvo3dInfo("Model Volvo FL280 689[S]15","Obracaj samochód i klikaj skrytki. Z tyłu znajduje się oznaczona autopompa COMBI-M.");
+}
+function volvo3dReset(){if(!volvo3d.group)return;volvo3d.group.rotation.set(0,0,0);volvo3d.camera.position.set(5.7,3.4,7.2);volvo3d.camera.lookAt(0,1,0);volvo3d.doors.forEach(d=>{d.userData.open=false;d.rotation.y=0;});}
+function volvo3dShowRear(){if(!volvo3d.group)return;volvo3d.group.rotation.y=Math.PI;volvo3dInfo("Tył pojazdu","Z tyłu znajduje się autopompa COMBI-M. Kliknij ją na modelu, aby zobaczyć opis.");}
+
+document.addEventListener('DOMContentLoaded',()=>{const b=document.querySelector('[data-screen="volvoScreen"]');if(b)b.addEventListener('click',()=>setTimeout(initVolvo3D,80));});
 </script>
 </body>
 </html>
