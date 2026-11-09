@@ -3819,7 +3819,21 @@ async function updateTrainingGoalStatus(id,status){
 let volvo3d={scene:null,camera:null,renderer:null,group:null,doors:[],raycaster:null,pointer:null,raf:0,drag:false,lastX:0,lastY:0,opened:null,loading:false};
 function volvo3dInfo(title,desc){const el=$("volvo3dInfo");if(el)el.innerHTML='<b>'+title+'</b><p class="muted" style="margin:6px 0 0">'+desc+'</p>';}
 function volvoMat(color,metalness=0,roughness=.62){return new THREE.MeshStandardMaterial({color,metalness,roughness});}
-function volvoBox(parent,w,h,d,x,y,z,color,metal=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),volvoMat(color,metal));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function volvoBox(parent,w,h,d,x,y,z,color,metal=0){
+ // Zaokrąglona geometria zamiast ostrych pudełek: delikatne promienie na panelach,
+ // drzwiach skrytek, zderzakach i detalach. Promień skaluje się do najmniejszego wymiaru.
+ const radius=Math.max(.001,Math.min(w,h,d)*.18);
+ const shape=new THREE.Shape();
+ const x0=-w/2,y0=-h/2,r=Math.min(radius,w/2-.0001,h/2-.0001);
+ shape.moveTo(x0+r,y0);shape.lineTo(x0+w-r,y0);shape.quadraticCurveTo(x0+w,y0,x0+w,y0+r);
+ shape.lineTo(x0+w,y0+h-r);shape.quadraticCurveTo(x0+w,y0+h,x0+w-r,y0+h);
+ shape.lineTo(x0+r,y0+h);shape.quadraticCurveTo(x0,y0+h,x0,y0+h-r);
+ shape.lineTo(x0,y0+r);shape.quadraticCurveTo(x0,y0,x0+r,y0);shape.closePath();
+ const bevel=Math.min(radius*.42,d*.16);
+ const geometry=new THREE.ExtrudeGeometry(shape,{depth:Math.max(.001,d-bevel*2),bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:5});
+ geometry.translate(0,0,-d/2+bevel);
+ const m=new THREE.Mesh(geometry,volvoMat(color,metal,.48));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
 function volvoShape(parent,points,z,depth,color,bevel=.06){
  const sh=new THREE.Shape();sh.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)sh.lineTo(points[i][0],points[i][1]);sh.closePath();
  const geo=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:16});
@@ -3949,22 +3963,33 @@ function initVolvo3D(){
   const curve=new THREE.CatmullRomCurve3(pts);const arch=new THREE.Mesh(new THREE.TubeGeometry(curve,32,.055,8,false),volvoMat(0x24282d,.65,.5));group.add(arch);
  }));
  // Skrytki boczne G1–G6: sześć paneli w dwóch rzędach na obu bokach.
- const lockerDefs=[{id:"G1",name:"Skrytka G1",x:-1.72,z:-.955},{id:"G2",name:"Skrytka G2",x:-.72,z:-.955},{id:"G3",name:"Skrytka G3",x:.28,z:-.955},{id:"G4",name:"Skrytka G4",x:-1.72,z:.955},{id:"G5",name:"Skrytka G5",x:-.72,z:.955},{id:"G6",name:"Skrytka G6",x:.28,z:.955}];
+ // Zabudowa Bocar: trzy szerokie, aluminiowe żaluzje na każdym boku.
+ // Sześć stref G1–G6 pozostaje klikalnych, ale wizualnie odpowiadają dużym skrytkom
+ // typowym dla tej zabudowy, a nie małym czarnym prostokątom.
+ const lockerDefs=[{id:"G1",name:"Skrytka G1",x:-1.68,z:-.955},{id:"G2",name:"Skrytka G2",x:-.62,z:-.955},{id:"G3",name:"Skrytka G3",x:.43,z:-.955},{id:"G4",name:"Skrytka G4",x:-1.68,z:.955},{id:"G5",name:"Skrytka G5",x:-.62,z:.955},{id:"G6",name:"Skrytka G6",x:.43,z:.955}];
  lockerDefs.forEach((d,i)=>{
   const side=d.z<0?-1:1;
-  const panel=new THREE.Group();panel.position.set(d.x,1.92,d.z);group.add(panel);
-  const door=volvoBox(panel,.88,1.38,.065,0,0,0,0xbfc4c8,.72);
-  const inset=volvoBox(panel,.77,1.25,.018,0,0,side*.042,0x4b5156,.55);
-  const face=volvoBox(panel,.69,1.17,.025,0,0,side*.055,0x292f35,.45);
-  const stripe=volvoBox(panel,.7,.075,.035,0,.49,side*.08,0xd51b25,.2);
-  const handle=volvoBox(panel,.08,.25,.07,.31,0,side*.095,0x9da3a8,.8);
-  const label=volvoBox(panel,.28,.12,.035,-.2,.47,side*.09,0xe6e8e9,.15);
+  const panel=new THREE.Group();panel.position.set(d.x,1.91,d.z);group.add(panel);
+  const data={kind:"locker",id:d.id,name:d.name,description:"Skrytka "+d.id+" w zabudowie Bocar. Kliknij, aby zobaczyć przypisany spis wyposażenia. Dokładne rozmieszczenie wewnątrz nie jest odtwarzane bez zdjęć konkretnego egzemplarza."};
+  const frame=volvoBox(panel,1.00,1.54,.075,0,0,0,0x6c747a,.72);
+  const dark=volvoBox(panel,.91,1.43,.035,0,0,side*.045,0x30363b,.35);
+  const shutter=volvoBox(panel,.85,1.34,.045,0,0,side*.073,0xb7bec3,.82);
   const slats=[];
-  for(let yy=-.51;yy<=.51;yy+=.105)slats.push(volvoBox(panel,.72,.018,.018,0,yy,side*.074,0x8e969c,.72));
-  [ -.35,.35 ].forEach(y=>volvoBox(panel,.045,.08,.07,-.4,y,side*.08,0x777e83,.7));
-  const data={kind:"locker",id:d.id,name:d.name,description:"Otwierana skrytka "+d.id+". Drzwi mają żaluzjowy podział jak w zabudowach pożarniczych. Szczegółowe wyposażenie wyświetla się w spisie poniżej; rozmieszczenie wewnątrz wymaga zdjęć konkretnego auta."};
-  [door,inset,face,stripe,handle,label,...slats].forEach(o=>o.userData=data);
-  panel.userData={...data,open:false,side};volvo3d.doors.push(panel);
+  for(let yy=-.61;yy<=.61;yy+=.085){
+   const slat=volvoBox(panel,.82,.045,.035,0,yy,side*.105,yy>.57?0xd6dadd:0xaeb6bc,.82);
+   slats.push(slat);
+  }
+  // Prowadnice i dolna listwa żaluzji.
+  const rails=[
+   volvoBox(panel,.045,1.40,.055,-.445,0,side*.11,0x555e65,.75),
+   volvoBox(panel,.045,1.40,.055,.445,0,side*.11,0x555e65,.75),
+   volvoBox(panel,.88,.075,.06,0,-.69,side*.13,0x68727a,.8),
+   volvoBox(panel,.11,.20,.07,.31,.02,side*.15,0x343a40,.65)
+  ];
+  const marker=volvoBox(panel,.25,.10,.035,-.24,.68,side*.13,0xe6e8e9,.25);
+  [frame,dark,shutter,...slats,...rails,marker].forEach(o=>o.userData=data);
+  panel.userData={...data,open:false,side};
+  volvo3d.doors.push(panel);
  });
  // Tył pojazdu: drzwi żaluzjowe, lampy, stopień i stanowisko COMBI-M.
  volvoBox(group,.08,1.52,1.68,-2.46,1.9,0,0x8f1019,.45);
