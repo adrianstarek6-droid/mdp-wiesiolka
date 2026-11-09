@@ -133,7 +133,8 @@ function groupSnapshot(row) {
     done: !!row.done,
 
     memberIds: normalizeIds(row.member_ids),
-    memberNames: normalizeNames(row.member_names)
+    memberNames: normalizeNames(row.member_names),
+    guardianAssigned: !!row.guardian_assigned
   };
 }
 
@@ -154,6 +155,7 @@ function groupJson(row, members = []) {
 
     memberIds: normalizeIds(row.member_ids),
     memberNames: normalizeNames(row.member_names),
+    guardianAssigned: !!row.guardian_assigned,
 
     members
   };
@@ -357,6 +359,7 @@ async function initDb() {
 
       member_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
       member_names JSONB NOT NULL DEFAULT '[]'::jsonb,
+      guardian_assigned BOOLEAN NOT NULL DEFAULT FALSE,
 
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -457,6 +460,9 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_mdp_training_logs_goal
       ON mdp_training_logs(goal_id,created_at DESC);
   `);
+
+  // Addytywne pole dla przypisania wspólnego konta opiekunów do grupy.
+  await pool.query("ALTER TABLE newspaper_groups ADD COLUMN IF NOT EXISTS guardian_assigned BOOLEAN NOT NULL DEFAULT FALSE");
 
   // Addytywne znaczniki archiwizacji — bez usuwania rekordów i powiązanej historii.
   await pool.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
@@ -2943,7 +2949,7 @@ app.get(
 app.post(
   '/api/newspaper-groups',
   auth,
-  adminOnly,
+  staff,
   async (req, res) => {
     try {
       const b = req.body;
@@ -3011,7 +3017,8 @@ app.post(
           started,
           done,
           member_ids,
-          member_names
+          member_names,
+          guardian_assigned
         )
         VALUES(
           $1,
@@ -3023,7 +3030,8 @@ app.post(
           FALSE,
           FALSE,
           $6::jsonb,
-          $7::jsonb
+          $7::jsonb,
+          $8
         )
         RETURNING *
         `,
@@ -3034,7 +3042,8 @@ app.post(
           JSON.stringify(streets),
           copies,
           JSON.stringify(ids),
-          JSON.stringify(names)
+          JSON.stringify(names),
+          !!b.guardianAssigned
         ]
       );
 
@@ -3084,7 +3093,7 @@ app.post(
 app.put(
   '/api/newspaper-groups/:id',
   auth,
-  adminOnly,
+  staff,
   async (req, res) => {
     try {
       const oldR = await pool.query(
@@ -3271,6 +3280,11 @@ app.put(
           ? !!req.body.done
           : !!old.done;
 
+      const guardianAssigned =
+        req.body.guardianAssigned !== undefined
+          ? !!req.body.guardianAssigned
+          : !!old.guardian_assigned;
+
       const r = await pool.query(
         `
         UPDATE newspaper_groups
@@ -3284,8 +3298,9 @@ app.put(
           started=$7,
           done=$8,
           member_ids=$9::jsonb,
-          member_names=$10::jsonb
-        WHERE id=$11
+          member_names=$10::jsonb,
+          guardian_assigned=$11
+        WHERE id=$12
         RETURNING *
         `,
         [
@@ -3299,6 +3314,7 @@ app.put(
           done,
           JSON.stringify(ids),
           JSON.stringify(names),
+          guardianAssigned,
           req.params.id
         ]
       );
