@@ -2240,42 +2240,62 @@ function renderNewspapers(){
   const memberView=$("newspaperMemberView"); if(!memberView)return;
 
   if(state.role==="guardian"){
-    const total=groups.reduce((s,g)=>s+Number(g.copies||0),0);
-    const delivered=groups.reduce((s,g)=>s+Number(g.delivered||0),0);
-    const done=groups.filter(g=>g.done).length;
+    const assigned=groups.filter(g=>!!g.guardianAssigned);
+    const total=assigned.reduce((sum,g)=>sum+Number(g.copies||0),0);
+    const delivered=assigned.reduce((sum,g)=>sum+Number(g.delivered||0),0);
+    const done=assigned.filter(g=>g.done).length;
     const pct=total?Math.min(100,Math.round(delivered/total*100)):0;
-    memberView.innerHTML=`<div class="card" style="border:1px solid #6b2429;background:linear-gradient(145deg,#241012,#101010)">
-      <h3>📰 Echo Łaz — nadzór kolportażu</h3>
-      <p class="muted">Podgląd wszystkich grup. Widać, kto zakończył roznoszenie, ile gazet rozdano i które grupy nadal pracują.</p>
-      <div class="stats">
-        <div class="stat"><strong>${groups.length}</strong><span>Grupy</span></div>
-        <div class="stat"><strong>${done}/${groups.length}</strong><span>Rozniesione</span></div>
-        <div class="stat"><strong>${delivered}/${total}</strong><span>Rozdane gazety</span></div>
-      </div>
-      <div class="progress" style="margin-top:14px"><div style="width:${pct}%;background:linear-gradient(90deg,#e51b23,#ff7378)"></div></div>
-      <div class="muted" style="margin-top:7px">Łączna realizacja: <b style="color:white">${pct}%</b></div>
-    </div>
-    ${groups.length?groups.map(g=>{
-      const copies=Number(g.copies||0),deliveredCount=Number(g.delivered||0);
-      const progress=copies?Math.min(100,Math.round(deliveredCount/copies*100)):0;
-      const status=g.done?"🟢 ROZNIESIONO":g.started?"🟡 W TRAKCIE":"⚪ NIE ROZPOCZĘTO";
-      const people=[...(g.memberNames||[])];
+    const peopleForGroup=g=>{
+      const fromIds=(g.memberIds||[]).map(id=>(state.data.members||[]).find(m=>String(m.id)===String(id))).filter(Boolean).map(memberFullName);
+      return [...new Set([...fromIds,...(g.memberNames||[])])].filter(Boolean);
+    };
+    const groupCard=g=>{
+      const copies=Number(g.copies||0),count=Number(g.delivered||0);
+      const progress=copies?Math.min(100,Math.round(count/copies*100)):0;
+      const people=peopleForGroup(g);
+      const status=g.done?"🟢 ROZNIESIONO":g.started?"🟡 W TRAKCIE":"🔴 NIE ROZNIESIONO";
       return `<article class="card" style="margin:12px 0;border-left:5px solid ${escapeHtml(g.color||"#777")};background:linear-gradient(145deg,#191919,#101010)">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
           <div><div class="muted" style="font-size:11px;letter-spacing:1px">GRUPA KOLPORTAŻOWA</div><h3 style="margin:5px 0">${escapeHtml(g.name)}</h3><div class="muted">📍 ${escapeHtml(g.region)}</div></div>
           <span class="badge" style="border:1px solid ${escapeHtml(g.color||"#777")}">${status}</span>
         </div>
         <div class="stats" style="margin-top:14px">
-          <div class="stat"><strong>${deliveredCount}/${copies}</strong><span>Rozdane gazety</span></div>
+          <div class="stat"><strong>${count}/${copies}</strong><span>Rozdane gazety</span></div>
           <div class="stat"><strong>${progress}%</strong><span>Postęp</span></div>
-          <div class="stat"><strong>${people.length}</strong><span>Przypisani</span></div>
+          <div class="stat"><strong>${people.length}</strong><span>Przypisani członkowie</span></div>
         </div>
         <div class="progress" style="margin-top:12px"><div style="width:${progress}%;background:${escapeHtml(g.color||"#e51b23")}"></div></div>
-        <div class="muted" style="margin-top:10px">${people.length?"👥 "+people.map(escapeHtml).join(", "):"Nie przypisano członków"}</div>
-        ${(g.streets||[]).length?`<div class="muted" style="margin-top:7px">📌 ${g.streets.map(escapeHtml).join(" · ")}</div>`:""}
+        <div style="margin-top:12px"><b>👥 Członkowie grupy</b>
+          <div class="group-members" style="margin-top:7px">${people.length?people.map(name=>`<span class="member-chip">${escapeHtml(name)} · ${g.done?"🟢 rozniósł":"🔴 jeszcze nierozliczony"}</span>`).join(""):`<span class="muted">Nie przypisano członków</span>`}</div>
+        </div>
+        ${(g.streets||[]).length?`<div class="muted" style="margin-top:9px">📌 ${g.streets.map(escapeHtml).join(" · ")}</div>`:""}
       </article>`;
-    }).join(""):`<div class="empty">Brak utworzonych grup kolportażowych.</div>`}
-    `;
+    };
+    memberView.innerHTML=`<div class="card" style="border:1px solid #6b2429;background:linear-gradient(145deg,#241012,#101010)">
+      <h3>📰 Echo Łaz — Twoja grupa</h3>
+      <p class="muted">Tutaj masz grupę przypisaną do konta Opiekunowie. Niżej możesz otworzyć podgląd wszystkich grup i sprawdzić, które już rozniesiono.</p>
+      <div class="stats">
+        <div class="stat"><strong>${assigned.length}</strong><span>Twoje grupy</span></div>
+        <div class="stat"><strong>${done}/${assigned.length}</strong><span>Rozniesione</span></div>
+        <div class="stat"><strong>${delivered}/${total}</strong><span>Rozdane gazety</span></div>
+      </div>
+      <div class="progress" style="margin-top:14px"><div style="width:${pct}%;background:linear-gradient(90deg,#e51b23,#ff7378)"></div></div>
+      <div class="muted" style="margin-top:7px">Realizacja Twojej grupy: <b style="color:white">${pct}%</b></div>
+    </div>
+    ${assigned.length?assigned.map(groupCard).join(""):`<div class="empty">Nie przypisano jeszcze grupy do konta Opiekunowie. Administrator może zaznaczyć „Przypisz wspólne konto Opiekunowie” w ustawieniach grupy.</div>`}
+    <div class="card" style="margin-top:14px">
+      <h3>🌍 Wszystkie grupy kolportażowe</h3>
+      <p class="muted">Kliknij, aby zobaczyć pełny raport: kto już rozniósł, kto jest w trakcie, a kto jeszcze nie rozpoczął.</p>
+      <button class="btn red" type="button" onclick="toggleGuardianAllGroups()">👀 Zobacz wszystkie grupy</button>
+      <div id="guardianAllGroups" style="display:none;margin-top:12px">
+        <div class="stats">
+          <div class="stat"><strong>${groups.length}</strong><span>Wszystkie grupy</span></div>
+          <div class="stat"><strong>${groups.filter(g=>g.done).length}/${groups.length}</strong><span>Rozniesione</span></div>
+          <div class="stat"><strong>${groups.filter(g=>!g.done).length}</strong><span>Do dokończenia</span></div>
+        </div>
+        ${groups.length?groups.map(groupCard).join(""):`<div class="empty">Brak grup kolportażowych.</div>`}
+      </div>
+    </div>`;
   }else if(state.role==="member"){
     const mine=groups.filter(groupHasMember);
     const total=mine.reduce((s,g)=>s+Number(g.copies||0),0);
@@ -2306,6 +2326,15 @@ function renderNewspapers(){
     }).join("");
     updateNewspaperMonthStatus();
   }
+}
+
+function toggleGuardianAllGroups(){
+  const panel=$("guardianAllGroups");
+  if(!panel)return;
+  const opening=panel.style.display==="none";
+  panel.style.display=opening?"block":"none";
+  const button=panel.parentElement?.querySelector("button");
+  if(button)button.textContent=opening?"🙈 Ukryj wszystkie grupy":"👀 Zobacz wszystkie grupy";
 }
 
 function openNewspaperMap(id){
