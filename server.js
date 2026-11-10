@@ -2422,7 +2422,7 @@ async function saveAttendance(
         [req.body.member_id]
       );
 
-      if (m.rows[0] && COALESCE(m.rows[0].role,'member') !== 'member') {
+      if (m.rows[0] && String(m.rows[0].role || 'member') !== 'member') {
         return res.status(400).json({
           error: 'Frekwencja jest prowadzona wyłącznie dla członków MDP.'
         });
