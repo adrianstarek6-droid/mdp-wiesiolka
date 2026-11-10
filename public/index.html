@@ -2266,7 +2266,7 @@ function renderNewspapers(){
         </div>
         <div class="progress" style="margin-top:12px"><div style="width:${progress}%;background:${escapeHtml(g.color||"#e51b23")}"></div></div>
         <div style="margin-top:12px"><b>👥 Członkowie grupy</b>
-          <div class="group-members" style="margin-top:7px">${people.length?people.map(name=>`<span class="member-chip">${escapeHtml(name)} · ${g.done?"🟢 rozniósł":"🔴 jeszcze nierozliczony"}</span>`).join(""):`<span class="muted">Nie przypisano członków</span>`}</div>
+          <div class="group-members" style="margin-top:7px">${people.length?people.map(name=>`<span class="member-chip">${escapeHtml(name)}</span>`).join(""):`<span class="muted">Nie przypisano członków</span>`}</div>
         </div>
         ${(g.streets||[]).length?`<div class="muted" style="margin-top:9px">📌 ${g.streets.map(escapeHtml).join(" · ")}</div>`:""}
       </article>`;
