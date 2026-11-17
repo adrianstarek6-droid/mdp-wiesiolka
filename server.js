@@ -202,6 +202,7 @@ async function auth(req, res, next) {
           id,
           first_name,
           last_name,
+          name,
           role,
           photo,
           code_hash
