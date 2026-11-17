@@ -3028,77 +3028,84 @@ async function editAttendance(eventId,memberId,status){
   }
 }
 
+let attendanceViewRows=[];
+let attendanceViewEventId=null;
+
+function renderAttendanceTable(){
+  const body=$("attendanceRows");
+  if(!body)return;
+  const query=($("attendanceSearch")?.value||"").trim().toLocaleLowerCase("pl");
+  const filter=$("attendanceFilter")?.value||"all";
+  const filtered=attendanceViewRows.filter(r=>{
+    const name=String(r.member_name||r.name||"").toLocaleLowerCase("pl");
+    if(query&&!name.includes(query))return false;
+    if(filter==="missing"&&r.status)return false;
+    if(filter!=="all"&&filter!=="missing"&&r.status!==filter)return false;
+    return true;
+  });
+  $("attendanceVisibleCount").textContent="Widoczne: "+filtered.length+" / "+attendanceViewRows.length;
+  body.innerHTML=filtered.map(r=>{
+    const name=r.member_name||r.name||`${r.first_name||""} ${r.last_name||""}`.trim()||"Nieznany";
+    const current=String(r.status||"").trim().toLowerCase();
+    const nonCounting=!!r.is_non_counting;
+    const memberId=Number(r.member_id||r.memberId||0);
+    const label=current==="yes"?"✅ Będę / Był":current==="maybe"?"🟡 Może":current==="no"?"❌ Nie będę / Nie było":"⚪ Brak odpowiedzi";
+    const updated=r.created_at?formatCreated(r.created_at):"—";
+    return `<tr>
+      <td><b>${escapeHtml(name)}</b>${nonCounting?'<div class="muted">Opiekunowie · poza frekwencją</div>':""}<div class="muted" style="font-size:11px">Ostatnia zmiana: ${escapeHtml(updated)}</div></td>
+      <td>${label}</td>
+      <td><select onchange="editAttendance(${Number(attendanceViewEventId)},${nonCounting?0:memberId},this.value)" ${memberId||nonCounting?"":"disabled"} aria-label="Zmień obecność">
+        <option value="">Zmień…</option>
+        <option value="yes" ${current==="yes"?"selected":""}>✅ Będę / Był</option>
+        <option value="maybe" ${current==="maybe"?"selected":""}>🟡 Może</option>
+        <option value="no" ${current==="no"?"selected":""}>❌ Nie będę / Nie było</option>
+      </select></td>
+    </tr>`;
+  }).join("")||'<tr><td colspan="3" class="muted">Brak wyników dla wybranego filtra.</td></tr>';
+}
+
 async function showAttendance(eventId){
   if(!isStaff())return;
-
   try{
     const data=await api(`/api/attendance/${Number(eventId)}?t=${Date.now()}`,{method:"GET"});
-
-    const rows=Array.isArray(data)?data:
-      Array.isArray(data?.attendance)?data.attendance:
-      Array.isArray(data?.rows)?data.rows:[];
-
+    const rows=Array.isArray(data)?data:Array.isArray(data?.attendance)?data.attendance:Array.isArray(data?.rows)?data.rows:[];
     const event=state.data.events.find(e=>Number(e.id)===Number(eventId));
-
-    const cleanRows=rows.map(r=>({
-      ...r,
-      status:String(r.status||"").trim().toLowerCase()
-    }));
-
-    let yes=0,maybe=0,no=0;
-    cleanRows.filter(r=>!r.is_non_counting).forEach(r=>{
-      if(r.status==="yes")yes++;
-      else if(r.status==="maybe")maybe++;
-      else if(r.status==="no")no++;
-    });
-
+    attendanceViewRows=rows.map(r=>({...r,status:String(r.status||"").trim().toLowerCase()}));
+    attendanceViewEventId=Number(eventId);
+    const counted=attendanceViewRows.filter(r=>!r.is_non_counting);
+    const yes=counted.filter(r=>r.status==="yes").length;
+    const maybe=counted.filter(r=>r.status==="maybe").length;
+    const no=counted.filter(r=>r.status==="no").length;
+    const missing=counted.filter(r=>!r.status).length;
     openModal(`
-      <h2>📋 Obecność</h2>
-      <p class="muted">${escapeHtml(event?.title || "Zbiórka")}${event?.completed?" · historia": " · nadchodząca"}</p>
-
+      <h2>📋 Obecność — panel kadry</h2>
+      <p class="muted">${escapeHtml(event?.title||"Zbiórka")}${event?.completed?" · historia":" · nadchodząca"}</p>
       <div class="stats" style="margin:14px 0">
-        <div class="stat"><strong>${yes}</strong><span>✅ Był / Będę</span></div>
+        <div class="stat"><strong>${yes}</strong><span>✅ Będę / Był</span></div>
         <div class="stat"><strong>${maybe}</strong><span>🟡 Może</span></div>
-        <div class="stat"><strong>${no}</strong><span>❌ Nie było / Nie będzie</span></div>
+        <div class="stat"><strong>${no}</strong><span>❌ Nie będę / Nie było</span></div>
+        <div class="stat"><strong>${missing}</strong><span>⚪ Brak odpowiedzi</span></div>
       </div>
-
-      ${rows.length ? `
-        <div style="overflow:auto">
-          <table>
-            <thead><tr><th>Członek</th><th>Status</th><th>Zmień</th></tr></thead>
-            <tbody>
-              ${cleanRows.map(r=>{
-                const name=r.member_name || r.name ||
-                  `${r.first_name||""} ${r.last_name||""}`.trim() || "Nieznany";
-                const current=r.status;
-                const isNonCounting=!!r.is_non_counting;
-                const memberId=Number(r.member_id || r.memberId || 0);
-                const statusLabel=current==="yes"?"✅ Był / Będę":current==="maybe"?"🟡 Może":current==="no"?"❌ Nie było / Nie będzie":"❔ Brak odpowiedzi";
-                return `<tr>
-                  <td>${escapeHtml(name)} ${isNonCounting?'<span class="badge">Opiekunowie · poza frekwencją</span>':""}</td>
-                  <td>${statusLabel}</td>
-                  <td>
-                    <select onchange="editAttendance(${Number(eventId)},${isNonCounting?0:memberId},this.value)" ${memberId||isNonCounting?"":"disabled"} aria-label="Zmień obecność">
-                      <option value="">Zmień…</option>
-                      <option value="yes" ${current==="yes"?"selected":""}>✅ Był / Będę</option>
-                      <option value="maybe" ${current==="maybe"?"selected":""}>🟡 Może</option>
-                      <option value="no" ${current==="no"?"selected":""}>❌ Nie było / Nie będzie</option>
-                    </select>
-                  </td>
-                </tr>`;
-              }).join("")}
-            </tbody>
-          </table>
-        </div>
-      `:`<div class="empty">Brak członków na liście.</div>`}
-
+      <div class="card" style="margin:12px 0;padding:12px">
+        <div class="field"><label for="attendanceSearch">🔎 Szukaj członka</label><input id="attendanceSearch" type="search" placeholder="Wpisz imię lub nazwisko…" oninput="renderAttendanceTable()"></div>
+        <div class="field"><label for="attendanceFilter">Filtr odpowiedzi</label><select id="attendanceFilter" onchange="renderAttendanceTable()">
+          <option value="all">Wszyscy</option><option value="yes">Będę / Był</option><option value="maybe">Może</option><option value="no">Nie będę / Nie było</option><option value="missing">Brak odpowiedzi</option>
+        </select></div>
+        <small id="attendanceVisibleCount" class="muted"></small>
+      </div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Członek</th><th>Status</th><th>Zmień</th></tr></thead>
+          <tbody id="attendanceRows"></tbody>
+        </table>
+      </div>
       <div class="card" style="margin-top:14px">
         <b>💡 Jak działa frekwencja?</b>
-        <div class="muted" style="margin-top:6px">Po zbiórce ustaw członkowi „✅ Był / Będę” albo „❌ Nie było”. Ta zmiana zapisuje się w bazie i jest uwzględniana w frekwencji. „🟡 Może” nie zwiększa ani obecności, ani nieobecności.</div>
+        <div class="muted" style="margin-top:6px">„Będę” to deklaracja przed zbiórką. Po zbiórce kadra potwierdza faktyczną obecność. Brak odpowiedzi nie jest automatycznie liczony jako nieobecność. Opiekunowie nie wliczają się do frekwencji członków.</div>
       </div>
-
       <div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>
     `);
+    renderAttendanceTable();
   }catch(e){
     toast("Nie udało się pobrać obecności: "+e.message,"error");
   }
