@@ -469,6 +469,10 @@ async function initDb() {
   await pool.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ");
 
+  // Frekwencja jest przypisana do stałego ID członka, a nazwa służy tylko do zgodności ze starszymi wpisami.
+  await pool.query('ALTER TABLE attendance ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES members(id) ON DELETE CASCADE');
+  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS attendance_event_member_id_unique ON attendance(event_id,member_id) WHERE member_id IS NOT NULL');
+
   await pool.query("ALTER TABLE quiz_submissions ADD COLUMN IF NOT EXISTS questions_snapshot JSONB NOT NULL DEFAULT '[]'::jsonb");
   await pool.query("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS questions_per_round INTEGER NOT NULL DEFAULT 10");
 
@@ -2407,68 +2411,71 @@ async function saveAttendance(
     }
 
     let memberName = '';
+    let attendanceMemberId = null;
 
     if (req.role === 'member') {
+      attendanceMemberId = Number(req.member.id);
       memberName =
         `${req.member.first_name || ''} ${req.member.last_name || ''}`
           .trim() ||
         String(req.member.name || '').trim();
-
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT first_name,last_name,name,role
+        SELECT id,first_name,last_name,name,role
         FROM members
         WHERE id=$1 AND archived_at IS NULL
         `,
         [req.body.member_id]
       );
-
       if (m.rows[0] && String(m.rows[0].role || 'member') !== 'member') {
-        return res.status(400).json({
-          error: 'Frekwencja jest prowadzona wyłącznie dla członków MDP.'
-        });
+        return res.status(400).json({ error: 'Frekwencja jest prowadzona wyłącznie dla członków MDP.' });
       }
-
       if (m.rows[0]) {
+        attendanceMemberId = Number(m.rows[0].id);
         memberName =
           `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
             .trim() ||
           String(m.rows[0].name || '').trim();
       }
-
     } else {
-      memberName = String(
-        req.body.member_name || ''
-      ).trim();
+      memberName = String(req.body.member_name || '').trim();
     }
 
     if (!memberName) {
-      return res.status(400).json({
-        error:
-          'Nie znaleziono członka.'
-      });
+      return res.status(400).json({ error: 'Nie znaleziono członka.' });
     }
 
-    await pool.query(
-      `
-      INSERT INTO attendance
-      (event_id,member_name,status)
-      VALUES($1,$2,$3)
-      ON CONFLICT(event_id,member_name)
-      DO UPDATE SET
-        status=EXCLUDED.status
-      `,
-      [
-        eventId,
-        memberName,
-        status
-      ]
-    );
+    if (attendanceMemberId) {
+      await pool.query(
+        'UPDATE attendance SET member_id=$1 WHERE event_id=$2 AND member_name=$3 AND member_id IS NULL',
+        [attendanceMemberId,eventId,memberName]
+      );
+      await pool.query(
+        `
+        INSERT INTO attendance (event_id,member_name,member_id,status)
+        VALUES($1,$2,$3,$4)
+        ON CONFLICT (event_id,member_id) WHERE member_id IS NOT NULL
+        DO UPDATE SET member_name=EXCLUDED.member_name,status=EXCLUDED.status
+        `,
+        [eventId,memberName,attendanceMemberId,status]
+      );
+    } else {
+      await pool.query(
+        `
+        INSERT INTO attendance (event_id,member_name,status)
+        VALUES($1,$2,$3)
+        ON CONFLICT(event_id,member_name)
+        DO UPDATE SET status=EXCLUDED.status
+        `,
+        [eventId,memberName,status]
+      );
+    }
 
     res.json({
       ok: true,
       event_id: eventId,
+      member_id: attendanceMemberId,
       member_name: memberName,
       status
     });
@@ -2511,8 +2518,8 @@ app.get('/api/my-attendance', auth, async (req, res) => {
       String(req.member.name || '').trim();
     if (!fullName) return res.json({});
     const result = await pool.query(
-      'SELECT event_id,status FROM attendance WHERE member_name=$1',
-      [fullName]
+      'SELECT event_id,status FROM attendance WHERE member_id=$1 OR (member_id IS NULL AND member_name=$2)',
+      [req.member.id,fullName]
     );
     const attendance = {};
     for (const row of result.rows) attendance[String(row.event_id)] = row.status;
@@ -2567,9 +2574,15 @@ app.get(
         FROM members m
         LEFT JOIN attendance a
           ON a.event_id=$1
-         AND a.member_name=COALESCE(
-           NULLIF(TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))), ''),
-           TRIM(COALESCE(m.name,''))
+         AND (
+           a.member_id=m.id
+           OR (
+             a.member_id IS NULL
+             AND a.member_name=COALESCE(
+               NULLIF(TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))), ''),
+               TRIM(COALESCE(m.name,''))
+             )
+           )
          )
         WHERE COALESCE(m.role,'member')='member'
           AND m.archived_at IS NULL
