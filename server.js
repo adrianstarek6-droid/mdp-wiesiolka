@@ -2410,14 +2410,15 @@ async function saveAttendance(
     if (req.role === 'member') {
       memberName =
         `${req.member.first_name || ''} ${req.member.last_name || ''}`
-          .trim();
+          .trim() ||
+        String(req.member.name || '').trim();
 
     } else if (req.body.member_id) {
       const m = await pool.query(
         `
-        SELECT first_name,last_name,role
+        SELECT first_name,last_name,name,role
         FROM members
-        WHERE id=$1
+        WHERE id=$1 AND archived_at IS NULL
         `,
         [req.body.member_id]
       );
@@ -2431,7 +2432,8 @@ async function saveAttendance(
       if (m.rows[0]) {
         memberName =
           `${m.rows[0].first_name || ''} ${m.rows[0].last_name || ''}`
-            .trim();
+            .trim() ||
+          String(m.rows[0].name || '').trim();
       }
 
     } else {
@@ -2497,6 +2499,28 @@ app.post(
       req.params.eventId
     )
 );
+
+// Członek pobiera swój aktualny status z bazy, także po zmianie telefonu.
+app.get('/api/my-attendance', auth, async (req, res) => {
+  if (req.role !== 'member' || !req.member) {
+    return res.status(403).json({ error: 'Ta funkcja jest dostępna dla członków MDP.' });
+  }
+  try {
+    const fullName = `${req.member.first_name || ''} ${req.member.last_name || ''}`.trim() ||
+      String(req.member.name || '').trim();
+    if (!fullName) return res.json({});
+    const result = await pool.query(
+      'SELECT event_id,status FROM attendance WHERE member_name=$1',
+      [fullName]
+    );
+    const attendance = {};
+    for (const row of result.rows) attendance[String(row.event_id)] = row.status;
+    return res.json(attendance);
+  } catch (e) {
+    console.error('Błąd pobierania własnej obecności:', e);
+    return res.status(500).json({ error: 'Nie udało się pobrać Twoich odpowiedzi.' });
+  }
+});
 
 app.get(
   '/api/attendance/:eventId',
