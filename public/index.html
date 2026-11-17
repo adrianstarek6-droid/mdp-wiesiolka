@@ -1425,6 +1425,7 @@ const state = {
   lastName: localStorage.getItem("mdp_last_name") || "",
   photo: localStorage.getItem("mdp_photo") || "",
   data: {events:[],news:[],members:[]},
+  attendance: {},
   newspapers: []
 };
 
@@ -1575,6 +1576,17 @@ function normalizeData(data){
 async function loadData(){
   const data=await api("/api/data",{method:"GET"});
   state.data=normalizeData(data);
+  if(state.role==="member"){
+    try{
+      const ownAttendance=await api("/api/my-attendance",{method:"GET"});
+      state.attendance=ownAttendance&&typeof ownAttendance==="object"?ownAttendance:{};
+    }catch(e){
+      console.warn("Nie udało się odświeżyć własnej obecności:",e);
+      state.attendance=state.attendance||{};
+    }
+  }else{
+    state.attendance={};
+  }
   await loadUrgent();
   await loadNewspaperGroupsFromServer();
   renderAll();
@@ -1613,7 +1625,7 @@ function eventCard(e, compact=false){
 
   const attendanceForMember =
     state.role==="member" && state.memberId
-      ? getLocalAttendance(id)
+      ? String(state.attendance?.[String(id)] || "")
       : null;
 
   return `
@@ -2984,11 +2996,11 @@ async function setAttendance(eventId,status){
       body:JSON.stringify(body)
     });
 
-    setLocalAttendance(eventId,status);
+    state.attendance=state.attendance||{};
+    state.attendance[String(eventId)]=status;
     toast(status==="yes"?"Obecność: Będę":status==="maybe"?"Obecność: Może":"Obecność: Nie będę");
 
-    // Odświeżenie danych po zapisie sprawia, że po zmianie odpowiedzi
-    // przycisk od razu pokazuje właściwy stan.
+    // Stan przycisków jest pobierany z bazy, a nie tylko z pamięci telefonu.
     await loadData();
   }catch(e){
     toast("Nie udało się zapisać obecności: "+e.message,"error");
