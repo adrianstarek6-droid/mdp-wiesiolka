@@ -104,6 +104,23 @@ label{font-size:12px;color:#aaa}
 .att-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
 .att-btn{border:1px solid #333;background:#191919;color:#ddd;border-radius:11px;padding:9px 5px;font-size:12px;font-weight:700}
 .att-btn.active.yes{background:#125a3b;border-color:#1b9863}.att-btn.active.maybe{background:#6c5414;border-color:#b48b23}.att-btn.active.no{background:#65161b;border-color:#a92a31}
+
+/* FREKWENCJA CZLONKA — czytelna karta odpowiedzi */
+.member-attendance{margin-top:14px;padding:14px;border:1px solid #382326;border-radius:17px;background:linear-gradient(145deg,#211214,#141112)}
+.member-attendance-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.member-attendance-title{font-size:13px;font-weight:800;letter-spacing:.2px}
+.member-attendance-state{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:11px;background:#191919;border:1px solid #343434;font-size:12px;color:#ddd}
+.member-attendance-state.yes{background:#10291e;border-color:#216341;color:#8be0b0}
+.member-attendance-state.maybe{background:#302710;border-color:#70571b;color:#f3d27b}
+.member-attendance-state.no{background:#321316;border-color:#74252c;color:#ff9ba1}
+.member-attendance-state.pending{color:#f3d27b}
+.member-attendance-hint{font-size:11px;color:#999;line-height:1.45;margin-top:9px}
+.member-attendance .att-grid{gap:8px;margin-top:0}
+.member-attendance .att-btn{min-height:46px;border-radius:12px;font-size:12px;transition:background .16s,border-color .16s,transform .16s}
+.member-attendance .att-btn:disabled{opacity:.55;cursor:wait}
+.member-attendance .att-btn.active{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 4px 14px rgba(0,0,0,.18)}
+@media(max-width:390px){.member-attendance{padding:11px}.member-attendance .att-btn{font-size:11px;padding:9px 3px}}
+
 .outfit-box{margin-top:10px;padding:11px 12px;border:1px solid #3b3030;border-radius:13px;background:#181212}.outfit-box b{color:#fff}
 .profile-head{display:flex;gap:14px;align-items:center}
 .avatar{width:70px;height:70px;border-radius:20px;object-fit:cover;background:#242424;border:1px solid #333}
@@ -1640,11 +1657,20 @@ function eventCard(e, compact=false){
     ${outfit?`<div class="outfit-box"><b>👕 Ubiór:</b> ${escapeHtml(outfit)}</div>`:`<div class="outfit-box muted">👕 Ubiór: nie podano</div>`}
     <button class="btn outline" style="width:100%;margin-top:10px" onclick="showOutfit(${Number(id)})">👕 Pokaż ubiór</button>
     ${state.role==="member" ? `
-      <div class="att-grid">
-        <button class="att-btn yes ${attendanceForMember==="yes"?"active":""}" onclick="setAttendance(${Number(id)},'yes')">✅ Będę</button>
-        <button class="att-btn maybe ${attendanceForMember==="maybe"?"active":""}" onclick="setAttendance(${Number(id)},'maybe')">🟡 Może</button>
-        <button class="att-btn no ${attendanceForMember==="no"?"active":""}" onclick="setAttendance(${Number(id)},'no')">❌ Nie będę</button>
-      </div>
+      <section class="member-attendance" aria-label="Twoja odpowiedź dotycząca obecności">
+        <div class="member-attendance-head">
+          <span class="member-attendance-title">🙋 TWOJA OBECNOŚĆ</span>
+          <span class="member-attendance-state ${state.attendanceSaving?.[String(id)]?"pending":attendanceForMember||""}">
+            ${state.attendanceSaving?.[String(id)]?"⏳ Zapisywanie…":attendanceForMember==="yes"?"✅ Będę":attendanceForMember==="maybe"?"🟡 Może":attendanceForMember==="no"?"❌ Nie będę":"⚪ Nie wybrano"}
+          </span>
+        </div>
+        <div class="att-grid">
+          <button type="button" class="att-btn yes ${attendanceForMember==="yes"?"active":""}" aria-pressed="${attendanceForMember==="yes"}" ${state.attendanceSaving?.[String(id)]?"disabled":""} onclick="setAttendance(${Number(id)},'yes')">✅ Będę</button>
+          <button type="button" class="att-btn maybe ${attendanceForMember==="maybe"?"active":""}" aria-pressed="${attendanceForMember==="maybe"}" ${state.attendanceSaving?.[String(id)]?"disabled":""} onclick="setAttendance(${Number(id)},'maybe')">🟡 Może</button>
+          <button type="button" class="att-btn no ${attendanceForMember==="no"?"active":""}" aria-pressed="${attendanceForMember==="no"}" ${state.attendanceSaving?.[String(id)]?"disabled":""} onclick="setAttendance(${Number(id)},'no')">❌ Nie będę</button>
+        </div>
+        <div class="member-attendance-hint">Możesz zmienić odpowiedź przed zbiórką. Po kliknięciu poczekaj na potwierdzenie zapisu.</div>
+      </section>
     `:""}
     ${["admin","guardian"].includes(state.role) ? `
       <div class="actions">
@@ -2984,26 +3010,35 @@ function showOutfit(eventId){
 }
 
 async function setAttendance(eventId,status){
+  const key=String(Number(eventId));
+  state.attendanceSaving=state.attendanceSaving||{};
+  if(state.attendanceSaving[key])return;
+  const previous=state.attendance?.[key]||"";
+  if(previous===status)return;
+  state.attendanceSaving[key]=true;
+  state.attendance=state.attendance||{};
+  state.attendance[key]=status;
+  renderEvents();
   try{
     const body={
       status,
       member_id: state.memberId ? Number(state.memberId) : undefined,
       member_name: `${state.firstName||""} ${state.lastName||""}`.trim()
     };
-
     await api(`/api/attendance/${Number(eventId)}`,{
       method:"POST",
       body:JSON.stringify(body)
     });
-
-    state.attendance=state.attendance||{};
-    state.attendance[String(eventId)]=status;
-    toast(status==="yes"?"Obecność: Będę":status==="maybe"?"Obecność: Może":"Obecność: Nie będę");
-
-    // Stan przycisków jest pobierany z bazy, a nie tylko z pamięci telefonu.
+    toast(status==="yes"?"✅ Zapisano: Będę":status==="maybe"?"🟡 Zapisano: Może":"❌ Zapisano: Nie będę");
+    // Pobieramy potwierdzony stan z serwera, aby telefon i panel kadry miały te same dane.
     await loadData();
   }catch(e){
-    toast("Nie udało się zapisać obecności: "+e.message,"error");
+    state.attendance[key]=previous;
+    toast("Nie udało się zapisać odpowiedzi. Spróbuj ponownie: "+e.message,"error");
+    renderEvents();
+  }finally{
+    state.attendanceSaving[key]=false;
+    renderEvents();
   }
 }
 
