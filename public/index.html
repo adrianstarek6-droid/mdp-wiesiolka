@@ -940,6 +940,70 @@ body{background-color:#050505}
  #homeScreen .hero-copy{padding-right:74px!important}
 }
 
+
+
+/* ===== HOME PREMIUM FIRE COMMAND — WYŁĄCZNIE WARSTWA WIZUALNA ===== */
+#homeScreen{--home-red:#ef3038}
+#homeScreen .hero{
+  height:auto!important;min-height:310px!important;max-height:none!important;
+  padding:19px 20px 18px!important;margin:4px 0 14px!important;
+  display:flex!important;flex-direction:column!important;justify-content:space-between!important;
+  gap:24px!important;isolation:isolate;
+  background:
+    radial-gradient(ellipse at 88% 40%,rgba(226,27,35,.22),transparent 42%),
+    linear-gradient(135deg,#171a1f 0%,#101216 55%,#210d11 100%)!important;
+  border:1px solid rgba(239,48,56,.38)!important;border-radius:25px!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.07)!important;
+}
+#homeScreen .hero:before{inset:9px!important;border:1px solid rgba(255,255,255,.055)!important;border-radius:18px!important}
+#homeScreen .hero:after{width:4px!important;right:0!important;top:20px!important;bottom:20px!important;height:auto!important;background:linear-gradient(180deg,#ff555b,#a90e17)!important;border-radius:5px!important}
+#homeScreen .hero-topline{display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;z-index:2}
+#homeScreen .hero-topline>span:first-child{font-size:10px;font-weight:900;letter-spacing:1.8px;color:#f4f4f4}
+#homeScreen .hero-topline>span:first-child i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef3038;margin-right:7px;box-shadow:0 0 12px rgba(239,48,56,.8)}
+#homeScreen .hero-edition{font-size:8px!important;letter-spacing:1px!important;color:#e7a4a7!important;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:99px;padding:7px 9px!important}
+#homeScreen .hero-copy{position:relative;z-index:2;padding-right:108px!important;margin:0!important}
+#homeScreen .hero-overline{font-size:9px!important;letter-spacing:1.65px!important;color:#e47b80!important;font-weight:800}
+#homeScreen .hero h1{font-size:clamp(34px,8vw,46px)!important;line-height:1.02!important;letter-spacing:-1.8px!important;margin:7px 0 10px!important}
+#homeScreen .hero h1 span{display:block;color:#fff!important}
+#homeScreen .hero p{font-size:13px!important;line-height:1.55!important;color:#b9bec5!important;max-width:270px!important}
+#homeScreen .hero-emblem{right:17px!important;width:clamp(92px,25vw,126px)!important;opacity:.95!important}
+#homeScreen .hero-foot{position:relative;z-index:2;display:flex;gap:10px!important;justify-content:flex-start!important;padding-top:13px!important;border-top:1px solid rgba(255,255,255,.09)}
+#homeScreen .hero-foot span{font-size:9px!important;letter-spacing:1px!important;color:#b7bbc0!important}
+#homeScreen .hero-foot b{color:#ff555b!important;margin-right:5px}
+#homeScreen .home-signature{display:flex!important;align-items:center;gap:11px;padding:12px 14px;margin:0 0 17px!important;border:1px solid #2d343d;border-radius:16px;background:linear-gradient(110deg,#171c22,#111418)!important}
+#homeScreen .home-signature>div b{display:block;font-size:11px;letter-spacing:1.6px}
+#homeScreen .home-signature>div small{display:block;color:#8e98a2;font-size:8px;letter-spacing:1px;margin-top:3px}
+#homeScreen .signature-line{height:1px;flex:1;background:linear-gradient(90deg,#6c272d,transparent)}
+#homeScreen .signature-status{font-size:9px!important;letter-spacing:1px;color:#e5a0a3!important}
+#homeScreen .home-quick-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:0 0 23px!important}
+#homeScreen .home-quick-card{
+  min-height:104px!important;display:grid!important;grid-template-columns:38px 1fr!important;grid-template-rows:auto auto!important;
+  align-content:center!important;align-items:center!important;column-gap:10px!important;row-gap:4px!important;
+  padding:14px!important;text-align:left!important;border:1px solid #2c343d!important;border-radius:17px!important;
+  background:linear-gradient(145deg,#1a2026,#111519)!important;color:#f4f5f6!important;
+  box-shadow:0 9px 22px rgba(0,0,0,.18)!important;transition:transform .18s ease,border-color .18s ease,background .18s ease!important
+}
+#homeScreen .home-quick-card:active{transform:scale(.97)!important;border-color:#9c3037!important}
+#homeScreen .home-quick-card>span{grid-row:1/3;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(226,27,35,.13);border:1px solid rgba(226,27,35,.25);font-size:19px}
+#homeScreen .home-quick-card>b{font-size:13px!important;align-self:end}
+#homeScreen .home-quick-card>small{font-size:10px!important;color:#929ca6!important;line-height:1.35}
+#homeScreen .section-title{margin:22px 2px 11px!important}
+#homeScreen .section-title h2{font-size:17px!important;font-weight:850!important;letter-spacing:-.3px}
+#homeScreen .section-title small{color:#e27a80!important;font-weight:800}
+#homeScreen #homeEvents .card,#homeScreen #homeNews .card{border-radius:17px!important}
+@media(max-width:380px){
+ #homeScreen .hero{min-height:295px!important;padding:17px!important}
+ #homeScreen .hero-copy{padding-right:82px!important}
+ #homeScreen .hero-emblem{right:10px!important;width:88px!important}
+ #homeScreen .hero h1{font-size:34px!important}
+ #homeScreen .home-quick-card{padding:11px!important;grid-template-columns:32px 1fr!important;column-gap:8px!important}
+ #homeScreen .home-quick-card>span{width:32px;height:32px;font-size:16px}
+}
+@media(min-width:650px){
+ #homeScreen .hero{min-height:330px!important;padding:25px 28px!important}
+ #homeScreen .home-quick-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
