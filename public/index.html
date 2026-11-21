@@ -2167,7 +2167,7 @@ function renderTrainings(){
     try{
       const parsed=new URL(url),host=parsed.hostname.toLowerCase();
       validLink=["facebook.com","www.facebook.com","m.facebook.com","fb.watch"].includes(host)||host.endsWith(".facebook.com")?parsed.href:"";
-      isShare=!!validLink&&/\\/share\\/r\\//i.test(parsed.pathname);
+      isShare=!!validLink&&parsed.pathname.toLowerCase().includes("/share/r/");
     }catch(_){}
     return `<article class="card training-video">
       <div class="training-video-head"><h3>🎓 ${escapeHtml(n.title||"Film szkoleniowy")}</h3></div>
