@@ -1991,7 +1991,7 @@ function renderGalleryGridOnly(){
   if(!rows.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">'+(galleryFavoritesOnly?'Nie masz jeszcze ulubionych materiałów.':search?'Nic nie znaleziono.':'W tym albumie nie ma jeszcze zdjęć ani filmów.')+'</div>';return;}
   grid.innerHTML=rows.map(item=>{
     const isVideo=String(item.mime_type||"").startsWith("video/");
-    const media=isVideo?'<div class="gallery-thumb video-thumb"><video src="'+escapeHtml(item.data_url)+'" muted playsinline preload="none"></video><span>▶ FILM</span></div>':'<img src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
+    const media=isVideo?'<div class="gallery-thumb video-thumb"><video src="'+escapeHtml(item.media_url)+'" muted playsinline preload="none"></video><span>▶ FILM</span></div>':'<img src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
     const date=item.event_date||item.created_at;
     return '<article class="gallery-item">'+(item.is_featured?'<span class="gallery-featured">★ WYRÓŻNIONE</span>':'')+
       '<button class="gallery-open" type="button" onclick="openGalleryMedia('+Number(item.id)+')" aria-label="Otwórz materiał">'+media+'</button>'+
@@ -2008,7 +2008,7 @@ function openGalleryMedia(id){
   const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
   galleryViewerId=Number(id);
   const isVideo=String(item.mime_type||"").startsWith("video/");
-  const media=isVideo?'<video class="gallery-viewer-media" src="'+escapeHtml(item.data_url)+'" controls autoplay playsinline></video>':'<img class="gallery-viewer-media" src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'">';
+  const media=isVideo?'<video class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" controls autoplay playsinline></video>':'<img class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'">';
   const title=item.title||(isVideo?"Film":"Zdjęcie");
   openModal('<h2 style="margin:0 0 10px">'+escapeHtml(title)+'</h2>'+media+
     (item.caption?'<p class="muted">'+escapeHtml(item.caption)+'</p>':"")+
@@ -2027,7 +2027,7 @@ function galleryViewerMove(step){
 function closeGalleryViewer(){galleryViewerId=null;closeModal()}
 function downloadGalleryMedia(id){
   const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
-  const a=document.createElement("a");a.href=item.data_url;a.download=item.file_name||("mdp-"+id);document.body.appendChild(a);a.click();a.remove();
+  const a=document.createElement("a");a.href=item.media_url;a.download=item.file_name||("mdp-"+id);document.body.appendChild(a);a.click();a.remove();
 }
 async function toggleGalleryFeatured(id){
   const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
