@@ -1005,25 +1005,40 @@ body{background-color:#050505}
 }
 
 
-/* Galeria MDP — osobny ekran, kompaktowe miniatury i podgląd po kliknięciu */
+/* Galeria MDP — albumy wydarzeń, wyszukiwarka i podgląd */
 .gallery-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}
 .gallery-tab{min-height:64px;padding:12px 8px;border:1px solid #303943;border-radius:15px;background:linear-gradient(145deg,#151a20,#101317);color:#c4cbd2;font-weight:850;font-size:14px}
 .gallery-tab.active{background:linear-gradient(135deg,#51151b,#241115);border-color:#a52b34;color:#fff;box-shadow:0 5px 18px rgba(215,25,32,.14)}
 .gallery-upload{margin:12px 0;padding:13px}.gallery-upload summary{font-weight:850;cursor:pointer;list-style:none}.gallery-upload summary::-webkit-details-marker{display:none}.gallery-upload[open] summary{margin-bottom:13px}
-.gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 30px}
-.gallery-item{overflow:hidden;padding:0;margin:0}
+.gallery-tools{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0}
+.gallery-tools input,.gallery-tools select{width:100%;min-width:0}
+.gallery-event-strip{display:flex;gap:8px;overflow-x:auto;padding:3px 0 10px;scrollbar-width:thin}
+.gallery-event-chip{flex:0 0 auto;max-width:220px;text-align:left;border:1px solid #303943;background:#14191f;color:#e8edf2;border-radius:13px;padding:10px 12px}
+.gallery-event-chip.active{border-color:#c8323d;background:#32151a}
+.gallery-event-chip b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gallery-event-chip small{display:block;color:#aeb7c1;font-size:10px;margin-top:3px}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 30px}
+.gallery-item{position:relative;overflow:hidden;padding:0;margin:0;border-radius:12px;background:#11161c}
 .gallery-open{display:block;width:100%;padding:0;border:0;background:#050607;position:relative}
 .gallery-item img,.gallery-thumb{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#050607}
 .gallery-thumb{position:relative;overflow:hidden}
 .gallery-thumb video{width:100%;height:100%;object-fit:cover}
-.gallery-thumb span{position:absolute;right:7px;bottom:7px;padding:5px 8px;border-radius:8px;background:rgba(0,0,0,.78);font-size:10px;font-weight:900}
-.gallery-item-body{padding:9px 10px}
-.gallery-item-body h3{margin:0 0 4px;font-size:13px}
-.gallery-item-body p{margin:0;color:var(--muted);font-size:12px;white-space:pre-wrap}
-.gallery-item-body .meta{margin-top:6px;font-size:10px}
-.gallery-upload .field{margin-bottom:9px}
+.gallery-thumb span{position:absolute;right:6px;bottom:6px;padding:4px 6px;border-radius:7px;background:rgba(0,0,0,.8);font-size:9px;font-weight:900}
+.gallery-item-body{padding:7px 8px}
+.gallery-item-body h3{margin:0 0 4px;font-size:11px;line-height:1.25}
+.gallery-item-body p{margin:0;color:var(--muted);font-size:10px;white-space:pre-wrap}
+.gallery-item-body .meta{margin-top:5px;font-size:9px}
+.gallery-item-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.gallery-mini-action{border:1px solid #343c46;background:#1a2028;color:#e9edf2;border-radius:8px;padding:5px 7px;font-size:10px;font-weight:800}
+.gallery-mini-action.active{color:#ffcf61;border-color:#8e6d28}
+.gallery-featured{position:absolute;top:6px;left:6px;padding:4px 6px;border-radius:7px;background:#8b202a;color:#fff;font-size:9px;font-weight:900;z-index:2}
 .gallery-file-hint{font-size:12px;color:var(--muted);margin-top:6px}
-@media(max-width:390px){.gallery-grid{gap:8px}.gallery-item-body{padding:8px}.gallery-tab{font-size:12px}}
+.gallery-progress{font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-line}
+.gallery-viewer-media{display:block;width:100%;max-height:68vh;object-fit:contain;background:#000;border-radius:14px}
+.gallery-viewer-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.gallery-viewer-actions button,.gallery-viewer-actions a{flex:1;min-width:95px;text-align:center}
+@media(min-width:650px){.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.gallery-tools{grid-template-columns:2fr 1fr 1fr}}
+@media(max-width:390px){.gallery-grid{gap:5px}.gallery-item-body{padding:6px}.gallery-tab{font-size:12px}}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -1147,15 +1162,18 @@ body{background-color:#050505}
 
   <section id="galleryScreen" class="screen">
     <div class="hero">
+      <span class="hero-overline">MDP WIESIÓŁKA · WSPOMNIENIA</span>
       <h1>Galeria <span>MDP</span></h1>
-      <p>Zdjęcia i filmy z życia naszej drużyny.</p>
+      <p>Zdjęcia, filmy i historia naszej drużyny w jednym miejscu.</p>
     </div>
-    <div class="section-title"><h2>Wybierz album</h2><small id="galleryCount"></small></div>
     <div class="gallery-tabs" role="tablist" aria-label="Albumy galerii">
       <button type="button" class="gallery-tab active" data-gallery-category="events" onclick="switchGalleryCategory('events')">📅 Zbiórki</button>
       <button type="button" class="gallery-tab" data-gallery-category="training" onclick="switchGalleryCategory('training')">🏆 Ćwiczenia na zawody</button>
     </div>
     <div id="galleryUploadWrap"></div>
+    <div id="galleryTools" class="gallery-tools"></div>
+    <div id="galleryEventAlbums"></div>
+    <div class="section-title"><h2 id="galleryHeading">Wszystkie materiały</h2><small id="galleryCount"></small></div>
     <div id="galleryGrid" class="gallery-grid"><div class="empty">Otwieranie galerii…</div></div>
   </section>
 
@@ -1891,109 +1909,167 @@ function selectCalendarDay(day){selectedCalendarDay=day;renderCalendar()}
 
 let galleryCategory = "events";
 let galleryRows = [];
+let galleryEventFilter = "";
+let galleryFavoritesOnly = false;
+let galleryViewerId = null;
+const GALLERY_FAVORITES_KEY = "mdp_gallery_favorites_v1";
 
+function galleryFavoriteIds(){
+  try { const value=JSON.parse(localStorage.getItem(GALLERY_FAVORITES_KEY)||"[]"); return Array.isArray(value)?value.map(Number):[]; }
+  catch(e){ return []; }
+}
+function galleryIsFavorite(id){ return galleryFavoriteIds().includes(Number(id)); }
+function galleryToggleFavorite(id){
+  const ids=galleryFavoriteIds(),n=Number(id),next=ids.includes(n)?ids.filter(x=>x!==n):[...ids,n];
+  localStorage.setItem(GALLERY_FAVORITES_KEY,JSON.stringify(next));
+  renderGallery();
+  if(galleryViewerId===n)openGalleryMedia(n);
+}
+function galleryEventLabel(ev){
+  const d=String(ev.event_date||ev.date||"").slice(0,10);
+  const date=d?new Date(d+"T12:00:00").toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"}):"Bez daty";
+  return (ev.title||"Zbiórka")+" · "+date;
+}
+function gallerySortEvents(events){
+  return [...events].sort((a,b)=>String(b.event_date||b.date||"").localeCompare(String(a.event_date||a.date||""))||Number(b.id)-Number(a.id));
+}
 function switchGalleryCategory(category){
   if(!["events","training"].includes(category))return;
-  galleryCategory=category;
-  document.querySelectorAll("[data-gallery-category]").forEach(btn=>
-    btn.classList.toggle("active",btn.dataset.galleryCategory===category)
-  );
+  galleryCategory=category;galleryEventFilter="";galleryFavoritesOnly=false;
+  document.querySelectorAll("[data-gallery-category]").forEach(btn=>btn.classList.toggle("active",btn.dataset.galleryCategory===category));
   loadGallery();
 }
-
+function filterGalleryEvent(id){
+  galleryEventFilter=String(id||"");
+  const sel=$("galleryEventFilter");if(sel)sel.value=galleryEventFilter;
+  renderGallery();
+}
 function renderGallery(){
-  const wrap=$("galleryUploadWrap"), grid=$("galleryGrid");
-  if(!wrap||!grid)return;
+  const wrap=$("galleryUploadWrap"),grid=$("galleryGrid"),tools=$("galleryTools"),albums=$("galleryEventAlbums");
+  if(!wrap||!grid||!tools||!albums)return;
+  const events=gallerySortEvents(state.data.events||[]);
+  const eventOptions=events.map(ev=>'<option value="'+Number(ev.id)+'">'+escapeHtml(galleryEventLabel(ev))+'</option>').join("");
   wrap.innerHTML=isStaff()?(
-    '<details class="card gallery-upload"><summary>＋ Dodaj zdjęcie lub film</summary><form id="galleryUploadForm" onsubmit="uploadGalleryMedia(event)">'+
-    '<div class="field"><label for="galleryTitle">Tytuł (opcjonalnie)</label><input id="galleryTitle" maxlength="120" placeholder="Np. Ćwiczenia bojowe 2026"></div>'+
-    '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiału…"></textarea></div>'+
-    '<div class="field"><label for="galleryFile">Wybierz zdjęcie lub film</label><input id="galleryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Maksymalnie 250 MB na plik (filmy około 5 minut w typowej jakości). Zdjęcia i filmy zapisują się w galerii dla całej drużyny.</div></div>'+
-    '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button></form></details>'
+    '<details class="card gallery-upload"><summary>＋ Dodaj zdjęcia lub filmy</summary><form id="galleryUploadForm" onsubmit="uploadGalleryMedia(event)">'+
+    '<div class="field"><label for="galleryTitle">Tytuł (opcjonalnie)</label><input id="galleryTitle" maxlength="120" placeholder="Np. Zbiórka i ćwiczenia bojowe"></div>'+
+    '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiałów…"></textarea></div>'+
+    (galleryCategory==="events"?'<div class="field"><label for="galleryUploadEvent">Przypisz do konkretnej zbiórki</label><select id="galleryUploadEvent"><option value="">Bez przypisania do zbiórki</option>'+eventOptions+'</select><div class="gallery-file-hint">Wybierz wydarzenie z kalendarza. Zdjęcia i filmy pojawią się w jego albumie.</div></div>':'')+
+    '<div class="field"><label for="galleryFile">Wybierz zdjęcia lub filmy</label><input id="galleryFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Możesz zaznaczyć kilka plików naraz. Maksymalnie 250 MB na plik.</div></div>'+
+    '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button><div id="galleryUploadProgress" class="gallery-progress"></div></form></details>'
   ):"";
-  const count=$("galleryCount");if(count)count.textContent=galleryRows.length+" materiałów";
-  if(!galleryRows.length){
-    grid.innerHTML='<div class="empty" style="grid-column:1/-1">W tym albumie nie ma jeszcze zdjęć ani filmów.</div>';
-    return;
-  }
-  grid.innerHTML=galleryRows.map(item=>{
+  tools.innerHTML='<input id="gallerySearch" type="search" placeholder="🔎 Szukaj tytułu lub opisu…" oninput="renderGalleryGridOnly()">'+
+    (galleryCategory==="events"?'<select id="galleryEventFilter" onchange="filterGalleryEvent(this.value)"><option value="">Wszystkie zbiórki</option>'+eventOptions+'</select>':'')+
+    '<button type="button" class="gallery-mini-action '+(galleryFavoritesOnly?'active':'')+'" onclick="galleryFavoritesOnly=!galleryFavoritesOnly;renderGallery()">★ '+(galleryFavoritesOnly?'Pokaż wszystkie':'Ulubione')+'</button>';
+  if($("galleryEventFilter"))$("galleryEventFilter").value=galleryEventFilter;
+  renderGalleryAlbums();
+  renderGalleryGridOnly();
+}
+function renderGalleryAlbums(){
+  const root=$("galleryEventAlbums");if(!root)return;
+  if(galleryCategory!=="events"){root.innerHTML="";return;}
+  const counts=new Map();
+  galleryRows.forEach(row=>{if(row.event_id)counts.set(Number(row.event_id),(counts.get(Number(row.event_id))||0)+1)});
+  const events=gallerySortEvents((state.data.events||[]).filter(ev=>counts.has(Number(ev.id))));
+  if(!events.length){root.innerHTML='<div class="muted" style="font-size:12px;margin:6px 0 10px">Materiały nieprzypisane do zbiórek znajdziesz na liście poniżej.</div>';return;}
+  root.innerHTML='<div class="section-title"><h2>Albumy zbiórek</h2><small>Wybierz wydarzenie</small></div><div class="gallery-event-strip">'+
+    '<button type="button" class="gallery-event-chip '+(!galleryEventFilter?'active':'')+'" onclick="filterGalleryEvent(\'\')"><b>Wszystkie zbiórki</b><small>'+galleryRows.length+' materiałów</small></button>'+
+    events.map(ev=>'<button type="button" class="gallery-event-chip '+(galleryEventFilter===String(ev.id)?'active':'')+'" onclick="filterGalleryEvent('+Number(ev.id)+')"><b>'+escapeHtml(ev.title||"Zbiórka")+'</b><small>'+escapeHtml(String(ev.event_date||"").slice(0,10))+' · '+counts.get(Number(ev.id))+' materiałów</small></button>').join("")+
+    '</div>';
+}
+function renderGalleryGridOnly(){
+  const grid=$("galleryGrid");if(!grid)return;
+  const search=String($("gallerySearch")?.value||"").trim().toLocaleLowerCase("pl");
+  let rows=galleryRows.filter(item=>{
+    if(galleryEventFilter&&Number(item.event_id)!==Number(galleryEventFilter))return false;
+    if(galleryFavoritesOnly&&!galleryIsFavorite(item.id))return false;
+    const hay=[item.title,item.caption,item.file_name,item.event_title].join(" ").toLocaleLowerCase("pl");
+    return !search||hay.includes(search);
+  });
+  const heading=$("galleryHeading");
+  if(heading)heading.textContent=galleryFavoritesOnly?"Ulubione":galleryEventFilter?(galleryRows.find(x=>Number(x.event_id)===Number(galleryEventFilter))?.event_title||"Materiały ze zbiórki"):"Wszystkie materiały";
+  const count=$("galleryCount");if(count)count.textContent=rows.length+" materiałów";
+  if(!rows.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">'+(galleryFavoritesOnly?'Nie masz jeszcze ulubionych materiałów.':search?'Nic nie znaleziono.':'W tym albumie nie ma jeszcze zdjęć ani filmów.')+'</div>';return;}
+  grid.innerHTML=rows.map(item=>{
     const isVideo=String(item.mime_type||"").startsWith("video/");
-    const media=isVideo
-      ? '<div class="gallery-thumb video-thumb"><video src="'+escapeHtml(item.data_url)+'" muted playsinline preload="metadata"></video><span>▶ FILM</span></div>'
-      : '<img src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
-    return '<article class="card gallery-item">'+
+    const media=isVideo?'<div class="gallery-thumb video-thumb"><video src="'+escapeHtml(item.data_url)+'" muted playsinline preload="none"></video><span>▶ FILM</span></div>':'<img src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
+    const date=item.event_date||item.created_at;
+    return '<article class="gallery-item">'+(item.is_featured?'<span class="gallery-featured">★ WYRÓŻNIONE</span>':'')+
       '<button class="gallery-open" type="button" onclick="openGalleryMedia('+Number(item.id)+')" aria-label="Otwórz materiał">'+media+'</button>'+
-      '<div class="gallery-item-body">'+
-      (item.title?'<h3>'+escapeHtml(item.title)+'</h3>':(isVideo?"Film":"Zdjęcie"))+
-      (item.caption?'<p>'+escapeHtml(item.caption)+'</p>':"")+
-      '<div class="meta"><span class="badge">'+escapeHtml(formatCreated(item.created_at))+'</span></div>'+
-      (isStaff()?'<button class="btn danger" style="margin-top:8px" type="button" onclick="deleteGalleryMedia('+Number(item.id)+')">Usuń</button>':"")+
-      '</div></article>';
+      '<div class="gallery-item-body"><h3>'+escapeHtml(item.title||(isVideo?"Film":"Zdjęcie"))+'</h3>'+
+      '<div class="meta">'+escapeHtml(date?String(date).slice(0,10):"")+'</div>'+
+      (item.event_title?'<div class="meta">'+escapeHtml(item.event_title)+'</div>':"")+
+      '<div class="gallery-item-actions"><button class="gallery-mini-action '+(galleryIsFavorite(item.id)?'active':'')+'" type="button" onclick="galleryToggleFavorite('+Number(item.id)+')">'+(galleryIsFavorite(item.id)?'★':'☆')+'</button>'+
+      '<button class="gallery-mini-action" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇</button>'+
+      (isStaff()?'<button class="gallery-mini-action" type="button" onclick="toggleGalleryFeatured('+Number(item.id)+')">'+(item.is_featured?'Usuń ★':'Wyróżnij ★')+'</button><button class="gallery-mini-action" type="button" onclick="deleteGalleryMedia('+Number(item.id)+')">Usuń</button>':"")+
+      '</div></div></article>';
   }).join("");
 }
-
 function openGalleryMedia(id){
-  const item=galleryRows.find(row=>Number(row.id)===Number(id));
-  if(!item)return;
+  const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
+  galleryViewerId=Number(id);
   const isVideo=String(item.mime_type||"").startsWith("video/");
-  const media=isVideo
-    ? '<video src="'+escapeHtml(item.data_url)+'" controls autoplay playsinline style="display:block;width:100%;max-height:68vh;background:#000;border-radius:14px"></video>'
-    : '<img src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'" style="display:block;width:100%;max-height:68vh;object-fit:contain;background:#000;border-radius:14px">';
-  openModal('<h2 style="margin:0 0 12px">'+escapeHtml(item.title||(isVideo?"Film":"Zdjęcie"))+'</h2>'+media+
+  const media=isVideo?'<video class="gallery-viewer-media" src="'+escapeHtml(item.data_url)+'" controls autoplay playsinline></video>':'<img class="gallery-viewer-media" src="'+escapeHtml(item.data_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'">';
+  const title=item.title||(isVideo?"Film":"Zdjęcie");
+  openModal('<h2 style="margin:0 0 10px">'+escapeHtml(title)+'</h2>'+media+
     (item.caption?'<p class="muted">'+escapeHtml(item.caption)+'</p>':"")+
-    '<div class="actions"><button class="btn outline" type="button" onclick="closeModal()">Zamknij</button></div>');
+    (item.event_title?'<p class="muted">📅 '+escapeHtml(item.event_title)+' · '+escapeHtml(String(item.event_date||"").slice(0,10))+'</p>':"")+
+    '<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="galleryViewerMove(-1)">‹ Poprzednie</button><button class="btn outline" type="button" onclick="galleryToggleFavorite('+Number(item.id)+')">'+(galleryIsFavorite(item.id)?'★ Ulubione':'☆ Ulubione')+'</button><button class="btn outline" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇ Pobierz</button><button class="btn outline" type="button" onclick="galleryViewerMove(1)">Następne ›</button></div>'+
+    (isStaff()?'<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="toggleGalleryFeatured('+Number(item.id)+')">'+(item.is_featured?'Usuń wyróżnienie':'★ Wyróżnij')+'</button></div>':"")+
+    '<div class="actions"><button class="btn outline" type="button" onclick="closeGalleryViewer()">Zamknij</button></div>');
 }
-
+function galleryViewerMove(step){
+  const index=galleryRows.findIndex(row=>Number(row.id)===Number(galleryViewerId));
+  const rows=galleryRows.filter(row=>!galleryEventFilter||Number(row.event_id)===Number(galleryEventFilter));
+  const current=rows.findIndex(row=>Number(row.id)===Number(galleryViewerId));
+  if(current<0||!rows.length)return;
+  const next=rows[(current+step+rows.length)%rows.length];openGalleryMedia(next.id);
+}
+function closeGalleryViewer(){galleryViewerId=null;closeModal()}
+function downloadGalleryMedia(id){
+  const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
+  const a=document.createElement("a");a.href=item.data_url;a.download=item.file_name||("mdp-"+id);document.body.appendChild(a);a.click();a.remove();
+}
+async function toggleGalleryFeatured(id){
+  const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
+  try{await api("/api/gallery/"+Number(id)+"/featured",{method:"PATCH",body:JSON.stringify({is_featured:!item.is_featured})});toast(item.is_featured?"Usunięto wyróżnienie.":"Materiał wyróżniony.");await loadGallery();if(galleryViewerId===Number(id))openGalleryMedia(id);}
+  catch(e){toast(e.message,"error");}
+}
 async function loadGallery(){
-  const grid=$("galleryGrid");
-  if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Ładowanie galerii…</div>';
-  try{
-    const rows=await api("/api/gallery?category="+encodeURIComponent(galleryCategory),{method:"GET"});
-    galleryRows=Array.isArray(rows)?rows:[];
-    renderGallery();
-  }catch(e){
-    if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nie udało się pobrać galerii. '+escapeHtml(e.message)+'</div>';
-  }
+  const grid=$("galleryGrid");if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Ładowanie galerii…</div>';
+  try{const rows=await api("/api/gallery?category="+encodeURIComponent(galleryCategory),{method:"GET"});galleryRows=Array.isArray(rows)?rows:[];renderGallery();}
+  catch(e){if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nie udało się pobrać galerii. '+escapeHtml(e.message)+'</div>';}
 }
-
 async function uploadGalleryMedia(event){
   event.preventDefault();
-  const file=$("galleryFile")?.files?.[0];
-  if(!file){toast("Najpierw wybierz plik.","error");return;}
-  if(file.size>250*1024*1024){toast("Plik przekracza limit 250 MB.","error");return;}
-  if(!(file.type.startsWith("image/")||["video/mp4","video/webm","video/quicktime"].includes(file.type))){
-    toast("Ten format pliku nie jest obsługiwany.","error");return;
-  }
-  const btn=$("galleryUploadBtn");
-  if(btn){btn.disabled=true;btn.textContent="Zapisywanie…";}
+  const files=Array.from($("galleryFile")?.files||[]);
+  if(!files.length){toast("Najpierw wybierz pliki.","error");return;}
+  if(files.some(file=>file.size>250*1024*1024)){toast("Jeden z plików przekracza limit 250 MB.","error");return;}
+  if(files.some(file=>!(file.type.startsWith("image/")||["video/mp4","video/webm","video/quicktime"].includes(file.type)))){toast("Jeden z formatów plików nie jest obsługiwany.","error");return;}
+  const btn=$("galleryUploadBtn"),progress=$("galleryUploadProgress");
+  if(btn){btn.disabled=true;btn.textContent="Przesyłanie…";}
+  let done=0,errors=[];
   try{
-    const dataUrl=await new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(String(reader.result||""));
-      reader.onerror=()=>reject(new Error("Nie udało się odczytać pliku."));
-      reader.readAsDataURL(file);
-    });
-    await api("/api/gallery",{method:"POST",body:JSON.stringify({
-      category:galleryCategory,
-      title:$("galleryTitle")?.value||"",
-      caption:$("galleryCaption")?.value||"",
-      file_name:file.name,
-      mime_type:file.type,
-      data_url:dataUrl
-    })});
-    toast("Dodano materiał do galerii.");
+    for(const file of files){
+      if(progress)progress.textContent="Przesyłanie "+(done+1)+"/"+files.length+": "+file.name;
+      const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(new Error("Nie udało się odczytać pliku."));reader.readAsDataURL(file);});
+      try{
+        await api("/api/gallery",{method:"POST",body:JSON.stringify({
+          category:galleryCategory,title:$("galleryTitle")?.value||"",caption:$("galleryCaption")?.value||"",
+          event_id:galleryCategory==="events"?($("galleryUploadEvent")?.value||null):null,
+          file_name:file.name,mime_type:file.type,data_url:dataUrl
+        })});done++;
+      }catch(e){errors.push(file.name+": "+e.message);}
+    }
+    toast("Dodano "+done+" z "+files.length+" plików"+(errors.length?". Część nie została wysłana.":"") ,errors.length?"error":"success");
+    if(progress)progress.textContent=errors.join("\n");
     await loadGallery();
   }catch(e){toast(e.message,"error");}
   finally{if(btn){btn.disabled=false;btn.textContent="⬆️ Dodaj do galerii";}}
 }
-
 async function deleteGalleryMedia(id){
   if(!confirm("Usunąć ten materiał z galerii?"))return;
-  try{
-    await api("/api/gallery/"+Number(id),{method:"DELETE"});
-    toast("Materiał usunięty.");
-    await loadGallery();
-  }catch(e){toast(e.message,"error");}
+  try{await api("/api/gallery/"+Number(id),{method:"DELETE"});toast("Materiał usunięty.");await loadGallery();}
+  catch(e){toast(e.message,"error");}
 }
 
 
