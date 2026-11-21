@@ -30,8 +30,8 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   );
 }
 
-app.use(express.json({ limit: '30mb' }));
-app.use(express.urlencoded({ extended: true, limit: '30mb' }));
+app.use(express.json({ limit: '350mb' }));
+app.use(express.urlencoded({ extended: true, limit: '350mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
@@ -1631,8 +1631,8 @@ app.post('/api/gallery', auth, staff, async (req, res) => {
     if (!dataUrl.startsWith('data:' + mimeType + ';base64,')) {
       return res.status(400).json({ error: 'Plik jest nieprawidłowy.' });
     }
-    if (dataUrl.length > 27 * 1024 * 1024) {
-      return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar to 20 MB.' });
+    if (dataUrl.length > 336 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar pliku to 250 MB.' });
     }
     const result = await pool.query(
       'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by) ' +
