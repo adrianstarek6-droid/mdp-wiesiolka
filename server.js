@@ -286,10 +286,20 @@ async function initDb() {
       mime_type TEXT NOT NULL,
       data_url TEXT NOT NULL,
       created_by TEXT NOT NULL DEFAULT '',
+      event_id INTEGER REFERENCES events(id) ON DELETE SET NULL,
+      is_featured BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE mdp_gallery_media
+      ADD COLUMN IF NOT EXISTS event_id INTEGER REFERENCES events(id) ON DELETE SET NULL;
+    ALTER TABLE mdp_gallery_media
+      ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT FALSE;
     CREATE INDEX IF NOT EXISTS mdp_gallery_category_created_idx
       ON mdp_gallery_media(category,created_at DESC);
+    CREATE INDEX IF NOT EXISTS mdp_gallery_event_created_idx
+      ON mdp_gallery_media(event_id,created_at DESC);
+    CREATE INDEX IF NOT EXISTS mdp_gallery_featured_idx
+      ON mdp_gallery_media(is_featured,created_at DESC);
 
     CREATE TABLE IF NOT EXISTS news (
       id SERIAL PRIMARY KEY,
@@ -1598,13 +1608,24 @@ app.get('/api/stats', auth, async (req, res) => {
 app.get('/api/gallery', auth, async (req, res) => {
   try {
     const category = String(req.query.category || '').trim();
+    const eventId = req.query.event_id ? Number(req.query.event_id) : null;
     if (category && !['training','events'].includes(category)) {
       return res.status(400).json({ error: 'Nieprawidłowa zakładka galerii.' });
     }
+    if (eventId !== null && (!Number.isInteger(eventId) || eventId < 1)) {
+      return res.status(400).json({ error: 'Nieprawidłowa zbiórka.' });
+    }
+    const values = [];
+    const where = [];
+    if (category) { values.push(category); where.push(`m.category=$${values.length}`); }
+    if (eventId !== null) { values.push(eventId); where.push(`m.event_id=$${values.length}`); }
     const result = await pool.query(
-      'SELECT id,category,title,caption,file_name,mime_type,data_url,created_by,created_at FROM mdp_gallery_media ' +
-      (category ? 'WHERE category=$1 ' : '') + 'ORDER BY created_at DESC,id DESC',
-      category ? [category] : []
+      'SELECT m.id,m.category,m.title,m.caption,m.file_name,m.mime_type,m.data_url,m.created_by,m.event_id,m.is_featured,m.created_at,' +
+      'e.title AS event_title,e.event_date AS event_date ' +
+      'FROM mdp_gallery_media m LEFT JOIN events e ON e.id=m.event_id ' +
+      (where.length ? 'WHERE '+where.join(' AND ')+' ' : '') +
+      'ORDER BY m.is_featured DESC,m.created_at DESC,m.id DESC',
+      values
     );
     res.json(result.rows);
   } catch (e) {
@@ -1622,8 +1643,19 @@ app.post('/api/gallery', auth, staff, async (req, res) => {
     const dataUrl = String(b.data_url || '');
     const title = String(b.title || '').trim().slice(0,120);
     const caption = String(b.caption || '').trim().slice(0,500);
+    const eventId = b.event_id ? Number(b.event_id) : null;
     if (!['training','events'].includes(category)) {
       return res.status(400).json({ error: 'Wybierz prawidłową zakładkę galerii.' });
+    }
+    if (eventId !== null && (!Number.isInteger(eventId) || eventId < 1)) {
+      return res.status(400).json({ error: 'Nieprawidłowa zbiórka.' });
+    }
+    if (eventId !== null && category !== 'events') {
+      return res.status(400).json({ error: 'Zbiórkę można przypisać tylko w albumie Zbiórki.' });
+    }
+    if (eventId !== null) {
+      const event = await pool.query('SELECT id FROM events WHERE id=$1',[eventId]);
+      if (!event.rowCount) return res.status(404).json({ error: 'Wybrana zbiórka już nie istnieje.' });
     }
     if (!(/^(image\/(jpeg|png|webp|gif|heic|heif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) {
       return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
@@ -1635,16 +1667,33 @@ app.post('/api/gallery', auth, staff, async (req, res) => {
       return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar pliku to 250 MB.' });
     }
     const result = await pool.query(
-      'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by) ' +
-      'VALUES($1,$2,$3,$4,$5,$6,$7) ' +
-      'RETURNING id,category,title,caption,file_name,mime_type,data_url,created_by,created_at',
+      'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by,event_id) ' +
+      'VALUES($1,$2,$3,$4,$5,$6,$7,$8) ' +
+      'RETURNING id,category,title,caption,file_name,mime_type,data_url,created_by,event_id,is_featured,created_at',
       [category,title,caption,fileName,mimeType,dataUrl,
-       String(req.firstName || req.name || req.role || 'MDP').slice(0,100)]
+       String(req.firstName || req.name || req.role || 'MDP').slice(0,100),eventId]
     );
     res.status(201).json(result.rows[0]);
   } catch (e) {
     console.error('Galeria — zapis:', e);
     res.status(500).json({ error: 'Nie udało się zapisać pliku w galerii.' });
+  }
+});
+
+app.patch('/api/gallery/:id/featured', auth, staff, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Nieprawidłowy materiał.' });
+    const featured = req.body?.is_featured === true;
+    const result = await pool.query(
+      'UPDATE mdp_gallery_media SET is_featured=$1 WHERE id=$2 RETURNING id,is_featured',
+      [featured,id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'Nie znaleziono materiału.' });
+    res.json(result.rows[0]);
+  } catch (e) {
+    console.error('Galeria — wyróżnianie:',e);
+    res.status(500).json({ error: 'Nie udało się zmienić wyróżnienia.' });
   }
 });
 
