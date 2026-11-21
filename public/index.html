@@ -1009,7 +1009,7 @@ body{background-color:#050505}
 .gallery-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}
 .gallery-tab{min-height:64px;padding:12px 8px;border:1px solid #303943;border-radius:15px;background:linear-gradient(145deg,#151a20,#101317);color:#c4cbd2;font-weight:850;font-size:14px}
 .gallery-tab.active{background:linear-gradient(135deg,#51151b,#241115);border-color:#a52b34;color:#fff;box-shadow:0 5px 18px rgba(215,25,32,.14)}
-.gallery-upload{margin:12px 0;padding:14px}
+.gallery-upload{margin:12px 0;padding:13px}.gallery-upload summary{font-weight:850;cursor:pointer;list-style:none}.gallery-upload summary::-webkit-details-marker{display:none}.gallery-upload[open] summary{margin-bottom:13px}
 .gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 30px}
 .gallery-item{overflow:hidden;padding:0;margin:0}
 .gallery-open{display:block;width:100%;padding:0;border:0;background:#050607;position:relative}
@@ -1905,12 +1905,11 @@ function renderGallery(){
   const wrap=$("galleryUploadWrap"), grid=$("galleryGrid");
   if(!wrap||!grid)return;
   wrap.innerHTML=isStaff()?(
-    '<form class="card gallery-upload" id="galleryUploadForm" onsubmit="uploadGalleryMedia(event)">'+
-    '<h3 style="margin-top:0">＋ Dodaj zdjęcie lub film</h3>'+
+    '<details class="card gallery-upload"><summary>＋ Dodaj zdjęcie lub film</summary><form id="galleryUploadForm" onsubmit="uploadGalleryMedia(event)">'+
     '<div class="field"><label for="galleryTitle">Tytuł (opcjonalnie)</label><input id="galleryTitle" maxlength="120" placeholder="Np. Ćwiczenia bojowe 2026"></div>'+
     '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiału…"></textarea></div>'+
     '<div class="field"><label for="galleryFile">Wybierz zdjęcie lub film</label><input id="galleryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Maksymalnie 250 MB na plik (filmy około 5 minut w typowej jakości). Zdjęcia i filmy zapisują się w galerii dla całej drużyny.</div></div>'+
-    '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button></form>'
+    '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button></form></details>'
   ):"";
   const count=$("galleryCount");if(count)count.textContent=galleryRows.length+" materiałów";
   if(!galleryRows.length){
