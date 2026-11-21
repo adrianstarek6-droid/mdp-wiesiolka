@@ -2988,20 +2988,16 @@ app.get(
   staff,
   async (req, res) => {
     try {
-      const year = Number(
-        req.query.year || new Date().getFullYear()
-      );
-
-      if (
-        !Number.isInteger(year) ||
-        year < 2000 ||
-        year > 2100
-      ) {
-        return res.status(400).json({
-          error: 'Nieprawidłowy rok.'
-        });
+      const year = Number(req.query.year || new Date().getFullYear());
+      if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+        return res.status(400).json({ error: 'Nieprawidłowy rok.' });
       }
 
+      // Liczymy wyłącznie zbiórki, które faktycznie się odbyły:
+      // zakończone przez kadrę albo z datą/godziną już minioną.
+      // Dla każdego członka i zbiórki wybieramy najwyżej jeden zapis.
+      // Preferujemy powiązanie member_id, a starsze rekordy bez ID
+      // dopasowujemy po znormalizowanym imieniu i nazwisku.
       const r = await pool.query(
         `
         SELECT
@@ -3010,125 +3006,104 @@ app.get(
           m.last_name,
           m.role,
           m.photo,
-
-          COALESCE(
-            SUM(
-              CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='yes'
-                THEN 1
-                ELSE 0
-              END
-            ),
-            0
-          )::int AS yes,
-
-          COALESCE(
-            SUM(
-              CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='no'
-                THEN 1
-                ELSE 0
-              END
-            ),
-            0
-          )::int AS no,
-
-          COALESCE(
-            SUM(
-              CASE
-                WHEN LEFT(COALESCE(e.event_date,''),4)=$1::text
-                 AND a.status='maybe'
-                THEN 1
-                ELSE 0
-              END
-            ),
-            0
-          )::int AS maybe
-
+          COALESCE(stats.yes, 0)::int AS yes,
+          COALESCE(stats.no, 0)::int AS no,
+          COALESCE(stats.maybe, 0)::int AS maybe,
+          COALESCE(stats.responses, 0)::int AS responses,
+          COALESCE(stats.eligible_events, 0)::int AS eligible_events,
+          GREATEST(COALESCE(stats.eligible_events, 0) - COALESCE(stats.responses, 0), 0)::int AS unanswered
         FROM members m
-
-        LEFT JOIN attendance a
-          ON a.member_name =
-             TRIM(
-               CONCAT(
-                 COALESCE(m.first_name,''),
-                 ' ',
-                 COALESCE(m.last_name,'')
-               )
-             )
-
-        LEFT JOIN events e
-          ON e.id=a.event_id
-
+        LEFT JOIN LATERAL (
+          SELECT
+            COUNT(*) FILTER (WHERE chosen.status='yes')::int AS yes,
+            COUNT(*) FILTER (WHERE chosen.status='no')::int AS no,
+            COUNT(*) FILTER (WHERE chosen.status='maybe')::int AS maybe,
+            COUNT(*) FILTER (WHERE chosen.status IN ('yes','no','maybe'))::int AS responses,
+            COUNT(*)::int AS eligible_events
+          FROM events e
+          LEFT JOIN LATERAL (
+            SELECT a.status
+            FROM attendance a
+            WHERE a.event_id=e.id
+              AND (
+                a.member_id=m.id
+                OR (
+                  a.member_id IS NULL
+                  AND LOWER(REGEXP_REPLACE(TRIM(a.member_name), '\\s+', ' ', 'g')) =
+                      LOWER(REGEXP_REPLACE(TRIM(
+                        COALESCE(NULLIF(CONCAT_WS(' ',m.first_name,m.last_name),''),m.name,'')
+                      ), '\\s+', ' ', 'g'))
+                )
+              )
+            ORDER BY CASE WHEN a.member_id=m.id THEN 0 ELSE 1 END, a.id DESC
+            LIMIT 1
+          ) chosen ON TRUE
+          WHERE LEFT(COALESCE(e.event_date,''),4)=$1::text
+            AND (
+              e.completed=TRUE
+              OR (
+                e.event_date ~ '^\\d{4}-\\d{2}-\\d{2}$'
+                AND (
+                  e.event_date < TO_CHAR(CURRENT_DATE,'YYYY-MM-DD')
+                  OR (
+                    e.event_date = TO_CHAR(CURRENT_DATE,'YYYY-MM-DD')
+                    AND COALESCE(NULLIF(e.event_time,''),'23:59') <= TO_CHAR(LOCALTIME,'HH24:MI')
+                  )
+                )
+              )
+            )
+        ) stats ON TRUE
         WHERE COALESCE(m.role,'member')='member'
-
-        GROUP BY
-          m.id,
-          m.first_name,
-          m.last_name,
-          m.role,
-          m.photo
-
-        ORDER BY
-          m.first_name,
-          m.last_name,
-          m.id
+          AND m.archived_at IS NULL
+        ORDER BY LOWER(COALESCE(NULLIF(CONCAT_WS(' ',m.first_name,m.last_name),''),m.name,'')),m.id
         `,
         [String(year)]
       );
 
       const members = r.rows.map(x => {
-        const yes = Number(x.yes || 0);
-        const no = Number(x.no || 0);
-        const maybe = Number(x.maybe || 0);
-
-        const confirmed = yes + no;
-        const total = confirmed + maybe;
-
+        const yes=Number(x.yes||0), no=Number(x.no||0), maybe=Number(x.maybe||0);
+        const responses=Number(x.responses||0), eligibleEvents=Number(x.eligible_events||0);
+        const confirmed=yes+no;
         return {
-          id: Number(x.id),
-          first_name: x.first_name || '',
-          last_name: x.last_name || '',
-          role: x.role || 'member',
-          photo: x.photo || '',
-
-          yes,
-          no,
-          maybe,
-
-          attended: yes,
-          absent: no,
-
-          confirmed,
-          total,
-
-          percentage: confirmed
-            ? Math.round(yes / confirmed * 100)
-            : 0
+          id:Number(x.id),
+          first_name:x.first_name||'',
+          last_name:x.last_name||'',
+          role:x.role||'member',
+          photo:x.photo||'',
+          yes,no,maybe,responses,confirmed,
+          eligible_events:eligibleEvents,
+          unanswered:Number(x.unanswered||0),
+          attended:yes,
+          absent:no,
+          total:responses,
+          percentage:confirmed ? Math.round(yes/confirmed*100) : 0,
+          response_percentage:eligibleEvents ? Math.round(responses/eligibleEvents*100) : 0
         };
       });
 
+      const totals=members.reduce((a,m)=>{
+        a.yes+=m.yes;a.no+=m.no;a.maybe+=m.maybe;
+        a.responses+=m.responses;a.unanswered+=m.unanswered;
+        a.eligible_events+=m.eligible_events;
+        return a;
+      },{yes:0,no:0,maybe:0,responses:0,unanswered:0,eligible_events:0});
+      const confirmed=totals.yes+totals.no;
       res.json({
         year,
+        event_count:members.length ? Math.max(...members.map(m=>m.eligible_events)) : 0,
+        totals:{
+          ...totals,
+          confirmed,
+          attendance_percentage:confirmed ? Math.round(totals.yes/confirmed*100) : 0
+        },
         members
       });
-
     } catch (e) {
-      console.error(
-        'Błąd frekwencji rocznej:',
-        e
-      );
-
-      res.status(500).json({
-        error:
-          'Nie udało się pobrać frekwencji rocznej.'
-      });
+      console.error('Błąd frekwencji rocznej:',e);
+      res.status(500).json({error:'Nie udało się pobrać frekwencji rocznej.'});
     }
   }
 );
-
 
 // ======================================================
 // GAZETY
