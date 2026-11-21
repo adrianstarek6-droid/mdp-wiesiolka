@@ -2163,12 +2163,26 @@ function renderTrainings(){
     .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   root.innerHTML=rows.length?rows.map(n=>{
     const url=String(n.body||"").trim(),embed=facebookTrainingEmbed(url);
+    let isShare=false,validLink="";
+    try{
+      const parsed=new URL(url),host=parsed.hostname.toLowerCase();
+      validLink=["facebook.com","www.facebook.com","m.facebook.com","fb.watch"].includes(host)||host.endsWith(".facebook.com")?parsed.href:"";
+      isShare=!!validLink&&/\\/share\\/r\\//i.test(parsed.pathname);
+    }catch(_){}
     return `<article class="card training-video">
       <div class="training-video-head"><h3>🎓 ${escapeHtml(n.title||"Film szkoleniowy")}</h3></div>
-      ${embed?`<div class="training-video-frame"><iframe src="${escapeHtml(embed)}" title="${escapeHtml(n.title||"Film szkoleniowy")}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`:`<div class="notice">Nie udało się rozpoznać linku do filmu.</div>`}
+      ${isShare&&validLink?`
+        <div style="padding:18px;border:1px solid #3a3032;border-radius:15px;background:linear-gradient(135deg,#241316,#111820);text-align:center">
+          <div style="font-size:38px;margin-bottom:8px">▶️</div>
+          <b style="display:block;margin-bottom:6px">Film z Facebooka</b>
+          <p class="muted" style="font-size:12px;margin:0 0 14px">Kliknij poniżej — otworzy się dokładnie ten film na Facebooku. Nie musisz kopiować linku.</p>
+          <a class="btn red" style="display:inline-block;text-decoration:none" href="${escapeHtml(validLink)}" target="_blank" rel="noopener noreferrer">▶ Otwórz i odtwórz film</a>
+        </div>`:
+        embed?`<div class="training-video-frame"><iframe src="${escapeHtml(embed)}" title="${escapeHtml(n.title||"Film szkoleniowy")}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`:
+        `<div class="notice">Ten link nie jest prawidłowym linkiem do filmu na Facebooku.</div>`}
       <div class="training-video-foot">
         <span class="training-video-date">${n.created_at?escapeHtml(formatCreated(n.created_at)):"Materiał szkoleniowy"}</span>
-        ${embed?`<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Otwórz na Facebooku ↗</a>`:""}
+        ${validLink?`<a href="${escapeHtml(validLink)}" target="_blank" rel="noopener noreferrer">Otwórz na Facebooku ↗</a>`:""}
         ${state.role==="admin"?`<button class="btn danger" type="button" onclick="deleteNews(${Number(n.id)})">Usuń</button>`:""}
       </div>
     </article>`;
