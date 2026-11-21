@@ -1058,6 +1058,13 @@ body{background-color:#050505}
 .profile-activity-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #292929}
 .profile-activity-item:last-child{border-bottom:0}
 @media(max-width:420px){.profile-photo-editor{grid-template-columns:1fr;justify-items:center}.profile-photo-controls{width:100%}}
+  .training-video{overflow:hidden;padding:0}
+  .training-video-head{padding:15px 15px 10px}
+  .training-video-frame{position:relative;width:100%;aspect-ratio:16/9;background:#050607;border-top:1px solid #303943;border-bottom:1px solid #303943}
+  .training-video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .training-video-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 15px}
+  .training-video-foot a{color:#ff777d;font-size:12px;font-weight:800;text-decoration:none}
+  .training-video-date{font-size:11px;color:#9ba4ad}
 </style>
 </head>
 
@@ -1210,6 +1217,24 @@ body{background-color:#050505}
   <section id="newsScreen" class="screen">
     <div class="section-title"><h2>Ogłoszenia</h2></div>
     <div id="newsList"></div>
+  </section>
+
+  <section id="trainingsScreen" class="screen">
+    <div class="hero">
+      <span class="hero-overline">MDP WIESIÓŁKA · MATERIAŁY SZKOLENIOWE</span>
+      <h1>Strefa <span>szkoleń.</span></h1>
+      <p>Filmy szkoleniowe odtwarzane bezpośrednio w aplikacji.</p>
+    </div>
+    <div id="trainingManageCard" class="card hidden">
+      <h3>➕ Dodaj film szkoleniowy</h3>
+      <form id="trainingForm">
+        <div class="field"><label for="trainingTitle">Tytuł filmu</label><input id="trainingTitle" maxlength="140" required placeholder="Np. Rozwinięcie linii gaśniczej"></div>
+        <div class="field"><label for="trainingUrl">Link do filmu na Facebooku</label><input id="trainingUrl" type="url" required placeholder="https://www.facebook.com/..."></div>
+        <button class="btn red" type="submit">Dodaj do szkoleń</button>
+      </form>
+      <p class="muted" style="font-size:11px;margin-bottom:0">Film musi być publiczny i mieć włączoną możliwość osadzania.</p>
+    </div>
+    <div id="trainingList"><div class="empty">Ładowanie filmów…</div></div>
   </section>
 
   <section id="quizScreen" class="screen">
@@ -1374,6 +1399,7 @@ body{background-color:#050505}
     <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
     <div class="more-grid">
       <button class="more-tile" type="button" onclick="openScreen('galleryScreen')"><span>📸</span><b>Galeria MDP</b><small>Zdjęcia i filmy ze zbiórek oraz ćwiczeń</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('trainingsScreen')"><span>🎓</span><b>Szkolenia</b><small>Filmy i materiały szkoleniowe</small></button>
       <button class="more-tile" type="button" onclick="openScreen('inventoryScreen')"><span>📦</span><b>Magazyn MDP</b><small>Sprzęt, umundurowanie, stany i historia</small></button>
       <button class="more-tile" type="button" onclick="openScreen('trainingCenterScreen')"><span>🏃</span><b>Centrum ćwiczeń</b><small>Przygotowanie do zawodów i postępy</small></button>
       <button class="more-tile" type="button" onclick="openScreen('timingScreen')"><span>⏱️</span><b>Stoper</b><small>Pomiary i historia wyników</small></button>
@@ -1803,6 +1829,7 @@ function renderAll(){
   renderHome();
   renderEvents();
   renderNews();
+  renderTrainings();
   renderProfile();
   renderNewspapers();
   renderTimingMemberOptions();
@@ -1882,7 +1909,7 @@ function renderHome(){
   $("homeEvents").innerHTML=events.slice(0,3).map(e=>eventCard(e,true)).join("") ||
     `<div class="empty">Brak nadchodzących zbiórek.</div>`;
 
-  const news=[...state.data.news].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const news=[...state.data.news].filter(n=>n.category!=="training").sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   $("homeNews").innerHTML=news.slice(0,3).map(newsCard).join("") ||
     `<div class="empty">Brak ogłoszeń.</div>`;
 }
@@ -2115,9 +2142,37 @@ function newsCard(n){
 }
 
 function renderNews(){
-  const news=[...state.data.news].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const news=[...state.data.news].filter(n=>n.category!=="training").sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   $("newsList").innerHTML=news.map(newsCard).join("") ||
     `<div class="empty">Nie ma jeszcze żadnych ogłoszeń.</div>`;
+}
+
+function facebookTrainingEmbed(rawUrl){
+  try{
+    const parsed=new URL(String(rawUrl||"").trim());
+    const host=parsed.hostname.toLowerCase();
+    if(!["https:","http:"].includes(parsed.protocol) ||
+       !(host==="facebook.com" || host.endsWith(".facebook.com") || host==="fb.watch")) return "";
+    return "https://www.facebook.com/plugins/video.php?href="+encodeURIComponent(parsed.href)+"&show_text=false&width=560";
+  }catch(_){return "";}
+}
+
+function renderTrainings(){
+  const root=$("trainingList");if(!root)return;
+  const rows=[...(state.data.news||[])].filter(n=>n.category==="training")
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  root.innerHTML=rows.length?rows.map(n=>{
+    const url=String(n.body||"").trim(),embed=facebookTrainingEmbed(url);
+    return `<article class="card training-video">
+      <div class="training-video-head"><h3>🎓 ${escapeHtml(n.title||"Film szkoleniowy")}</h3></div>
+      ${embed?`<div class="training-video-frame"><iframe src="${escapeHtml(embed)}" title="${escapeHtml(n.title||"Film szkoleniowy")}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`:`<div class="notice">Nie udało się rozpoznać linku do filmu.</div>`}
+      <div class="training-video-foot">
+        <span class="training-video-date">${n.created_at?escapeHtml(formatCreated(n.created_at)):"Materiał szkoleniowy"}</span>
+        ${embed?`<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Otwórz na Facebooku ↗</a>`:""}
+        ${state.role==="admin"?`<button class="btn danger" type="button" onclick="deleteNews(${Number(n.id)})">Usuń</button>`:""}
+      </div>
+    </article>`;
+  }).join(""):`<div class="empty">Nie ma jeszcze dodanych filmów szkoleniowych.</div>`;
 }
 
 function isStaff(){return ["admin","guardian"].includes(state.role);}
@@ -3636,6 +3691,8 @@ function updateUIForRole(){
   document.querySelectorAll("[data-admin-only]").forEach(el=>el.classList.toggle("hidden",state.role!=="admin"));
   const manageTile=document.getElementById("manageNavBtn");
   if(manageTile)manageTile.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
+  const trainingManage=$("trainingManageCard");
+  if(trainingManage)trainingManage.classList.toggle("hidden",!["admin","guardian"].includes(state.role));
 }
 
 async function login(role,code,firstName,lastName){
@@ -3971,6 +4028,16 @@ $("urgentForm").addEventListener("submit",async e=>{
 });
 
 $("memberForm").addEventListener("submit",addMember);
+
+$("trainingForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const title=$("trainingTitle").value.trim(),url=$("trainingUrl").value.trim();
+  if(!facebookTrainingEmbed(url)){toast("Wklej prawidłowy link do filmu z Facebooka.","error");return;}
+  try{
+    await api("/api/news",{method:"POST",body:JSON.stringify({title,body:url,category:"training"})});
+    e.target.reset();await loadData();renderTrainings();toast("Film dodany do zakładki Szkolenia.");
+  }catch(err){toast("Nie udało się dodać filmu: "+err.message,"error");}
+});
 
 $("newsForm").addEventListener("submit",async e=>{
   e.preventDefault();
