@@ -1039,6 +1039,40 @@ body{background-color:#050505}
 .gallery-viewer-actions button,.gallery-viewer-actions a{flex:1;min-width:95px;text-align:center}
 @media(min-width:650px){.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.gallery-tools{grid-template-columns:2fr 1fr 1fr}}
 @media(max-width:390px){.gallery-grid{gap:5px}.gallery-item-body{padding:6px}.gallery-tab{font-size:12px}}
+
+/* HALOWE MDP */
+.hall-hero{background:linear-gradient(120deg,#111820,#251014 70%,#45151b);border-color:#643039}
+.hall-source{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hall-source-icon{width:44px;height:44px;border-radius:13px;background:#32151a;display:grid;place-items:center;font-size:22px}
+.hall-source-copy{flex:1;min-width:160px;display:grid;gap:4px}
+.hall-source-copy small{color:#aab2ba;font-size:11px;line-height:1.4}
+.hall-dimensions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.hall-dimensions>div{padding:12px 7px;border:1px solid #35404b;border-radius:13px;background:#10161c;text-align:center}
+.hall-dimensions strong{display:block;font-size:18px;color:#ff6269}
+.hall-dimensions small{display:block;color:#9da8b2;font-size:10px;margin-top:4px}
+.hall-svg-wrap{overflow-x:auto;border:1px solid #303b46;border-radius:15px;background:#0b1015;padding:8px}
+.hall-course-svg{display:block;width:100%;min-width:300px;height:auto}
+.hall-svg-title{fill:#f1f3f5;font-size:15px;font-weight:800}
+.hall-footnote{font-size:11px;color:#9da8b2;line-height:1.5;margin:10px 2px 0}
+.hall-lane{padding:14px}
+.hall-lane-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.hall-lane-head>span{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:12px;background:#3a1419;border:1px solid #78303a;color:#ff7077;font-weight:900}
+.hall-lane-head div{display:grid;gap:3px}
+.hall-lane-head small{color:#9da8b2;font-size:11px}
+.hall-lane ul,.hall-bullets{margin:0;padding-left:19px}
+.hall-lane li,.hall-bullets li{font-size:13px;color:#d7dde2;line-height:1.55;margin:6px 0}
+.hall-rule-banner{padding:13px;border-radius:13px;background:linear-gradient(110deg,#301317,#1b171a);border:1px solid #633039;margin-bottom:12px}
+.hall-rule-banner b,.hall-rule-banner small{display:block}
+.hall-rule-banner small{color:#b7bec5;font-size:11px;margin-top:5px}
+.hall-table-wrap{overflow-x:auto}
+.hall-penalty-table{min-width:440px;font-size:12px}
+.hall-penalty-table th{background:#1c242c;color:#e4e8ec}
+.hall-penalty-table td:last-child,.hall-penalty-table th:last-child{text-align:center;white-space:nowrap;font-weight:800}
+.hall-discrepancy{margin-top:12px;background:#302510;border-color:#72551d;color:#f2dfb2;line-height:1.5}
+.hall-final-note p{font-size:12px;line-height:1.55;color:#aeb7bf}
+.hall-final-note a{color:#ff7279;font-weight:800;font-size:13px}
+@media(max-width:420px){.hall-source .btn{width:100%;text-align:center}.hall-dimensions{gap:5px}.hall-dimensions>div{padding:10px 4px}.hall-dimensions strong{font-size:16px}.hall-dimensions small{font-size:9px}}
+
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -1400,6 +1434,7 @@ body{background-color:#050505}
     <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
     <div class="more-grid">
       <button class="more-tile" type="button" onclick="openScreen('galleryScreen')"><span>📸</span><b>Galeria MDP</b><small>Zdjęcia i filmy ze zbiórek oraz ćwiczeń</small></button>
+      <button class="more-tile" type="button" onclick="openScreen('hallMdpScreen')"><span>🏆</span><b>Halowe MDP</b><small>Regulamin, punktacja, tor i przeszkody</small></button>
       <button class="more-tile" type="button" onclick="openScreen('trainingsScreen')"><span>🎓</span><b>Szkolenia</b><small>Filmy i materiały szkoleniowe</small></button>
       <button class="more-tile" type="button" onclick="openScreen('inventoryScreen')"><span>📦</span><b>Magazyn MDP</b><small>Sprzęt, umundurowanie, stany i historia</small></button>
       <button class="more-tile" type="button" onclick="openScreen('trainingCenterScreen')"><span>🏃</span><b>Centrum ćwiczeń</b><small>Przygotowanie do zawodów i postępy</small></button>
@@ -1415,7 +1450,165 @@ body{background-color:#050505}
   </section>
 
 
-  
+  <section id="hallMdpScreen" class="screen">
+    <div class="section-title"><h2>🏆 Halowe MDP</h2><small>Zasady zawodów</small></div>
+    <div class="hero hall-hero">
+      <span class="hero-overline">MDP WIESIÓŁKA · MATERIAŁ SZKOLENIOWY</span>
+      <h1>Halowe <span>zawody MDP.</span></h1>
+      <p>Regulamin, rozmieszczenie stanowisk, wymiary i punktacja w jednym miejscu.</p>
+    </div>
+    <div class="card hall-source">
+      <div class="hall-source-icon">📄</div>
+      <div class="hall-source-copy">
+        <b>Oficjalny regulamin ZOSP RP</b>
+        <small>Wydanie 2023 · uchwała nr 64/17/2023 z 6 grudnia 2023 r. · 21 stron</small>
+      </div>
+      <a class="btn red" href="https://www.gov.pl/attachment/3839d586-c157-4a29-a77a-9de8a86c78dc" target="_blank" rel="noopener">Otwórz PDF ↗</a>
+    </div>
+    <div class="notice">To jest regulamin halowy. Nie należy go mylić z regulaminem tradycyjnych zawodów MDP na otwartym stadionie. Poniższy schemat jest poglądowym opracowaniem wymiarów z regulaminu — ostateczne ustawienie toru zatwierdza komisja sędziowska.</div>
+
+    <div class="section-title"><h2>📐 Tor i jego wymiary</h2><small>Rozdział I, pkt 9</small></div>
+    <div class="card">
+      <div class="hall-dimensions">
+        <div><strong>10 × 8 m</strong><small>cały plac zawodów</small></div>
+        <div><strong>10 × 2 m</strong><small>każdy z 4 odcinków</small></div>
+        <div><strong>1 m</strong><small>miejsce przed startem</small></div>
+      </div>
+      <div class="hall-svg-wrap">
+        <svg class="hall-course-svg" viewBox="0 0 620 540" role="img" aria-label="Poglądowy schemat czterech odcinków toru halowego MDP, każdy 10 na 2 metry">
+          <defs>
+            <marker id="hallArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#ff555c"/></marker>
+          </defs>
+          <text x="310" y="24" text-anchor="middle" class="hall-svg-title">PLAC ZAWODÓW · 10 m × 8 m</text>
+          <rect x="55" y="48" width="500" height="400" rx="8" fill="#10161c" stroke="#71808d" stroke-width="2"/>
+          <g stroke="#53606c" stroke-width="1.5">
+            <path d="M55 148H555 M55 248H555 M55 348H555"/>
+          </g>
+          <g fill="#dce3e9" font-size="15" font-weight="700">
+            <text x="67" y="76">ODCINEK 1 · 10 × 2 m</text>
+            <text x="67" y="176">ODCINEK 2 · 10 × 2 m</text>
+            <text x="67" y="276">ODCINEK 3 · 10 × 2 m</text>
+            <text x="67" y="376">ODCINEK 4 · 10 × 2 m</text>
+          </g>
+          <g fill="none" stroke="#ff555c" stroke-width="4" marker-end="url(#hallArrow)">
+            <path d="M95 112H510"/>
+            <path d="M510 212H95"/>
+            <path d="M95 312H510"/>
+            <path d="M510 412H95"/>
+          </g>
+          <g fill="#f3bd55" stroke="#1a1a1a" stroke-width="2">
+            <circle cx="155" cy="112" r="9"/><circle cx="405" cy="112" r="9"/>
+            <circle cx="205" cy="212" r="9"/><circle cx="455" cy="212" r="9"/>
+            <circle cx="115" cy="312" r="9"/><circle cx="305" cy="312" r="9"/><circle cx="500" cy="312" r="9"/>
+            <circle cx="145" cy="412" r="9"/><circle cx="205" cy="412" r="9"/>
+          </g>
+          <g fill="#f5f7f8" font-size="11" font-weight="700">
+            <text x="155" y="98" text-anchor="middle">2 m</text><text x="405" y="98" text-anchor="middle">7 m</text>
+            <text x="205" y="198" text-anchor="middle">3 m</text><text x="455" y="198" text-anchor="middle">8 m</text>
+            <text x="115" y="298" text-anchor="middle">START</text><text x="305" y="298" text-anchor="middle">5 m</text><text x="500" y="298" text-anchor="middle">KONIEC</text>
+            <text x="145" y="398" text-anchor="middle">0,5 m</text><text x="205" y="398" text-anchor="middle">2 m</text>
+          </g>
+          <g stroke="#dce3e9" stroke-width="1.5" fill="none">
+            <path d="M55 465H555 M55 458V472 M555 458V472"/>
+            <path d="M35 48V448 M28 48H42 M28 448H42"/>
+          </g>
+          <g fill="#aeb8c2" font-size="13">
+            <text x="305" y="488" text-anchor="middle">10 m</text>
+            <text x="22" y="250" transform="rotate(-90 22 250)" text-anchor="middle">8 m</text>
+            <text x="305" y="520" text-anchor="middle">Strzałki pokazują poglądowy kierunek przebiegu</text>
+          </g>
+        </svg>
+      </div>
+      <p class="hall-footnote">Schemat nie jest kopią rysunku technicznego organizatora. Pokazuje układ czterech odcinków i podstawowe punkty ustawienia sprzętu; dokładne pozycje opisano niżej.</p>
+    </div>
+
+    <div class="section-title"><h2>🧰 Przeszkody i stanowiska</h2><small>Rozdział II, pkt 10</small></div>
+    <div class="hall-lane-list">
+      <article class="card hall-lane">
+        <div class="hall-lane-head"><span>01</span><div><b>Odcinek pierwszy</b><small>10 m × 2 m · gaśnica i łączniki</small></div></div>
+        <ul>
+          <li>3 węże W-52 z rozłączonymi łącznikami — 0,5 m od początku odcinka; łączniki w parach oddalone o 0,1 m, a pary o 0,5 m.</li>
+          <li>Gaśnica proszkowa GP-6 bez ładunku — 2 m od linii startu.</li>
+          <li>Płyta 0,8 × 0,8 m do ustawienia gaśnicy — początek płyty na 7 m.</li>
+        </ul>
+      </article>
+      <article class="card hall-lane">
+        <div class="hall-lane-head"><span>02</span><div><b>Odcinek drugi</b><small>10 m × 2 m · wąż W-52</small></div></div>
+        <ul>
+          <li>Wąż W-52 zwinięty w podwójny krąg i spięty noszakiem — 3 m od początku odcinka.</li>
+          <li>Płyta 0,8 × 0,8 m do odłożenia węża — początek płyty na 8 m.</li>
+        </ul>
+      </article>
+      <article class="card hall-lane">
+        <div class="hall-lane-head"><span>03</span><div><b>Odcinek trzeci</b><small>10 m × 2 m · węzeł i sprzęt</small></div></div>
+        <ul>
+          <li>Stanowisko węzła płaskiego na początku odcinka; linka długości 2 m i średnicy około 8 mm.</li>
+          <li>Dwa stojaki z poprzeczką na wysokości 0,8 m — w odległości 5 m od początku odcinka.</li>
+          <li>Stanowisko sprzętu i armatur na końcu; pole na sprzęt 0,4 × 1,0 m. Do rozpoznania: rozdzielacz, wąż W-52 z noszakiem, zbieracz i smok ssawny.</li>
+        </ul>
+      </article>
+      <article class="card hall-lane">
+        <div class="hall-lane-head"><span>04</span><div><b>Odcinek czwarty</b><small>10 m × 2 m · prądownica i linia</small></div></div>
+        <ul>
+          <li>Pyszczek prądownicy — 0,5 m od początku odcinka, skierowany w stronę rozdzielacza.</li>
+          <li>Rozdzielacz — 2 m od początku odcinka, nasadą W-75 w kierunku mety.</li>
+          <li>Dwa odcinki węża W-52 o długości 15 m każdy, zwinięte w podwójny krąg, ustawione przy rozdzielaczu.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="section-title"><h2>🧮 Punktacja i punkty karne</h2><small>Rozdział II, pkt 12</small></div>
+    <div class="card">
+      <div class="hall-rule-banner"><b>Wynik zawodnika = czas wykonania + punkty karne</b><small>1 punkt karny odpowiada 1 sekundzie. Im niższy wynik, tym lepiej.</small></div>
+      <div class="hall-table-wrap">
+        <table class="hall-penalty-table">
+          <thead><tr><th>Błąd / przewinienie</th><th>Punkty karne</th></tr></thead>
+          <tbody>
+            <tr><td>Drugi falstart</td><td>5 pkt</td></tr>
+            <tr><td>Błędne ustawienie gaśnicy na podeście</td><td>5 pkt</td></tr>
+            <tr><td>Błędne połączenie pary łączników — za każdy przypadek</td><td>5 pkt*</td></tr>
+            <tr><td>Błędne ułożenie węża W-52 na podeście</td><td>5 pkt</td></tr>
+            <tr><td>Nieprawidłowo lub nieczytelnie zawiązany węzeł</td><td>10 pkt</td></tr>
+            <tr><td>Zrzucenie poprzeczki</td><td>5 pkt</td></tr>
+            <tr><td>Niewłaściwy sprzęt na stanowisku armatur</td><td>5 pkt</td></tr>
+            <tr><td>Nieprawidłowe połączenie węży W-52 lub węża z rozdzielaczem — za każdy przypadek</td><td>5 pkt</td></tr>
+            <tr><td>Przekroczenie mety z nieprawidłowo podłączoną prądownicą</td><td>10 pkt</td></tr>
+            <tr><td>Rzucenie prądownicy</td><td>5 pkt</td></tr>
+            <tr><td>Nieprawidłowa kolejność zadań — za każdy przypadek</td><td>10 pkt</td></tr>
+            <tr><td>Wyjście dwiema stopami poza wyznaczony tor</td><td>5 pkt</td></tr>
+            <tr><td>Zgubienie lub pozostawienie umundurowania albo sprzętu — za każdy przypadek</td><td>5 pkt</td></tr>
+            <tr><td>Ominięcie przeszkody — za każdy przypadek</td><td>10 pkt</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="notice hall-discrepancy"><b>Ważna uwaga do źródła:</b> punkt 12.5 regulaminu podaje 5 pkt za błędne połączenie pary łączników, ale tabela w załączniku nr 3 pokazuje przy tej pozycji 3 pkt. W aplikacji pokazuję wartość z treści punktu 12.5 (5 pkt). Przed zawodami warto potwierdzić tę rozbieżność u organizatora lub sędziego głównego.</div>
+    </div>
+
+    <div class="section-title"><h2>🏁 Dyskwalifikacja i klasyfikacja</h2><small>Rozdział II–III</small></div>
+    <div class="card">
+      <h3>Kiedy zawodnik może zostać zdyskwalifikowany?</h3>
+      <ul class="hall-bullets">
+        <li>Trzykrotny falstart.</li>
+        <li>Nieukończenie konkurencji lub niedobiegnięcie do mety.</li>
+        <li>Nieprzeniesienie prądownicy całą długością za linię mety.</li>
+        <li>Brak zawodnika na starcie w czasie określonym przez organizatora.</li>
+        <li>Rażąco niesportowe zachowanie lub niesubordynacja.</li>
+      </ul>
+      <h3>Jak liczy się wynik?</h3>
+      <ul class="hall-bullets">
+        <li>Indywidualnie — liczy się suma czasu i punktów karnych; wygrywa najniższy wynik.</li>
+        <li>Drużynowo — sumuje się wyniki czterech najlepszych zawodników drużyny.</li>
+        <li>Przy remisie stosuje się kryteria opisane w pkt 13 regulaminu; dla miejsc 1–3 może być przeprowadzony dodatkowy start.</li>
+      </ul>
+    </div>
+    <div class="card hall-final-note">
+      <b>Źródło i zakres</b>
+      <p>Opracowanie na podstawie oficjalnego „Regulaminu Halowych Młodzieżowych Zawodów Sportowo-Pożarniczych”, wydanie 2023, w szczególności pkt 9–13 oraz załączników.</p>
+      <a href="https://www.gov.pl/attachment/3839d586-c157-4a29-a77a-9de8a86c78dc" target="_blank" rel="noopener">Pełny regulamin ZOSP RP — otwórz PDF ↗</a>
+    </div>
+  </section>
+
+
   <section id="inventoryScreen" class="screen">
     <div class="section-title"><h2>📦 Magazyn MDP</h2><small>Wyposażenie drużyny</small></div>
     <div class="hero inventory-hero">
