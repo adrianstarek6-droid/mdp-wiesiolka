@@ -1898,7 +1898,7 @@ function renderGallery(){
     '<h3 style="margin-top:0">＋ Dodaj zdjęcie lub film</h3>'+
     '<div class="field"><label for="galleryTitle">Tytuł (opcjonalnie)</label><input id="galleryTitle" maxlength="120" placeholder="Np. Ćwiczenia bojowe 2026"></div>'+
     '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiału…"></textarea></div>'+
-    '<div class="field"><label for="galleryFile">Wybierz zdjęcie lub film</label><input id="galleryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Maksymalnie 20 MB na plik. Zdjęcia i filmy zapisują się w galerii dla całej drużyny.</div></div>'+
+    '<div class="field"><label for="galleryFile">Wybierz zdjęcie lub film</label><input id="galleryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Maksymalnie 250 MB na plik (filmy około 5 minut w typowej jakości). Zdjęcia i filmy zapisują się w galerii dla całej drużyny.</div></div>'+
     '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button></form>'
   ):"";
   if(!galleryRows.length){
@@ -1936,7 +1936,7 @@ async function uploadGalleryMedia(event){
   event.preventDefault();
   const file=$("galleryFile")?.files?.[0];
   if(!file){toast("Najpierw wybierz plik.","error");return;}
-  if(file.size>20*1024*1024){toast("Plik przekracza limit 20 MB.","error");return;}
+  if(file.size>250*1024*1024){toast("Plik przekracza limit 250 MB.","error");return;}
   if(!(file.type.startsWith("image/")||["video/mp4","video/webm","video/quicktime"].includes(file.type))){
     toast("Ten format pliku nie jest obsługiwany.","error");return;
   }
