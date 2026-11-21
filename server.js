@@ -1735,7 +1735,7 @@ app.delete(
 // NEWS
 // ======================================================
 
-app.post('/api/news', auth, adminOnly, async (req, res) => {
+app.post('/api/news', auth, staff, async (req, res) => {
   try {
     const b = req.body;
 
