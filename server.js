@@ -1605,6 +1605,15 @@ app.get('/api/stats', auth, async (req, res) => {
 // ======================================================
 // GALERIA MDP — zdjęcia i filmy zapisane trwale w PostgreSQL
 // ======================================================
+function galleryMediaSignature(id,expires){
+  return crypto.createHmac('sha256',process.env.GALLERY_MEDIA_SECRET||process.env.ADMIN_CODE||process.env.GUARDIAN_CODE||'mdp-gallery-media')
+    .update(String(id)+'.'+String(expires)).digest('hex');
+}
+function galleryMediaUrl(id){
+  const expires=Math.floor(Date.now()/1000)+21600;
+  return '/api/gallery/'+Number(id)+'/file?expires='+expires+'&signature='+galleryMediaSignature(id,expires);
+}
+
 app.get('/api/gallery', auth, async (req, res) => {
   try {
     const category = String(req.query.category || '').trim();
@@ -1620,17 +1629,55 @@ app.get('/api/gallery', auth, async (req, res) => {
     if (category) { values.push(category); where.push(`m.category=$${values.length}`); }
     if (eventId !== null) { values.push(eventId); where.push(`m.event_id=$${values.length}`); }
     const result = await pool.query(
-      'SELECT m.id,m.category,m.title,m.caption,m.file_name,m.mime_type,m.data_url,m.created_by,m.event_id,m.is_featured,m.created_at,' +
+      'SELECT m.id,m.category,m.title,m.caption,m.file_name,m.mime_type,m.created_by,m.event_id,m.is_featured,m.created_at,' +
       'e.title AS event_title,e.event_date AS event_date ' +
       'FROM mdp_gallery_media m LEFT JOIN events e ON e.id=m.event_id ' +
       (where.length ? 'WHERE '+where.join(' AND ')+' ' : '') +
       'ORDER BY m.is_featured DESC,m.created_at DESC,m.id DESC',
       values
     );
-    res.json(result.rows);
+    res.json(result.rows.map(row=>({...row,media_url:galleryMediaUrl(row.id)})));
   } catch (e) {
     console.error('Galeria — odczyt:', e);
     res.status(500).json({ error: 'Nie udało się pobrać galerii.' });
+  }
+});
+
+// Pliki są pobierane dopiero wtedy, gdy są potrzebne. Podpisany adres działa 6 godzin.
+app.get('/api/gallery/:id/file', async (req,res) => {
+  try {
+    const id=Number(req.params.id),expires=Number(req.query.expires),signature=String(req.query.signature||'');
+    if(!Number.isInteger(id)||id<1||!Number.isInteger(expires)||expires<Math.floor(Date.now()/1000)||
+       !/^[a-f0-9]{64}$/i.test(signature)||
+       !crypto.timingSafeEqual(Buffer.from(signature,'hex'),Buffer.from(galleryMediaSignature(id,expires),'hex'))){
+      return res.status(403).json({error:'Link do materiału wygasł. Odśwież galerię.'});
+    }
+    const result=await pool.query('SELECT mime_type,data_url,file_name FROM mdp_gallery_media WHERE id=$1',[id]);
+    if(!result.rowCount)return res.status(404).end();
+    const row=result.rows[0],encoded=String(row.data_url||'').split(',').pop();
+    const buffer=Buffer.from(encoded,'base64'),size=buffer.length;
+    const range=req.headers.range;
+    res.set('Content-Type',row.mime_type||'application/octet-stream');
+    res.set('Accept-Ranges','bytes');
+    res.set('Cache-Control','private, max-age=300');
+    res.set('X-Content-Type-Options','nosniff');
+    if(range){
+      const match=/^bytes=(\d*)-(\d*)$/.exec(range);
+      if(!match)return res.status(416).set('Content-Range','bytes */'+size).end();
+      let start=match[1]?Number(match[1]):Math.max(0,size-Number(match[2]||0));
+      let finish=match[2]&&match[1]?Number(match[2]):size-1;
+      if(!match[1]&&match[2])start=Math.max(0,size-Number(match[2]));
+      if(start>=size||finish<start)return res.status(416).set('Content-Range','bytes */'+size).end();
+      finish=Math.min(finish,size-1);
+      res.status(206).set('Content-Range','bytes '+start+'-'+finish+'/'+size).set('Content-Length',String(finish-start+1));
+      return res.end(buffer.subarray(start,finish+1));
+    }
+    res.set('Content-Length',String(size));
+    res.set('Content-Disposition','inline; filename="'+String(row.file_name||'mdp-media').replace(/["\\\\\r\n]/g,'_')+'"');
+    res.end(buffer);
+  } catch(e){
+    console.error('Galeria — plik:',e);
+    res.status(500).json({error:'Nie udało się pobrać materiału.'});
   }
 });
 
@@ -1644,36 +1691,22 @@ app.post('/api/gallery', auth, staff, async (req, res) => {
     const title = String(b.title || '').trim().slice(0,120);
     const caption = String(b.caption || '').trim().slice(0,500);
     const eventId = b.event_id ? Number(b.event_id) : null;
-    if (!['training','events'].includes(category)) {
-      return res.status(400).json({ error: 'Wybierz prawidłową zakładkę galerii.' });
-    }
-    if (eventId !== null && (!Number.isInteger(eventId) || eventId < 1)) {
-      return res.status(400).json({ error: 'Nieprawidłowa zbiórka.' });
-    }
-    if (eventId !== null && category !== 'events') {
-      return res.status(400).json({ error: 'Zbiórkę można przypisać tylko w albumie Zbiórki.' });
-    }
+    if (!['training','events'].includes(category)) return res.status(400).json({ error: 'Wybierz prawidłową zakładkę galerii.' });
+    if (eventId !== null && (!Number.isInteger(eventId) || eventId < 1)) return res.status(400).json({ error: 'Nieprawidłowa zbiórka.' });
+    if (eventId !== null && category !== 'events') return res.status(400).json({ error: 'Zbiórkę można przypisać tylko w albumie Zbiórki.' });
     if (eventId !== null) {
       const event = await pool.query('SELECT id FROM events WHERE id=$1',[eventId]);
       if (!event.rowCount) return res.status(404).json({ error: 'Wybrana zbiórka już nie istnieje.' });
     }
-    if (!(/^(image\/(jpeg|png|webp|gif|heic|heif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) {
-      return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
-    }
-    if (!dataUrl.startsWith('data:' + mimeType + ';base64,')) {
-      return res.status(400).json({ error: 'Plik jest nieprawidłowy.' });
-    }
-    if (dataUrl.length > 336 * 1024 * 1024) {
-      return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar pliku to 250 MB.' });
-    }
+    if (!(/^(image\/(jpeg|png|webp|gif|heic|heif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
+    if (!dataUrl.startsWith('data:' + mimeType + ';base64,')) return res.status(400).json({ error: 'Plik jest nieprawidłowy.' });
+    if (dataUrl.length > 336 * 1024 * 1024) return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar pliku to 250 MB.' });
     const result = await pool.query(
-      'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by,event_id) ' +
-      'VALUES($1,$2,$3,$4,$5,$6,$7,$8) ' +
-      'RETURNING id,category,title,caption,file_name,mime_type,data_url,created_by,event_id,is_featured,created_at',
-      [category,title,caption,fileName,mimeType,dataUrl,
-       String(req.firstName || req.name || req.role || 'MDP').slice(0,100),eventId]
+      'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by,event_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8) '+
+      'RETURNING id,category,title,caption,file_name,mime_type,created_by,event_id,is_featured,created_at',
+      [category,title,caption,fileName,mimeType,dataUrl,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId]
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({...result.rows[0],media_url:galleryMediaUrl(result.rows[0].id)});
   } catch (e) {
     console.error('Galeria — zapis:', e);
     res.status(500).json({ error: 'Nie udało się zapisać pliku w galerii.' });
