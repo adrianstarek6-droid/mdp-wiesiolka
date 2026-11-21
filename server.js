@@ -30,8 +30,8 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   );
 }
 
-app.use(express.json({ limit: '3mb' }));
-app.use(express.urlencoded({ extended: true, limit: '3mb' }));
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
@@ -276,6 +276,20 @@ async function initDb() {
       archived_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS mdp_gallery_media (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL CHECK (category IN ('training','events')),
+      title TEXT NOT NULL DEFAULT '',
+      caption TEXT NOT NULL DEFAULT '',
+      file_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      data_url TEXT NOT NULL,
+      created_by TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS mdp_gallery_category_created_idx
+      ON mdp_gallery_media(category,created_at DESC);
 
     CREATE TABLE IF NOT EXISTS news (
       id SERIAL PRIMARY KEY,
@@ -1574,6 +1588,78 @@ app.get('/api/stats', auth, async (req, res) => {
     res.status(500).json({
       error: 'Błąd statystyk.'
     });
+  }
+});
+
+
+// ======================================================
+// GALERIA MDP — zdjęcia i filmy zapisane trwale w PostgreSQL
+// ======================================================
+app.get('/api/gallery', auth, async (req, res) => {
+  try {
+    const category = String(req.query.category || '').trim();
+    if (category && !['training','events'].includes(category)) {
+      return res.status(400).json({ error: 'Nieprawidłowa zakładka galerii.' });
+    }
+    const result = await pool.query(
+      'SELECT id,category,title,caption,file_name,mime_type,data_url,created_by,created_at FROM mdp_gallery_media ' +
+      (category ? 'WHERE category=$1 ' : '') + 'ORDER BY created_at DESC,id DESC',
+      category ? [category] : []
+    );
+    res.json(result.rows);
+  } catch (e) {
+    console.error('Galeria — odczyt:', e);
+    res.status(500).json({ error: 'Nie udało się pobrać galerii.' });
+  }
+});
+
+app.post('/api/gallery', auth, staff, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const category = String(b.category || '');
+    const fileName = String(b.file_name || 'plik').slice(0,180);
+    const mimeType = String(b.mime_type || '').toLowerCase();
+    const dataUrl = String(b.data_url || '');
+    const title = String(b.title || '').trim().slice(0,120);
+    const caption = String(b.caption || '').trim().slice(0,500);
+    if (!['training','events'].includes(category)) {
+      return res.status(400).json({ error: 'Wybierz prawidłową zakładkę galerii.' });
+    }
+    if (!(/^(image\/(jpeg|png|webp|gif|heic|heif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) {
+      return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
+    }
+    if (!dataUrl.startsWith('data:' + mimeType + ';base64,')) {
+      return res.status(400).json({ error: 'Plik jest nieprawidłowy.' });
+    }
+    if (dataUrl.length > 27 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar to 20 MB.' });
+    }
+    const result = await pool.query(
+      'INSERT INTO mdp_gallery_media (category,title,caption,file_name,mime_type,data_url,created_by) ' +
+      'VALUES($1,$2,$3,$4,$5,$6,$7) ' +
+      'RETURNING id,category,title,caption,file_name,mime_type,data_url,created_by,created_at',
+      [category,title,caption,fileName,mimeType,dataUrl,
+       String(req.firstName || req.name || req.role || 'MDP').slice(0,100)]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (e) {
+    console.error('Galeria — zapis:', e);
+    res.status(500).json({ error: 'Nie udało się zapisać pliku w galerii.' });
+  }
+});
+
+app.delete('/api/gallery/:id', auth, staff, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'Nieprawidłowy plik.' });
+    }
+    const result = await pool.query('DELETE FROM mdp_gallery_media WHERE id=$1 RETURNING id',[id]);
+    if (!result.rowCount) return res.status(404).json({ error: 'Nie znaleziono pliku.' });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Galeria — usuwanie:', e);
+    res.status(500).json({ error: 'Nie udało się usunąć pliku.' });
   }
 });
 
