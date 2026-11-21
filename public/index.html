@@ -1355,6 +1355,7 @@ body{background-color:#050505}
   <section id="moreScreen" class="screen">
     <div class="section-title"><h2>Więcej funkcji</h2><small>MDP Wiesiółka</small></div>
     <div class="more-grid">
+      <button class="more-tile" type="button" onclick="openScreen('galleryScreen')"><span>📸</span><b>Galeria MDP</b><small>Zdjęcia i filmy ze zbiórek oraz ćwiczeń</small></button>
       <button class="more-tile" type="button" onclick="openScreen('inventoryScreen')"><span>📦</span><b>Magazyn MDP</b><small>Sprzęt, umundurowanie, stany i historia</small></button>
       <button class="more-tile" type="button" onclick="openScreen('trainingCenterScreen')"><span>🏃</span><b>Centrum ćwiczeń</b><small>Przygotowanie do zawodów i postępy</small></button>
       <button class="more-tile" type="button" onclick="openScreen('timingScreen')"><span>⏱️</span><b>Stoper</b><small>Pomiary i historia wyników</small></button>
@@ -1583,7 +1584,6 @@ ul. Przykładowa 2"></textarea></div>
   <div class="nav-inner">
     <button class="nav-btn active" data-screen="homeScreen"><b>⌂</b>Start</button>
     <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
-    <button class="nav-btn" data-screen="galleryScreen"><b>📸</b>Galeria</button>
     <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
     <button class="nav-btn" data-screen="volvoScreen"><b>🚒</b>Volvo</button>
     <button class="nav-btn" data-screen="moreScreen"><b>☰</b>Więcej</button>
@@ -3514,7 +3514,7 @@ function openScreen(id){
   const screen=$(id);
   if(screen)screen.classList.add("active");
 
-  const primaryScreens=["homeScreen","eventsScreen","galleryScreen","newspapersScreen","volvoScreen"];
+  const primaryScreens=["homeScreen","eventsScreen","newspapersScreen","volvoScreen"];
   const activeNav=primaryScreens.includes(id)?id:"moreScreen";
   document.querySelectorAll(".bottom-nav .nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===activeNav));
 
