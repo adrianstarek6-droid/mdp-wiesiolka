@@ -1606,7 +1606,7 @@ app.get('/api/stats', auth, async (req, res) => {
 // GALERIA MDP — zdjęcia i filmy zapisane trwale w PostgreSQL
 // ======================================================
 function galleryMediaSignature(id,expires){
-  return crypto.createHmac('sha256',process.env.GALLERY_MEDIA_SECRET||process.env.ADMIN_CODE||process.env.GUARDIAN_CODE||'mdp-gallery-media')
+  return crypto.createHmac('sha256',process.env.GALLERY_MEDIA_SECRET||process.env.DATABASE_URL||process.env.ADMIN_CODE||process.env.GUARDIAN_CODE||'mdp-gallery-media')
     .update(String(id)+'.'+String(expires)).digest('hex');
 }
 function galleryMediaUrl(id){
