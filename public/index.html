@@ -5125,6 +5125,78 @@ input:focus,textarea:focus,select:focus{border-color:#f13b45!important;box-shado
 }
 </style>
 
+
+<style id="mdp-red-led-texture-v3">
+/* Ciemne tło z delikatną fakturą i czerwonym światłem LED */
+body{position:relative;isolation:isolate}
+body:before{
+ content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+ background:
+  radial-gradient(circle at 12% 18%,rgba(255,35,48,.095) 0 1px,transparent 2px),
+  radial-gradient(circle at 82% 73%,rgba(255,35,48,.075) 0 1px,transparent 2px),
+  linear-gradient(135deg,transparent 0 48.8%,rgba(255,255,255,.018) 49%,transparent 49.2% 100%),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 42px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.01) 0 1px,transparent 1px 42px),
+  radial-gradient(ellipse at 50% 0%,rgba(195,15,28,.12),transparent 52%);
+ background-size:23px 23px,31px 31px,100% 100%,100% 100%,100% 100%,100% 100%;
+ opacity:.72;
+}
+.app,.login-wrap{position:relative;z-index:1}
+html,body{background-color:#07090c!important}
+header{box-shadow:0 9px 34px rgba(0,0,0,.5),0 1px 0 rgba(239,35,48,.16)!important}
+.topbar{position:relative}
+.topbar:after{
+ content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;
+ background:linear-gradient(90deg,transparent,rgba(255,44,57,.52),rgba(255,44,57,.12),transparent);
+ box-shadow:0 0 10px rgba(255,30,45,.38);pointer-events:none;
+}
+/* Oficjalny emblemat MDP — używamy istniejącego pliku logo, nie tekstowego zamiennika */
+.logo,.login-logo,.signature-logo{
+ background-color:transparent!important;
+ background-image:var(--mdp-emblem)!important;
+ background-position:center!important;
+ background-size:contain!important;
+ background-repeat:no-repeat!important;
+ border:0!important;border-radius:50%!important;clip-path:none!important;
+}
+.logo{
+ width:49px!important;height:49px!important;flex:0 0 49px!important;
+ box-shadow:0 0 0 2px rgba(255,48,61,.28),0 0 13px rgba(255,25,42,.42),0 0 27px rgba(255,25,42,.17)!important;
+ filter:drop-shadow(0 0 5px rgba(255,35,49,.38))!important;
+}
+.login-logo{
+ box-shadow:0 0 0 3px rgba(255,48,61,.25),0 0 20px rgba(255,25,42,.35)!important;
+}
+.signature-logo{filter:drop-shadow(0 0 7px rgba(255,35,49,.35))!important}
+/* Czerwony LED wokół głównych powierzchni */
+.hero{
+ border-color:rgba(255,55,68,.55)!important;
+ box-shadow:0 20px 55px rgba(0,0,0,.48),0 0 0 1px rgba(255,40,54,.09),0 0 26px rgba(220,18,34,.16),inset 0 1px rgba(255,255,255,.08)!important;
+}
+.hero-topline>span:first-child{ text-shadow:0 0 12px rgba(255,55,68,.55)!important }
+.hero-foot{border-top-color:rgba(255,65,77,.2)!important}
+.section-title{border-bottom-color:rgba(255,55,68,.18)!important}
+.section-title h2:before{box-shadow:0 0 7px #ff2938,0 0 17px rgba(255,35,50,.55)!important}
+.home-quick-card,.more-tile{
+ border-color:rgba(255,255,255,.13)!important;
+ box-shadow:0 13px 32px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.055),inset 0 0 18px rgba(255,30,45,.025)!important;
+}
+.home-quick-card:before,.more-tile:before{
+ width:3px!important;background:linear-gradient(180deg,#ff7a80,#ff172b 55%,#7b0710)!important;
+ box-shadow:0 0 8px rgba(255,27,43,.75),0 0 18px rgba(255,27,43,.38)!important;
+}
+.card{box-shadow:0 13px 33px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.045)!important}
+.btn.red{
+ box-shadow:0 0 0 1px rgba(255,103,111,.16),0 5px 16px rgba(239,25,41,.28),0 0 17px rgba(239,25,41,.13)!important;
+}
+.bottom-nav{box-shadow:0 -10px 34px rgba(0,0,0,.55),0 -1px 0 rgba(255,45,58,.14)!important}
+.bottom-nav .nav-btn.active{box-shadow:0 0 0 1px rgba(255,85,95,.12),0 0 18px rgba(239,25,41,.22),inset 0 1px rgba(255,255,255,.08)!important}
+@media(prefers-reduced-motion:no-preference){
+ .logo{transition:filter .25s ease,box-shadow .25s ease!important}
+ .logo:hover{filter:drop-shadow(0 0 8px rgba(255,35,49,.62))!important}
+}
+</style>
+
 </body>
 </html>
 </button>
