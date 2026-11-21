@@ -3735,7 +3735,7 @@ function updateTimingPenaltyPreview(){
   const raw=Math.round(currentTimingMs());
   if($("timingPenaltyPreview"))$("timingPenaltyPreview").innerHTML="Czas surowy: <b>"+formatTiming(raw)+"</b> · Kara: <b>+"+formatTiming(points*1000)+"</b><br><strong>Czas końcowy: "+formatTiming(raw+points*1000)+"</strong>";
 }
-function paintTimingClock(){$("timingClock").textContent=formatTiming(currentTimingMs());}
+function paintTimingClock(){$("timingClock").textContent=formatTiming(currentTimingMs());updateTimingPenaltyPreview();}
 function startTiming(){
   if(timingStartedAt)return;
   timingStartedAt=performance.now();
