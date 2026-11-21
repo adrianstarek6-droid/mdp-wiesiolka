@@ -4945,6 +4945,31 @@ PUMP:["Autopompa COMBI-M",["Autopompa oznaczona przez jednostkę jako COMBI-M","
 };
 function volvoShowEquipment(key){const d=VOLVO_EQUIPMENT_INFO[key],el=$("volvoEquipmentDetail");if(!d||!el)return;el.innerHTML='<b>'+d[0]+'</b><ul style="padding-left:20px;margin:8px 0">'+d[1].map(x=>'<li style="margin:4px 0">'+x+'</li>').join('')+'</ul><p class="muted">'+d[2]+'</p>';}
 </script>
+
+<style id="mdp-premium-final-override">
+/* Ostateczna warstwa stylu — po wszystkich dotychczasowych stylach */
+.logo:before{content:none!important;display:none!important}
+.logo{font-size:0!important}
+.topbar{background:transparent}
+.hero,.card,.home-quick-card,.more-tile,.stat,.volvo-spec{
+  box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.card,.home-quick-card,.more-tile,.stat,.volvo-spec{
+  border-color:rgba(190,205,220,.17)!important;
+}
+.home-quick-card,.more-tile{
+  background:linear-gradient(145deg,#202a34 0%,#121920 72%,#171216 100%)!important;
+}
+.btn.red{
+  background:linear-gradient(135deg,#ff3b45,#bd101b)!important;
+  box-shadow:0 8px 22px rgba(226,27,35,.28)!important;
+}
+.nav-btn.active{
+  background:linear-gradient(145deg,#57151d,#241116)!important;
+  border-color:rgba(255,83,92,.55)!important;
+}
+</style>
+
 </body>
 </html>
 </button>
