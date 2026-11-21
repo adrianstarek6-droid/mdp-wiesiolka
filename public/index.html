@@ -5256,6 +5256,97 @@ input,textarea,select{background:#030303!important;border-color:#302024!importan
 .empty{background:#030303!important;border-color:#332024!important}
 </style>
 
+
+<style id="mdp-blackout-neon-led-v5">
+/* FINAL BLACKOUT + NEON LED — wszystkie kafle i opcje bez szarego tła */
+:root{
+ --bg:#000!important;--card:#000!important;--card2:#000!important;
+ --line:#25050a!important;--red:#ff1028!important;--red2:#ff3448!important;
+}
+html,body,.app,main,.page,.tab-content,.content,.login-wrap{
+ background-color:#000!important;
+}
+body:before{
+ opacity:.82!important;
+ background:
+  radial-gradient(ellipse at 50% 0%,rgba(255,0,30,.17),transparent 42%),
+  radial-gradient(ellipse at 0% 50%,rgba(255,0,30,.07),transparent 28%),
+  radial-gradient(ellipse at 100% 80%,rgba(130,0,255,.045),transparent 28%),
+  repeating-linear-gradient(0deg,transparent 0 55px,rgba(255,255,255,.012) 56px,transparent 57px),
+  repeating-linear-gradient(90deg,transparent 0 55px,rgba(255,255,255,.009) 56px,transparent 57px)!important;
+}
+/* Kafelki Start/Więcej — prawdziwa czerń, nie grafit */
+.home-quick-card,.more-tile,.stat,
+.home-quick-grid>a,.more-grid>a,
+button.home-quick-card,button.more-tile{
+ background:#000!important;
+ background-image:linear-gradient(145deg,#000 0%,#020202 72%,#050000 100%)!important;
+ border:1px solid rgba(255,24,48,.48)!important;
+ box-shadow:0 0 0 1px rgba(255,15,35,.08),0 7px 25px #000,
+  0 0 13px rgba(255,0,28,.15),inset 0 0 20px rgba(255,0,28,.035)!important;
+}
+.home-quick-card:after,.more-tile:after{
+ content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+ background:linear-gradient(115deg,rgba(255,0,30,.07),transparent 34%,transparent 72%,rgba(255,0,30,.045));
+}
+.home-quick-card:before,.more-tile:before{
+ width:3px!important;background:linear-gradient(180deg,#ff9ba3 0%,#ff1028 48%,#8b0010 100%)!important;
+ box-shadow:0 0 8px #ff1028,0 0 18px rgba(255,0,35,.85),0 0 30px rgba(255,0,35,.35)!important;
+}
+.home-quick-card>span,.more-tile>span{
+ background:#030303!important;border:1px solid rgba(255,40,60,.65)!important;
+ box-shadow:0 0 8px rgba(255,0,35,.24),0 0 18px rgba(255,0,35,.13)!important;
+}
+/* Delikatne różne barwy neonów ikon — baza nadal czarna */
+.home-quick-card:nth-child(3n+2)>span,.more-tile:nth-child(3n+2)>span{
+ border-color:rgba(0,210,255,.62)!important;
+ box-shadow:0 0 9px rgba(0,190,255,.32),0 0 20px rgba(0,190,255,.15)!important;
+}
+.home-quick-card:nth-child(3n)>span,.more-tile:nth-child(3n)>span{
+ border-color:rgba(174,75,255,.65)!important;
+ box-shadow:0 0 9px rgba(174,75,255,.34),0 0 20px rgba(174,75,255,.15)!important;
+}
+.home-quick-card b,.more-tile b{color:#fff!important;text-shadow:0 0 12px rgba(255,255,255,.09)}
+.home-quick-card small,.more-tile small{color:#aaa!important}
+/* Wszystkie pozostałe powierzchnie aplikacji */
+.card,.calendar-panel,.volvo-hero,.login-card,.modal,.event-card,
+.member-card,.report-card,.news-card,.attendance-card,.panel,
+.stat,.volvo-spec{
+ background:#000!important;background-image:none!important;
+ border-color:rgba(255,35,52,.25)!important;
+ box-shadow:0 10px 32px #000,0 0 15px rgba(255,0,25,.07),inset 0 1px rgba(255,255,255,.025)!important;
+}
+header,.bottom-nav{background:#000!important}
+.icon-btn,.badge,.member-chip,.att-btn,.role-tab,.calendar-day,
+input,textarea,select{
+ background:#000!important;color:#fff!important;
+}
+input,textarea,select{border-color:#351016!important}
+.btn:not(.red):not(.green):not(.yellow):not(.danger){
+ background:#000!important;border-color:#4b111b!important;color:#fff!important;
+ box-shadow:0 0 10px rgba(255,0,30,.08)!important;
+}
+.btn.red{
+ background:linear-gradient(100deg,#ff1832,#b90019)!important;
+ border:1px solid #ff5263!important;
+ box-shadow:0 0 10px rgba(255,0,35,.55),0 0 24px rgba(255,0,35,.24)!important;
+}
+.bottom-nav{border-top:1px solid rgba(255,20,40,.5)!important;box-shadow:0 -5px 25px rgba(255,0,30,.12)!important}
+.bottom-nav .nav-btn.active{
+ background:#090001!important;border:1px solid #ff233b!important;
+ box-shadow:0 0 8px #ff1028,0 0 22px rgba(255,0,35,.35),inset 0 0 14px rgba(255,0,35,.12)!important;
+}
+.section-title h2:before{box-shadow:0 0 10px #ff1028,0 0 24px rgba(255,0,35,.8)!important}
+.logo,.login-logo{filter:drop-shadow(0 0 7px rgba(255,0,35,.75))!important}
+@media(prefers-reduced-motion:no-preference){
+ .home-quick-card,.more-tile,.btn,.nav-btn{transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease!important}
+ .home-quick-card:hover,.more-tile:hover{
+  border-color:#ff3448!important;box-shadow:0 0 10px rgba(255,0,35,.42),0 0 28px rgba(255,0,35,.22)!important;
+  transform:translateY(-2px)!important;
+ }
+}
+</style>
+
 </body>
 </html>
 </button>
