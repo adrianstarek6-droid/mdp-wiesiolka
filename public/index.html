@@ -2449,172 +2449,91 @@ async function loadMyStats(){
   }
 }
 
-async function showAnnualAttendance(){
-  if(!isStaff()) return;
+let annualAttendanceView = null;
 
-  try{
-    openModal(`
-      <h2>📊 Frekwencja całoroczna</h2>
-      <p class="muted">Ładowanie frekwencji członków...</p>
-      <div class="empty">Pobieram dane ze zbiórek...</div>
-    `);
-
-    const members = (Array.isArray(state.data.members) ? state.data.members : []).filter(m=>(m.role||"member")==="member");
-    const events = Array.isArray(state.data.events) ? state.data.events : [];
-
-    const currentYear = new Date().getFullYear();
-
-    // Liczymy tylko zbiórki z bieżącego roku, które już się odbyły.
-    // Jeżeli serwer oznaczył zbiórkę jako zakończoną, również ją uwzględniamy.
-    const annualEvents = events.filter(e=>{
-      const raw = String(e.event_date || e.date || "").trim();
-      if(!raw) return !!e.completed;
-
-      const d = new Date(`${raw}T${e.event_time || e.time || "23:59"}`);
-      if(Number.isNaN(d.getTime())) return false;
-
-      return d.getFullYear() === currentYear && (e.completed || d <= new Date());
+function renderAnnualAttendanceTable(){
+  const root=$("annualAttendanceTable");
+  if(!root||!annualAttendanceView)return;
+  const query=normName($("annualAttendanceSearch")?.value||"");
+  const rows=annualAttendanceView.members
+    .filter(m=>normName(`${m.first_name} ${m.last_name}`).includes(query))
+    .sort((a,b)=>{
+      if(b.percentage!==a.percentage)return b.percentage-a.percentage;
+      if(b.yes!==a.yes)return b.yes-a.yes;
+      if(a.confirmed===0&&b.confirmed>0)return 1;
+      if(b.confirmed===0&&a.confirmed>0)return -1;
+      return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`,"pl");
     });
-
-    const stats = new Map();
-    members.forEach(m=>{
-      stats.set(String(m.id),{
-        id:String(m.id),
-        first_name:m.first_name || m.name || "",
-        last_name:m.last_name || "",
-        yes:0,
-        no:0,
-        maybe:0,
-        responses:0
-      });
-    });
-
-    // GET /api/attendance/:eventId zwraca listę członków wraz z ich statusem.
-    // Dzięki temu członek bez żadnej zapisanej obecności nadal trafia do tabeli.
-    for(const event of annualEvents){
-      try{
-        const data = await api(`/api/attendance/${Number(event.id)}`,{method:"GET"});
-        const rows = Array.isArray(data) ? data :
-          Array.isArray(data?.attendance) ? data.attendance :
-          Array.isArray(data?.rows) ? data.rows : [];
-
-        rows.forEach(r=>{
-          let memberId = r.member_id ?? r.memberId ?? r.id_member;
-
-          // Jeżeli endpoint nie zwrócił ID członka, dopasuj po imieniu i nazwisku.
-          if(memberId == null){
-            const rowName = normName(
-              r.member_name || r.name ||
-              `${r.first_name || ""} ${r.last_name || ""}`.trim()
-            );
-
-            if(rowName){
-              for(const m of stats.values()){
-                const memberName = normName(`${m.first_name} ${m.last_name}`);
-                if(memberName === rowName){
-                  memberId = m.id;
-                  break;
-                }
-              }
-            }
-          }
-
-          const st = memberId != null ? stats.get(String(memberId)) : null;
-          if(!st) return;
-
-          if(r.status === "yes"){
-            st.yes++;
-            st.responses++;
-          }else if(r.status === "no"){
-            st.no++;
-            st.responses++;
-          }else if(r.status === "maybe"){
-            st.maybe++;
-            st.responses++;
-          }
-        });
-      }catch(err){
-        console.warn("Nie udało się pobrać obecności zbiórki",event.id,err);
-      }
-    }
-
-    const rows = [...stats.values()].map(st=>{
-      const counted = st.yes + st.no;
-      const percentage = counted > 0 ? Math.round(st.yes / counted * 100) : 0;
-      return {...st,counted,percentage};
-    }).sort((a,b)=>{
-      const an = `${a.first_name} ${a.last_name}`.trim();
-      const bn = `${b.first_name} ${b.last_name}`.trim();
-      return an.localeCompare(bn,"pl");
-    });
-
-    const totalYes = rows.reduce((sum,r)=>sum+r.yes,0);
-    const totalNo = rows.reduce((sum,r)=>sum+r.no,0);
-    const totalCounted = totalYes + totalNo;
-    const teamPercentage = totalCounted > 0
-      ? Math.round(totalYes / totalCounted * 100)
-      : 0;
-
-    openModal(`
-      <h2>📊 Frekwencja całoroczna</h2>
-      <p class="muted">Rok ${currentYear} · ${annualEvents.length} odbytych/zakończonych zbiórek</p>
-
-      <div class="stats" style="margin:14px 0">
-        <div class="stat"><strong>${rows.length}</strong><span>Członków</span></div>
-        <div class="stat"><strong>${annualEvents.length}</strong><span>Zbiórek</span></div>
-        <div class="stat"><strong>${teamPercentage}%</strong><span>Frekwencja drużyny</span></div>
-      </div>
-
-      ${rows.length ? `
-        <div style="overflow:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Członek</th>
-                <th>✅ Był</th>
-                <th>❌ Nie było</th>
-                <th>🟡 Może</th>
-                <th>📊 Frekwencja</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map(r=>{
-                const name = `${r.first_name} ${r.last_name}`.trim() || "Członek MDP";
-                return `
-                  <tr>
-                    <td><b>${escapeHtml(name)}</b></td>
-                    <td>${r.yes}</td>
-                    <td>${r.no}</td>
-                    <td>${r.maybe}</td>
-                    <td><b>${r.percentage}%</b></td>
-                  </tr>`;
-              }).join("")}
-            </tbody>
-          </table>
-        </div>
-        <p class="muted" style="margin-top:12px;font-size:12px">
-          Frekwencja procentowa = „Będę” ÷ („Będę” + „Nie będę”). „Może” nie zmienia procentu.
-          Członkowie bez żadnej odpowiedzi pozostają na liście z wynikiem 0%.
-        </p>
-      ` : `
-        <div class="empty">Brak członków MDP.</div>
-      `}
-
-      <div class="actions">
-        <button class="btn outline" onclick="closeModal()">Zamknij</button>
-      </div>
-    `);
-
-  }catch(e){
-    console.error("Frekwencja całoroczna:",e);
-    openModal(`
-      <h2>📊 Frekwencja całoroczna</h2>
-      <div class="empty">Nie udało się pobrać frekwencji: ${escapeHtml(e.message)}</div>
-      <div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>
-    `);
-  }
+  root.innerHTML=rows.length?`
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>#</th><th>Członek</th><th>✅ Był</th><th>❌ Nie było</th><th>🟡 Może</th><th>❔ Brak</th><th>Frekwencja</th><th>Odpowiedzi</th></tr></thead>
+        <tbody>${rows.map((m,i)=>{
+          const name=`${m.first_name} ${m.last_name}`.trim()||"Członek MDP";
+          const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":String(i+1);
+          const pct=m.confirmed?m.percentage+"%":"—";
+          return `<tr>
+            <td><b>${medal}</b></td>
+            <td><b>${escapeHtml(name)}</b></td>
+            <td>${m.yes}</td><td>${m.no}</td><td>${m.maybe}</td><td>${m.unanswered}</td>
+            <td><b>${pct}</b><div style="height:5px;min-width:54px;background:#252b32;border-radius:9px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${m.percentage}%;background:#e21b23"></div></div></td>
+            <td>${m.responses}/${m.eligible_events}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:11px;margin-top:10px">Ranking sortuje od najwyższej frekwencji. „—” oznacza brak potwierdzonych odpowiedzi.</p>
+  `:`<div class="empty">Nie znaleziono członków pasujących do wyszukiwania.</div>`;
 }
 
+async function showAnnualAttendance(year = new Date().getFullYear()){
+  if(!isStaff())return;
+  const selectedYear=Number(year);
+  if(!Number.isInteger(selectedYear)||selectedYear<2000||selectedYear>2100)return;
+  try{
+    openModal(`
+      <h2>🏆 Frekwencja MDP</h2>
+      <p class="muted">Dokładne zestawienie obecności całej drużyny.</p>
+      <div class="empty">Pobieram dane bez zmieniania zapisanej historii…</div>
+    `);
+    const data=await api(`/api/annual-attendance?year=${selectedYear}`,{method:"GET"});
+    annualAttendanceView=data||{year:selectedYear,members:[],totals:{}};
+    const members=Array.isArray(data?.members)?data.members:[];
+    const totals=data?.totals||{};
+    const yearOptions=[0,1,2,3,4].map(offset=>{
+      const y=new Date().getFullYear()-offset;
+      return `<option value="${y}" ${y===selectedYear?"selected":""}>${y}</option>`;
+    }).join("");
+    openModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div><span class="eyebrow">MDP WIESIÓŁKA</span><h2 style="margin:4px 0">🏆 Frekwencja drużyny</h2></div>
+        <button class="icon-btn" type="button" onclick="closeModal()">✕</button>
+      </div>
+      <div class="field" style="margin-top:12px"><label for="annualAttendanceYear">Rok</label><select id="annualAttendanceYear" onchange="showAnnualAttendance(Number(this.value))">${yearOptions}</select></div>
+      <div class="stats" style="margin:12px 0">
+        <div class="stat"><strong>${members.length}</strong><span>Aktywnych członków</span></div>
+        <div class="stat"><strong>${Number(data?.event_count||0)}</strong><span>Odbytych zbiórek</span></div>
+        <div class="stat"><strong>${Number(totals.attendance_percentage||0)}%</strong><span>Frekwencja potwierdzona</span></div>
+      </div>
+      <div class="stats" style="margin:10px 0">
+        <div class="stat"><strong>${Number(totals.yes||0)}</strong><span>Obecności</span></div>
+        <div class="stat"><strong>${Number(totals.no||0)}</strong><span>Nieobecności</span></div>
+        <div class="stat"><strong>${Number(totals.maybe||0)}</strong><span>Może</span></div>
+      </div>
+      <div class="card" style="margin:10px 0">
+        <b>📌 Pełna dokładność danych</b>
+        <p class="muted" style="font-size:12px;margin:6px 0 0">Brak odpowiedzi: ${Number(totals.unanswered||0)} · Zapisane odpowiedzi: ${Number(totals.responses||0)}. Brak odpowiedzi nie jest liczony jako nieobecność. „Może” również nie obniża procentu frekwencji.</p>
+      </div>
+      <div class="field"><label for="annualAttendanceSearch">🔎 Szukaj członka</label><input id="annualAttendanceSearch" type="search" placeholder="Wpisz imię lub nazwisko" oninput="renderAnnualAttendanceTable()"></div>
+      <div id="annualAttendanceTable"></div>
+      <div class="actions"><button class="btn outline" type="button" onclick="closeModal()">Zamknij</button></div>
+    `);
+    renderAnnualAttendanceTable();
+  }catch(e){
+    console.error("Frekwencja całoroczna:",e);
+    openModal(`<h2>📊 Frekwencja całoroczna</h2><div class="empty">Nie udało się pobrać frekwencji: ${escapeHtml(e.message)}</div><div class="actions"><button class="btn outline" onclick="closeModal()">Zamknij</button></div>`);
+  }
+}
 async function loadGeneralStats(){
   try{
     const data=await api("/api/stats");
