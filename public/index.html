@@ -1200,8 +1200,9 @@ body{background-color:#050505}
       <form id="timingForm">
         <div class="field"><label>Konkurencja / ćwiczenie</label><input id="timingExercise" required maxlength="120" placeholder="Np. rozwinięcie bojowe"></div>
         <div class="field" id="timingMemberField"><label>Członek MDP</label><select id="timingMember" required></select></div>
-        <div class="field"><label>Liczba błędów</label><input id="timingErrors" type="number" min="0" max="10000" value="0" required></div>
-        <div class="field"><label>Punkty karne</label><input id="timingPenalties" type="number" min="0" max="100000" value="0" required><small class="muted">Wpisz zgodnie z regulaminem konkurencji — system nie zakłada kary za każdy błąd.</small></div>
+        <div class="field"><label>Liczba błędów</label><input id="timingErrors" type="number" min="0" max="10000" value="0" required oninput="updateTimingPenaltyPreview()"></div>
+        <div class="field"><label>Punkty karne (automatycznie)</label><input id="timingPenalties" type="number" min="0" max="100000" value="0" readonly><small class="muted">1 błąd = 5 punktów karnych = 5 sekund doliczone do czasu.</small></div>
+        <div id="timingPenaltyPreview" class="notice" style="margin:10px 0">Czas końcowy: —</div>
         <div class="field"><label>Notatka (opcjonalnie)</label><textarea id="timingNotes" maxlength="1000" placeholder="Co poprawić następnym razem…"></textarea></div>
         <button class="btn red" type="submit">💾 Zapisz wynik</button>
       </form>
@@ -3725,6 +3726,15 @@ function formatTiming(ms){
   return `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}.${String(hundredths).padStart(2,"0")}`;
 }
 function currentTimingMs(){return timingStartedAt ? timingElapsedMs + (performance.now()-timingStartedAt) : timingElapsedMs;}
+function timingPenaltyPoints(errors){return Math.max(0,Math.floor(Number(errors)||0))*5;}
+function timingFinalMs(record){return Math.max(0,Number(record?.time_ms)||0)+Math.max(0,Number(record?.penalty_points)||0)*1000;}
+function updateTimingPenaltyPreview(){
+  const errors=Math.max(0,Math.floor(Number($("timingErrors")?.value)||0));
+  const points=timingPenaltyPoints(errors);
+  if($("timingPenalties"))$("timingPenalties").value=String(points);
+  const raw=Math.round(currentTimingMs());
+  if($("timingPenaltyPreview"))$("timingPenaltyPreview").innerHTML="Czas surowy: <b>"+formatTiming(raw)+"</b> · Kara: <b>+"+formatTiming(points*1000)+"</b><br><strong>Czas końcowy: "+formatTiming(raw+points*1000)+"</strong>";
+}
 function paintTimingClock(){$("timingClock").textContent=formatTiming(currentTimingMs());}
 function startTiming(){
   if(timingStartedAt)return;
@@ -3803,7 +3813,7 @@ function renderTimingResults(){
   let rows=exercise?memberBase.filter(r=>String(r.exercise).toLowerCase()===exercise.toLowerCase()):memberBase;
   if(state.role==="member") rows=rows.filter(r=>Number(r.member_id)===Number(state.memberId));
   const validRows=rows.filter(r=>r.valid!==false && r.valid!==0);
-  const times=validRows.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+  const times=validRows.map(r=>timingFinalMs(r)).filter(Number.isFinite);
   const best=times.length?Math.min(...times):null;
   const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
   $("timingStats").innerHTML=`<div class="stat"><b>${times.length}</b><span>Pomiarów${exercise?" w tej konkurencji":" łącznie"}</span></div><div class="stat"><b>${best===null?"—":formatTiming(best)}</b><span>Najlepszy czas</span></div><div class="stat"><b>${avg===null?"—":formatTiming(avg)}</b><span>Średni czas</span></div><div class="stat"><b>${validRows.reduce((n,r)=>n+Number(r.errors||0),0)}</b><span>Błędy łącznie</span></div>`;
@@ -3817,9 +3827,9 @@ function renderTimingResults(){
     return `<article class="card" style="margin-bottom:10px;border-color:${valid?"#292929":"#713036"}">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
         <div><h3>${escapeHtml(r.exercise||"Bez nazwy")}</h3><div class="muted">${escapeHtml(new Date(r.created_at).toLocaleString("pl-PL"))}</div></div>
-        <b style="font-size:23px;white-space:nowrap">${formatTiming(r.time_ms)}</b>
+        <b style="font-size:23px;white-space:nowrap">${formatTiming(timingFinalMs(r))}</b>
       </div>
-      <div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span><span class="badge">${valid?"Ważny":"Unieważniony"}</span></div>
+      <div class="meta"><span class="badge">Błędy: ${Number(r.errors)||0}</span><span class="badge">Punkty karne: ${Number(r.penalty_points)||0}</span><span class="badge">Czas surowy: ${formatTiming(r.time_ms)}</span><span class="badge">Kara: +${formatTiming((Number(r.penalty_points)||0)*1000)}</span><span class="badge">${valid?"Ważny":"Unieważniony"}</span></div>
       ${Array.isArray(r.splits)&&r.splits.length?`<div class="card" style="margin:9px 0;padding:10px;background:#101820"><b>Międzyczasy</b>${r.splits.map((s,i)=>`<div class="meta"><span>${escapeHtml(s.label||`Odcinek ${i+1}`)}</span><span class="badge">Odcinek: ${formatTiming(s.segment_ms)}</span><span class="badge">Łącznie: ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}</div>`:""}
       ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
       ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
@@ -3832,7 +3842,7 @@ function renderTimingResults(){
     if(!first){selectedTimingMemberId=null;renderTimingResults();return;}
     const memberName=`${first.first_name||""} ${first.last_name||""}`.trim()||"Członek MDP";
     const memberValid=memberRows.filter(r=>r.valid!==false&&r.valid!==0);
-    const memberTimes=memberValid.map(r=>Number(r.time_ms)).filter(Number.isFinite);
+    const memberTimes=memberValid.map(r=>timingFinalMs(r)).filter(Number.isFinite);
     const memberBest=memberTimes.length?Math.min(...memberTimes):null;
     const memberAvg=memberTimes.length?Math.round(memberTimes.reduce((a,b)=>a+b,0)/memberTimes.length):null;
     $("timingHistory").innerHTML=`<button class="btn outline" type="button" onclick="backToTimingMembers()">← Wszyscy członkowie</button>
@@ -3844,15 +3854,15 @@ function renderTimingResults(){
   if(state.role==="member"){
     const ordered=[...validRows].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
     const latest=ordered[ordered.length-1]||null, previous=ordered[ordered.length-2]||null;
-    const delta=latest&&previous?Number(latest.time_ms)-Number(previous.time_ms):null;
+    const delta=latest&&previous?timingFinalMs(latest)-timingFinalMs(previous):null;
     const deltaText=delta===null?"Brak wcześniejszej próby":delta<0?`Szybciej o ${formatTiming(Math.abs(delta))}`:delta>0?`Wolniej o ${formatTiming(delta)}`:"Taki sam czas";
     const splitRows=ordered.filter(r=>Array.isArray(r.splits)&&r.splits.length);
     const recent=ordered.slice(-6);
-    const progress=recent.length?`<div class="card" style="margin-top:12px"><h3>📈 Ostatnie próby</h3>${recent.map(r=>{const pct=best?Math.max(8,Math.round(best/Number(r.time_ms)*100)):0;return `<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>${escapeHtml(new Date(r.created_at).toLocaleDateString("pl-PL"))}</span><b>${formatTiming(r.time_ms)}</b></div><div style="height:8px;background:#252b32;border-radius:99px;overflow:hidden;margin-top:5px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#b71922,#ff4a52);border-radius:99px"></div></div></div>`}).join("")}</div>`:"";
+    const progress=recent.length?`<div class="card" style="margin-top:12px"><h3>📈 Ostatnie próby</h3>${recent.map(r=>{const pct=best?Math.max(8,Math.round(best/timingFinalMs(r)*100)):0;return `<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>${escapeHtml(new Date(r.created_at).toLocaleDateString("pl-PL"))}</span><b>${formatTiming(timingFinalMs(r))}</b></div><div style="height:8px;background:#252b32;border-radius:99px;overflow:hidden;margin-top:5px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#b71922,#ff4a52);border-radius:99px"></div></div></div>`}).join("")}</div>`:"";
     const lastSplits=latest&&Array.isArray(latest.splits)?latest.splits:[];
     const fastest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)<=Number(b.segment_ms)?a:b):null;
     const slowest=lastSplits.length?lastSplits.reduce((a,b)=>Number(a.segment_ms)>=Number(b.segment_ms)?a:b):null;
-    const analysis=`<div class="card" style="margin-top:12px"><h3>🏃 Analiza biegu i ćwiczenia</h3><div class="stats"><div class="stat"><strong>${latest?formatTiming(latest.time_ms):"—"}</strong><span>Ostatnia próba</span></div><div class="stat"><strong>${delta===null?"—":delta===0?"0":formatTiming(Math.abs(delta))}</strong><span>${delta===null?"Porównanie":delta<0?"Poprawa":delta>0?"Różnica — wolniej":"Bez zmiany"}</span></div><div class="stat"><strong>${splitRows.length}</strong><span>Prób z międzyczasami</span></div></div><p class="muted" style="margin:10px 0">${escapeHtml(deltaText)} względem poprzedniego ważnego pomiaru w wybranej konkurencji.</p>${lastSplits.length?`<h4>Międzyczasy z ostatniej próby</h4>${lastSplits.map((s,i)=>`<div class="calendar-event-row"><b>${escapeHtml(s.label||`Odcinek ${i+1}`)}</b><span>${formatTiming(s.segment_ms)} · łącznie ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}<div class="meta"><span class="badge">Najszybszy odcinek: ${escapeHtml(fastest.label||"—")} · ${formatTiming(fastest.segment_ms)}</span><span class="badge">Najwolniejszy: ${escapeHtml(slowest.label||"—")} · ${formatTiming(slowest.segment_ms)}</span></div>`:`<div class="notice">Nie zapisano jeszcze międzyczasów. Opiekun może zmierzyć kolejne odcinki przyciskiem „Międzyczas” podczas pomiaru. Wtedy zobaczysz, na którym fragmencie biegu przyspieszasz lub zwalniasz.</div>`}<p class="muted">Tempo na kilometr i prędkość pokażemy dopiero wtedy, gdy pomiar będzie miał przypisany dystans — nie zgadujemy odległości.</p></div>`;
+    const analysis=`<div class="card" style="margin-top:12px"><h3>🏃 Analiza biegu i ćwiczenia</h3><div class="stats"><div class="stat"><strong>${latest?formatTiming(timingFinalMs(latest)):"—"}</strong><span>Ostatnia próba</span></div><div class="stat"><strong>${delta===null?"—":delta===0?"0":formatTiming(Math.abs(delta))}</strong><span>${delta===null?"Porównanie":delta<0?"Poprawa":delta>0?"Różnica — wolniej":"Bez zmiany"}</span></div><div class="stat"><strong>${splitRows.length}</strong><span>Prób z międzyczasami</span></div></div><p class="muted" style="margin:10px 0">${escapeHtml(deltaText)} względem poprzedniego ważnego pomiaru w wybranej konkurencji.</p>${lastSplits.length?`<h4>Międzyczasy z ostatniej próby</h4>${lastSplits.map((s,i)=>`<div class="calendar-event-row"><b>${escapeHtml(s.label||`Odcinek ${i+1}`)}</b><span>${formatTiming(s.segment_ms)} · łącznie ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}<div class="meta"><span class="badge">Najszybszy odcinek: ${escapeHtml(fastest.label||"—")} · ${formatTiming(fastest.segment_ms)}</span><span class="badge">Najwolniejszy: ${escapeHtml(slowest.label||"—")} · ${formatTiming(slowest.segment_ms)}</span></div>`:`<div class="notice">Nie zapisano jeszcze międzyczasów. Opiekun może zmierzyć kolejne odcinki przyciskiem „Międzyczas” podczas pomiaru. Wtedy zobaczysz, na którym fragmencie biegu przyspieszasz lub zwalniasz.</div>`}<p class="muted">Tempo na kilometr i prędkość pokażemy dopiero wtedy, gdy pomiar będzie miał przypisany dystans — nie zgadujemy odległości.</p></div>`;
     $("timingHistory").innerHTML=analysis+progress+`<div class="section-title"><h3>Twoja historia wyników</h3><small>${rows.length} wyników</small></div>${rows.map(renderRecord).join("")}`;
     return;
   }
@@ -3871,7 +3881,7 @@ function renderTimingResults(){
     const first=list[0];
     const name=`${first.first_name||""} ${first.last_name||""}`.trim()||"Członek MDP";
     const valid=list.filter(r=>r.valid!==false&&r.valid!==0);
-    const memberBest=valid.length?Math.min(...valid.map(r=>Number(r.time_ms)).filter(Number.isFinite)):"—";
+    const memberBest=valid.length?Math.min(...valid.map(r=>timingFinalMs(r)).filter(Number.isFinite)):"—";
     const bestText=memberBest==="—"?"—":formatTiming(memberBest);
     const errorCount=valid.reduce((n,r)=>n+Number(r.errors||0),0);
     return `<button class="card" type="button" onclick="openTimingMember(${id})" style="width:100%;text-align:left;color:inherit;cursor:pointer;margin-bottom:10px">
@@ -3890,12 +3900,14 @@ $("timingForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(timingStartedAt)stopTiming();
   const timeMs=Math.round(timingElapsedMs);
+  const errors=Math.max(0,Math.floor(Number($("timingErrors").value)||0));
+  const penaltyPoints=timingPenaltyPoints(errors);
   const memberId=Number($("timingMember").value);
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
   try{
-    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors:Number($("timingErrors").value),penalty_points:Number($("timingPenalties").value),notes:$("timingNotes").value.trim(),splits:timingSplits})});
-    toast("Wynik zapisany.");resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";await loadTimingResults();
+    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors,penalty_points:penaltyPoints,notes:$("timingNotes").value.trim(),splits:timingSplits})});
+    toast("Wynik zapisany.");resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";updateTimingPenaltyPreview();await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
 
