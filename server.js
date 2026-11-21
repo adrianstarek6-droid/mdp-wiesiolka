@@ -305,8 +305,11 @@ async function initDb() {
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
       body TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      category TEXT NOT NULL DEFAULT 'announcement'
     );
+
+    ALTER TABLE news ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'announcement';
 
     CREATE TABLE IF NOT EXISTS members (
       id SERIAL PRIMARY KEY,
@@ -1584,7 +1587,7 @@ app.get('/api/stats', auth, async (req, res) => {
       ),
 
       pool.query(
-        'SELECT COUNT(*)::int c FROM news'
+        "SELECT COUNT(*)::int c FROM news WHERE category='announcement'"
       )
     ]);
 
@@ -1919,10 +1922,11 @@ app.post('/api/news', auth, staff, async (req, res) => {
       });
     }
 
+    const category = b.category === 'training' ? 'training' : 'announcement';
     const r = await pool.query(
       `
-      INSERT INTO news(title,body)
-      VALUES($1,$2)
+      INSERT INTO news(title,body,category)
+      VALUES($1,$2,$3)
       RETURNING *
       `,
       [
@@ -1931,13 +1935,14 @@ app.post('/api/news', auth, staff, async (req, res) => {
           b.content ||
           b.description ||
           b.text ||
-          ''
+          '',
+        category
       ]
     );
 
     try {
       await sendPushToAll({
-        title: 'Nowe ogłoszenie MDP',
+        title: category === 'training' ? 'Nowe szkolenie MDP' : 'Nowe ogłoszenie MDP',
         body: title
       });
     } catch (e) {
