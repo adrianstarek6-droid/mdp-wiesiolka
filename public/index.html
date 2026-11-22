@@ -1460,7 +1460,7 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
         <div class="field"><label for="analysisExercise">Konkurencja / ćwiczenie</label><input id="analysisExercise" maxlength="120" required placeholder="Np. rozwinięcie bojowe – tor 1"></div>
         <div class="field"><label for="analysisTitle">Nazwa filmu (opcjonalnie)</label><input id="analysisTitle" maxlength="140" placeholder="Np. Próba treningowa"></div>
         <div class="field"><label for="analysisNotes">Co trener ma sprawdzić? (opcjonalnie)</label><textarea id="analysisNotes" maxlength="1000" placeholder="Np. płynność ruchów, organizacja, współpraca…"></textarea></div>
-        <div class="field"><label for="analysisFile">Wybierz film</label><input id="analysisFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm" required><small class="muted">MP4, MOV lub WebM · maksymalnie 60 MB</small></div>
+        <div class="field"><label for="analysisFile">Wybierz film</label><input id="analysisFile" type="file" accept="video/*,.mp4,.mov,.mkv,.avi,.webm,.3gp,.m4v,.mpeg,.mpg,.mts,.m2ts,.wmv,.flv,.ogv" required><small class="muted">Obsługiwane formaty wideo · maksymalnie 60 MB</small></div>
         <button class="btn red" type="submit">⬆️ Dodaj film</button>
       </form>
     </div>
@@ -4590,11 +4590,15 @@ $("analysisVideoForm").addEventListener("submit",async e=>{
   const file=$("analysisFile")?.files?.[0],memberId=Number($("analysisMember").value);
   if(!memberId){toast("Wybierz członka MDP.","error");return;}
   if(!file){toast("Wybierz film.","error");return;}
-  if(!["video/mp4","video/webm","video/quicktime"].includes(file.type)||file.size>60*1024*1024){toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;}
+  if(file.size>60*1024*1024){toast("Film może mieć maksymalnie 60 MB.","error");return;}
+  const ext=(file.name.split(".").pop()||"").toLowerCase();
+  const extensionMime={"mp4":"video/mp4","m4v":"video/x-m4v","mov":"video/quicktime","mkv":"video/x-matroska","avi":"video/x-msvideo","webm":"video/webm","3gp":"video/3gpp","mpeg":"video/mpeg","mpg":"video/mpeg","mts":"video/mp2t","m2ts":"video/mp2t","wmv":"video/x-ms-wmv","flv":"video/x-flv","ogv":"video/ogg"};
+  const mimeType=(file.type&&file.type.startsWith("video/"))?file.type:(extensionMime[ext]||"video/unknown");
   const submit=e.target.querySelector('button[type="submit"]');if(submit)submit.disabled=true;
   try{
-    const dataUrl=await fileToDataUrl(file);
-    await api("/api/training-videos",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("analysisExercise").value.trim(),title:$("analysisTitle").value.trim(),notes:$("analysisNotes").value.trim(),file_name:file.name,mime_type:file.type,data_url:dataUrl})});
+    let dataUrl=await fileToDataUrl(file);
+    dataUrl=dataUrl.replace(/^data:[^;]+;base64,/, "data:"+mimeType+";base64,");
+    await api("/api/training-videos",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("analysisExercise").value.trim(),title:$("analysisTitle").value.trim(),notes:$("analysisNotes").value.trim(),file_name:file.name,mime_type:mimeType,data_url:dataUrl})});
     e.target.reset();toast("Film przypisany do członka MDP.");await loadAnalysisVideos();
   }catch(err){toast(err.message,"error");}
   finally{if(submit)submit.disabled=false;}
