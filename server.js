@@ -3896,6 +3896,10 @@ app.post(
 // ======================================================
 // QUIZY MDP
 // ======================================================
+function quizStaffOnly(req,res,next) {
+  return isStaff(req) ? next() : res.status(403).json({error:'Tylko opiekun lub administrator może zarządzać quizami.'});
+}
+
 function cleanQuizQuestions(value) {
   if (!Array.isArray(value)) return null;
   const questions = value.map((q, i) => {
@@ -3914,21 +3918,34 @@ function cleanQuizQuestions(value) {
 
 app.get('/api/quizzes', auth, async (req, res) => {
   try {
-    const staffView = req.role === 'admin';
-    if (req.role === 'guardian') return res.status(403).json({error:'Podgląd zarządzania quizami jest dostępny tylko dla administratora.'});
+    const staffView = isStaff(req);
+    const leaderboardQuery = `
+      SELECT member_id, MAX(member_name) AS member_name,
+        SUM(score)::int AS score, SUM(total)::int AS total,
+        COUNT(*)::int AS attempts,
+        ROUND(100.0 * SUM(score) / NULLIF(SUM(total),0))::int AS percentage
+      FROM quiz_submissions
+      GROUP BY member_id
+      HAVING SUM(total) > 0
+      ORDER BY percentage DESC, score DESC, attempts DESC, member_name ASC
+      LIMIT 50
+    `;
     if (staffView) {
-      const [quizzes, members, submissions] = await Promise.all([
+      const [quizzes, members, submissions, leaderboard] = await Promise.all([
         pool.query('SELECT id,title,questions,questions_per_round,active,created_at,updated_at FROM quizzes ORDER BY created_at DESC,id DESC'),
         pool.query("SELECT id,first_name,last_name,name FROM members WHERE COALESCE(role,'member')='member' ORDER BY first_name,last_name,id"),
-        pool.query('SELECT id,quiz_id,member_id,member_name,answers,questions_snapshot,score,total,submitted_at FROM quiz_submissions ORDER BY submitted_at DESC,id DESC')
+        pool.query('SELECT id,quiz_id,member_id,member_name,answers,questions_snapshot,score,total,submitted_at FROM quiz_submissions ORDER BY submitted_at DESC,id DESC'),
+        pool.query(leaderboardQuery)
       ]);
-      return res.json({quizzes:quizzes.rows,members:members.rows,submissions:submissions.rows});
+      return res.json({quizzes:quizzes.rows,members:members.rows,submissions:submissions.rows,leaderboard:leaderboard.rows});
     }
+    if (req.role !== 'member') return res.status(403).json({error:'Brak dostępu do quizów.'});
     const memberId = Number(req.memberId);
     if (!Number.isInteger(memberId) || memberId <= 0) return res.status(401).json({error:'Nie rozpoznano członka.'});
-    const [quizzes, submissions] = await Promise.all([
+    const [quizzes, submissions, leaderboard] = await Promise.all([
       pool.query('SELECT id,title,questions,questions_per_round,created_at FROM quizzes WHERE active=TRUE ORDER BY created_at DESC,id DESC'),
-      pool.query('SELECT quiz_id,score,total,submitted_at FROM quiz_submissions WHERE member_id=$1',[memberId])
+      pool.query('SELECT quiz_id,score,total,submitted_at FROM quiz_submissions WHERE member_id=$1',[memberId]),
+      pool.query(leaderboardQuery)
     ]);
     const done = new Map(submissions.rows.map(x => [Number(x.quiz_id),x]));
     const shuffle = (arr) => {
@@ -3936,7 +3953,7 @@ app.get('/api/quizzes', auth, async (req, res) => {
       for (let i=out.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [out[i],out[j]]=[out[j],out[i]]; }
       return out;
     };
-    res.json({quizzes:quizzes.rows.map(q=>{
+    res.json({leaderboard:leaderboard.rows,quizzes:quizzes.rows.map(q=>{
       const all=Array.isArray(q.questions)?q.questions:[];
       const wanted=Math.max(1,Math.min(Number(q.questions_per_round)||10,all.length));
       const questions=shuffle(all).slice(0,wanted).map((x,i)=>({id:String(x.id||`q${i+1}`),text:x.text,options:x.options}));
@@ -3948,7 +3965,41 @@ app.get('/api/quizzes', auth, async (req, res) => {
   }
 });
 
-app.post('/api/quizzes', auth, adminOnly, async (req,res) => {
+app.post('/api/quizzes/generate', auth, quizStaffOnly, async (req,res) => {
+  try {
+    const title=String(req.body?.title||'').trim();
+    const requested=Number.parseInt(req.body?.questionCount,10);
+    const questionsPerRound=Number.parseInt(req.body?.questionsPerRound,10);
+    if(!title) return res.status(400).json({error:'Podaj nazwę generowanego quizu.'});
+    if(!Number.isInteger(requested)||requested<4||requested>40) return res.status(400).json({error:'Wybierz od 4 do 40 pytań.'});
+    const source=await pool.query('SELECT questions FROM quizzes WHERE questions IS NOT NULL ORDER BY created_at DESC,id DESC');
+    const unique=new Map();
+    for(const row of source.rows){
+      const list=Array.isArray(row.questions)?row.questions:[];
+      for(const q of list){
+        const options=Array.isArray(q.options)?q.options.slice(0,4).map(v=>String(v||'').trim()):[];
+        const correctIndex=Number(q.correctIndex);
+        const text=String(q.text||'').trim();
+        if(!text||options.length!==4||options.some(v=>!v)||!Number.isInteger(correctIndex)||correctIndex<0||correctIndex>3) continue;
+        const normalized={id:'gen_'+(unique.size+1),text,options,correctIndex};
+        const key=JSON.stringify([text.toLocaleLowerCase('pl-PL'),options,correctIndex]);
+        if(!unique.has(key)) unique.set(key,normalized);
+      }
+    }
+    const poolQuestions=[...unique.values()];
+    if(poolQuestions.length<4) return res.status(400).json({error:'Baza pytań jest za mała. Dodaj najpierw co najmniej 4 poprawne pytania.'});
+    for(let i=poolQuestions.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[poolQuestions[i],poolQuestions[j]]=[poolQuestions[j],poolQuestions[i]];}
+    const questions=poolQuestions.slice(0,Math.min(requested,poolQuestions.length)).map((q,i)=>({...q,id:'q'+(i+1)}));
+    const roundSize=Math.max(1,Math.min(Number.isInteger(questionsPerRound)?questionsPerRound:10,questions.length));
+    const created=await pool.query(
+      'INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,TRUE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',
+      [title,JSON.stringify(questions),roundSize]
+    );
+    res.status(201).json({ok:true,generated:true,source:'question_bank',quiz:created.rows[0]});
+  } catch(e) { console.error('Błąd automatycznego tworzenia quizu:',e); res.status(500).json({error:'Nie udało się automatycznie utworzyć quizu.'}); }
+});
+
+app.post('/api/quizzes', auth, quizStaffOnly, async (req,res) => {
   try {
     const title=String(req.body?.title||'').trim();
     const questions=cleanQuizQuestions(req.body?.questions);
@@ -3959,7 +4010,7 @@ app.post('/api/quizzes', auth, adminOnly, async (req,res) => {
   } catch(e) { console.error(e); res.status(500).json({error:'Nie udało się utworzyć quizu.'}); }
 });
 
-app.put('/api/quizzes/:id', auth, adminOnly, async (req,res) => {
+app.put('/api/quizzes/:id', auth, quizStaffOnly, async (req,res) => {
   try {
     const id=Number(req.params.id), title=String(req.body?.title||'').trim();
     const questions=cleanQuizQuestions(req.body?.questions);
@@ -3973,7 +4024,7 @@ app.put('/api/quizzes/:id', auth, adminOnly, async (req,res) => {
 
 // Nowa runda bez kasowania historii: poprzedni quiz zostaje zarchiwizowany,
  // a nowa kopia otrzymuje osobne ID, więc członkowie mogą rozwiązać ją ponownie.
-app.post('/api/quizzes/:id/reset', auth, adminOnly, async (req,res) => {
+app.post('/api/quizzes/:id/reset', auth, quizStaffOnly, async (req,res) => {
   const id=Number(req.params.id);
   if(!Number.isInteger(id)||id<=0) return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
   const client=await pool.connect();
@@ -3998,12 +4049,12 @@ app.post('/api/quizzes/:id/reset', auth, adminOnly, async (req,res) => {
 
 // Trwałe usuwanie quizu jest zablokowane, ponieważ usunęłoby również
 // odpowiedzi i wyniki członków. Zamiast tego użyj archiwizacji.
-app.delete('/api/quizzes/:id/permanent', auth, adminOnly, async (req,res) => {
+app.delete('/api/quizzes/:id/permanent', auth, quizStaffOnly, async (req,res) => {
   return res.status(409).json({error:'Trwałe usuwanie quizów jest zablokowane, aby zachować wszystkie odpowiedzi i wyniki. Możesz zarchiwizować quiz.'});
 });
 
 // Archiwizujemy quiz zamiast usuwać wyniki członków.
-app.delete('/api/quizzes/:id', auth, adminOnly, async (req,res) => {
+app.delete('/api/quizzes/:id', auth, quizStaffOnly, async (req,res) => {
   try {
     const id=Number(req.params.id);
     const r=await pool.query('UPDATE quizzes SET active=FALSE,updated_at=NOW() WHERE id=$1 RETURNING id',[id]);
