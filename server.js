@@ -3977,7 +3977,7 @@ app.post('/api/quizzes/generate-ai', auth, quizStaffOnly, async (req,res) => {
   const last=quizAiCooldown.get(staffId)||0;
   if(Date.now()-last<15000) return res.status(429).json({error:'Odczekaj chwilę przed wygenerowaniem kolejnego quizu.'});
   const token=process.env.NEON_AI_GATEWAY_TOKEN;
-  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\/+$/,'');
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\\/+$/,'');
   if(!token) return res.status(503).json({error:'Generator AI nie jest jeszcze podłączony. Brakuje bezpiecznego klucza NEON_AI_GATEWAY_TOKEN w ustawieniach serwera Render.'});
   try {
     const title=String(req.body?.title||'').trim().slice(0,120);
