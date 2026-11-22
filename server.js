@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 const webpush = require('web-push');
-const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, HeadObjectCommand, HeadBucketCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const app = express();
@@ -1360,6 +1360,20 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
   }
 });
 
+
+app.get('/api/training-videos/storage-health', async (req,res) => {
+  const s3=getVideoS3();
+  const result={configured:Boolean(s3),bucketConfigured:Boolean(videoStorageBucket),bucketReachable:false,checked_at:new Date().toISOString()};
+  if(!s3) return res.status(503).json({...result,error:'Brak wymaganych ustawień klienta magazynu.'});
+  try {
+    await s3.send(new HeadBucketCommand({Bucket:videoStorageBucket}));
+    result.bucketReachable=true;
+    return res.json(result);
+  } catch(e) {
+    console.error('MDP_VIDEO_STORAGE_HEALTH_FAILED',JSON.stringify({name:e?.name,code:e?.Code||e?.code,httpStatus:e?.$metadata?.httpStatusCode,message:String(e?.message||'').slice(0,240)}));
+    return res.status(503).json({...result,error:'Serwer nie może połączyć się z wybranym magazynem.',storage_error:e?.Code||e?.code||e?.name||'STORAGE_ERROR'});
+  }
+});
 
 app.get('/api/training-videos', auth, async (req,res) => {
   try {
