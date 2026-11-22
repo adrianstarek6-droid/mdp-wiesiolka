@@ -1103,6 +1103,30 @@ body{background-color:#050505}
 @media(min-width:700px){.quiz-member-card{padding:20px}.quiz-member-intro{padding:26px}}
 .quiz-ai-status{padding:9px 11px;border-radius:10px;background:#241b12;border:1px solid #6b4a20;color:#f2c27a;font-size:12px;margin:10px 0 14px}
 .quiz-ai-status.is-ready{background:#102219;border-color:#285b3d;color:#8de2a9}
+.quiz-play-shell{padding:2px}
+.quiz-play-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.quiz-progress-meta{display:flex;justify-content:space-between;margin:18px 0 7px;font-size:12px;color:#bbb}
+.quiz-progress-track{height:7px;border-radius:20px;background:#292929;overflow:hidden}
+.quiz-progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#a80e17,#ff424b);transition:width .2s}
+.quiz-countdown{text-align:center;color:#ff686e;font-weight:900;font-size:20px;margin:13px 0}
+.quiz-question-live{padding:18px 0}
+.quiz-question-live h3{font-size:19px;line-height:1.4;margin:6px 0 16px}
+.quiz-live-options{display:grid;gap:9px}
+.quiz-option-btn{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:13px;border-radius:13px;border:1px solid #353535;background:#111;color:#eee}
+.quiz-option-btn>span{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:9px;background:#252525;color:#ff7378;font-weight:900}
+.quiz-option-btn.selected{border-color:#e51b23;background:rgba(229,27,35,.14)}
+.quiz-option-btn.selected>span{background:#e51b23;color:#fff}
+.quiz-play-actions{display:flex;gap:9px;margin-top:10px}
+.quiz-play-actions button{flex:1}
+.quiz-answer-hint{text-align:center;font-size:11px;margin:10px 0 0}
+.quiz-mode-choice{padding:16px 0}
+.quiz-mode-choice .btn{width:100%;margin-top:10px}
+.quiz-finish-screen{text-align:center;padding:24px 8px}
+.quiz-finish-icon{font-size:48px;margin:18px 0 6px}
+.quiz-finish-score{font-size:54px;font-weight:900;color:#ff555c;line-height:1.05;margin:16px 0 4px}
+.quiz-finish-score small{font-size:19px;color:#aaa}
+.quiz-finish-percent{font-size:15px;font-weight:800}
+.quiz-finish-screen .btn{width:100%;margin-top:20px}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -3829,18 +3853,56 @@ async function renderMemberQuizzes(){
     root.innerHTML='<div class="quiz-member-intro"><span>STREFA WIEDZY</span><h2>Sprawdź, co potrafisz.</h2><p>Rozwiązuj quizy, zdobywaj punkty i pnij się w rankingu drużyny.</p></div>'+quizCards+ranking;
   }catch(e){root.innerHTML=`<div class="card">Nie udało się pobrać quizów: ${quizEsc(e.message)}</div>`;}
 }
+let memberQuizTimer=null;
+let memberQuizTimerValue=20;
+
 function startMemberQuiz(id){
   const q=memberQuizzesCache.find(x=>Number(x.id)===Number(id));if(!q)return;
+  const questions=q.questions||[];if(!questions.length){toast('Ten quiz nie ma pytań.','error');return;}
+  openModal(`<div class="quiz-play-shell"><span class="quiz-card-kicker">STREFA WIEDZY MDP</span><h2>${quizEsc(q.title)}</h2><p class="muted">Wybierz sposób rozwiązywania. W obu trybach pytania pokazują się pojedynczo.</p><div class="quiz-mode-choice"><button class="btn red" type="button" id="quizModeNormal">Spokojny trening</button><p class="muted">Bez odliczania czasu.</p><button class="btn outline" type="button" id="quizModeTimed">⚡ Tryb na czas</button><p class="muted">20 sekund na każde pytanie.</p></div><button class="btn outline" type="button" onclick="closeModal()">Anuluj</button></div>`);
+  $('quizModeNormal').addEventListener('click',()=>runMemberQuiz(q,false));
+  $('quizModeTimed').addEventListener('click',()=>runMemberQuiz(q,true));
+}
+
+function runMemberQuiz(q,timed){
   const questions=q.questions||[];
-  openModal(`<h2>🧠 ${quizEsc(q.title)}</h2><p class="muted">Odpowiedz na każde pytanie. Po wysłaniu nie będzie można zmienić odpowiedzi.</p><form id="memberQuizAnswerForm"><input type="hidden" name="quizId" value="${Number(q.id)}">${questions.map((x,i)=>`<div class="card" style="margin:12px 0;background:#101010"><b>${i+1}. ${quizEsc(x.text)}</b><div style="margin-top:8px">${(x.options||[]).map((o,j)=>`<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 0"><input type="radio" name="answer-${i}" value="${j}" required style="margin-top:4px"><span>${quizEsc(o)}</span></label>`).join('')}</div></div>`).join('')}<div class="actions"><button class="btn red" type="submit">Wyślij odpowiedzi</button><button class="btn outline" type="button" onclick="closeModal()">Anuluj</button></div></form>`);
-  $('memberQuizAnswerForm').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const answers=questions.map((x,i)=>({questionId:String(x.id||`q${i+1}`),answerIndex:Number(new FormData(e.target).get(`answer-${i}`))}));
-    if(answers.some(a=>!Number.isInteger(a.answerIndex))){toast('Odpowiedz na każde pytanie.','error');return;}
-    const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;
-    try{const result=await api(`/api/quizzes/${Number(q.id)}/submit`,{method:'POST',body:JSON.stringify({answers})});closeModal();toast(`Quiz ukończony: ${result.score}/${result.total}`);await renderMemberQuizzes();}
-    catch(err){btn.disabled=false;toast(err.message,'error')}
-  });
+  const answers=Array(questions.length).fill(null);
+  let index=0,remaining=20,submitting=false;
+  const root=$('modalRoot');
+  const stopTimer=()=>{if(memberQuizTimer){clearInterval(memberQuizTimer);memberQuizTimer=null;}};
+  const submit=async()=>{
+    if(submitting)return;submitting=true;stopTimer();
+    const answerPayload=questions.map((x,i)=>({questionId:String(x.id||`q${i+1}`),answerIndex:Number.isInteger(answers[i])?answers[i]:-1}));
+    const submitBtn=$('quizFinishBtn');if(submitBtn)submitBtn.disabled=true;
+    try{
+      const result=await api(`/api/quizzes/${Number(q.id)}/submit`,{method:'POST',body:JSON.stringify({answers:answerPayload})});
+      const pct=Number(result.total)?Math.round(Number(result.score)/Number(result.total)*100):0;
+      root.innerHTML=`<div class="quiz-finish-screen"><span class="quiz-card-kicker">QUIZ ZAKOŃCZONY</span><div class="quiz-finish-icon">${pct>=80?'🏆':pct>=50?'🚒':'📚'}</div><h2>${pct>=80?'Świetna robota!':pct>=50?'Dobra robota!':'Trening czyni mistrza!'}</h2><div class="quiz-finish-score">${Number(result.score)}<small>/ ${Number(result.total)} pkt</small></div><div class="quiz-finish-percent">${pct}% poprawnych odpowiedzi</div><p class="muted">${timed?'Tryb na czas':'Spokojny trening'} · ${questions.length} pytań</p><button class="btn red" type="button" onclick="closeModal();renderMemberQuizzes()">Zakończ</button></div>`;
+      await renderMemberQuizzes();
+    }catch(err){submitting=false;if(submitBtn)submitBtn.disabled=false;toast(err.message,'error');}
+  };
+  const render=()=>{
+    stopTimer();remaining=20;
+    const question=questions[index];
+    const progress=Math.round((index+1)/questions.length*100);
+    root.innerHTML=`<div class="quiz-play-shell"><div class="quiz-play-top"><span class="quiz-card-kicker">${quizEsc(q.title)}</span><button class="btn outline" type="button" onclick="closeModal()">Zamknij</button></div><div class="quiz-progress-meta"><b>Pytanie ${index+1} z ${questions.length}</b><span>${progress}%</span></div><div class="quiz-progress-track"><div class="quiz-progress-fill" style="width:${progress}%"></div></div>${timed?`<div class="quiz-countdown" id="quizCountdown">⏱ ${remaining} s</div>`:''}<div class="quiz-question-live"><h3>${quizEsc(question.text)}</h3><div class="quiz-live-options">${(question.options||[]).map((option,j)=>`<button class="quiz-option-btn ${answers[index]===j?'selected':''}" type="button" data-answer="${j}"><span>${String.fromCharCode(65+j)}</span><b>${quizEsc(option)}</b></button>`).join('')}</div></div><div class="quiz-play-actions"><button class="btn outline" type="button" id="quizPrevBtn" ${index===0?'disabled':''}>Wstecz</button><button class="btn red" type="button" id="quizNextBtn" ${Number.isInteger(answers[index])?'':'disabled'}>${index===questions.length-1?'Zakończ quiz':'Następne pytanie →'}</button></div><p class="muted quiz-answer-hint">${Number.isInteger(answers[index])?'Odpowiedź zapisana.':'Wybierz jedną odpowiedź, aby przejść dalej.'}</p></div>`;
+    root.querySelectorAll('[data-answer]').forEach(btn=>btn.addEventListener('click',()=>{
+      answers[index]=Number(btn.dataset.answer);
+      root.querySelectorAll('[data-answer]').forEach(b=>b.classList.toggle('selected',b===btn));
+      $('quizNextBtn').disabled=false;$('quizNextBtn').textContent=index===questions.length-1?'Zakończ quiz':'Następne pytanie →';
+      const hint=root.querySelector('.quiz-answer-hint');if(hint)hint.textContent='Odpowiedź zapisana.';
+    }));
+    $('quizPrevBtn').addEventListener('click',()=>{if(index>0){index--;render();}});
+    $('quizNextBtn').addEventListener('click',()=>{if(index===questions.length-1)submit();else{index++;render();}});
+    if(timed){
+      memberQuizTimer=setInterval(()=>{
+        remaining=Math.max(0,remaining-1);
+        const counter=$('quizCountdown');if(counter)counter.textContent='⏱ '+remaining+' s';
+        if(remaining<=0){stopTimer();if(index===questions.length-1)submit();else{index++;render();}}
+      },1000);
+    }
+  };
+  render();
 }
 
 function getLocalAttendance(eventId){
@@ -4086,7 +4148,7 @@ function openModal(html){
     </div>`;
 }
 
-function closeModal(){$("modalRoot").innerHTML=""}
+function closeModal(){if(memberQuizTimer){clearInterval(memberQuizTimer);memberQuizTimer=null;}$("modalRoot").innerHTML=""}
 
 function openScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
