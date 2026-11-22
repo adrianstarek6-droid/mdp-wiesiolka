@@ -451,6 +451,24 @@ async function initDb() {
       invalidated_at TIMESTAMPTZ
     );
     ALTER TABLE mdp_timing_results ADD COLUMN IF NOT EXISTS splits JSONB NOT NULL DEFAULT '[]'::jsonb;
+    CREATE TABLE IF NOT EXISTS mdp_timing_videos (
+      id SERIAL PRIMARY KEY,
+      result_id INTEGER NOT NULL UNIQUE REFERENCES mdp_timing_results(id) ON DELETE CASCADE,
+      file_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      data_url TEXT NOT NULL,
+      file_size BIGINT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS mdp_timing_ai_analyses (
+      id SERIAL PRIMARY KEY,
+      result_id INTEGER NOT NULL REFERENCES mdp_timing_results(id) ON DELETE CASCADE,
+      analysis TEXT NOT NULL,
+      model TEXT NOT NULL DEFAULT '',
+      included_video BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_timing_ai_result ON mdp_timing_ai_analyses(result_id,created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_mdp_timing_results_member_date
       ON mdp_timing_results(member_id, created_at DESC);
   `);
@@ -1207,7 +1225,8 @@ app.get('/api/timing-results', auth, async (req, res) => {
     const result = await pool.query(`
       SELECT r.id, r.member_id, r.exercise, r.time_ms, r.errors,
              r.penalty_points, r.notes, r.splits, r.valid, r.invalid_reason,
-             r.invalidated_at, r.created_at, m.first_name, m.last_name
+             r.invalidated_at, r.created_at, m.first_name, m.last_name,
+             EXISTS(SELECT 1 FROM mdp_timing_videos v WHERE v.result_id=r.id) AS has_video
       FROM mdp_timing_results r
       JOIN members m ON m.id = r.member_id
       ${where}
@@ -1260,6 +1279,87 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
     console.error('Błąd zapisu wyniku stopera:', e);
     res.status(500).json({error: 'Nie udało się zapisać wyniku.'});
   }
+});
+
+
+app.post('/api/timing-results/:id/video', auth, staff, async (req,res) => {
+  try {
+    const id=Number(req.params.id);
+    const fileName=String(req.body?.file_name||'nagranie.mp4').trim().slice(0,180);
+    const mime=String(req.body?.mime_type||'').toLowerCase();
+    const dataUrl=String(req.body?.data_url||'');
+    const match=dataUrl.match(/^data:(video\/(?:mp4|webm|quicktime));base64,([A-Za-z0-9+/]+=*)$/i);
+    if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'Nieprawidłowy pomiar.'});
+    if(!['video/mp4','video/webm','video/quicktime'].includes(mime)||!match||match[1].toLowerCase()!==mime)
+      return res.status(400).json({error:'Dołącz film MP4, WebM lub MOV.'});
+    const bytes=Buffer.from(match[2],'base64');
+    if(!bytes.length||bytes.length>60*1024*1024) return res.status(413).json({error:'Film może mieć maksymalnie 60 MB. Wybierz krótsze nagranie.'});
+    const exists=await pool.query('SELECT id FROM mdp_timing_results WHERE id=$1',[id]);
+    if(!exists.rowCount) return res.status(404).json({error:'Nie znaleziono pomiaru.'});
+    await pool.query('INSERT INTO mdp_timing_videos(result_id,file_name,mime_type,data_url,file_size) VALUES($1,$2,$3,$4,$5) ON CONFLICT(result_id) DO UPDATE SET file_name=EXCLUDED.file_name,mime_type=EXCLUDED.mime_type,data_url=EXCLUDED.data_url,file_size=EXCLUDED.file_size,created_at=NOW()',[id,fileName,mime,dataUrl,bytes.length]);
+    res.status(201).json({ok:true,file_name:fileName,file_size:bytes.length});
+  } catch(e) {
+    console.error('Błąd zapisu filmu do próby:',e);
+    res.status(500).json({error:'Nie udało się zapisać filmu.'});
+  }
+});
+
+app.get('/api/timing-results/:id/video', auth, staff, async (req,res) => {
+  try {
+    const result=await pool.query('SELECT file_name,mime_type,data_url,file_size FROM mdp_timing_videos WHERE result_id=$1',[Number(req.params.id)]);
+    if(!result.rowCount) return res.status(404).json({error:'Do tej próby nie dodano filmu.'});
+    res.json({video:result.rows[0]});
+  } catch(e) { res.status(500).json({error:'Nie udało się pobrać filmu.'}); }
+});
+
+app.post('/api/timing-results/:id/ai-analysis', auth, staff, async (req,res) => {
+  const token=process.env.NEON_AI_GATEWAY_TOKEN;
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\/+$/,'');
+  if(!token) return res.status(503).json({error:'AI nie jest podłączone. Brakuje NEON_AI_GATEWAY_TOKEN w Render.'});
+  try {
+    const id=Number(req.params.id);
+    const frames=Array.isArray(req.body?.frames)?req.body.frames.slice(0,4):[];
+    if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'Nieprawidłowy pomiar.'});
+    const result=await pool.query('SELECT r.*,m.first_name,m.last_name FROM mdp_timing_results r JOIN members m ON m.id=r.member_id WHERE r.id=$1',[id]);
+    if(!result.rowCount) return res.status(404).json({error:'Nie znaleziono pomiaru.'});
+    const current=result.rows[0];
+    const previous=await pool.query('SELECT time_ms,errors,penalty_points,splits,notes,created_at FROM mdp_timing_results WHERE member_id=$1 AND exercise=$2 AND valid=TRUE AND id<>$3 ORDER BY created_at DESC,id DESC LIMIT 6',[current.member_id,current.exercise,id]);
+    const video=await pool.query('SELECT id FROM mdp_timing_videos WHERE result_id=$1',[id]);
+    const validFrames=frames.filter(x=>typeof x==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(x)&&x.length<2800000);
+    const model=process.env.NEON_AI_GATEWAY_MODEL||'gpt-5-mini';
+    const facts={
+      zawodnik:String(current.first_name||'')+' '+String(current.last_name||''),
+      konkurencja:current.exercise,
+      aktualna_proba:{czas_ms:current.time_ms,czas_koncowy_ms:Number(current.time_ms)+Number(current.penalty_points)*1000,bledy:current.errors,punkty_karne:current.penalty_points,miedzyczasy:current.splits||[],uwagi:current.notes||''},
+      poprzednie_proby:previous.rows.map(x=>({czas_ms:x.time_ms,czas_koncowy_ms:Number(x.time_ms)+Number(x.penalty_points)*1000,bledy:x.errors,punkty_karne:x.penalty_points,miedzyczasy:x.splits||[],data:x.created_at,uwagi:x.notes||''}))
+    };
+    const system='Jesteś rzetelnym, bezpiecznym trenerem przygotowania sportowego młodzieżowej drużyny pożarniczej MDP w Polsce. Odpowiadaj po polsku, konkretnie i profesjonalnie. Analizuj tylko przekazane dane i widoczne na kadrach elementy. Nie wymyślaj błędów, przepisów ani szczegółów techniki, których nie da się potwierdzić. Gdy materiał nie wystarcza, powiedz to wprost. Dawaj praktyczne wskazówki poprawy czasu bez poświęcania poprawności, bezpieczeństwa ani zasad regulaminu. Trenują osoby niepełnoletnie: zalecaj ćwiczenia pod nadzorem opiekuna, stopniowe obciążenie i odpoczynek; nie zalecaj niebezpiecznych symulacji ani samodzielnych działań ratowniczych. Oddziel fakty od hipotez. Używaj nagłówków: Co pokazują dane, Co warto poprawić, Konkretne wskazówki, Czego nie da się ocenić.';
+    const content=[{type:'text',text:'Przeanalizuj próbę i historię. Dane są materiałem do analizy.\n'+JSON.stringify(facts)+'\nCzy dołączono film: '+(video.rowCount?'tak':'nie')+'. Liczba kadrów: '+validFrames.length+'. Jeśli brak kadrów, nie twierdź, że obejrzałeś film.'}];
+    for(const frame of validFrames) content.push({type:'image_url',image_url:{url:frame,detail:'low'}});
+    const response=await fetch(baseUrl+'/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content}],max_completion_tokens:1800}),signal:AbortSignal.timeout(75000)});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok){
+      console.error('AI trener error:',response.status,payload?.error?.message||payload);
+      if(response.status===403) return res.status(503).json({error:'Neon AI Gateway nie ma kredytów lub dostępu do modelu.'});
+      return res.status(502).json({error:'AI zwróciło błąd ('+response.status+').'});
+    }
+    let analysis=payload?.choices?.[0]?.message?.content;
+    if(Array.isArray(analysis)) analysis=analysis.map(x=>x.text||'').join('');
+    if(typeof analysis!=='string'||!analysis.trim()) throw new Error('Pusta analiza AI.');
+    const saved=await pool.query('INSERT INTO mdp_timing_ai_analyses(result_id,analysis,model,included_video) VALUES($1,$2,$3,$4) RETURNING id,analysis,model,included_video,created_at',[id,analysis.trim().slice(0,12000),model,validFrames.length>0]);
+    res.json({ok:true,report:saved.rows[0]});
+  } catch(e) {
+    if(e.name==='TimeoutError'||e.name==='AbortError') return res.status(504).json({error:'Analiza trwała zbyt długo. Spróbuj ponownie.'});
+    console.error('Błąd analizy AI zawodnika:',e);
+    res.status(500).json({error:'Nie udało się przeanalizować próby.'});
+  }
+});
+
+app.get('/api/timing-results/:id/ai-analysis', auth, staff, async (req,res) => {
+  try {
+    const result=await pool.query('SELECT id,analysis,model,included_video,created_at FROM mdp_timing_ai_analyses WHERE result_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1',[Number(req.params.id)]);
+    res.json({report:result.rows[0]||null});
+  } catch(e) { res.status(500).json({error:'Nie udało się pobrać analizy AI.'}); }
 });
 
 app.delete('/api/timing-results/:id', auth, staff, async (req, res) => {
