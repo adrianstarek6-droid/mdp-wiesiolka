@@ -4525,11 +4525,20 @@ $("timingForm").addEventListener("submit",async e=>{
   const errors=Math.max(0,Math.floor(Number($("timingErrors").value)||0));
   const penaltyPoints=timingPenaltyPoints(errors);
   const memberId=Number($("timingMember").value);
+  const videoFile=$("timingVideoFile")?.files?.[0]||null;
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
+  if(videoFile&&(!["video/mp4","video/webm","video/quicktime"].includes(videoFile.type)||videoFile.size>60*1024*1024)){
+    toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;
+  }
   try{
-    await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors,penalty_points:penaltyPoints,notes:$("timingNotes").value.trim(),splits:timingSplits})});
-    toast("Wynik zapisany.");resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";updateTimingPenaltyPreview();await loadTimingResults();
+    const saved=await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors,penalty_points:penaltyPoints,notes:$("timingNotes").value.trim(),splits:timingSplits})});
+    if(videoFile){
+      const dataUrl=await fileToDataUrl(videoFile);
+      await api("/api/timing-results/"+saved.result.id+"/video",{method:"POST",body:JSON.stringify({file_name:videoFile.name,mime_type:videoFile.type,data_url:dataUrl})});
+    }
+    toast(videoFile?"Wynik i film zapisane.":"Wynik zapisany.");
+    resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";if($("timingVideoFile"))$("timingVideoFile").value="";updateTimingPenaltyPreview();await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
 
