@@ -4505,7 +4505,7 @@ async function fileToDataUrl(file){
 }
 async function extractTimingVideoFrames(dataUrl){
   return await new Promise(resolve=>{
-    const video=document.createElement('video');video.muted=true;video.playsInline=true;video.preload='auto';
+    const video=document.createElement('video');video.crossOrigin='anonymous';video.muted=true;video.playsInline=true;video.preload='auto';
     let finished=false;const frames=[];const targets=[];
     const done=out=>{if(finished)return;finished=true;video.removeAttribute('src');video.load();resolve(out);};
     video.onerror=()=>done([]);
