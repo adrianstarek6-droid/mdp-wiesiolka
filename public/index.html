@@ -1442,6 +1442,8 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
     </div>
     <div class="card" id="timingVideoLibraryCard">
       <h3>🎥 Biblioteka filmów z prób</h3>
+      <div class="actions" style="margin:10px 0"><button class="btn red" type="button" id="timingTeamAnalyzeBtn" onclick="analyzeWholeTeam()">🤖 Analiza całej drużyny</button></div>
+      <div id="timingTeamAiReport"></div>
       <p class="muted">Dodawaj nagrania niezależnie od stopera. Możesz przypisać dowolny film do dowolnego członka i konkurencji.</p>
       <form id="timingLibraryVideoForm">
         <div class="field"><label for="timingLibraryMember">Członek MDP</label><select id="timingLibraryMember" required></select></div>
@@ -4517,12 +4519,31 @@ function renderTimingLibraryMemberOptions(){
   const members=state.data.members||[];
   sel.innerHTML='<option value="">Wybierz członka…</option>'+members.map(m=>'<option value="'+Number(m.id)+'">'+escapeHtml((m.first_name||"")+" "+(m.last_name||m.name||""))+'</option>').join("");
 }
+async function analyzeTimingLibraryVideo(id){
+  const root=$('timingLibraryReport-'+id);if(!root)return;
+  root.innerHTML='<div class="notice">AI analizuje wybrane kadry nagrania…</div>';
+  try{
+    const data=await api('/api/training-videos/'+id);const frames=await extractTimingVideoFrames(data.video.data_url);
+    if(!frames.length)throw new Error('Nie udało się odczytać kadrów z filmu.');
+    const result=await api('/api/training-videos/'+id+'/ai-analysis',{method:'POST',body:JSON.stringify({frames})});
+    root.innerHTML='<div class="card" style="margin-top:10px;border-color:#790014"><h4>🤖 Analiza AI nagrania</h4><div class="muted">'+formatCreated(result.report.created_at)+' · analiza wybranych kadrów, nie pełnego filmu</div><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px">'+escapeHtml(result.report.analysis)+'</div></div>';
+  }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
+}
+async function analyzeWholeTeam(){
+  const root=$('timingTeamAiReport');const btn=$('timingTeamAnalyzeBtn');if(!root)return;
+  if(btn)btn.disabled=true;root.innerHTML='<div class="notice">AI analizuje wyniki, historię, błędy i raporty wszystkich członków. To może potrwać…</div>';
+  try{
+    const data=await api('/api/training-team-analysis',{method:'POST',body:JSON.stringify({})});
+    root.innerHTML='<div class="card" style="border-color:#790014;margin-top:10px"><h3>🏆 Raport całej drużyny MDP</h3><div class="muted">Przeanalizowano dane '+Number(data.members_count)+' zawodników · '+formatCreated(new Date().toISOString())+'</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.analysis)+'</div></div>';
+  }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
+  finally{if(btn)btn.disabled=false;}
+}
 async function loadTimingVideoLibrary(){
   const root=$("timingVideoLibraryList");if(!root||!["admin","guardian"].includes(state.role))return;
   try{
     const data=await api("/api/training-videos");timingLibraryVideos=Array.isArray(data?.videos)?data.videos:[];
     if(!timingLibraryVideos.length){root.innerHTML='<div class="empty">Nie dodano jeszcze filmów. Możesz dodać pierwsze nagranie powyżej.</div>';return;}
-    root.innerHTML=timingLibraryVideos.map(v=>'<article class="card" style="background:#101010;margin:10px 0"><b>'+escapeHtml(v.title||v.file_name||"Nagranie")+'</b><div class="muted">'+escapeHtml((v.first_name||"")+" "+(v.last_name||""))+' · '+escapeHtml(v.exercise)+' · '+formatCreated(v.created_at)+'</div>'+(v.notes?'<p class="muted">'+escapeHtml(v.notes)+'</p>':'')+'<div class="actions"><button class="btn outline" type="button" onclick="playTimingLibraryVideo('+Number(v.id)+')">▶ Odtwórz</button><button class="btn danger" type="button" onclick="deleteTimingLibraryVideo('+Number(v.id)+')">Usuń</button></div><div id="timingLibraryPlayer-'+Number(v.id)+'"></div></article>').join("");
+    root.innerHTML=timingLibraryVideos.map(v=>'<article class="card" style="background:#101010;margin:10px 0"><b>'+escapeHtml(v.title||v.file_name||"Nagranie")+'</b><div class="muted">'+escapeHtml((v.first_name||"")+" "+(v.last_name||""))+' · '+escapeHtml(v.exercise)+' · '+formatCreated(v.created_at)+'</div>'+(v.notes?'<p class="muted">'+escapeHtml(v.notes)+'</p>':'')+'<div class="actions"><button class="btn outline" type="button" onclick="playTimingLibraryVideo('+Number(v.id)+')">▶ Odtwórz</button><button class="btn outline" type="button" onclick="analyzeTimingLibraryVideo('+Number(v.id)+')">🤖 Analizuj AI</button><button class="btn danger" type="button" onclick="deleteTimingLibraryVideo('+Number(v.id)+')">Usuń</button></div><div id="timingLibraryPlayer-'+Number(v.id)+'"></div><div id="timingLibraryReport-'+Number(v.id)+'"></div></article>').join("");
   }catch(e){root.innerHTML='<div class="empty">Nie udało się pobrać filmów: '+escapeHtml(e.message)+'</div>';}
 }
 async function playTimingLibraryVideo(id){
