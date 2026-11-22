@@ -1312,13 +1312,20 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
 });
 
 
-app.get('/api/training-videos', auth, staff, async (req,res) => {
+app.get('/api/training-videos', auth, async (req,res) => {
   try {
+    const memberOnly=req.role==='member';
     const result=await pool.query(`
-      SELECT v.id,v.member_id,v.exercise,v.title,v.notes,v.file_name,v.mime_type,v.file_size,v.created_at,m.first_name,m.last_name
+      SELECT v.id,v.member_id,v.exercise,v.title,v.notes,v.file_name,v.mime_type,v.file_size,v.created_at,m.first_name,m.last_name,
+        a.analysis AS analysis,a.created_at AS analysis_created_at,a.id AS analysis_id
       FROM mdp_training_videos v JOIN members m ON m.id=v.member_id
+      LEFT JOIN LATERAL (
+        SELECT id,analysis,created_at FROM mdp_training_video_analyses
+        WHERE video_id=v.id ORDER BY created_at DESC,id DESC LIMIT 1
+      ) a ON TRUE
+      WHERE ($1::boolean=FALSE OR v.member_id=$2)
       ORDER BY v.created_at DESC,v.id DESC
-    `);
+    `,[memberOnly,memberOnly?Number(req.member.id):null]);
     res.json({videos:result.rows});
   } catch(e) { console.error('Błąd listy filmów treningowych:',e); res.status(500).json({error:'Nie udało się pobrać filmów.'}); }
 });
@@ -1382,9 +1389,17 @@ app.post('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) =>
   }catch(e){console.error('Błąd analizy filmu MDP:',e);res.status(e.name==='TimeoutError'?504:500).json({error:e.name==='TimeoutError'?'Analiza trwała za długo. Spróbuj ponownie.':'Nie udało się przeanalizować nagrania.'});}
 });
 
-app.get('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => {
-  try{const r=await pool.query('SELECT id,analysis,model,created_at FROM mdp_training_video_analyses WHERE video_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1',[Number(req.params.id)]);res.json({report:r.rows[0]||null});}
-  catch(e){res.status(500).json({error:'Nie udało się pobrać analizy filmu.'});}
+app.get('/api/training-videos/:id/ai-analysis', auth, async (req,res) => {
+  try{
+    const id=Number(req.params.id);
+    if(req.role==='member'){
+      const owner=await pool.query('SELECT member_id FROM mdp_training_videos WHERE id=$1',[id]);
+      if(!owner.rowCount)return res.status(404).json({error:'Nie znaleziono filmu.'});
+      if(Number(owner.rows[0].member_id)!==Number(req.member.id))return res.status(403).json({error:'Nie masz dostępu do tej analizy.'});
+    }
+    const r=await pool.query('SELECT id,analysis,model,created_at FROM mdp_training_video_analyses WHERE video_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1',[id]);
+    res.json({report:r.rows[0]||null});
+  }catch(e){res.status(500).json({error:'Nie udało się pobrać analizy filmu.'});}
 });
 
 app.get('/api/training-team-analysis/latest', auth, staff, async (req,res) => {
@@ -1417,10 +1432,11 @@ app.post('/api/training-team-analysis', auth, staff, async (req,res) => {
   }catch(e){console.error('Błąd raportu drużyny:',e);res.status(e.name==='TimeoutError'?504:500).json({error:e.name==='TimeoutError'?'Raport drużyny trwał zbyt długo. Spróbuj ponownie.':'Nie udało się przygotować raportu drużyny.'});}
 });
 
-app.get('/api/training-videos/:id', auth, staff, async (req,res) => {
+app.get('/api/training-videos/:id', auth, async (req,res) => {
   try {
-    const result=await pool.query('SELECT id,title,file_name,mime_type,data_url FROM mdp_training_videos WHERE id=$1',[Number(req.params.id)]);
+    const result=await pool.query('SELECT id,member_id,title,file_name,mime_type,data_url FROM mdp_training_videos WHERE id=$1',[Number(req.params.id)]);
     if(!result.rowCount) return res.status(404).json({error:'Nie znaleziono filmu.'});
+    if(req.role==='member'&&Number(result.rows[0].member_id)!==Number(req.member.id))return res.status(403).json({error:'Nie masz dostępu do tego filmu.'});
     res.json({video:result.rows[0]});
   } catch(e) { res.status(500).json({error:'Nie udało się pobrać filmu.'}); }
 });
