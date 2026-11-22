@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 const videoStorageBucket = process.env.MDP_VIDEO_BUCKET || 'mdp-training-videos';
 const videoStorageReady = Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_ENDPOINT_URL_S3 && process.env.AWS_REGION);
 const videoS3 = videoStorageReady ? new S3Client({ region: process.env.AWS_REGION, endpoint: process.env.AWS_ENDPOINT_URL_S3, forcePathStyle: true, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY } }) : null;
+console.log('MDP video storage config:', { accessKey: Boolean(process.env.AWS_ACCESS_KEY_ID), secretKey: Boolean(process.env.AWS_SECRET_ACCESS_KEY), endpoint: Boolean(process.env.AWS_ENDPOINT_URL_S3), region: Boolean(process.env.AWS_REGION), bucket: Boolean(videoStorageBucket), ready: videoStorageReady });
 const MAX_TRAINING_VIDEO_BYTES = 1024 * 1024 * 1024;
 
 const pool = new Pool({
