@@ -1384,7 +1384,8 @@ app.post('/api/training-videos/upload-url', auth, staff, async (req,res) => {
 
 app.post('/api/training-videos/complete', auth, staff, async (req,res) => {
   try {
-    if(!videoS3) return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'});
+    const s3=getVideoS3();
+    if(!s3) { console.error('MDP video completion storage unavailable: required environment settings missing'); return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'}); }
     const memberId=Number(req.body?.member_id);
     const exercise=String(req.body?.exercise||'').trim().slice(0,120);
     const title=String(req.body?.title||'').trim().slice(0,140);
@@ -1399,7 +1400,7 @@ app.post('/api/training-videos/complete', auth, staff, async (req,res) => {
     const head=await s3.send(new HeadObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));
     const fileSize=Number(head.ContentLength||0);
     if(!fileSize||fileSize>MAX_TRAINING_VIDEO_BYTES){await s3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(413).json({error:'Film przekracza limit 1 GB albo jest pusty.'});}
-    if(head.ContentType&&head.ContentType.toLowerCase()!==mime){await videoS3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(400).json({error:'Typ przesłanego pliku nie zgadza się z wybranym formatem.'});}
+    if(head.ContentType&&head.ContentType.toLowerCase()!==mime){await s3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(400).json({error:'Typ przesłanego pliku nie zgadza się z wybranym formatem.'});}
     const saved=await pool.query(`
       INSERT INTO mdp_training_videos(member_id,exercise,title,notes,file_name,mime_type,data_url,object_key,file_size,created_by_role)
       VALUES($1,$2,$3,$4,$5,$6,'',$7,$8,$9)
