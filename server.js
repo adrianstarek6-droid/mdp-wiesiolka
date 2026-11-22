@@ -4019,7 +4019,7 @@ app.post('/api/quizzes/generate-ai', auth, quizStaffOnly, async (req,res) => {
     if(!questions||questions.length!==count) throw new Error('AI zwróciło niekompletny zestaw pytań. Wygeneruj quiz ponownie.');
     const normalized=questions.map((q,i)=>({...q,id:'ai_q'+(i+1)}));
     const created=await pool.query(
-      'INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,TRUE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',
+      'INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,FALSE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',
       [title,JSON.stringify(normalized),round]
     );
     res.status(201).json({ok:true,generated:true,source:'ai',model,quiz:created.rows[0]});
@@ -4073,6 +4073,16 @@ app.post('/api/quizzes', auth, quizStaffOnly, async (req,res) => {
     const r=await pool.query('INSERT INTO quizzes(title,questions,questions_per_round,active) VALUES($1,$2::jsonb,$3,TRUE) RETURNING id,title,questions,questions_per_round,active,created_at,updated_at',[title,JSON.stringify(questions),questionsPerRound]);
     res.status(201).json(r.rows[0]);
   } catch(e) { console.error(e); res.status(500).json({error:'Nie udało się utworzyć quizu.'}); }
+});
+
+app.post('/api/quizzes/:id/publish', auth, quizStaffOnly, async (req,res) => {
+  try {
+    const id=Number(req.params.id);
+    if(!Number.isInteger(id)||id<=0)return res.status(400).json({error:'Nieprawidłowy identyfikator quizu.'});
+    const result=await pool.query('UPDATE quizzes SET active=TRUE,updated_at=NOW() WHERE id=$1 RETURNING id,title,active',[id]);
+    if(!result.rowCount)return res.status(404).json({error:'Nie znaleziono quizu.'});
+    res.json({ok:true,quiz:result.rows[0]});
+  }catch(e){console.error('Błąd publikacji quizu:',e);res.status(500).json({error:'Nie udało się opublikować quizu.'});}
 });
 
 app.put('/api/quizzes/:id', auth, quizStaffOnly, async (req,res) => {
