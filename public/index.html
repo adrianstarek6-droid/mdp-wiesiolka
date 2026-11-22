@@ -1856,134 +1856,23 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
 
 <section id="sportsBojowkaScreen" class="screen">
   <div class="section-title"><h2>🚒 ROZWINIĘCIE BOJOWE</h2><button class="btn outline" type="button" onclick="openScreen('sportsMdpScreen')">← SPORTOWE MDP</button></div>
-  <div class="competition-detail-hero competition-detail-red"><span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 01</span><div class="competition-detail-symbol">🚒</div><h1>ROZWINIĘCIE<br><em>BOJOWE</em></h1><p>Plan toru, odcinki, wymiary przeszkód i zasady naliczania punktów.</p></div>
-  <div class="competition-stat-grid"><div><b>75 m</b><small>długość toru</small></div><div><b>5 m</b><small>szerokość toru</small></div><div><b>1000</b><small>punktów premii</small></div></div>
-  <div class="card competition-content-card">
-    <span class="competition-card-kicker">SCHEMAT TORU · WIDOK Z GÓRY</span><h3>Pełna trasa 0–75 m</h3>
-    <p class="muted">Schemat poglądowy w proporcjach długości. Oznaczenia pokazują położenie elementów, a nie instrukcję wykonywania konkurencji.</p>
-    <div style="overflow-x:auto;background:#080b0e;border:1px solid #343d47;border-radius:14px;padding:10px">
-      <svg viewBox="0 0 900 330" role="img" aria-label="Schemat toru rozwinięcia bojowego MDP długości 75 metrów i szerokości 5 metrów" style="display:block;width:100%;min-width:680px;height:auto">
-        <defs><pattern id="bojGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="#26313b" stroke-width=".7"/></pattern></defs>
-        <text x="450" y="20" fill="#f4f5f6" font-size="15" text-anchor="middle" font-weight="800">ROZWINIĘCIE BOJOWE · 75 m × 5 m</text>
-        <rect x="75" y="65" width="750" height="62" rx="5" fill="#111820" stroke="#aab4be" stroke-width="2"/>
-        <rect x="75" y="65" width="750" height="62" fill="url(#bojGrid)"/>
-        <g stroke="#52606c" stroke-dasharray="4 4"><path d="M675 65V127M725 65V127M775 65V127"/></g>
-        <g fill="#ffb64d" stroke="#20170b" stroke-width="2">
-          <rect x="146" y="69" width="16" height="54" rx="2"/>
-          <rect x="305" y="69" width="12" height="54" rx="2"/>
-          <rect x="425" y="69" width="60" height="54" rx="3"/>
-          <rect x="595" y="85" width="20" height="22" rx="2"/>
-          <rect x="650" y="69" width="12" height="54" rx="2"/>
-          <circle cx="675" cy="96" r="9"/><circle cx="725" cy="96" r="9"/>
-          <rect x="775" y="72" width="35" height="48" rx="3" fill="#75a7e8"/>
-        </g>
-        <g fill="#f4f5f6" font-size="10" font-weight="800" text-anchor="middle">
-          <text x="154" y="56">RÓW</text><text x="311" y="56">ŚCIANKA</text><text x="455" y="56">TUNEL</text><text x="605" y="78">KŁADKA</text><text x="656" y="56">LINIA 59 m</text><text x="675" y="145">60 m</text><text x="725" y="145">65 m</text><text x="792" y="56">STANOWISKA</text>
-        </g>
-        <g fill="#aeb8c2" font-size="10"><text x="80" y="155">START · 0 m</text><text x="820" y="155" text-anchor="end">META · 75 m</text></g>
-        <g stroke="#e94a53" stroke-width="2"><path d="M75 175H825M75 170V180M825 170V180"/></g>
-        <g fill="#f5f5f5" font-size="11" text-anchor="middle"><text x="375" y="192">60 m</text><text x="700" y="192">65 m</text><text x="750" y="192">70 m</text><text x="825" y="192">75 m</text></g>
-        <g fill="#aeb8c2" font-size="10"><text x="75" y="220">0–60 m · przeszkody i odcinek główny</text><text x="675" y="238">60–65 m · stanowisko hydronetek / tarcz</text><text x="725" y="256">65–70 m · stanowiska oceniane</text><text x="775" y="274">70–75 m · pole końcowe</text></g>
-        <g stroke="#f5f5f5" stroke-width="1"><path d="M75 295H825M75 290V300M825 290V300"/></g><text x="450" y="316" fill="#aeb8c2" font-size="11" text-anchor="middle">Długość całkowita: 75 m · szerokość: 5 m</text>
-      </svg>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:12px">
-      <div class="badge">🟠 Rów · początek 7,1 m</div><div class="badge">🟠 Ścianka · 23 m</div><div class="badge">🟠 Tunel · początek 35 m</div><div class="badge">🟠 Kładka · początek 52 m</div><div class="badge">🔵 Skrzynka · 58 m</div><div class="badge">🔵 Stanowiska · 70 m</div>
-    </div>
-  </div>
-  <div class="card competition-content-card"><span class="competition-card-kicker">WYMIARY ELEMENTÓW</span><h3>Przeszkody i stanowiska</h3>
-    <div style="display:grid;gap:9px">
-      <div class="badge" style="white-space:normal;justify-content:space-between">Rów wodny <b>2,0 × 1,6 m</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Ścianka <b>2,0 m szer. · 0,7 m wys.</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Tunel <b>6,0 × 0,6 m · wys. 0,8 m</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Kładka <b>2,0 × 0,2 m · wys. 0,35 m</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Skrzynka na noszaki <b>min. 60 × 40 × 30 cm</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Podest stanowiska sprzętu <b>2,0 × 0,5 m</b></div>
-    </div>
-    <p class="muted">Oznaczenia i wymiary pochodzą z rozdziału 9–10 regulaminu 2/2026.</p>
-  </div>
-  <div class="card competition-content-card"><span class="competition-card-kicker">PUNKTACJA</span><h3>Za co są punkty?</h3>
-    <div class="competition-callout"><span>🏅</span><p><b>Start: 1000 punktów</b><br>Od premii odejmuje się czas wykonania konkurencji (1 sekunda = 1 punkt) oraz punkty karne.</p></div>
-    <div style="display:grid;gap:8px;margin-top:12px">
-      <div class="badge" style="white-space:normal;justify-content:space-between">Nieprawidłowe pokonanie przeszkody <b>−10 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Błędy w rozmieszczeniu linii wężowej / nieprawidłowa praca <b>−10 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Skręt odcinka węża ponad 360° <b>−5 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Rozłączona para łączników <b>−20 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Nieprawidłowy / nieczytelny węzeł <b>−10 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Pozostawiony lub zgubiony sprzęt <b>−5 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Nienapełniony nalewak <b>−20 pkt</b></div>
-    </div>
-    <p class="muted">To skrót najważniejszych kategorii kar. Pełny katalog przypadków, wyjątków i oceny sędziowskiej znajduje się w pkt 10.3 regulaminu.</p>
-  </div>
-  <div class="competition-official-card"><div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Źródło wymiarów i zasad oceniania. W razie rozbieżności decyduje regulamin i komisja sędziowska.</span></div><a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a></div>
-  <div class="competition-safety-note">Grafiki są schematami informacyjnymi. Przygotowanie i ćwiczenia na rzeczywistym torze wyłącznie z opiekunem lub instruktorem oraz po sprawdzeniu stanowiska przez organizatora.</div><button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
+  <div class="competition-detail-hero competition-detail-red"><span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 01</span><div class="competition-detail-symbol">🚒</div><h1>ROZWINIĘCIE<br><em>BOJOWE</em></h1><p>Informacje o konkurencji i ogólnych zasadach oceniania.</p></div>
+  <div class="competition-stat-grid"><div><b>MDP</b><small>konkurencja drużynowa</small></div><div><b>1000</b><small>punktów premii</small></div><div><b>2026</b><small>regulamin 2/2026</small></div></div>
+  <div class="card competition-content-card"><span class="competition-card-kicker">O KONKURENCJI</span><h3>Na czym polega?</h3><p>Rozwinięcie bojowe to zespołowa konkurencja sportowo-pożarnicza. Szczegółowy przebieg, rozmieszczenie wyposażenia i przygotowanie stanowisk prowadzą opiekunowie oraz organizatorzy zgodnie z oficjalnym regulaminem.</p><div class="competition-callout"><span>🎯</span><p><b>Co warto znać?</b><br>Ogólne zasady konkurencji, system punktowy, rolę sędziów oraz oficjalne kryteria oceny.</p></div></div>
+  <div class="card competition-content-card"><span class="competition-card-kicker">PUNKTACJA</span><h3>Jak ustalany jest wynik?</h3><p>Drużyna rozpoczyna z premią <b>1000 punktów</b>. Od tej wartości odejmuje się czas wykonania konkurencji oraz punkty karne przyznane przez sędziów.</p><p class="muted">1 sekunda czasu = 1 punkt. Szczegółowe kary i wyjątki ocenia komisja zgodnie z regulaminem 2/2026.</p></div>
+  <div class="competition-official-card"><div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Pełne zasady, schematy i tabele ocen są w dokumencie organizatora.</span></div><a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a></div>
+  <div class="competition-safety-note">Ta podstrona ma charakter informacyjny. Przygotowanie do konkurencji i ustawianie toru odbywa się wyłącznie przez opiekunów, instruktorów i organizatora zawodów.</div>
+  <button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
 </section>
 <section id="sportsSztafetaScreen" class="screen">
   <div class="section-title"><h2>🏃 SZTAFETA 400 M</h2><button class="btn outline" type="button" onclick="openScreen('sportsMdpScreen')">← SPORTOWE MDP</button></div>
-  <div class="competition-detail-hero competition-detail-orange"><span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 02</span><div class="competition-detail-symbol">🏃</div><h1>SZTAFETA<br><em>400 METRÓW</em></h1><p>Pełny plan dziewięciu odcinków, rozmieszczenie przeszkód i zasady punktacji.</p></div>
-  <div class="competition-stat-grid"><div><b>400 m</b><small>dystans całkowity</small></div><div><b>9</b><small>odcinków</small></div><div><b>1,2 m</b><small>min. szerokość toru</small></div></div>
-  <div class="card competition-content-card"><span class="competition-card-kicker">SCHEMAT TORU · WIDOK Z GÓRY</span><h3>Cała sztafeta 0–400 m</h3><p class="muted">Schemat liniowy z kilometrażem i punktami ustawienia elementów. Nie przedstawia techniki pokonywania przeszkód.</p>
-    <div style="overflow-x:auto;background:#080b0e;border:1px solid #343d47;border-radius:14px;padding:10px">
-      <svg viewBox="0 0 900 420" role="img" aria-label="Schemat sztafety MDP 400 metrów z dziewięcioma odcinkami i przeszkodami" style="display:block;width:100%;min-width:720px;height:auto">
-        <text x="450" y="22" fill="#f4f5f6" font-size="15" text-anchor="middle" font-weight="800">SZTAFETA 400 m · 9 ODCINKÓW</text>
-        <rect x="55" y="55" width="790" height="54" rx="6" fill="#111820" stroke="#aab4be" stroke-width="2"/>
-        <g stroke="#6a7783" stroke-dasharray="5 4"><path d="M104.4 55V109M153.8 55V109M252.5 55V109M351.3 55V109M450 55V109M548.8 55V109M647.5 55V109M746.3 55V109"/></g>
-        <g fill="#ffb64d" stroke="#20170b" stroke-width="2">
-          <rect x="89" y="59" width="6" height="46" rx="2"/><rect x="193" y="65" width="7" height="34" rx="2"/>
-          <rect x="391" y="64" width="8" height="36" rx="2"/><rect x="490" y="64" width="8" height="36" rx="2"/>
-          <rect x="588" y="64" width="8" height="36" rx="2"/><rect x="796" y="64" width="30" height="36" rx="3" fill="#75a7e8"/>
-          <circle cx="205" cy="82" r="5"/><circle cx="214" cy="82" r="5"/><rect x="218" y="77" width="8" height="10" rx="2" fill="#75a7e8"/>
-          <rect x="785" y="77" width="8" height="10" rx="2" fill="#75a7e8"/>
-        </g>
-        <g fill="#f5f5f5" font-size="9" font-weight="800" text-anchor="middle">
-          <text x="92" y="48">ŚCIANA</text><text x="210" y="48">WĄŻ</text><text x="395" y="48">POPRZECZKA</text><text x="494" y="48">PŁOTEK</text><text x="592" y="48">GAŚNICA</text><text x="810" y="48">SPRZĘT</text>
-        </g>
-        <g fill="#c5cdd5" font-size="10" text-anchor="middle">
-          <text x="55" y="128">0</text><text x="104" y="128">25</text><text x="154" y="128">50</text><text x="253" y="128">100</text><text x="351" y="128">150</text><text x="450" y="128">200</text><text x="549" y="128">250</text><text x="648" y="128">300</text><text x="746" y="128">350</text><text x="845" y="128">400 m</text>
-        </g>
-        <g fill="#f4f5f6" font-size="10" font-weight="800" text-anchor="middle">
-          <text x="79" y="155">1</text><text x="129" y="155">2</text><text x="203" y="155">3</text><text x="302" y="155">4</text><text x="401" y="155">5</text><text x="500" y="155">6</text><text x="599" y="155">7</text><text x="697" y="155">8</text><text x="795" y="155">9</text>
-        </g>
-        <g stroke="#e88d37" stroke-width="1.5"><path d="M55 166H104M104 166H154M154 166H253M253 166H351M351 166H450M450 166H549M549 166H648M648 166H746M746 166H845"/></g>
-        <g fill="#aeb8c2" font-size="10">
-          <text x="55" y="194">1 · 0–25 m — ściana drabiniasta na 20 m</text>
-          <text x="55" y="218">2 · 25–50 m — odcinek bez przeszkody</text>
-          <text x="55" y="242">3 · 50–100 m — wąż na 70 m, płyta 0,8 × 0,8 m na 75 m</text>
-          <text x="55" y="266">4 · 100–150 m — odcinek bez przeszkody</text>
-          <text x="55" y="290">5 · 150–200 m — poprzeczka na 175 m</text>
-          <text x="55" y="314">6 · 200–250 m — płotek na 225 m</text>
-          <text x="55" y="338">7 · 250–300 m — gaśnica 275 m, płyta 280 m</text>
-          <text x="55" y="362">8 · 300–350 m — odcinek bez przeszkody</text>
-          <text x="55" y="386">9 · 350–400 m — strefa do 365 m, sprzęt na 380 m</text>
-        </g>
-      </svg>
-    </div>
-  </div>
-  <div class="card competition-content-card"><span class="competition-card-kicker">WYMIARY I OZNACZENIA</span><h3>Przeszkody na trasie</h3>
-    <div style="display:grid;gap:8px">
-      <div class="badge" style="white-space:normal;justify-content:space-between">Ściana drabiniasta · 20 m <b>2,0 m wys. × 1,2 m szer.</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Wąż W-52 · 70 m <b>15 m długości</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Płyta · 75 m i 280 m <b>0,8 × 0,8 m</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Poprzeczka · 175 m <b>0,8 m wys. × 1,2 m szer.</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Płotek · 225 m <b>0,6 m wysokości</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Gaśnica · 275 m <b>gabaryt GP-6</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Sprzęt na odcinku 9 · 380 m <b>2 węże + rozdzielacz</b></div>
-    </div>
-    <p class="muted">Odcinki 1 i 2 mają po 25 m, odcinki 3–9 po 50 m. Minimalna szerokość bieżni: 1,20 m.</p>
-  </div>
-  <div class="card competition-content-card"><span class="competition-card-kicker">PUNKTACJA</span><h3>Jak liczy się wynik?</h3>
-    <div class="competition-callout"><span>🏅</span><p><b>Premia: 100 punktów</b><br>Do wyniku dolicza się lub odejmuje różnicę czasu względem czasu założonego dla średniego wieku drużyny.</p></div>
-    <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>Średni wiek</th><th>Czas założony</th></tr></thead><tbody><tr><td>11 lat</td><td>83 s</td></tr><tr><td>12 lat</td><td>80 s</td></tr><tr><td>13 lat</td><td>77 s</td></tr><tr><td>14 lat</td><td>74 s</td></tr><tr><td>15 lat</td><td>71 s</td></tr><tr><td>16 lat</td><td>68 s</td></tr></tbody></table></div>
-    <p>Każda sekunda poniżej czasu założonego: <b>+1 pkt</b>. Każda sekunda powyżej: <b>−1 pkt</b>.</p>
-    <div style="display:grid;gap:8px;margin-top:10px">
-      <div class="badge" style="white-space:normal;justify-content:space-between">Błąd przy przeszkodzie / nieprawidłowa praca <b>−10 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Nieprawidłowe połączenie sprzętu <b>−10 pkt</b></div>
-      <div class="badge" style="white-space:normal;justify-content:space-between">Nieprzeniesienie prądownicy za metę <b>−20 pkt</b></div>
-    </div>
-    <p class="muted">Skrót najważniejszych zasad. Pełne przypadki kar, wyjątki i dyskwalifikacje określa pkt 11.3 regulaminu.</p>
-  </div>
-  <div class="competition-official-card"><div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Źródło wymiarów i zasad oceniania. W razie rozbieżności decyduje regulamin i komisja sędziowska.</span></div><a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a></div>
-  <div class="competition-safety-note">Grafiki są schematami informacyjnymi. Przygotowanie i ćwiczenia na rzeczywistym torze wyłącznie z opiekunem lub instruktorem oraz po sprawdzeniu stanowiska przez organizatora.</div><button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
+  <div class="competition-detail-hero competition-detail-orange"><span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 02</span><div class="competition-detail-symbol">🏃</div><h1>SZTAFETA<br><em>400 METRÓW</em></h1><p>Ogólne informacje o biegu drużynowym i zasadach oceniania.</p></div>
+  <div class="competition-stat-grid"><div><b>400 m</b><small>dystans biegu</small></div><div><b>9</b><small>zawodników i odcinków</small></div><div><b>100</b><small>punktów premii</small></div></div>
+  <div class="card competition-content-card"><span class="competition-card-kicker">O KONKURENCJI</span><h3>Podział biegu</h3><p>Sztafeta ma łącznie 400 metrów i składa się z dziewięciu odcinków. Pierwsze dwa odcinki mają po 25 metrów, a pozostałe po 50 metrów. Szczegółowe rozmieszczenie przeszkód i przygotowanie toru określa oficjalny regulamin oraz organizator.</p><div class="competition-callout"><span>🏁</span><p><b>Co warto znać?</b><br>Ogólny podział konkurencji, sposób obliczania wyniku, rolę sędziów i klasyfikację drużyn.</p></div></div>
+  <div class="card competition-content-card"><span class="competition-card-kicker">PUNKTACJA</span><h3>Jak liczy się wynik?</h3><p>Drużyna otrzymuje premię <b>100 punktów</b>. Dla drużyny wyznacza się czas założony na podstawie średniego wieku zawodników.</p><p>Każda sekunda poniżej czasu założonego daje <b>+1 punkt</b>, a każda sekunda powyżej oznacza <b>−1 punkt</b>. Dodatkowe punkty karne przyznają sędziowie zgodnie z regulaminem.</p><p class="muted">Szczegółowe tabele, zasady oceny i wyjątki znajdują się w regulaminie 2/2026.</p></div>
+  <div class="competition-official-card"><div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Pełne schematy toru, przeszkód i punktacji są w dokumencie organizatora.</span></div><a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a></div>
+  <div class="competition-safety-note">Ta podstrona ma charakter informacyjny. Przygotowanie do biegu i ustawianie toru odbywa się wyłącznie przez opiekunów, instruktorów i organizatora zawodów.</div>
+  <button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
 </section>
 
 
