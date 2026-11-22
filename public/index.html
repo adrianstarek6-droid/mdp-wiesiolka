@@ -4370,6 +4370,7 @@ function renderTimingMemberOptions(){
   const memberView=state.role==="member";
   // Członek ma wyłącznie własną analizę. Stoper i formularz pomiaru są dla kadry.
   $("timingMeasureCard")?.classList.toggle("hidden",memberView);
+  $("timingVideoLibraryCard")?.classList.toggle("hidden",memberView);
   const timingNav=document.querySelector('.nav-btn[data-screen="timingScreen"]');
   if(timingNav) timingNav.innerHTML=memberView?"<b>📊</b>Analiza":"<b>⏱️</b>Stoper";
   if(memberView){
