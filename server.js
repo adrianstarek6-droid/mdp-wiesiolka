@@ -290,6 +290,17 @@ async function initDb() {
       is_featured BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS mdp_gallery_upload_chunks (
+      upload_id TEXT NOT NULL,
+      chunk_index INTEGER NOT NULL,
+      chunk_data TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY(upload_id,chunk_index)
+    );
+    CREATE INDEX IF NOT EXISTS mdp_gallery_upload_chunks_created_idx
+      ON mdp_gallery_upload_chunks(created_at);
+    DELETE FROM mdp_gallery_upload_chunks WHERE created_at < NOW() - INTERVAL '24 hours';
+
     ALTER TABLE mdp_gallery_media
       ADD COLUMN IF NOT EXISTS event_id INTEGER REFERENCES events(id) ON DELETE SET NULL;
     ALTER TABLE mdp_gallery_media
@@ -1681,6 +1692,89 @@ app.get('/api/gallery/:id/file', async (req,res) => {
   } catch(e){
     console.error('Galeria — plik:',e);
     res.status(500).json({error:'Nie udało się pobrać materiału.'});
+  }
+});
+
+// Wysyłanie galerii małymi częściami — działa stabilniej na iPhone i Androidzie.
+app.post('/api/gallery/chunk', auth, staff, async (req,res) => {
+  try {
+    const uploadId=String(req.body?.upload_id||'');
+    const chunkIndex=Number(req.body?.chunk_index);
+    const chunkData=String(req.body?.chunk_data||'');
+    if(!/^[a-f0-9-]{20,80}$/i.test(uploadId) || !Number.isInteger(chunkIndex) || chunkIndex<0 || chunkIndex>10000)
+      return res.status(400).json({error:'Nieprawidłowa część pliku.'});
+    if(!chunkData || chunkData.length>6*1024*1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(chunkData))
+      return res.status(400).json({error:'Nieprawidłowe dane części pliku.'});
+    await pool.query(
+      'INSERT INTO mdp_gallery_upload_chunks(upload_id,chunk_index,chunk_data) VALUES($1,$2,$3) ON CONFLICT(upload_id,chunk_index) DO UPDATE SET chunk_data=EXCLUDED.chunk_data,created_at=NOW()',
+      [uploadId,chunkIndex,chunkData]
+    );
+    res.json({success:true,chunk_index:chunkIndex});
+  } catch(e) {
+    console.error('Galeria — część pliku:',e);
+    res.status(500).json({error:'Nie udało się wysłać części pliku. Spróbuj ponownie.'});
+  }
+});
+
+app.post('/api/gallery/finalize', auth, staff, async (req,res) => {
+  const client=await pool.connect();
+  try {
+    const b=req.body||{};
+    const uploadId=String(b.upload_id||'');
+    const chunkCount=Number(b.chunk_count);
+    const fileSize=Number(b.file_size);
+    const category=String(b.category||'');
+    const fileName=String(b.file_name||'plik').slice(0,180);
+    const mimeType=String(b.mime_type||'').toLowerCase();
+    const title=String(b.title||'').trim().slice(0,120);
+    const caption=String(b.caption||'').trim().slice(0,500);
+    const eventId=b.event_id?Number(b.event_id):null;
+    if(!/^[a-f0-9-]{20,80}$/i.test(uploadId)||!Number.isInteger(chunkCount)||chunkCount<1||chunkCount>10001)
+      return res.status(400).json({error:'Dane wysyłania są nieprawidłowe.'});
+    if(!Number.isSafeInteger(fileSize)||fileSize<1||fileSize>700*1024*1024)
+      return res.status(413).json({error:'Plik przekracza techniczny limit galerii (700 MB).'});
+    if(!['training','events'].includes(category))
+      return res.status(400).json({error:'Wybierz prawidłową zakładkę galerii.'});
+    if(!(/^(image\/(jpeg|png|webp|gif|heic|heif|avif)|video\/(mp4|webm|quicktime))$/).test(mimeType))
+      return res.status(400).json({error:'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.'});
+    if(eventId!==null&&(!Number.isInteger(eventId)||eventId<1||category!=='events'))
+      return res.status(400).json({error:'Nieprawidłowa zbiórka.'});
+    if(eventId!==null){
+      const event=await client.query('SELECT id FROM events WHERE id=$1',[eventId]);
+      if(!event.rowCount)return res.status(404).json({error:'Wybrana zbiórka już nie istnieje.'});
+    }
+    const count=await client.query('SELECT COUNT(*)::int AS count, COALESCE(SUM(length(chunk_data)),0)::bigint AS encoded_length FROM mdp_gallery_upload_chunks WHERE upload_id=$1',[uploadId]);
+    if(count.rows[0].count!==chunkCount)
+      return res.status(400).json({error:'Brakuje części pliku. Wysyłanie nie zostało zakończone.'});
+    await client.query('BEGIN');
+    const inserted=await client.query(
+      `INSERT INTO mdp_gallery_media(category,title,caption,file_name,mime_type,data_url,created_by,event_id)
+       SELECT $1,$2,$3,$4,$5,'data:'||$5||';base64,'||string_agg(chunk_data,'' ORDER BY chunk_index),$6,$7
+       FROM mdp_gallery_upload_chunks WHERE upload_id=$8
+       HAVING COUNT(*)=$9
+       RETURNING id,category,title,caption,file_name,mime_type,created_by,event_id,is_featured,created_at`,
+      [category,title,caption,fileName,mimeType,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId,uploadId,chunkCount]
+    );
+    if(!inserted.rowCount)throw new Error('Nie udało się złożyć wszystkich części pliku.');
+    await client.query('DELETE FROM mdp_gallery_upload_chunks WHERE upload_id=$1',[uploadId]);
+    await client.query('COMMIT');
+    res.status(201).json({...inserted.rows[0],media_url:galleryMediaUrl(inserted.rows[0].id)});
+  } catch(e) {
+    await client.query('ROLLBACK').catch(()=>{});
+    console.error('Galeria — kończenie wysyłania:',e);
+    res.status(500).json({error:'Nie udało się zakończyć zapisu pliku. Spróbuj ponownie.'});
+  } finally { client.release(); }
+});
+
+app.delete('/api/gallery/upload/:uploadId', auth, staff, async (req,res) => {
+  try {
+    const uploadId=String(req.params.uploadId||'');
+    if(!/^[a-f0-9-]{20,80}$/i.test(uploadId))return res.status(400).json({error:'Nieprawidłowy identyfikator.'});
+    await pool.query('DELETE FROM mdp_gallery_upload_chunks WHERE upload_id=$1',[uploadId]);
+    res.json({success:true});
+  } catch(e) {
+    console.error('Galeria — anulowanie wysyłania:',e);
+    res.status(500).json({error:'Nie udało się posprzątać niedokończonego wysyłania.'});
   }
 });
 
