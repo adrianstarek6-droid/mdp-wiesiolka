@@ -4196,7 +4196,7 @@ function openScreen(id){
   // ulice, członków, kolory i liczbę gazet.
   // Galeria Volvo nie wymaga WebGL ani zewnętrznej biblioteki 3D.
   if(id==="galleryScreen") loadGallery();
-  if(id==="timingScreen") { renderTimingMemberOptions(); renderTimingLibraryMemberOptions(); loadTimingResults(); loadTimingVideoLibrary(); }
+  if(id==="timingScreen") { renderTimingMemberOptions(); renderTimingLibraryMemberOptions(); loadTimingResults(); loadTimingVideoLibrary(); loadLatestTeamAnalysis(); }
   if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="inventoryScreen") loadInventory();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
@@ -4528,6 +4528,11 @@ async function analyzeTimingLibraryVideo(id){
     const result=await api('/api/training-videos/'+id+'/ai-analysis',{method:'POST',body:JSON.stringify({frames})});
     root.innerHTML='<div class="card" style="margin-top:10px;border-color:#790014"><h4>🤖 Analiza AI nagrania</h4><div class="muted">'+formatCreated(result.report.created_at)+' · analiza wybranych kadrów, nie pełnego filmu</div><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px">'+escapeHtml(result.report.analysis)+'</div></div>';
   }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
+}
+async function loadLatestTeamAnalysis(){
+  const root=$('timingTeamAiReport');if(!root||!["admin","guardian"].includes(state.role))return;
+  try{const data=await api('/api/training-team-analysis/latest');if(data.report)root.innerHTML='<div class="card" style="border-color:#790014;margin-top:10px"><h3>🏆 Ostatni raport całej drużyny</h3><div class="muted">'+formatCreated(data.report.created_at)+' · '+Number(data.report.members_count)+' zawodników</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.report.analysis)+'</div></div>';}
+  catch(e){console.warn('Nie udało się pobrać raportu drużyny:',e);}
 }
 async function analyzeWholeTeam(){
   const root=$('timingTeamAiReport');const btn=$('timingTeamAnalyzeBtn');if(!root)return;
