@@ -1825,18 +1825,95 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
   </section>
 
 <section id="sportsMdpScreen" class="screen">
-<div class="section-title"><h2>🏃 SPORTOWE MDP</h2><button class="btn outline" type="button" onclick="openScreen('competitionsScreen')">← ZAWODY</button></div>
-<div class="hero hall-hero"><span class="hero-overline">MDP WIESIÓŁKA · STREFA ZAWODNIKA</span><h1>Zawody <span>sportowe MDP.</span></h1><p>Dwie główne konkurencje sportowo-pożarnicze w jednym miejscu.</p></div>
-<div class="more-grid">
-<div class="more-tile"><span>🚒</span><b>ROZWINIĘCIE BOJOWE</b><small>Zespołowa konkurencja sprawdzająca współpracę i przygotowanie drużyny.</small></div>
-<div class="more-tile"><span>🏃</span><b>SZTAFETA</b><small>Bieg drużynowy z przekazywaniem pałeczki i zadaniami sportowymi.</small></div>
-</div>
-<div class="card">
-<h3>📋 Przygotowanie do zawodów</h3>
-<p class="muted">Dokładny przebieg konkurencji, ustawienie toru, sprzęt, punktacja i zasady oceniania zależą od obowiązującego regulaminu oraz organizatora zawodów.</p>
-<p class="muted">Trening z przeszkodami i sprzętem pożarniczym wykonuj wyłącznie podczas zajęć prowadzonych przez opiekuna lub uprawnionego instruktora, na przygotowanym i sprawdzonym stanowisku.</p>
-</div>
-<div class="card hall-final-note"><b>Materiały drużyny</b><p>Opiekun może tutaj dodać zatwierdzone przez organizatora grafiki, materiały i informacje dotyczące konkretnych zawodów.</p></div>
+  <div class="section-title"><h2>🏃 SPORTOWE MDP</h2><button class="btn outline" type="button" onclick="openScreen('competitionsScreen')">← ZAWODY</button></div>
+  <div class="competition-hero">
+    <div class="competition-kicker">MDP WIESIÓŁKA <span>•</span> STREFA ZAWODNIKA</div>
+    <div class="competition-hero-icon">🏆</div>
+    <h1>SPORTOWE <em>MDP</em></h1>
+    <p>Dwie konkurencje. Jedna drużyna. Wspólny wynik.</p>
+    <div class="competition-tags"><span>ROZWINIĘCIE BOJOWE</span><span>SZTAFETA 400 M</span></div>
+  </div>
+  <div class="competition-section-heading"><div><small>WYBIERZ KONKURENCJĘ</small><h2>Co chcesz sprawdzić?</h2></div><span class="competition-heading-mark">02 / 02</span></div>
+  <div class="competition-choice-grid">
+    <button class="competition-choice competition-choice-red" type="button" onclick="openScreen('sportsBojowkaScreen')">
+      <span class="competition-choice-top"><span class="competition-choice-icon">🚒</span><span class="competition-choice-arrow">↗</span></span>
+      <span class="competition-choice-index">KONKURENCJA 01</span>
+      <strong>ROZWINIĘCIE<br>BOJOWE</strong>
+      <small>Informacje o konkurencji, ocenianiu i oficjalnym regulaminie.</small>
+      <span class="competition-choice-cta">OTWÓRZ KONKURENCJĘ <b>→</b></span>
+    </button>
+    <button class="competition-choice competition-choice-orange" type="button" onclick="openScreen('sportsSztafetaScreen')">
+      <span class="competition-choice-top"><span class="competition-choice-icon">🏃</span><span class="competition-choice-arrow">↗</span></span>
+      <span class="competition-choice-index">KONKURENCJA 02</span>
+      <strong>SZTAFETA<br>400 METRÓW</strong>
+      <small>Informacje o biegu drużynowym, odcinkach i ocenianiu.</small>
+      <span class="competition-choice-cta">OTWÓRZ KONKURENCJĘ <b>→</b></span>
+    </button>
+  </div>
+  <div class="competition-info-strip"><span>📘</span><div><b>Jeden oficjalny regulamin</b><small>Wydanie 2/2026 · ZOSP RP · obie konkurencje sportowe MDP</small></div><a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">PDF ↗</a></div>
+  <div class="competition-footnote">Materiały informacyjne. Szczegółowe zasady startu i oceniania określa aktualny regulamin oraz organizator zawodów.</div>
+</section>
+
+<section id="sportsBojowkaScreen" class="screen">
+  <div class="section-title"><h2>🚒 ROZWINIĘCIE BOJOWE</h2><button class="btn outline" type="button" onclick="openScreen('sportsMdpScreen')">← SPORTOWE MDP</button></div>
+  <div class="competition-detail-hero competition-detail-red">
+    <span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 01</span>
+    <div class="competition-detail-symbol">🚒</div>
+    <h1>ROZWINIĘCIE<br><em>BOJOWE</em></h1>
+    <p>Konkurencja drużynowa oceniana według oficjalnego regulaminu MDP.</p>
+  </div>
+  <div class="competition-stat-grid">
+    <div><b>01</b><small>konkurencja</small></div><div><b>MDP</b><small>kategoria</small></div><div><b>2026</b><small>wydanie regulaminu</small></div>
+  </div>
+  <div class="card competition-content-card">
+    <span class="competition-card-kicker">O KONKURENCJI</span>
+    <h3>Na czym polega?</h3>
+    <p>Rozwinięcie bojowe to zespołowa konkurencja sportowo-pożarnicza. Ocenie podlega końcowy rezultat drużyny oraz zgodność wykonania z regulaminem i decyzjami komisji sędziowskiej.</p>
+    <div class="competition-callout"><span>🎯</span><p><b>Co warto znać?</b><br>Ogólne zasady konkurencji, sposób ustalania wyniku, rolę sędziów oraz oficjalne kryteria oceny.</p></div>
+  </div>
+  <div class="card competition-content-card">
+    <span class="competition-card-kicker">OCENIANIE</span>
+    <h3>Jak ustalany jest wynik?</h3>
+    <p>Wynik jest obliczany zgodnie z tabelami i zasadami opisanymi w regulaminie. Czas oraz stwierdzone przez sędziów błędy wpływają na końcową liczbę punktów.</p>
+    <p class="muted">Nie stosuj uproszczonych tabel z internetu jako oficjalnej punktacji — wiążący jest dokument organizatora i aktualne wydanie regulaminu.</p>
+  </div>
+  <div class="competition-official-card">
+    <div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Rozdział dotyczący rozwinięcia bojowego oraz załączniki.</span></div>
+    <a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a>
+  </div>
+  <div class="competition-safety-note">Praktyczne przygotowanie do konkurencji odbywa się wyłącznie na zajęciach prowadzonych przez opiekuna lub instruktora, na zatwierdzonym stanowisku. Ta strona służy do zapoznania się z informacjami i regulaminem.</div>
+  <button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
+</section>
+
+<section id="sportsSztafetaScreen" class="screen">
+  <div class="section-title"><h2>🏃 SZTAFETA 400 M</h2><button class="btn outline" type="button" onclick="openScreen('sportsMdpScreen')">← SPORTOWE MDP</button></div>
+  <div class="competition-detail-hero competition-detail-orange">
+    <span class="competition-kicker">SPORTOWE MDP · KONKURENCJA 02</span>
+    <div class="competition-detail-symbol">🏃</div>
+    <h1>SZTAFETA<br><em>400 METRÓW</em></h1>
+    <p>Drużynowy bieg z podziałem na odcinki, oceniany według regulaminu MDP.</p>
+  </div>
+  <div class="competition-stat-grid">
+    <div><b>400 m</b><small>dystans</small></div><div><b>9</b><small>odcinków</small></div><div><b>2026</b><small>wydanie regulaminu</small></div>
+  </div>
+  <div class="card competition-content-card">
+    <span class="competition-card-kicker">O KONKURENCJI</span>
+    <h3>Na czym polega?</h3>
+    <p>Sztafeta 400 metrów jest konkurencją zespołową. Drużyna pokonuje wyznaczoną trasę w kolejnych odcinkach, a wynik całej drużyny jest oceniany na zasadach określonych przez organizatora i komisję sędziowską.</p>
+    <div class="competition-callout"><span>🏁</span><p><b>Co warto znać?</b><br>Podział konkurencji na odcinki, ogólne kryteria oceniania, zasady klasyfikacji oraz oficjalne decyzje sędziowskie.</p></div>
+  </div>
+  <div class="card competition-content-card">
+    <span class="competition-card-kicker">OCENIANIE</span>
+    <h3>Czas i wynik drużyny</h3>
+    <p>Na klasyfikację wpływa czas uzyskany przez drużynę oraz punkty przyznane lub odjęte zgodnie z oficjalnymi zasadami. Szczegółowe tabele i sytuacje sporne opisuje regulamin.</p>
+    <p class="muted">Przed zawodami sprawdź, jakie wydanie regulaminu wskazał organizator. To ono jest podstawą oceny startu.</p>
+  </div>
+  <div class="competition-official-card">
+    <div class="competition-official-icon">📘</div><div><small>OFICJALNY DOKUMENT</small><b>Regulamin MDP · wydanie 2/2026</b><span>Rozdział dotyczący sztafety 400 m oraz załączniki.</span></div>
+    <a href="https://www.gov.pl/attachment/f948bba5-1663-46ad-a949-688decf3ee92" target="_blank" rel="noopener">OTWÓRZ PDF ↗</a>
+  </div>
+  <div class="competition-safety-note">Praktyczne przygotowanie do biegu i korzystanie z elementów toru odbywa się pod nadzorem opiekuna lub instruktora. Ta strona służy do zapoznania się z informacjami i regulaminem.</div>
+  <button class="competition-back-wide" type="button" onclick="openScreen('sportsMdpScreen')">← WRÓĆ DO WYBORU KONKURENCJI</button>
 </section>
 
 
@@ -5494,5 +5571,69 @@ hr,.divider{border-color:#3d000a!important}
 .bottom-nav .nav-btn.active b{color:#ff334b!important;text-shadow:0 0 14px rgba(255,35,58,.35)!important}
 .bottom-nav .nav-btn:active{transform:scale(.96)!important}
 @media(max-width:360px){.bottom-nav{left:8px!important;right:8px!important;padding:6px!important}.bottom-nav .nav-btn{height:52px!important;font-size:9px!important}.bottom-nav .nav-btn b{font-size:18px!important}}
+
+
+/* ===== SPORTOWE MDP · DOPRACOWANE CENTRUM KONKURENCJI ===== */
+.competition-hero{position:relative;overflow:hidden;padding:23px 20px 21px;border:1px solid #63242a;border-radius:23px;background:radial-gradient(circle at 88% 16%,rgba(229,27,35,.3),transparent 38%),linear-gradient(145deg,#1b2026,#090b0e 78%);margin:12px 0 22px;box-shadow:0 15px 38px #0005}
+.competition-kicker{font-size:9px;letter-spacing:1.8px;font-weight:900;color:#d0a6a8}
+.competition-kicker span{color:#f0444b}
+.competition-hero-icon{position:absolute;right:20px;top:37px;font-size:58px;filter:drop-shadow(0 8px 15px #0008)}
+.competition-hero h1{font-size:clamp(34px,10vw,48px);line-height:.94;letter-spacing:-1.8px;margin:24px 0 9px;font-weight:950}
+.competition-hero h1 em,.competition-detail-hero h1 em{font-style:normal;color:#f0444b}
+.competition-hero p,.competition-detail-hero p{font-size:13px;color:#c1c7ce;max-width:255px;line-height:1.5;margin:0}
+.competition-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}
+.competition-tags span{font-size:8px;font-weight:900;letter-spacing:.8px;padding:7px 9px;border-radius:7px;border:1px solid #71343a;background:#210f12;color:#f4c6c8}
+.competition-section-heading{display:flex;align-items:end;justify-content:space-between;margin:22px 1px 12px}
+.competition-section-heading small,.competition-card-kicker{font-size:9px;letter-spacing:1.6px;color:#e15b62;font-weight:900}
+.competition-section-heading h2{font-size:21px;margin:5px 0 0;letter-spacing:-.5px}
+.competition-heading-mark{font-size:10px;color:#7d8994;font-weight:800}
+.competition-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:12px 0 16px}
+.competition-choice{appearance:none;display:flex;flex-direction:column;min-width:0;min-height:225px;text-align:left;padding:15px 13px 13px;border:1px solid #39434d;border-radius:19px;color:#f7f8fa;background:linear-gradient(150deg,#1c2229,#0c0f12 80%);cursor:pointer;box-shadow:0 10px 22px #0003;transition:transform .16s,border-color .16s,box-shadow .16s}
+.competition-choice:active{transform:scale(.975)}
+.competition-choice-red{border-color:#703139;background:radial-gradient(circle at 90% 0,rgba(220,35,44,.2),transparent 48%),linear-gradient(150deg,#21191c,#0c0f12 80%)}
+.competition-choice-orange{border-color:#76502d;background:radial-gradient(circle at 90% 0,rgba(220,126,35,.19),transparent 48%),linear-gradient(150deg,#211e19,#0c0f12 80%)}
+.competition-choice-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.competition-choice-icon{font-size:28px}
+.competition-choice-arrow{font-size:19px;color:#f0787d}
+.competition-choice-index{font-size:8px;letter-spacing:1.2px;color:#aeb7c0;font-weight:900;margin-bottom:8px}
+.competition-choice strong{font-size:clamp(16px,4.6vw,21px);line-height:1.05;letter-spacing:-.5px}
+.competition-choice small{font-size:10px;line-height:1.45;color:#aeb7c0;margin-top:10px}
+.competition-choice-cta{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ffffff1a;padding-top:11px;margin-top:auto;font-size:8px;letter-spacing:.6px;font-weight:900;color:#f28a8e}
+.competition-choice-orange .competition-choice-cta{color:#f0b36e}
+.competition-info-strip{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid #303943;border-radius:15px;background:#12171c}
+.competition-info-strip>span{font-size:23px}
+.competition-info-strip div{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.competition-info-strip b{font-size:12px}
+.competition-info-strip small{font-size:10px;color:#929da7}
+.competition-info-strip a{font-size:10px;font-weight:900;color:#ff777d;text-decoration:none}
+.competition-footnote{font-size:10px;line-height:1.5;color:#7f8b95;margin:12px 2px 25px}
+.competition-detail-hero{position:relative;overflow:hidden;padding:21px 19px 22px;border-radius:22px;margin:12px 0 13px;border:1px solid #633038;background:radial-gradient(circle at 90% 25%,#e51b2333,transparent 45%),linear-gradient(145deg,#1c2026,#090b0e 78%)}
+.competition-detail-orange{border-color:#72502e;background:radial-gradient(circle at 90% 25%,#e88c2830,transparent 45%),linear-gradient(145deg,#201e1a,#090b0e 78%)}
+.competition-detail-hero .competition-kicker{display:block;max-width:75%}
+.competition-detail-symbol{position:absolute;right:19px;top:40px;font-size:54px;filter:drop-shadow(0 8px 14px #0008)}
+.competition-detail-hero h1{font-size:clamp(32px,9vw,43px);line-height:.96;letter-spacing:-1.5px;margin:25px 0 10px}
+.competition-detail-orange h1 em{color:#f0a44d}
+.competition-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0 15px}
+.competition-stat-grid>div{display:flex;flex-direction:column;gap:4px;padding:12px 10px;border:1px solid #303943;border-radius:13px;background:linear-gradient(145deg,#191f25,#101418)}
+.competition-stat-grid b{font-size:19px;color:#fff}
+.competition-stat-grid small{font-size:9px;color:#929da7}
+.competition-content-card{padding:17px!important;margin:12px 0}
+.competition-content-card h3{font-size:19px;margin:7px 0 9px}
+.competition-content-card p{font-size:12px;line-height:1.65;color:#c0c7ce}
+.competition-callout{display:flex;gap:11px;align-items:flex-start;padding:12px;margin-top:14px;border:1px solid #63343a;border-radius:13px;background:#241316}
+.competition-callout>span{font-size:21px}
+.competition-callout p{margin:0;font-size:11px}
+.competition-callout b{color:#fff}
+.competition-official-card{display:flex;align-items:center;gap:10px;padding:14px;border:1px solid #493b2c;border-radius:15px;background:linear-gradient(120deg,#211c17,#111417);margin:14px 0}
+.competition-official-icon{font-size:25px}
+.competition-official-card div{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.competition-official-card small{font-size:8px;letter-spacing:1px;color:#e4aa67;font-weight:900}
+.competition-official-card b{font-size:11px}
+.competition-official-card span{font-size:9px;color:#9ba4ad;line-height:1.4}
+.competition-official-card a{font-size:9px;color:#ffb96d;font-weight:900;text-decoration:none;white-space:nowrap}
+.competition-safety-note{font-size:10px;line-height:1.6;color:#9da8b1;padding:12px 13px;border-left:3px solid #8e343a;background:#17191c;border-radius:0 10px 10px 0;margin:14px 0}
+.competition-back-wide{width:100%;padding:14px;border:1px solid #424c56;border-radius:13px;background:#171d23;color:#f1f3f5;font-size:10px;font-weight:900;letter-spacing:.6px;margin:3px 0 25px;cursor:pointer}
+.competition-back-wide:active{transform:scale(.99)}
+@media(max-width:360px){.competition-choice{padding:12px 10px}.competition-choice strong{font-size:15px}.competition-choice small{font-size:9px}.competition-choice-cta{font-size:7px}}
 
 </style>
