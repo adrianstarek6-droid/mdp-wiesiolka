@@ -4621,22 +4621,6 @@ async function invalidateTimingResult(id){
   try{await api(`/api/timing-results/${id}`,{method:"DELETE",body:JSON.stringify({reason:reason.trim()})});toast("Wynik unieważniony.");await loadTimingResults();}
   catch(e){toast(e.message,"error");}
 }
-$("timingLibraryVideoForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const file=$("timingLibraryFile")?.files?.[0];
-  const memberId=Number($("timingLibraryMember").value);
-  if(!memberId){toast("Wybierz członka MDP.","error");return;}
-  if(!file){toast("Wybierz film.","error");return;}
-  if(!["video/mp4","video/webm","video/quicktime"].includes(file.type)||file.size>60*1024*1024){toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;}
-  const submit=e.target.querySelector('button[type="submit"]');if(submit)submit.disabled=true;
-  try{
-    const dataUrl=await fileToDataUrl(file);
-    await api("/api/training-videos",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingLibraryExercise").value.trim(),title:$("timingLibraryTitle").value.trim(),notes:$("timingLibraryNotes").value.trim(),file_name:file.name,mime_type:file.type,data_url:dataUrl})});
-    e.target.reset();toast("Film dodany do biblioteki.");await loadTimingVideoLibrary();
-  }catch(err){toast(err.message,"error");}
-  finally{if(submit)submit.disabled=false;}
-});
-
 $("timingForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(timingStartedAt)stopTiming();
@@ -4646,12 +4630,9 @@ $("timingForm").addEventListener("submit",async e=>{
   const memberId=Number($("timingMember").value);
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
-  if(videoFile&&(!["video/mp4","video/webm","video/quicktime"].includes(videoFile.type)||videoFile.size>60*1024*1024)){
-    toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;
-  }
   try{
     const saved=await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors,penalty_points:penaltyPoints,notes:$("timingNotes").value.trim(),splits:timingSplits})});
-    toast(videoFile?"Wynik i film zapisane.":"Wynik zapisany.");
+    toast("Wynik zapisany.");
     resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";updateTimingPenaltyPreview();await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
