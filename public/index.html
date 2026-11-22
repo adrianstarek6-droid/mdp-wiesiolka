@@ -1127,6 +1127,8 @@ body{background-color:#050505}
 .quiz-finish-score small{font-size:19px;color:#aaa}
 .quiz-finish-percent{font-size:15px;font-weight:800}
 .quiz-finish-screen .btn{width:100%;margin-top:20px}
+
+.protected-gallery-thumb{display:flex;align-items:center;justify-content:center;min-height:150px;width:100%;font-weight:900;color:#ff6565;background:linear-gradient(145deg,#160809,#090909);letter-spacing:.5px}.protected-video-wrap{position:relative;width:100%;background:#000;border-radius:14px;overflow:hidden}.protected-video-watermark{position:absolute;right:10px;bottom:12px;pointer-events:none;color:#fff;background:#0009;border:1px solid #ffffff30;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900;letter-spacing:.7px;text-shadow:0 1px 3px #000}.gallery-viewer-media{max-width:100%}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -2404,6 +2406,7 @@ function renderGallery(){
     '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiałów…"></textarea></div>'+
     (galleryCategory==="events"?'<div class="field"><label for="galleryUploadEvent">Przypisz do konkretnej zbiórki</label><select id="galleryUploadEvent"><option value="">Bez przypisania do zbiórki</option>'+eventOptions+'</select><div class="gallery-file-hint">Wybierz wydarzenie z kalendarza. Zdjęcia i filmy pojawią się w jego albumie.</div></div>':'')+
     '<div class="field"><label for="galleryFile">Wybierz zdjęcia lub filmy</label><input id="galleryFile" type="file" multiple accept="image/*,video/*" onchange="updateGalleryFileSelection()" required><div class="gallery-file-hint">Możesz zaznaczyć wiele zdjęć i filmów jednocześnie. Maksymalnie 250 MB na plik.</div><div id="gallerySelectedFiles" class="gallery-file-hint" aria-live="polite">Nie wybrano jeszcze plików.</div></div>'+
+    '<label class="field" style="display:flex;align-items:flex-start;gap:10px"><input id="galleryProtectVideos" type="checkbox" style="width:auto;margin-top:3px"><span><b>🔒 Zabezpiecz wybrane filmy</b><small class="gallery-file-hint" style="display:block">Dotyczy tylko filmów z tego wysyłania. Dostęp po zalogowaniu, bez przycisku pobierania.</small></span></label>'+
     '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button><div id="galleryUploadProgress" class="gallery-progress"></div></form></details>'
   ):"";
   tools.innerHTML='<input id="gallerySearch" type="search" placeholder="🔎 Szukaj tytułu lub opisu…" oninput="renderGalleryGridOnly()">'+
@@ -2440,7 +2443,7 @@ function renderGalleryGridOnly(){
   if(!rows.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">'+(galleryFavoritesOnly?'Nie masz jeszcze ulubionych materiałów.':search?'Nic nie znaleziono.':'W tym albumie nie ma jeszcze zdjęć ani filmów.')+'</div>';return;}
   grid.innerHTML=rows.map(item=>{
     const isVideo=String(item.mime_type||"").startsWith("video/");
-    const media=isVideo?'<div class="gallery-thumb video-thumb"><video src="'+escapeHtml(item.media_url)+'" muted playsinline preload="none"></video><span>▶ FILM</span></div>':'<img src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
+    const media=isVideo?'<div class="gallery-thumb video-thumb">'+(item.is_protected?'<span class="protected-gallery-thumb">🔒 CHRONIONY FILM</span>':'<video src="'+escapeHtml(item.media_url)+'" muted playsinline preload="none"></video><span>▶ FILM</span>')+'</div>':'<img src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||item.file_name||"Zdjęcie MDP")+'" loading="lazy">';
     const date=item.event_date||item.created_at;
     return '<article class="gallery-item">'+(item.is_featured?'<span class="gallery-featured">★ WYRÓŻNIONE</span>':'')+
       '<button class="gallery-open" type="button" onclick="openGalleryMedia('+Number(item.id)+')" aria-label="Otwórz materiał">'+media+'</button>'+
@@ -2448,23 +2451,21 @@ function renderGalleryGridOnly(){
       '<div class="meta">'+escapeHtml(date?String(date).slice(0,10):"")+'</div>'+
       (item.event_title?'<div class="meta">'+escapeHtml(item.event_title)+'</div>':"")+
       '<div class="gallery-item-actions"><button class="gallery-mini-action '+(galleryIsFavorite(item.id)?'active':'')+'" type="button" onclick="galleryToggleFavorite('+Number(item.id)+')">'+(galleryIsFavorite(item.id)?'★':'☆')+'</button>'+
-      '<button class="gallery-mini-action" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇</button>'+
+      (item.is_protected?'':'<button class="gallery-mini-action" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇</button>')+
       (isStaff()?'<button class="gallery-mini-action" type="button" onclick="toggleGalleryFeatured('+Number(item.id)+')">'+(item.is_featured?'Usuń ★':'Wyróżnij ★')+'</button><button class="gallery-mini-action" type="button" onclick="deleteGalleryMedia('+Number(item.id)+')">Usuń</button>':"")+
       '</div></div></article>';
   }).join("");
 }
-function openGalleryMedia(id){
+let protectedGalleryObjectUrl=null;
+async function openGalleryMedia(id){
   const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
+  if(protectedGalleryObjectUrl){URL.revokeObjectURL(protectedGalleryObjectUrl);protectedGalleryObjectUrl=null;}
   galleryViewerId=Number(id);
-  const isVideo=String(item.mime_type||"").startsWith("video/");
-  const media=isVideo?'<video class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" controls autoplay playsinline ontouchstart="galleryTouchStart(event)" ontouchend="galleryTouchEnd(event)"></video>':'<img class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'" ontouchstart="galleryTouchStart(event)" ontouchend="galleryTouchEnd(event)">';
+  const isVideo=String(item.mime_type||"").startsWith("video/"),protectedVideo=isVideo&&item.is_protected===true;
+  const media=isVideo?(protectedVideo?'<div class="protected-video-wrap"><video id="protectedGalleryVideo" class="gallery-viewer-media" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false"></video><div class="protected-video-watermark">MDP WIESIÓŁKA · MATERIAŁ CHRONIONY</div></div><p id="protectedGalleryStatus" class="muted">🔒 Sprawdzanie dostępu…</p>':'<video class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" controls autoplay playsinline ontouchstart="galleryTouchStart(event)" ontouchend="galleryTouchEnd(event)"></video>'):'<img class="gallery-viewer-media" src="'+escapeHtml(item.media_url)+'" alt="'+escapeHtml(item.title||"Zdjęcie MDP")+'" ontouchstart="galleryTouchStart(event)" ontouchend="galleryTouchEnd(event)">';
   const title=item.title||(isVideo?"Film":"Zdjęcie");
-  openModal('<h2 style="margin:0 0 10px">'+escapeHtml(title)+'</h2>'+media+
-    (item.caption?'<p class="muted">'+escapeHtml(item.caption)+'</p>':"")+
-    (item.event_title?'<p class="muted">📅 '+escapeHtml(item.event_title)+' · '+escapeHtml(String(item.event_date||"").slice(0,10))+'</p>':"")+
-    '<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="galleryViewerMove(-1)">‹ Poprzednie</button><button class="btn outline" type="button" onclick="galleryToggleFavorite('+Number(item.id)+')">'+(galleryIsFavorite(item.id)?'★ Ulubione':'☆ Ulubione')+'</button><button class="btn outline" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇ Pobierz</button><button class="btn outline" type="button" onclick="galleryViewerMove(1)">Następne ›</button></div>'+
-    (isStaff()?'<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="toggleGalleryFeatured('+Number(item.id)+')">'+(item.is_featured?'Usuń wyróżnienie':'★ Wyróżnij')+'</button></div>':"")+
-    '<div class="actions"><button class="btn outline" type="button" onclick="closeGalleryViewer()">Zamknij</button></div>');
+  openModal('<h2 style="margin:0 0 10px">'+escapeHtml(title)+(protectedVideo?' · 🔒':'')+'</h2>'+media+(item.caption?'<p class="muted">'+escapeHtml(item.caption)+'</p>':"")+(item.event_title?'<p class="muted">📅 '+escapeHtml(item.event_title)+' · '+escapeHtml(String(item.event_date||"").slice(0,10))+'</p>':"")+'<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="galleryViewerMove(-1)">‹ Poprzednie</button><button class="btn outline" type="button" onclick="galleryToggleFavorite('+Number(item.id)+')">'+(galleryIsFavorite(item.id)?'★ Ulubione':'☆ Ulubione')+'</button>'+(protectedVideo?'':'<button class="btn outline" type="button" onclick="downloadGalleryMedia('+Number(item.id)+')">⬇ Pobierz</button>')+'<button class="btn outline" type="button" onclick="galleryViewerMove(1)">Następne ›</button></div>'+(isStaff()?'<div class="gallery-viewer-actions"><button class="btn outline" type="button" onclick="toggleGalleryFeatured('+Number(item.id)+')">'+(item.is_featured?'Usuń wyróżnienie':'★ Wyróżnij')+'</button></div>':"")+'<div class="actions"><button class="btn outline" type="button" onclick="closeGalleryViewer()">Zamknij</button></div>');
+  if(protectedVideo){try{const response=await fetch(item.media_url,{method:'GET',cache:'no-store',headers:authHeaders(false)});if(!response.ok)throw new Error(response.status===401?'Zaloguj się ponownie.':'Brak dostępu do chronionego filmu.');const blob=await response.blob();if(galleryViewerId!==Number(id))return;protectedGalleryObjectUrl=URL.createObjectURL(blob);const player=document.getElementById('protectedGalleryVideo');if(player){player.src=protectedGalleryObjectUrl;player.play().catch(()=>{});}const status=document.getElementById('protectedGalleryStatus');if(status)status.textContent='🔒 Film chroniony · odtwarzanie po zalogowaniu';}catch(error){const status=document.getElementById('protectedGalleryStatus');if(status)status.textContent=error.message||'Nie udało się otworzyć filmu.';}}
 }
 function galleryTouchStart(event){galleryTouchX=event.changedTouches?.[0]?.clientX??null;}
 function galleryTouchEnd(event){if(galleryTouchX===null)return;const delta=(event.changedTouches?.[0]?.clientX??galleryTouchX)-galleryTouchX;galleryTouchX=null;if(Math.abs(delta)>55)galleryViewerMove(delta<0?1:-1);}
@@ -2475,9 +2476,10 @@ function galleryViewerMove(step){
   if(current<0||!rows.length)return;
   const next=rows[(current+step+rows.length)%rows.length];openGalleryMedia(next.id);
 }
-function closeGalleryViewer(){galleryViewerId=null;closeModal()}
+function closeGalleryViewer(){galleryViewerId=null;if(protectedGalleryObjectUrl){URL.revokeObjectURL(protectedGalleryObjectUrl);protectedGalleryObjectUrl=null;}closeModal()}
 function downloadGalleryMedia(id){
   const item=galleryRows.find(row=>Number(row.id)===Number(id));if(!item)return;
+  if(item.is_protected){toast('Ten film jest chroniony i nie ma opcji pobierania.','error');return;}
   const a=document.createElement("a");a.href=item.media_url;a.download=item.file_name||("mdp-"+id);document.body.appendChild(a);a.click();a.remove();
 }
 async function toggleGalleryFeatured(id){
@@ -2537,6 +2539,7 @@ async function uploadGalleryMedia(event){
     for(let i=0;i<prepared.length;i++){
       const item=prepared[i],file=item.file;
       const uploadId=makeId(),chunkCount=Math.ceil(file.size/chunkSize);
+      const protectThisVideo=$("galleryProtectVideos")?.checked===true&&item.mime.startsWith("video/");
       if(file.size>700*1024*1024)throw new Error("Plik "+file.name+" przekracza techniczny limit 700 MB.");
       try{
         for(let index=0;index<chunkCount;index++){
@@ -2552,7 +2555,7 @@ async function uploadGalleryMedia(event){
           upload_id:uploadId,chunk_count:chunkCount,file_size:file.size,category:galleryCategory,
           title:$("galleryTitle")?.value||"",caption:$("galleryCaption")?.value||"",
           event_id:galleryCategory==="events"?($("galleryUploadEvent")?.value||null):null,
-          file_name:file.name,mime_type:item.mime
+          file_name:file.name,mime_type:item.mime,is_protected:protectThisVideo
         })});
         done++;
         if(progress)progress.textContent="Dodano "+done+" z "+files.length+" plików.";
