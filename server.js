@@ -351,6 +351,8 @@ async function initDb() {
       ADD COLUMN IF NOT EXISTS event_id INTEGER REFERENCES events(id) ON DELETE SET NULL;
     ALTER TABLE mdp_gallery_media
       ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE mdp_gallery_media
+      ADD COLUMN IF NOT EXISTS is_protected BOOLEAN NOT NULL DEFAULT FALSE;
     CREATE INDEX IF NOT EXISTS mdp_gallery_category_created_idx
       ON mdp_gallery_media(category,created_at DESC);
     CREATE INDEX IF NOT EXISTS mdp_gallery_event_created_idx
@@ -1863,7 +1865,8 @@ function galleryMediaSignature(id,expires){
   return crypto.createHmac('sha256',process.env.GALLERY_MEDIA_SECRET||process.env.DATABASE_URL||process.env.ADMIN_CODE||process.env.GUARDIAN_CODE||'mdp-gallery-media')
     .update(String(id)+'.'+String(expires)).digest('hex');
 }
-function galleryMediaUrl(id){
+function galleryMediaUrl(id,isProtected=false){
+  if(isProtected)return '/api/gallery/'+Number(id)+'/protected-file';
   const expires=Math.floor(Date.now()/1000)+21600;
   return '/api/gallery/'+Number(id)+'/file?expires='+expires+'&signature='+galleryMediaSignature(id,expires);
 }
@@ -1883,14 +1886,14 @@ app.get('/api/gallery', auth, async (req, res) => {
     if (category) { values.push(category); where.push(`m.category=$${values.length}`); }
     if (eventId !== null) { values.push(eventId); where.push(`m.event_id=$${values.length}`); }
     const result = await pool.query(
-      'SELECT m.id,m.category,m.title,m.caption,m.file_name,m.mime_type,m.created_by,m.event_id,m.is_featured,m.created_at,' +
+      'SELECT m.id,m.category,m.title,m.caption,m.file_name,m.mime_type,m.created_by,m.event_id,m.is_featured,m.is_protected,m.created_at,' +
       'e.title AS event_title,e.event_date AS event_date ' +
       'FROM mdp_gallery_media m LEFT JOIN events e ON e.id=m.event_id ' +
       (where.length ? 'WHERE '+where.join(' AND ')+' ' : '') +
       'ORDER BY m.is_featured DESC,m.created_at DESC,m.id DESC',
       values
     );
-    res.json(result.rows.map(row=>({...row,media_url:galleryMediaUrl(row.id)})));
+    res.json(result.rows.map(row=>({...row,media_url:galleryMediaUrl(row.id,row.is_protected)})));
   } catch (e) {
     console.error('Galeria — odczyt:', e);
     res.status(500).json({ error: 'Nie udało się pobrać galerii.' });
@@ -1935,6 +1938,30 @@ app.get('/api/gallery/:id/file', async (req,res) => {
   }
 });
 
+// Chronione filmy są udostępniane wyłącznie zalogowanym użytkownikom.
+app.get('/api/gallery/:id/protected-file', auth, async (req,res) => {
+  try {
+    const id=Number(req.params.id);
+    if(!Number.isInteger(id)||id<1)return res.status(400).end();
+    const result=await pool.query('SELECT mime_type,data_url,is_protected FROM mdp_gallery_media WHERE id=$1',[id]);
+    if(!result.rowCount)return res.status(404).end();
+    const row=result.rows[0];
+    if(!row.is_protected||!String(row.mime_type||'').startsWith('video/'))return res.status(404).end();
+    const buffer=Buffer.from(String(row.data_url||'').split(',').pop(),'base64');
+    res.set('Content-Type',row.mime_type);
+    res.set('Content-Length',String(buffer.length));
+    res.set('Content-Disposition','inline');
+    res.set('Cache-Control','private, no-store, no-cache, must-revalidate');
+    res.set('Pragma','no-cache');
+    res.set('X-Content-Type-Options','nosniff');
+    res.set('Cross-Origin-Resource-Policy','same-origin');
+    res.end(buffer);
+  } catch(e) {
+    console.error('Galeria — chroniony film:',e);
+    res.status(500).json({error:'Nie udało się odtworzyć chronionego filmu.'});
+  }
+});
+
 // Wysyłanie galerii małymi częściami — działa stabilniej na iPhone i Androidzie.
 app.post('/api/gallery/chunk', auth, staff, async (req,res) => {
   try {
@@ -1969,6 +1996,7 @@ app.post('/api/gallery/finalize', auth, staff, async (req,res) => {
     const title=String(b.title||'').trim().slice(0,120);
     const caption=String(b.caption||'').trim().slice(0,500);
     const eventId=b.event_id?Number(b.event_id):null;
+    const isProtected=b.is_protected===true;
     if(!/^[a-f0-9-]{20,80}$/i.test(uploadId)||!Number.isInteger(chunkCount)||chunkCount<1||chunkCount>10001)
       return res.status(400).json({error:'Dane wysyłania są nieprawidłowe.'});
     if(!Number.isSafeInteger(fileSize)||fileSize<1||fileSize>700*1024*1024)
@@ -1977,6 +2005,8 @@ app.post('/api/gallery/finalize', auth, staff, async (req,res) => {
       return res.status(400).json({error:'Wybierz prawidłową zakładkę galerii.'});
     if(!(/^(image\/(jpeg|png|webp|gif|heic|heif|avif)|video\/(mp4|webm|quicktime))$/).test(mimeType))
       return res.status(400).json({error:'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.'});
+    if(isProtected&&!mimeType.startsWith('video/'))
+      return res.status(400).json({error:'Ochronę można włączyć tylko dla filmów.'});
     if(eventId!==null&&(!Number.isInteger(eventId)||eventId<1||category!=='events'))
       return res.status(400).json({error:'Nieprawidłowa zbiórka.'});
     if(eventId!==null){
@@ -1988,17 +2018,17 @@ app.post('/api/gallery/finalize', auth, staff, async (req,res) => {
       return res.status(400).json({error:'Brakuje części pliku. Wysyłanie nie zostało zakończone.'});
     await client.query('BEGIN');
     const inserted=await client.query(
-      `INSERT INTO mdp_gallery_media(category,title,caption,file_name,mime_type,data_url,created_by,event_id)
-       SELECT $1,$2,$3,$4,$5,'data:'||$5||';base64,'||string_agg(chunk_data,'' ORDER BY chunk_index),$6,$7
+      `INSERT INTO mdp_gallery_media(category,title,caption,file_name,mime_type,data_url,created_by,event_id,is_protected)
+       SELECT $1,$2,$3,$4,$5,'data:'||$5||';base64,'||string_agg(chunk_data,'' ORDER BY chunk_index),$6,$7,$10
        FROM mdp_gallery_upload_chunks WHERE upload_id=$8
        HAVING COUNT(*)=$9
-       RETURNING id,category,title,caption,file_name,mime_type,created_by,event_id,is_featured,created_at`,
-      [category,title,caption,fileName,mimeType,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId,uploadId,chunkCount]
+       RETURNING id,category,title,caption,file_name,mime_type,created_by,event_id,is_featured,is_protected,created_at`,
+      [category,title,caption,fileName,mimeType,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId,uploadId,chunkCount,null,null,isProtected]
     );
     if(!inserted.rowCount)throw new Error('Nie udało się złożyć wszystkich części pliku.');
     await client.query('DELETE FROM mdp_gallery_upload_chunks WHERE upload_id=$1',[uploadId]);
     await client.query('COMMIT');
-    res.status(201).json({...inserted.rows[0],media_url:galleryMediaUrl(inserted.rows[0].id)});
+    res.status(201).json({...inserted.rows[0],media_url:galleryMediaUrl(inserted.rows[0].id,inserted.rows[0].is_protected)});
   } catch(e) {
     await client.query('ROLLBACK').catch(()=>{});
     console.error('Galeria — kończenie wysyłania:',e);
