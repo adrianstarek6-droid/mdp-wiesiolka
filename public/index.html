@@ -2326,7 +2326,7 @@ function renderGallery(){
     '<div class="field"><label for="galleryTitle">Tytuł (opcjonalnie)</label><input id="galleryTitle" maxlength="120" placeholder="Np. Zbiórka i ćwiczenia bojowe"></div>'+
     '<div class="field"><label for="galleryCaption">Opis (opcjonalnie)</label><textarea id="galleryCaption" maxlength="500" rows="2" placeholder="Krótki opis materiałów…"></textarea></div>'+
     (galleryCategory==="events"?'<div class="field"><label for="galleryUploadEvent">Przypisz do konkretnej zbiórki</label><select id="galleryUploadEvent"><option value="">Bez przypisania do zbiórki</option>'+eventOptions+'</select><div class="gallery-file-hint">Wybierz wydarzenie z kalendarza. Zdjęcia i filmy pojawią się w jego albumie.</div></div>':'')+
-    '<div class="field"><label for="galleryFile">Wybierz zdjęcia lub filmy</label><input id="galleryFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime" required><div class="gallery-file-hint">Możesz zaznaczyć kilka plików naraz. Maksymalnie 250 MB na plik.</div></div>'+
+    '<div class="field"><label for="galleryFile">Wybierz zdjęcia lub filmy</label><input id="galleryFile" type="file" multiple accept="image/*,video/*" onchange="updateGalleryFileSelection()" required><div class="gallery-file-hint">Możesz zaznaczyć wiele zdjęć i filmów jednocześnie. Maksymalnie 250 MB na plik.</div><div id="gallerySelectedFiles" class="gallery-file-hint" aria-live="polite">Nie wybrano jeszcze plików.</div></div>'+
     '<button class="btn red" id="galleryUploadBtn" type="submit">⬆️ Dodaj do galerii</button><div id="galleryUploadProgress" class="gallery-progress"></div></form></details>'
   ):"";
   tools.innerHTML='<input id="gallerySearch" type="search" placeholder="🔎 Szukaj tytułu lub opisu…" oninput="renderGalleryGridOnly()">'+
@@ -2413,15 +2413,25 @@ async function loadGallery(){
   try{const rows=await api("/api/gallery?category="+encodeURIComponent(galleryCategory),{method:"GET"});galleryRows=Array.isArray(rows)?rows:[];renderGallery();}
   catch(e){if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nie udało się pobrać galerii. '+escapeHtml(e.message)+'</div>';}
 }
+function updateGalleryFileSelection(){
+  const input=$("galleryFile"),box=$("gallerySelectedFiles");
+  if(!input||!box)return;
+  const files=Array.from(input.files||[]);
+  if(!files.length){box.textContent="Nie wybrano jeszcze plików.";return;}
+  const total=files.reduce((sum,file)=>sum+file.size,0);
+  const mb=n=>(n/1024/1024).toFixed(1).replace(".",",");
+  box.textContent="Wybrano "+files.length+" plików ("+mb(total)+" MB): "+files.map(file=>file.name).join(" • ");
+}
 async function uploadGalleryMedia(event){
   event.preventDefault();
   const input=$("galleryFile"),files=Array.from(input?.files||[]);
   const progress=$("galleryUploadProgress"),btn=$("galleryUploadBtn");
   if(!files.length){toast("Najpierw wybierz zdjęcia lub filmy.","error");return;}
   const mimeFor=file=>{
-    if(file.type)return file.type.toLowerCase();
+    const detected=(file.type||"").toLowerCase();
     const ext=(file.name.split(".").pop()||"").toLowerCase();
-    return ({jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",gif:"image/gif",heic:"image/heic",heif:"image/heif",avif:"image/avif",mp4:"video/mp4",m4v:"video/mp4",mov:"video/quicktime",webm:"video/webm"})[ext]||"";
+    const byExtension=({jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",gif:"image/gif",heic:"image/heic",heif:"image/heif",avif:"image/avif",mp4:"video/mp4",m4v:"video/mp4",mov:"video/quicktime",webm:"video/webm"})[ext]||"";
+    return !detected||detected==="application/octet-stream"||detected==="binary/octet-stream"?byExtension:detected;
   };
   const allowed=mime=>/^image\/(jpeg|png|webp|gif|heic|heif|avif)$/.test(mime)||["video/mp4","video/webm","video/quicktime"].includes(mime);
   const prepared=files.map(file=>({file,mime:mimeFor(file)}));
