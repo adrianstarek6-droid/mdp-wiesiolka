@@ -1417,7 +1417,7 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
   </section>
 
   <section id="timingScreen" class="screen">
-    <div class="section-title"><h2>⏱️ Stoper i analiza MDP</h2><small>Droga do zawodów</small></div>
+    <div class="section-title"><h2>⏱️ Stoper</h2><small>Pomiary i wyniki</small></div>
     <div class="card" id="timingMeasureCard">
       <h3>Pomiar czasu</h3>
       <div id="timingClock" style="font-size:clamp(38px,11vw,58px);font-weight:900;letter-spacing:1px;text-align:center;font-variant-numeric:tabular-nums;padding:14px 0">00:00.00</div>
@@ -1436,31 +1436,42 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
         <div class="field"><label>Punkty karne (automatycznie)</label><input id="timingPenalties" type="number" min="0" max="100000" value="0" readonly><small class="muted">1 błąd = 5 punktów karnych = 5 sekund doliczone do czasu.</small></div>
         <div id="timingPenaltyPreview" class="notice" style="margin:10px 0">Czas końcowy: —</div>
         <div class="field"><label>Notatka (opcjonalnie)</label><textarea id="timingNotes" maxlength="1000" placeholder="Co poprawić następnym razem…"></textarea></div>
-        <div class="field"><label for="timingVideoFile">🎥 Film z tej próby (opcjonalnie)</label><input id="timingVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm"><small class="muted">Krótki film do 60 MB. Nagranie zostanie przypisane do wyniku.</small></div>
         <button class="btn red" type="submit">💾 Zapisz wynik</button>
       </form>
     </div>
-    <div class="card" id="timingVideoLibraryCard">
-      <h3>🎥 Biblioteka filmów z prób</h3>
-      <div class="actions" style="margin:10px 0"><button class="btn red" type="button" id="timingTeamAnalyzeBtn" onclick="analyzeWholeTeam()">🤖 Analiza całej drużyny</button></div>
-      <div id="timingTeamAiReport"></div>
-      <p class="muted">Dodawaj nagrania niezależnie od stopera. Możesz przypisać dowolny film do dowolnego członka i konkurencji.</p>
-      <form id="timingLibraryVideoForm">
-        <div class="field"><label for="timingLibraryMember">Członek MDP</label><select id="timingLibraryMember" required></select></div>
-        <div class="field"><label for="timingLibraryExercise">Konkurencja / bieg</label><input id="timingLibraryExercise" maxlength="120" required placeholder="Np. rozwinięcie bojowe – tor 1"></div>
-        <div class="field"><label for="timingLibraryTitle">Nazwa nagrania (opcjonalnie)</label><input id="timingLibraryTitle" maxlength="140" placeholder="Np. Próba treningowa 2"></div>
-        <div class="field"><label for="timingLibraryNotes">Notatka (opcjonalnie)</label><textarea id="timingLibraryNotes" maxlength="1000" placeholder="Co warto sprawdzić na nagraniu…"></textarea></div>
-        <div class="field"><label for="timingLibraryFile">Wybierz film</label><input id="timingLibraryFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm" required><small class="muted">MP4, MOV lub WebM · maks. 60 MB</small></div>
-        <button class="btn red" type="submit">⬆️ Dodaj film do biblioteki</button>
-      </form>
-      <div id="timingVideoLibraryList" style="margin-top:14px"><div class="muted">Ładowanie biblioteki…</div></div>
-    </div>
     <div class="card">
-      <h3 id="timingAnalysisTitle">📊 Twoja analiza</h3>
+      <h3 id="timingAnalysisTitle">📊 Wyniki</h3>
       <div id="timingAnalysisControls" class="field" style="margin:12px 0"><label for="timingAnalysisFilter">Wybierz konkurencję / ćwiczenie</label><select id="timingAnalysisFilter" onchange="renderTimingResults()"><option value="">Wszystkie ćwiczenia</option></select></div>
       <div id="timingStats" class="stats-grid"><div class="muted">Ładowanie wyników…</div></div>
       <div id="timingHistory" style="margin-top:12px"></div>
     </div>
+  </section>
+
+  <section id="analysisScreen" class="screen">
+    <div class="hero">
+      <span class="hero-overline">MDP WIESIÓŁKA · TRENER AI</span>
+      <h1>Centrum <span>analizy.</span></h1>
+      <p>Filmy, indywidualne raporty zawodników i postępy całej drużyny w jednym, uporządkowanym miejscu.</p>
+    </div>
+    <div id="analysisUploadCard" class="card hidden">
+      <h3>🎥 Dodaj film do analizy</h3>
+      <form id="analysisVideoForm">
+        <div class="field"><label for="analysisMember">Wybierz członka MDP</label><select id="analysisMember" required></select></div>
+        <div class="field"><label for="analysisExercise">Konkurencja / ćwiczenie</label><input id="analysisExercise" maxlength="120" required placeholder="Np. rozwinięcie bojowe – tor 1"></div>
+        <div class="field"><label for="analysisTitle">Nazwa filmu (opcjonalnie)</label><input id="analysisTitle" maxlength="140" placeholder="Np. Próba treningowa"></div>
+        <div class="field"><label for="analysisNotes">Co trener ma sprawdzić? (opcjonalnie)</label><textarea id="analysisNotes" maxlength="1000" placeholder="Np. płynność ruchów, organizacja, współpraca…"></textarea></div>
+        <div class="field"><label for="analysisFile">Wybierz film</label><input id="analysisFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm" required><small class="muted">MP4, MOV lub WebM · maksymalnie 60 MB</small></div>
+        <button class="btn red" type="submit">⬆️ Dodaj film</button>
+      </form>
+    </div>
+    <div id="teamAnalysisCard" class="card hidden">
+      <h3>🏆 Postępy całej drużyny</h3>
+      <p class="muted">AI analizuje wyniki, czasy, błędy, międzyczasy i zapisane raporty zawodników. Nie porównuje różnych konkurencji tak, jakby były tą samą próbą.</p>
+      <button class="btn red" type="button" id="teamAnalysisBtn" onclick="analyzeWholeTeam()">🤖 Analizuj postępy drużyny</button>
+      <div id="teamAnalysisReport" style="margin-top:12px"></div>
+    </div>
+    <div class="section-title"><h2>📂 Filmy i analizy</h2><small id="analysisListCaption">Historia</small></div>
+    <div id="analysisVideoList"><div class="empty">Ładowanie analiz…</div></div>
   </section>
 
   <section id="newsScreen" class="screen">
@@ -2068,6 +2079,7 @@ ul. Przykładowa 2"></textarea></div>
     <button class="nav-btn" data-screen="eventsScreen"><b>📅</b>Zbiórki</button>
     <button class="nav-btn" data-screen="newspapersScreen"><b>📰</b>Gazety</button>
     <button class="nav-btn" data-screen="volvoScreen"><b>🚒</b>Volvo</button>
+    <button class="nav-btn" data-screen="analysisScreen"><b>📊</b>Analiza</button>
     <button class="nav-btn" data-screen="moreScreen"><b>☰</b>Więcej</button>
   </div>
 </nav>
@@ -4179,7 +4191,7 @@ function openScreen(id){
   const screen=$(id);
   if(screen)screen.classList.add("active");
 
-  const primaryScreens=["homeScreen","eventsScreen","newspapersScreen","volvoScreen"];
+  const primaryScreens=["homeScreen","eventsScreen","newspapersScreen","volvoScreen","analysisScreen"];
   const activeNav=primaryScreens.includes(id)?id:"moreScreen";
   document.querySelectorAll(".bottom-nav .nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.screen===activeNav));
 
@@ -4196,7 +4208,8 @@ function openScreen(id){
   // ulice, członków, kolory i liczbę gazet.
   // Galeria Volvo nie wymaga WebGL ani zewnętrznej biblioteki 3D.
   if(id==="galleryScreen") loadGallery();
-  if(id==="timingScreen") { renderTimingMemberOptions(); renderTimingLibraryMemberOptions(); loadTimingResults(); loadTimingVideoLibrary(); loadLatestTeamAnalysis(); }
+  if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
+  if(id==="analysisScreen") loadAnalysisWorkspace();
   if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="inventoryScreen") loadInventory();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
@@ -4366,15 +4379,10 @@ function renderTimingSplits(){
   root.innerHTML=timingSplits.length?`<b>Międzyczasy:</b> ${timingSplits.map(s=>`${escapeHtml(s.label)}: ${formatTiming(s.segment_ms)} (łącznie ${formatTiming(s.cumulative_ms)})`).join(" · ")}`:"Międzyczasy: jeszcze nie zapisano żadnego odcinka.";
 }
 function renderTimingMemberOptions(){
-  renderTimingLibraryMemberOptions();
   const sel=$("timingMember");if(!sel)return;
   const members=state.data.members||[];
   const memberView=state.role==="member";
-  // Członek ma wyłącznie własną analizę. Stoper i formularz pomiaru są dla kadry.
   $("timingMeasureCard")?.classList.toggle("hidden",memberView);
-  $("timingVideoLibraryCard")?.classList.toggle("hidden",memberView);
-  const timingNav=document.querySelector('.nav-btn[data-screen="timingScreen"]');
-  if(timingNav) timingNav.innerHTML=memberView?"<b>📊</b>Analiza":"<b>⏱️</b>Stoper";
   if(memberView){
     $("timingMemberField").classList.add("hidden");
     sel.innerHTML=`<option value="${Number(state.memberId)}">${escapeHtml(`${state.firstName} ${state.lastName}`.trim()||"Mój profil")}</option>`;
@@ -4433,7 +4441,7 @@ function renderTimingResults(){
       ${Array.isArray(r.splits)&&r.splits.length?`<div class="card" style="margin:9px 0;padding:10px;background:#101820"><b>Międzyczasy</b>${r.splits.map((s,i)=>`<div class="meta"><span>${escapeHtml(s.label||`Odcinek ${i+1}`)}</span><span class="badge">Odcinek: ${formatTiming(s.segment_ms)}</span><span class="badge">Łącznie: ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}</div>`:""}
       ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
       ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
-      ${staff&&valid?'<div class="actions" style="margin-top:10px"><button class="btn outline" type="button" onclick="analyzeTimingResult('+Number(r.id)+')">🤖 Analizuj AI</button>'+(r.has_video?'<button class="btn outline" type="button" onclick="viewTimingVideo('+Number(r.id)+')">▶ Odtwórz film</button>':'')+'<button class="btn danger" type="button" onclick="invalidateTimingResult('+Number(r.id)+')">Unieważnij wynik</button></div><div id="timingVideoView-'+Number(r.id)+'"></div><div id="timingAiReport-'+Number(r.id)+'"></div>':""}
+      ${staff&&valid?'<div class="actions" style="margin-top:10px">'+(r.has_video?'<button class="btn outline" type="button" onclick="viewTimingVideo('+Number(r.id)+')">▶ Odtwórz film</button>':'')+'<button class="btn danger" type="button" onclick="invalidateTimingResult('+Number(r.id)+')">Unieważnij wynik</button></div><div id="timingVideoView-'+Number(r.id)+'"></div>':""}
     </article>`;
   };
   if(state.role!=="member" && selectedTimingMemberId!==null){
@@ -4513,53 +4521,84 @@ async function extractTimingVideoFrames(dataUrl){
     video.src=dataUrl;
   });
 }
-let timingLibraryVideos=[];
-function renderTimingLibraryMemberOptions(){
-  const sel=$("timingLibraryMember");if(!sel)return;
+let analysisVideos=[];
+function renderAnalysisMemberOptions(){
+  const sel=$("analysisMember");if(!sel)return;
   const members=state.data.members||[];
   sel.innerHTML='<option value="">Wybierz członka…</option>'+members.map(m=>'<option value="'+Number(m.id)+'">'+escapeHtml((m.first_name||"")+" "+(m.last_name||m.name||""))+'</option>').join("");
 }
-async function analyzeTimingLibraryVideo(id){
-  const root=$('timingLibraryReport-'+id);if(!root)return;
-  root.innerHTML='<div class="notice">AI analizuje wybrane kadry nagrania…</div>';
+function renderAnalysisReport(report){
+  if(!report)return '<div class="muted" style="margin-top:10px">Analiza nie została jeszcze wykonana.</div>';
+  return '<div class="card" style="margin-top:10px;border-color:#790014"><h4>🤖 Raport trenera AI</h4><div class="muted">'+formatCreated(report.created_at)+'</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:9px">'+escapeHtml(report.analysis||"")+'</div></div>';
+}
+async function loadAnalysisWorkspace(){
+  const staff=["admin","guardian"].includes(state.role);
+  $("analysisUploadCard")?.classList.toggle("hidden",!staff);
+  $("teamAnalysisCard")?.classList.toggle("hidden",!staff);
+  if(staff)renderAnalysisMemberOptions();
+  await Promise.all([loadAnalysisVideos(),staff?loadLatestTeamAnalysis():Promise.resolve()]);
+}
+async function loadAnalysisVideos(){
+  const root=$("analysisVideoList");if(!root)return;
+  try{
+    const data=await api("/api/training-videos");analysisVideos=Array.isArray(data?.videos)?data.videos:[];
+    $("analysisListCaption").textContent=state.role==="member"?"Twoje nagrania i raporty":analysisVideos.length+" nagrań";
+    if(!analysisVideos.length){root.innerHTML='<div class="empty">Nie ma jeszcze filmów przypisanych do tego profilu.</div>';return;}
+    root.innerHTML=analysisVideos.map(v=>{
+      const report=v.analysis_id?{analysis:v.analysis,created_at:v.analysis_created_at}:null;
+      const staff=["admin","guardian"].includes(state.role);
+      return '<article class="card" style="margin-bottom:12px"><h3>'+escapeHtml(v.title||v.file_name||"Nagranie")+'</h3><div class="meta"><span class="badge">'+escapeHtml((v.first_name||"")+" "+(v.last_name||""))+'</span><span class="badge">'+escapeHtml(v.exercise)+'</span><span class="badge">'+formatCreated(v.created_at)+'</span></div>'+(v.notes?'<p class="muted">'+escapeHtml(v.notes)+'</p>':'')+'<div class="actions">'+(staff?'<button class="btn outline" type="button" onclick="analyzeSelectedVideo('+Number(v.id)+')">🤖 Analizuj film</button>':'')+'<button class="btn outline" type="button" onclick="playAnalysisVideo('+Number(v.id)+')">▶ Odtwórz film</button>'+(staff?'<button class="btn danger" type="button" onclick="deleteAnalysisVideo('+Number(v.id)+')">Usuń</button>':'')+'</div><div id="analysisPlayer-'+Number(v.id)+'"></div><div id="analysisReport-'+Number(v.id)+'">'+renderAnalysisReport(report)+'</div></article>';
+    }).join("");
+  }catch(e){root.innerHTML='<div class="empty">Nie udało się pobrać filmów: '+escapeHtml(e.message)+'</div>';}
+}
+async function analyzeSelectedVideo(id){
+  const root=$("analysisReport-"+id);if(!root)return;
+  root.innerHTML='<div class="notice">AI analizuje wybrane kadry filmu i historię wyników zawodnika…</div>';
   try{
     const data=await api('/api/training-videos/'+id);const frames=await extractTimingVideoFrames(data.video.data_url);
     if(!frames.length)throw new Error('Nie udało się odczytać kadrów z filmu.');
     const result=await api('/api/training-videos/'+id+'/ai-analysis',{method:'POST',body:JSON.stringify({frames})});
-    root.innerHTML='<div class="card" style="margin-top:10px;border-color:#790014"><h4>🤖 Analiza AI nagrania</h4><div class="muted">'+formatCreated(result.report.created_at)+' · analiza wybranych kadrów, nie pełnego filmu</div><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px">'+escapeHtml(result.report.analysis)+'</div></div>';
+    root.innerHTML=renderAnalysisReport(result.report);toast('Analiza została zapisana.');
+    await loadAnalysisVideos();
   }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
 }
+async function playAnalysisVideo(id){
+  try{const data=await api('/api/training-videos/'+id);const root=$('analysisPlayer-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000;margin-top:10px';video.src=data.video.data_url;root.appendChild(video);}
+  catch(e){toast(e.message,'error');}
+}
+async function deleteAnalysisVideo(id){
+  if(!confirm('Usunąć film i powiązane z nim analizy?'))return;
+  try{await api('/api/training-videos/'+id,{method:'DELETE'});toast('Film usunięty.');await loadAnalysisVideos();}
+  catch(e){toast(e.message,'error');}
+}
 async function loadLatestTeamAnalysis(){
-  const root=$('timingTeamAiReport');if(!root||!["admin","guardian"].includes(state.role))return;
-  try{const data=await api('/api/training-team-analysis/latest');if(data.report)root.innerHTML='<div class="card" style="border-color:#790014;margin-top:10px"><h3>🏆 Ostatni raport całej drużyny</h3><div class="muted">'+formatCreated(data.report.created_at)+' · '+Number(data.report.members_count)+' zawodników</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.report.analysis)+'</div></div>';}
+  const root=$('teamAnalysisReport');if(!root||!["admin","guardian"].includes(state.role))return;
+  try{const data=await api('/api/training-team-analysis/latest');if(data.report)root.innerHTML='<div class="card" style="border-color:#790014"><h3>🏆 Ostatni raport drużyny</h3><div class="muted">'+formatCreated(data.report.created_at)+' · '+Number(data.report.members_count)+' zawodników</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.report.analysis)+'</div></div>';}
   catch(e){console.warn('Nie udało się pobrać raportu drużyny:',e);}
 }
 async function analyzeWholeTeam(){
-  const root=$('timingTeamAiReport');const btn=$('timingTeamAnalyzeBtn');if(!root)return;
-  if(btn)btn.disabled=true;root.innerHTML='<div class="notice">AI analizuje wyniki, historię, błędy i raporty wszystkich członków. To może potrwać…</div>';
+  const root=$('teamAnalysisReport');const btn=$('teamAnalysisBtn');if(!root)return;
+  if(btn)btn.disabled=true;root.innerHTML='<div class="notice">AI analizuje postępy drużyny: czasy, błędy, międzyczasy i indywidualne raporty…</div>';
   try{
     const data=await api('/api/training-team-analysis',{method:'POST',body:JSON.stringify({})});
-    root.innerHTML='<div class="card" style="border-color:#790014;margin-top:10px"><h3>🏆 Raport całej drużyny MDP</h3><div class="muted">Przeanalizowano dane '+Number(data.members_count)+' zawodników · '+formatCreated(new Date().toISOString())+'</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.analysis)+'</div></div>';
+    root.innerHTML='<div class="card" style="border-color:#790014"><h3>🏆 Raport postępów drużyny</h3><div class="muted">Przeanalizowano '+Number(data.members_count)+' zawodników · '+formatCreated(data.report?.created_at||new Date().toISOString())+'</div><div style="white-space:pre-wrap;line-height:1.6;margin-top:10px">'+escapeHtml(data.analysis)+'</div></div>';
   }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
   finally{if(btn)btn.disabled=false;}
 }
-async function loadTimingVideoLibrary(){
-  const root=$("timingVideoLibraryList");if(!root||!["admin","guardian"].includes(state.role))return;
+$("analysisVideoForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const file=$("analysisFile")?.files?.[0],memberId=Number($("analysisMember").value);
+  if(!memberId){toast("Wybierz członka MDP.","error");return;}
+  if(!file){toast("Wybierz film.","error");return;}
+  if(!["video/mp4","video/webm","video/quicktime"].includes(file.type)||file.size>60*1024*1024){toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;}
+  const submit=e.target.querySelector('button[type="submit"]');if(submit)submit.disabled=true;
   try{
-    const data=await api("/api/training-videos");timingLibraryVideos=Array.isArray(data?.videos)?data.videos:[];
-    if(!timingLibraryVideos.length){root.innerHTML='<div class="empty">Nie dodano jeszcze filmów. Możesz dodać pierwsze nagranie powyżej.</div>';return;}
-    root.innerHTML=timingLibraryVideos.map(v=>'<article class="card" style="background:#101010;margin:10px 0"><b>'+escapeHtml(v.title||v.file_name||"Nagranie")+'</b><div class="muted">'+escapeHtml((v.first_name||"")+" "+(v.last_name||""))+' · '+escapeHtml(v.exercise)+' · '+formatCreated(v.created_at)+'</div>'+(v.notes?'<p class="muted">'+escapeHtml(v.notes)+'</p>':'')+'<div class="actions"><button class="btn outline" type="button" onclick="playTimingLibraryVideo('+Number(v.id)+')">▶ Odtwórz</button><button class="btn outline" type="button" onclick="analyzeTimingLibraryVideo('+Number(v.id)+')">🤖 Analizuj AI</button><button class="btn danger" type="button" onclick="deleteTimingLibraryVideo('+Number(v.id)+')">Usuń</button></div><div id="timingLibraryPlayer-'+Number(v.id)+'"></div><div id="timingLibraryReport-'+Number(v.id)+'"></div></article>').join("");
-  }catch(e){root.innerHTML='<div class="empty">Nie udało się pobrać filmów: '+escapeHtml(e.message)+'</div>';}
-}
-async function playTimingLibraryVideo(id){
-  try{const data=await api('/api/training-videos/'+id);const root=$('timingLibraryPlayer-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000;margin-top:10px';video.src=data.video.data_url;root.appendChild(video);}
-  catch(e){toast(e.message,'error');}
-}
-async function deleteTimingLibraryVideo(id){
-  if(!confirm('Usunąć to nagranie z biblioteki?'))return;
-  try{await api('/api/training-videos/'+id,{method:'DELETE'});toast('Film usunięty.');await loadTimingVideoLibrary();}
-  catch(e){toast(e.message,'error');}
-}
+    const dataUrl=await fileToDataUrl(file);
+    await api("/api/training-videos",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("analysisExercise").value.trim(),title:$("analysisTitle").value.trim(),notes:$("analysisNotes").value.trim(),file_name:file.name,mime_type:file.type,data_url:dataUrl})});
+    e.target.reset();toast("Film przypisany do członka MDP.");await loadAnalysisVideos();
+  }catch(err){toast(err.message,"error");}
+  finally{if(submit)submit.disabled=false;}
+});
 async function viewTimingVideo(id){
   try{const data=await api('/api/timing-results/'+id+'/video');const root=document.getElementById('timingVideoView-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000';video.src=data.video.data_url;root.appendChild(video);}
   catch(e){toast(e.message,'error');}
@@ -4605,7 +4644,6 @@ $("timingForm").addEventListener("submit",async e=>{
   const errors=Math.max(0,Math.floor(Number($("timingErrors").value)||0));
   const penaltyPoints=timingPenaltyPoints(errors);
   const memberId=Number($("timingMember").value);
-  const videoFile=$("timingVideoFile")?.files?.[0]||null;
   if(!timeMs){toast("Najpierw wykonaj pomiar czasu.","error");return;}
   if(state.role!=="member"&&!memberId){toast("Wybierz członka MDP.","error");return;}
   if(videoFile&&(!["video/mp4","video/webm","video/quicktime"].includes(videoFile.type)||videoFile.size>60*1024*1024)){
@@ -4613,12 +4651,8 @@ $("timingForm").addEventListener("submit",async e=>{
   }
   try{
     const saved=await api("/api/timing-results",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingExercise").value.trim(),time_ms:timeMs,errors,penalty_points:penaltyPoints,notes:$("timingNotes").value.trim(),splits:timingSplits})});
-    if(videoFile){
-      const dataUrl=await fileToDataUrl(videoFile);
-      await api("/api/timing-results/"+saved.result.id+"/video",{method:"POST",body:JSON.stringify({file_name:videoFile.name,mime_type:videoFile.type,data_url:dataUrl})});
-    }
     toast(videoFile?"Wynik i film zapisane.":"Wynik zapisany.");
-    resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";if($("timingVideoFile"))$("timingVideoFile").value="";updateTimingPenaltyPreview();await loadTimingResults();
+    resetTiming();$("timingErrors").value="0";$("timingPenalties").value="0";$("timingNotes").value="";updateTimingPenaltyPreview();await loadTimingResults();
   }catch(err){toast(err.message,"error");}
 });
 
