@@ -1337,11 +1337,11 @@ app.post('/api/training-videos', auth, staff, async (req,res) => {
     const title=String(req.body?.title||'').trim().slice(0,140);
     const notes=String(req.body?.notes||'').trim().slice(0,1000);
     const fileName=String(req.body?.file_name||'nagranie.mp4').trim().slice(0,180);
-    const mime=String(req.body?.mime_type||'').toLowerCase();
+    const mime=String(req.body?.mime_type||'').toLowerCase().trim();
     const dataUrl=String(req.body?.data_url||'');
-    const match=dataUrl.match(/^data:(video\/(?:mp4|webm|quicktime));base64,([A-Za-z0-9+/]+=*)$/i);
+    const match=dataUrl.match(/^data:(video\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/]+=*)$/i);
     if(!Number.isInteger(memberId)||memberId<1||!exercise) return res.status(400).json({error:'Wybierz członka MDP i konkurencję.'});
-    if(!['video/mp4','video/webm','video/quicktime'].includes(mime)||!match||match[1].toLowerCase()!==mime) return res.status(400).json({error:'Dołącz film MP4, MOV lub WebM.'});
+    if(!/^video\/[a-z0-9.+-]+$/.test(mime)||!match||match[1].toLowerCase()!==mime) return res.status(400).json({error:'Nieprawidłowy format pliku wideo. Wybierz plik filmowy.'});
     const bytes=Buffer.from(match[2],'base64');
     if(!bytes.length||bytes.length>60*1024*1024) return res.status(413).json({error:'Film może mieć maksymalnie 60 MB.'});
     const member=await pool.query('SELECT id FROM members WHERE id=$1 AND archived_at IS NULL',[memberId]);
