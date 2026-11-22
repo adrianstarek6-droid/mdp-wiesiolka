@@ -1101,6 +1101,8 @@ body{background-color:#050505}
 .quiz-rank-name small{font-size:10px;color:#999}
 .quiz-rank-percent{font-size:16px;color:#ff555c;font-variant-numeric:tabular-nums}
 @media(min-width:700px){.quiz-member-card{padding:20px}.quiz-member-intro{padding:26px}}
+.quiz-ai-status{padding:9px 11px;border-radius:10px;background:#241b12;border:1px solid #6b4a20;color:#f2c27a;font-size:12px;margin:10px 0 14px}
+.quiz-ai-status.is-ready{background:#102219;border-color:#285b3d;color:#8de2a9}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>#newspaperMap{height:58vh;min-height:360px;border-radius:16px;overflow:hidden;border:1px solid #2b2b2b}.leaflet-container{background:#111}.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.map-legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#171717;border:1px solid #2a2a2a;font-size:12px}.map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -1968,12 +1970,26 @@ ul. Przykładowa 2"></textarea></div>
       <div class="section-title"><h3>🧠 Centrum quizów MDP</h3><small>Panel kadry</small></div>
       <p class="muted">Twórz quizy ręcznie albo automatycznie z zapisanej bazy pytań. Historia i wyniki poprzednich rund pozostają zachowane.</p>
       <div class="quiz-generator">
-        <h4 style="margin:0 0 8px">⚡ Generator automatyczny</h4>
-        <p class="muted" style="margin:0 0 10px">Losuje różne pytania z dotychczasowej bazy quizów i składa z nich nowy quiz.</p>
-        <div class="field"><label for="quizAutoTitle">Nazwa nowego quizu</label><input id="quizAutoTitle" maxlength="120" placeholder="Np. Wielki sprawdzian MDP"></div>
+        <h4 style="margin:0 0 8px">✨ Generator quizów AI</h4>
+        <p class="muted" style="margin:0 0 10px">AI tworzy zupełnie nowe pytania, cztery odpowiedzi i wskazuje poprawną. Przed publikacją możesz wszystko sprawdzić i edytować.</p>
+        <div id="quizAiStatus" class="quiz-ai-status">Sprawdzanie połączenia z AI…</div>
+        <div class="field"><label for="quizAiTitle">Nazwa quizu</label><input id="quizAiTitle" maxlength="120" placeholder="Np. MDP — wielki sprawdzian"></div>
+        <div class="field"><label for="quizAiCategory">Kategoria</label><select id="quizAiCategory"><option>MDP i OSP</option><option>OSP Wiesiółka</option><option>Volvo FL280 i wyposażenie</option><option>Sprzęt pożarniczy</option><option>Pierwsza pomoc</option><option>Regulaminy zawodów MDP</option><option>Bezpieczeństwo pożarowe</option><option>Wiedza ogólna</option></select></div>
+        <div class="field"><label for="quizAiTopic">Dokładny temat pytań</label><input id="quizAiTopic" maxlength="160" placeholder="Np. armatura wodna, autopompa, zasady pierwszej pomocy"></div>
+        <div class="field"><label for="quizAiDifficulty">Poziom trudności</label><select id="quizAiDifficulty"><option value="easy">Łatwy</option><option value="medium" selected>Średni</option><option value="hard">Trudny</option><option value="expert">Bardzo trudny</option></select></div>
+        <div class="field"><label for="quizAiCount">Liczba nowych pytań (4–40)</label><input id="quizAiCount" type="number" min="4" max="40" value="10"></div>
+        <div class="field"><label for="quizAiRound">Ile pytań losować na podejście?</label><input id="quizAiRound" type="number" min="1" max="40" value="10"></div>
+        <div class="field"><label for="quizAiMaterial">Materiały / fakty do wykorzystania (opcjonalnie)</label><textarea id="quizAiMaterial" rows="3" maxlength="5000" placeholder="Wklej informacje o sprzęcie, jednostce lub regulaminie. AI ma się na nich opierać i nie zgadywać szczegółów."></textarea></div>
+        <button class="btn red" type="button" id="quizAiGenerateBtn" onclick="generateQuizWithAI()">✨ Wygeneruj nowe pytania AI</button>
+        <p class="muted" style="margin:9px 0 0">AI nie będzie zgadywać szczegółów konkretnego samochodu lub jednostki. Wklej materiały, jeśli quiz ma dotyczyć lokalnego wyposażenia.</p>
+      </div>
+      <div class="quiz-generator" style="margin-top:12px;border-color:#393939;background:#101010">
+        <h4 style="margin:0 0 8px">🎲 Losowanie z istniejącej bazy</h4>
+        <p class="muted" style="margin:0 0 10px">Utwórz quiz z pytań, które już wcześniej zapisano.</p>
+        <div class="field"><label for="quizAutoTitle">Nazwa nowego quizu</label><input id="quizAutoTitle" maxlength="120" placeholder="Np. Powtórka MDP"></div>
         <div class="field"><label for="quizAutoCount">Liczba pytań w puli</label><input id="quizAutoCount" type="number" min="4" max="40" value="10"></div>
         <div class="field"><label for="quizAutoRound">Ile pytań losować na podejście?</label><input id="quizAutoRound" type="number" min="1" max="40" value="10"></div>
-        <button class="btn red" type="button" id="quizAutoGenerateBtn" onclick="generateQuizFromBank()">⚡ Wygeneruj quiz z bazy pytań</button>
+        <button class="btn outline" type="button" id="quizAutoGenerateBtn" onclick="generateQuizFromBank()">🎲 Wylosuj z istniejących pytań</button>
       </div>
       <div class="quiz-manual-heading"><h4>✍️ Tworzenie ręczne</h4><span class="muted">Pełna kontrola nad pytaniami i odpowiedziami</span></div>
       <form id="quizForm">
@@ -3688,6 +3704,38 @@ function collectQuizForm(){
   const cards=[...document.querySelectorAll('.quiz-question-editor')];
   return cards.map((card,i)=>({id:`q${i+1}`,text:card.querySelector('.quiz-q-text').value.trim(),options:[...card.querySelectorAll('.quiz-q-option')].map(x=>x.value.trim()),correctIndex:Number(card.querySelector('.quiz-q-correct').value)}));
 }
+async function refreshQuizAiStatus(){
+  const root=$('quizAiStatus');if(!root)return;
+  try{
+    const status=await api('/api/quizzes/ai-status');
+    root.textContent=status.configured?'● AI podłączone · '+(status.model||'model AI'):'● AI wymaga jeszcze podłączenia klucza w Render';
+    root.classList.toggle('is-ready',Boolean(status.configured));
+  }catch(e){root.textContent='Nie udało się sprawdzić połączenia AI.';}
+}
+
+async function generateQuizWithAI(){
+  const title=$('quizAiTitle')?.value.trim();
+  const topic=$('quizAiTopic')?.value.trim();
+  const category=$('quizAiCategory')?.value||'MDP i OSP';
+  const difficulty=$('quizAiDifficulty')?.value||'medium';
+  const questionCount=Number($('quizAiCount')?.value)||10;
+  const questionsPerRound=Number($('quizAiRound')?.value)||10;
+  const material=$('quizAiMaterial')?.value||'';
+  if(!title||!topic){toast('Wpisz nazwę quizu i dokładny temat.','error');return;}
+  if(!Number.isInteger(questionCount)||questionCount<4||questionCount>40){toast('Wybierz od 4 do 40 pytań.','error');return;}
+  if(!Number.isInteger(questionsPerRound)||questionsPerRound<1||questionsPerRound>questionCount){toast('Liczba pytań na podejście musi mieścić się w puli.','error');return;}
+  const btn=$('quizAiGenerateBtn');if(btn){btn.disabled=true;btn.textContent='AI przygotowuje pytania…';}
+  try{
+    const result=await api('/api/quizzes/generate-ai',{method:'POST',body:JSON.stringify({title,topic,category,difficulty,questionCount,questionsPerRound,material})});
+    $('quizAiTitle').value='';$('quizAiTopic').value='';$('quizAiMaterial').value='';
+    toast('AI utworzyło '+(result.quiz?.questions||[]).length+' nowych pytań. Sprawdź quiz przed udostępnieniem.');
+    await renderQuizAdmin();
+    const created=(staffQuizCache.quizzes||[]).find(q=>Number(q.id)===Number(result.quiz?.id));
+    if(created) await editQuiz(created.id);
+  }catch(e){toast('Generator AI: '+e.message,'error');}
+  finally{if(btn){btn.disabled=false;btn.textContent='✨ Wygeneruj nowe pytania AI';}}
+}
+
 async function generateQuizFromBank(){
   const title=$('quizAutoTitle')?.value.trim();
   const questionCount=Number($('quizAutoCount')?.value)||10;
@@ -3709,6 +3757,7 @@ async function renderQuizAdmin(){
   if(!["admin","guardian"].includes(state.role))return;
   try{
     staffQuizCache=await api('/api/quizzes');
+    refreshQuizAiStatus();
     const list=$('quizAdminList'),results=$('quizResults'),leaderboardRoot=$('quizLeaderboard');if(!list||!results)return;
     const quizzes=staffQuizCache.quizzes||[], submissions=staffQuizCache.submissions||[];
     list.innerHTML='<h3>📚 Twoje quizy</h3>'+ (quizzes.length?quizzes.map(q=>{
