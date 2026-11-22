@@ -3999,7 +3999,7 @@ app.post('/api/quizzes/generate-ai', auth, quizStaffOnly, async (req,res) => {
     const response=await fetch(baseUrl+'/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],max_tokens:6500}),
+      body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],max_completion_tokens:6500}),
       signal:AbortSignal.timeout(75000)
     });
     const payload=await response.json().catch(()=>({}));
