@@ -2023,7 +2023,7 @@ app.post('/api/gallery/finalize', auth, staff, async (req,res) => {
        FROM mdp_gallery_upload_chunks WHERE upload_id=$8
        HAVING COUNT(*)=$9
        RETURNING id,category,title,caption,file_name,mime_type,created_by,event_id,is_featured,is_protected,created_at`,
-      [category,title,caption,fileName,mimeType,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId,uploadId,chunkCount,null,null,isProtected]
+      [category,title,caption,fileName,mimeType,String(req.firstName||req.name||req.role||'MDP').slice(0,100),eventId,uploadId,chunkCount,isProtected]
     );
     if(!inserted.rowCount)throw new Error('Nie udało się złożyć wszystkich części pliku.');
     await client.query('DELETE FROM mdp_gallery_upload_chunks WHERE upload_id=$1',[uploadId]);
