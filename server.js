@@ -1701,7 +1701,7 @@ app.post('/api/gallery', auth, staff, async (req, res) => {
       const event = await pool.query('SELECT id FROM events WHERE id=$1',[eventId]);
       if (!event.rowCount) return res.status(404).json({ error: 'Wybrana zbiórka już nie istnieje.' });
     }
-    if (!(/^(image\/(jpeg|png|webp|gif|heic|heif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
+    if (!(/^(image\/(jpeg|png|webp|gif|heic|heif|avif)|video\/(mp4|webm|quicktime))$/).test(mimeType)) return res.status(400).json({ error: 'Dozwolone są zdjęcia oraz filmy MP4, WebM i MOV.' });
     if (!dataUrl.startsWith('data:' + mimeType + ';base64,')) return res.status(400).json({ error: 'Plik jest nieprawidłowy.' });
     if (dataUrl.length > 336 * 1024 * 1024) return res.status(413).json({ error: 'Plik jest za duży. Maksymalny rozmiar pliku to 250 MB.' });
     const result = await pool.query(
