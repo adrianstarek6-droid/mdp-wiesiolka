@@ -1,4 +1,4 @@
-const CACHE_NAME = "mdp-wiesiolka-v49";
+const CACHE_NAME = "mdp-wiesiolka-v50";
 
 const FILES_TO_CACHE = [
   "/",
