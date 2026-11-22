@@ -474,6 +474,14 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_mdp_training_videos_member ON mdp_training_videos(member_id,created_at DESC);
+    CREATE TABLE IF NOT EXISTS mdp_training_team_analyses (
+      id SERIAL PRIMARY KEY,
+      analysis TEXT NOT NULL,
+      model TEXT NOT NULL DEFAULT '',
+      members_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_team_analyses_created ON mdp_training_team_analyses(created_at DESC);
     CREATE TABLE IF NOT EXISTS mdp_training_video_analyses (
       id SERIAL PRIMARY KEY,
       video_id INTEGER NOT NULL REFERENCES mdp_training_videos(id) ON DELETE CASCADE,
@@ -1379,6 +1387,11 @@ app.get('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => 
   catch(e){res.status(500).json({error:'Nie udało się pobrać analizy filmu.'});}
 });
 
+app.get('/api/training-team-analysis/latest', auth, staff, async (req,res) => {
+  try{const r=await pool.query('SELECT id,analysis,model,members_count,created_at FROM mdp_training_team_analyses ORDER BY created_at DESC,id DESC LIMIT 1');res.json({report:r.rows[0]||null});}
+  catch(e){res.status(500).json({error:'Nie udało się pobrać ostatniego raportu drużyny.'});}
+});
+
 app.post('/api/training-team-analysis', auth, staff, async (req,res) => {
   const token=process.env.NEON_AI_GATEWAY_TOKEN;
   const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\/+$/,'');
@@ -1399,7 +1412,8 @@ app.post('/api/training-team-analysis', auth, staff, async (req,res) => {
     if(!response.ok){console.error('AI analiza drużyny:',response.status,payload?.error?.message||payload);return res.status(response.status===403?503:502).json({error:response.status===403?'Neon AI Gateway nie ma kredytów lub dostępu do modelu.':'AI nie mogło przygotować raportu drużyny ('+response.status+').'});}
     let analysis=payload?.choices?.[0]?.message?.content;if(Array.isArray(analysis))analysis=analysis.map(x=>x.text||'').join('');
     if(typeof analysis!=='string'||!analysis.trim())throw new Error('Pusta analiza drużyny.');
-    res.json({ok:true,analysis:analysis.trim().slice(0,30000),members_count:dataset.length,model});
+    const saved=await pool.query('INSERT INTO mdp_training_team_analyses(analysis,model,members_count) VALUES($1,$2,$3) RETURNING id,analysis,model,members_count,created_at',[analysis.trim().slice(0,30000),model,dataset.length]);
+    res.json({ok:true,report:saved.rows[0],analysis:saved.rows[0].analysis,members_count:dataset.length,model});
   }catch(e){console.error('Błąd raportu drużyny:',e);res.status(e.name==='TimeoutError'?504:500).json({error:e.name==='TimeoutError'?'Raport drużyny trwał zbyt długo. Spróbuj ponownie.':'Nie udało się przygotować raportu drużyny.'});}
 });
 
