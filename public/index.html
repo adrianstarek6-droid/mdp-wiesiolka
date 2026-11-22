@@ -4425,10 +4425,23 @@ function renderTimingResults(){
     const memberTimes=memberValid.map(r=>timingFinalMs(r)).filter(Number.isFinite);
     const memberBest=memberTimes.length?Math.min(...memberTimes):null;
     const memberAvg=memberTimes.length?Math.round(memberTimes.reduce((a,b)=>a+b,0)/memberTimes.length):null;
+    const byExercise=new Map();
+    memberValid.forEach(r=>{const key=String(r.exercise||"Bez nazwy");if(!byExercise.has(key))byExercise.set(key,[]);byExercise.get(key).push(r);});
+    const progressCards=[...byExercise.entries()].map(([name,list])=>{
+      const ordered=[...list].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+      const firstTime=timingFinalMs(ordered[0]),lastTime=timingFinalMs(ordered[ordered.length-1]);
+      if(!Number.isFinite(firstTime)||!Number.isFinite(lastTime))return "";
+      const diff=lastTime-firstTime;
+      const label=ordered.length<2?"Za mało prób do porównania":diff<0?"Poprawa":diff>0?"Wynik wolniejszy":"Bez zmiany";
+      const detail=ordered.length<2?"Zapisz kolejny pomiar, aby zobaczyć zmianę":diff<0?"Szybciej o "+formatTiming(Math.abs(diff)):diff>0?"Wolniej o "+formatTiming(diff):"Czas bez zmian";
+      const firstErrors=Number(ordered[0].errors)||0,lastErrors=Number(ordered[ordered.length-1].errors)||0;
+      return `<div class="calendar-event-row" style="display:block;margin:8px 0"><b>${escapeHtml(name)}</b><div class="meta"><span class="badge">${ordered.length} prób</span><span class="badge">${escapeHtml(label)}</span></div><div class="muted">Pierwszy: ${formatTiming(firstTime)} · Ostatni: ${formatTiming(lastTime)} · ${escapeHtml(detail)}</div><div class="muted">Błędy: ${firstErrors} → ${lastErrors}</div></div>`;
+    }).join("");
+    const progressPanel=`<div class="card" style="margin:12px 0"><h3>📈 Postępy członka</h3>${progressCards||'<div class="empty">Brak ważnych pomiarów do analizy.</div>'}<p class="muted">Porównanie pierwszego i ostatniego ważnego pomiaru w każdej konkurencji. Analiza korzysta wyłącznie z zapisanych wyników stopera.</p></div>`;
     $("timingHistory").innerHTML=`<button class="btn outline" type="button" onclick="backToTimingMembers()">← Wszyscy członkowie</button>
       <div class="section-title"><h3>${escapeHtml(memberName)}</h3><small>${memberRows.length} wyników</small></div>
       <div class="stats" style="margin-bottom:12px"><div class="stat"><strong>${memberTimes.length}</strong><span>Ważne pomiary</span></div><div class="stat"><strong>${memberBest===null?"—":formatTiming(memberBest)}</strong><span>Najlepszy czas</span></div><div class="stat"><strong>${memberAvg===null?"—":formatTiming(memberAvg)}</strong><span>Średni czas</span></div></div>
-      <h3>Historia, błędy i punkty karne</h3>${memberRows.map(renderRecord).join("")}`;
+      ${progressPanel}<h3>Historia, błędy i punkty karne</h3>${memberRows.map(renderRecord).join("")}`;
     return;
   }
   if(state.role==="member"){
@@ -4464,9 +4477,13 @@ function renderTimingResults(){
     const memberBest=valid.length?Math.min(...valid.map(r=>timingFinalMs(r)).filter(Number.isFinite)):"—";
     const bestText=memberBest==="—"?"—":formatTiming(memberBest);
     const errorCount=valid.reduce((n,r)=>n+Number(r.errors||0),0);
+    const ordered=[...valid].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const firstTime=ordered.length?timingFinalMs(ordered[0]):NaN,lastTime=ordered.length?timingFinalMs(ordered[ordered.length-1]):NaN;
+    const diff=lastTime-firstTime;
+    const progressLabel=ordered.length<2?"Próby: "+ordered.length:diff<0?"Poprawa o "+formatTiming(Math.abs(diff)):diff>0?"Wolniej o "+formatTiming(diff):"Bez zmiany";
     return `<button class="card" type="button" onclick="openTimingMember(${id})" style="width:100%;text-align:left;color:inherit;cursor:pointer;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h3>${escapeHtml(name)}</h3><div class="muted">${list.length} wyników · ${valid.length} ważnych</div></div><b style="font-size:20px">›</b></div>
-      <div class="meta"><span class="badge">Najlepszy: ${bestText}</span><span class="badge">Błędy: ${errorCount}</span></div>
+      <div class="meta"><span class="badge">Najlepszy: ${bestText}</span><span class="badge">Błędy: ${errorCount}</span><span class="badge">${escapeHtml(progressLabel)}</span></div>
     </button>`;
   }).join("");
 }
