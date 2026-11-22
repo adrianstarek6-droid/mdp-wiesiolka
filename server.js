@@ -460,6 +460,20 @@ async function initDb() {
       file_size BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS mdp_training_videos (
+      id SERIAL PRIMARY KEY,
+      member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      exercise TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      file_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      data_url TEXT NOT NULL,
+      file_size BIGINT NOT NULL DEFAULT 0,
+      created_by_role TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_videos_member ON mdp_training_videos(member_id,created_at DESC);
     CREATE TABLE IF NOT EXISTS mdp_timing_ai_analyses (
       id SERIAL PRIMARY KEY,
       result_id INTEGER NOT NULL REFERENCES mdp_timing_results(id) ON DELETE CASCADE,
@@ -1281,6 +1295,58 @@ app.post('/api/timing-results', auth, staff, async (req, res) => {
   }
 });
 
+
+app.get('/api/training-videos', auth, staff, async (req,res) => {
+  try {
+    const result=await pool.query(`
+      SELECT v.id,v.member_id,v.exercise,v.title,v.notes,v.file_name,v.mime_type,v.file_size,v.created_at,m.first_name,m.last_name
+      FROM mdp_training_videos v JOIN members m ON m.id=v.member_id
+      ORDER BY v.created_at DESC,v.id DESC
+    `);
+    res.json({videos:result.rows});
+  } catch(e) { console.error('Błąd listy filmów treningowych:',e); res.status(500).json({error:'Nie udało się pobrać filmów.'}); }
+});
+
+app.post('/api/training-videos', auth, staff, async (req,res) => {
+  try {
+    const memberId=Number(req.body?.member_id);
+    const exercise=String(req.body?.exercise||'').trim().slice(0,120);
+    const title=String(req.body?.title||'').trim().slice(0,140);
+    const notes=String(req.body?.notes||'').trim().slice(0,1000);
+    const fileName=String(req.body?.file_name||'nagranie.mp4').trim().slice(0,180);
+    const mime=String(req.body?.mime_type||'').toLowerCase();
+    const dataUrl=String(req.body?.data_url||'');
+    const match=dataUrl.match(/^data:(video\\/(?:mp4|webm|quicktime));base64,([A-Za-z0-9+/]+=*)$/i);
+    if(!Number.isInteger(memberId)||memberId<1||!exercise) return res.status(400).json({error:'Wybierz członka MDP i konkurencję.'});
+    if(!['video/mp4','video/webm','video/quicktime'].includes(mime)||!match||match[1].toLowerCase()!==mime) return res.status(400).json({error:'Dołącz film MP4, MOV lub WebM.'});
+    const bytes=Buffer.from(match[2],'base64');
+    if(!bytes.length||bytes.length>60*1024*1024) return res.status(413).json({error:'Film może mieć maksymalnie 60 MB.'});
+    const member=await pool.query('SELECT id FROM members WHERE id=$1 AND archived_at IS NULL',[memberId]);
+    if(!member.rowCount) return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
+    const saved=await pool.query(`
+      INSERT INTO mdp_training_videos(member_id,exercise,title,notes,file_name,mime_type,data_url,file_size,created_by_role)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING id,member_id,exercise,title,notes,file_name,mime_type,file_size,created_at
+    `,[memberId,exercise,title,notes,fileName,mime,dataUrl,bytes.length,req.role]);
+    res.status(201).json({video:saved.rows[0]});
+  } catch(e) { console.error('Błąd zapisu filmu treningowego:',e); res.status(500).json({error:'Nie udało się zapisać filmu.'}); }
+});
+
+app.get('/api/training-videos/:id', auth, staff, async (req,res) => {
+  try {
+    const result=await pool.query('SELECT id,title,file_name,mime_type,data_url FROM mdp_training_videos WHERE id=$1',[Number(req.params.id)]);
+    if(!result.rowCount) return res.status(404).json({error:'Nie znaleziono filmu.'});
+    res.json({video:result.rows[0]});
+  } catch(e) { res.status(500).json({error:'Nie udało się pobrać filmu.'}); }
+});
+
+app.delete('/api/training-videos/:id', auth, staff, async (req,res) => {
+  try {
+    const result=await pool.query('DELETE FROM mdp_training_videos WHERE id=$1 RETURNING id',[Number(req.params.id)]);
+    if(!result.rowCount) return res.status(404).json({error:'Nie znaleziono filmu.'});
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:'Nie udało się usunąć filmu.'}); }
+});
 
 app.post('/api/timing-results/:id/video', auth, staff, async (req,res) => {
   try {
