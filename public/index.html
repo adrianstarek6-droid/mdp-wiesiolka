@@ -1436,6 +1436,7 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
         <div class="field"><label>Punkty karne (automatycznie)</label><input id="timingPenalties" type="number" min="0" max="100000" value="0" readonly><small class="muted">1 błąd = 5 punktów karnych = 5 sekund doliczone do czasu.</small></div>
         <div id="timingPenaltyPreview" class="notice" style="margin:10px 0">Czas końcowy: —</div>
         <div class="field"><label>Notatka (opcjonalnie)</label><textarea id="timingNotes" maxlength="1000" placeholder="Co poprawić następnym razem…"></textarea></div>
+        <div class="field"><label for="timingVideoFile">🎥 Film z tej próby (opcjonalnie)</label><input id="timingVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm"><small class="muted">Krótki film do 60 MB. Nagranie zostanie przypisane do wyniku.</small></div>
         <button class="btn red" type="submit">💾 Zapisz wynik</button>
       </form>
     </div>
@@ -4415,7 +4416,7 @@ function renderTimingResults(){
       ${Array.isArray(r.splits)&&r.splits.length?`<div class="card" style="margin:9px 0;padding:10px;background:#101820"><b>Międzyczasy</b>${r.splits.map((s,i)=>`<div class="meta"><span>${escapeHtml(s.label||`Odcinek ${i+1}`)}</span><span class="badge">Odcinek: ${formatTiming(s.segment_ms)}</span><span class="badge">Łącznie: ${formatTiming(s.cumulative_ms)}</span></div>`).join("")}</div>`:""}
       ${r.notes?`<p class="muted" style="white-space:pre-wrap">${escapeHtml(r.notes)}</p>`:""}
       ${!valid&&r.invalid_reason?`<p class="muted">Powód: ${escapeHtml(r.invalid_reason)}</p>`:""}
-      ${staff&&valid?`<button class="btn danger" type="button" onclick="invalidateTimingResult(${Number(r.id)})">Unieważnij wynik</button>`:""}
+      ${staff&&valid?'<div class="actions" style="margin-top:10px"><button class="btn outline" type="button" onclick="analyzeTimingResult('+Number(r.id)+')">🤖 Analizuj AI</button>'+(r.has_video?'<button class="btn outline" type="button" onclick="viewTimingVideo('+Number(r.id)+')">▶ Odtwórz film</button>':'')+'<button class="btn danger" type="button" onclick="invalidateTimingResult('+Number(r.id)+')">Unieważnij wynik</button></div><div id="timingVideoView-'+Number(r.id)+'"></div><div id="timingAiReport-'+Number(r.id)+'"></div>':""}
     </article>`;
   };
   if(state.role!=="member" && selectedTimingMemberId!==null){
@@ -4471,6 +4472,45 @@ function renderTimingResults(){
       <div class="meta"><span class="badge">Najlepszy: ${bestText}</span><span class="badge">Błędy: ${errorCount}</span></div>
     </button>`;
   }).join("");
+}
+
+const timingAiReports={};
+async function fileToDataUrl(file){
+  return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Nie udało się odczytać filmu.'));reader.readAsDataURL(file);});
+}
+async function extractTimingVideoFrames(dataUrl){
+  return await new Promise(resolve=>{
+    const video=document.createElement('video');video.muted=true;video.playsInline=true;video.preload='auto';
+    let finished=false;const frames=[];const targets=[];
+    const done=out=>{if(finished)return;finished=true;video.removeAttribute('src');video.load();resolve(out);};
+    video.onerror=()=>done([]);
+    video.onloadedmetadata=()=>{
+      const duration=Number(video.duration)||0;if(!Number.isFinite(duration)||duration<=0){done([]);return;}
+      [0.18,0.5,0.82].forEach(p=>targets.push(Math.min(Math.max(0.1,duration*p),Math.max(0.1,duration-0.1))));
+      video.currentTime=targets.shift();
+    };
+    video.onseeked=()=>{
+      try{const canvas=document.createElement('canvas');canvas.width=640;canvas.height=Math.max(1,Math.round(640*(video.videoHeight/video.videoWidth||0.5625)));canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);frames.push(canvas.toDataURL('image/jpeg',0.62));if(targets.length)video.currentTime=targets.shift();else done(frames);}
+      catch(e){done(frames);}
+    };
+    video.src=dataUrl;
+  });
+}
+async function viewTimingVideo(id){
+  try{const data=await api('/api/timing-results/'+id+'/video');const root=document.getElementById('timingVideoView-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000';video.src=data.video.data_url;root.appendChild(video);}
+  catch(e){toast(e.message,'error');}
+}
+async function analyzeTimingResult(id){
+  const root=document.getElementById('timingAiReport-'+id);if(!root)return;
+  root.innerHTML='<div class="notice">AI analizuje wyniki i przygotowuje zalecenia…</div>';
+  try{
+    let frames=[];const row=timingResults.find(x=>Number(x.id)===Number(id));
+    if(row?.has_video){try{const video=await api('/api/timing-results/'+id+'/video');frames=await extractTimingVideoFrames(video.video.data_url);}catch(e){console.warn('Nie udało się odczytać filmu do analizy:',e);}}
+    const data=await api('/api/timing-results/'+id+'/ai-analysis',{method:'POST',body:JSON.stringify({frames})});
+    const report=data.report;
+    root.innerHTML='<div class="card" style="margin-top:10px;border-color:#790014"><h4>🤖 Raport AI Trenera</h4><div class="muted" style="font-size:11px;margin-bottom:8px">'+(report.included_video?'Analiza danych i kadrów z filmu':'Analiza danych czasowych')+' · '+escapeHtml(new Date(report.created_at).toLocaleString('pl-PL'))+'</div><div style="white-space:pre-wrap;line-height:1.55">'+escapeHtml(report.analysis)+'</div></div>';
+    timingAiReports[id]=report;
+  }catch(e){root.innerHTML='<div class="notice">'+escapeHtml(e.message)+'</div>';toast(e.message,'error');}
 }
 async function invalidateTimingResult(id){
   const reason=prompt("Podaj powód unieważnienia. Wynik zostanie zachowany w bazie, ale zniknie z aktywnej historii.");
