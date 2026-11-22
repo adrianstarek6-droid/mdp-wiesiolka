@@ -8,6 +8,8 @@
   "dependencies": {
     "express": "^5.1.0",
     "pg": "^8.16.3",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "@aws-sdk/client-s3": "^3.922.0",
+    "@aws-sdk/s3-request-presigner": "^3.922.0"
   }
 }
