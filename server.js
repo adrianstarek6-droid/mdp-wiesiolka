@@ -37,6 +37,22 @@ console.log('MDP video storage config:', {
 });
 const MAX_TRAINING_VIDEO_BYTES = 1024 * 1024 * 1024;
 
+function videoStorageDiagnostic(stage) {
+  const ready = Boolean(getVideoS3());
+  const config = {
+    accessKey: Boolean(process.env.AWS_ACCESS_KEY_ID),
+    secretKey: Boolean(process.env.AWS_SECRET_ACCESS_KEY),
+    endpoint: Boolean(process.env.AWS_ENDPOINT_URL_S3),
+    region: Boolean(process.env.AWS_REGION),
+    bucket: Boolean(videoStorageBucket),
+    ready,
+    stage,
+    pid: process.pid
+  };
+  console.error('MDP_VIDEO_STORAGE_DIAGNOSTIC', JSON.stringify(config));
+  return config;
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL
@@ -1365,8 +1381,12 @@ app.get('/api/training-videos', auth, async (req,res) => {
 
 app.post('/api/training-videos/upload-url', auth, staff, async (req,res) => {
   try {
+    console.log('MDP_VIDEO_UPLOAD_URL_REQUEST', JSON.stringify({pid:process.pid,role:req.role,hasBucket:Boolean(videoStorageBucket)}));
     const s3=getVideoS3();
-    if(!s3) { console.error('MDP upload storage unavailable: required environment settings missing'); return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'}); }
+    if(!s3) {
+      const diagnostic=videoStorageDiagnostic('upload-url');
+      return res.status(503).json({error:'Magazyn filmów: konfiguracja niedostępna na serwerze (UPLOAD_URL).',code:'VIDEO_STORAGE_UPLOAD_URL_NOT_READY',diagnostic});
+    }
     const memberId=Number(req.body?.member_id);
     const mime=String(req.body?.mime_type||'').toLowerCase().trim();
     const fileSize=Number(req.body?.file_size);
@@ -1384,8 +1404,12 @@ app.post('/api/training-videos/upload-url', auth, staff, async (req,res) => {
 
 app.post('/api/training-videos/complete', auth, staff, async (req,res) => {
   try {
+    console.log('MDP_VIDEO_COMPLETE_REQUEST', JSON.stringify({pid:process.pid,role:req.role,hasBucket:Boolean(videoStorageBucket)}));
     const s3=getVideoS3();
-    if(!s3) { console.error('MDP video completion storage unavailable: required environment settings missing'); return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'}); }
+    if(!s3) {
+      const diagnostic=videoStorageDiagnostic('complete');
+      return res.status(503).json({error:'Magazyn filmów: konfiguracja niedostępna podczas zapisu (COMPLETE).',code:'VIDEO_STORAGE_COMPLETE_NOT_READY',diagnostic});
+    }
     const memberId=Number(req.body?.member_id);
     const exercise=String(req.body?.exercise||'').trim().slice(0,120);
     const title=String(req.body?.title||'').trim().slice(0,140);
@@ -1494,8 +1518,9 @@ app.get('/api/training-videos/:id', auth, async (req,res) => {
     if(req.role==='member'&&Number(result.rows[0].member_id)!==Number(req.member.id))return res.status(403).json({error:'Nie masz dostępu do tego filmu.'});
     const video=result.rows[0];
     if(video.object_key){
-      if(!videoS3)return res.status(503).json({error:'Magazyn filmów jest niedostępny.'});
-      video.data_url=await getSignedUrl(videoS3,new GetObjectCommand({Bucket:videoStorageBucket,Key:video.object_key}),{expiresIn:3600});
+      const s3=getVideoS3();
+      if(!s3) return res.status(503).json({error:'Magazyn filmów jest niedostępny podczas odczytu.',code:'VIDEO_STORAGE_READ_NOT_READY'});
+      video.data_url=await getSignedUrl(s3,new GetObjectCommand({Bucket:videoStorageBucket,Key:video.object_key}),{expiresIn:3600});
     }
     res.json({video});
   } catch(e) { console.error('Błąd pobrania filmu treningowego:',e);res.status(500).json({error:'Nie udało się pobrać filmu.'}); }
