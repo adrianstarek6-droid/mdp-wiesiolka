@@ -474,6 +474,14 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_mdp_training_videos_member ON mdp_training_videos(member_id,created_at DESC);
+    CREATE TABLE IF NOT EXISTS mdp_training_video_analyses (
+      id SERIAL PRIMARY KEY,
+      video_id INTEGER NOT NULL REFERENCES mdp_training_videos(id) ON DELETE CASCADE,
+      analysis TEXT NOT NULL,
+      model TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_mdp_training_video_analyses_video ON mdp_training_video_analyses(video_id,created_at DESC);
     CREATE TABLE IF NOT EXISTS mdp_timing_ai_analyses (
       id SERIAL PRIMARY KEY,
       result_id INTEGER NOT NULL REFERENCES mdp_timing_results(id) ON DELETE CASCADE,
@@ -1330,6 +1338,69 @@ app.post('/api/training-videos', auth, staff, async (req,res) => {
     `,[memberId,exercise,title,notes,fileName,mime,dataUrl,bytes.length,req.role]);
     res.status(201).json({video:saved.rows[0]});
   } catch(e) { console.error('Błąd zapisu filmu treningowego:',e); res.status(500).json({error:'Nie udało się zapisać filmu.'}); }
+});
+
+app.post('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => {
+  const token=process.env.NEON_AI_GATEWAY_TOKEN;
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\/+$/,'');
+  if(!token) return res.status(503).json({error:'AI nie jest podłączone. Brakuje NEON_AI_GATEWAY_TOKEN w Render.'});
+  try {
+    const id=Number(req.params.id);
+    const frames=Array.isArray(req.body?.frames)?req.body.frames.slice(0,4):[];
+    const video=await pool.query(`
+      SELECT v.*,m.first_name,m.last_name FROM mdp_training_videos v
+      JOIN members m ON m.id=v.member_id WHERE v.id=$1
+    `,[id]);
+    if(!video.rowCount) return res.status(404).json({error:'Nie znaleziono nagrania.'});
+    const v=video.rows[0];
+    const previous=await pool.query(`
+      SELECT time_ms,errors,penalty_points,splits,notes,created_at FROM mdp_timing_results
+      WHERE member_id=$1 AND LOWER(exercise)=LOWER($2) AND valid=TRUE ORDER BY created_at DESC LIMIT 8
+    `,[v.member_id,v.exercise]);
+    const validFrames=frames.filter(x=>typeof x==='string'&&/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(x)&&x.length<2800000);
+    if(!validFrames.length) return res.status(400).json({error:'Nie udało się odczytać kadrów z filmu. Spróbuj nagrania MP4 lub MOV.'});
+    const model=process.env.NEON_AI_GATEWAY_MODEL||'gpt-5-mini';
+    const facts={zawodnik:(v.first_name||'')+' '+(v.last_name||''),konkurencja:v.exercise,nazwa_nagrania:v.title||v.file_name,notatki:v.notes||'',historia_pomiarow:previous.rows.map(x=>({czas_ms:x.time_ms,bledy:x.errors,kary:x.penalty_points,miedzyczasy:x.splits||[],uwagi:x.notes||'',data:x.created_at}))};
+    const system='Jesteś profesjonalnym, rzetelnym trenerem MDP. Odpowiadaj po polsku. Analizuj tylko to, co rzeczywiście widać na dostarczonych kadrach i w danych. Nie udawaj, że obejrzałeś cały film: widzisz wybrane klatki. Nie wymyślaj regulaminu ani błędów. Oddziel obserwacje od przypuszczeń. Oceniaj płynność, organizację ruchu, kolejność widocznych czynności, współpracę i miejsca możliwej straty czasu tylko wtedy, gdy kadry na to pozwalają. Nie podawaj niebezpiecznych instrukcji; młodzież ćwiczy wyłącznie pod nadzorem opiekuna i zgodnie z regulaminem. Zakończ 3 konkretnymi, bezpiecznymi priorytetami treningowymi.';
+    const content=[{type:'text',text:'Przeanalizuj nagranie na podstawie tych kadrów oraz danych. Dane: '+JSON.stringify(facts)+'. Kadrów: '+validFrames.length+'. Wskaż też czego nie da się ocenić.'}];
+    for(const frame of validFrames) content.push({type:'image_url',image_url:{url:frame,detail:'low'}});
+    const response=await fetch(baseUrl+'/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content}],max_completion_tokens:2200}),signal:AbortSignal.timeout(90000)});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok){console.error('AI analiza filmu:',response.status,payload?.error?.message||payload);return res.status(response.status===403?503:502).json({error:response.status===403?'Neon AI Gateway nie ma kredytów lub dostępu do modelu.':'AI nie mogło przeanalizować filmu ('+response.status+').'});}
+    let analysis=payload?.choices?.[0]?.message?.content;if(Array.isArray(analysis))analysis=analysis.map(x=>x.text||'').join('');
+    if(typeof analysis!=='string'||!analysis.trim())throw new Error('Pusta analiza AI.');
+    const saved=await pool.query('INSERT INTO mdp_training_video_analyses(video_id,analysis,model) VALUES($1,$2,$3) RETURNING id,analysis,model,created_at',[id,analysis.trim().slice(0,14000),model]);
+    res.json({ok:true,report:saved.rows[0]});
+  }catch(e){console.error('Błąd analizy filmu MDP:',e);res.status(e.name==='TimeoutError'?504:500).json({error:e.name==='TimeoutError'?'Analiza trwała za długo. Spróbuj ponownie.':'Nie udało się przeanalizować nagrania.'});}
+});
+
+app.get('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => {
+  try{const r=await pool.query('SELECT id,analysis,model,created_at FROM mdp_training_video_analyses WHERE video_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1',[Number(req.params.id)]);res.json({report:r.rows[0]||null});}
+  catch(e){res.status(500).json({error:'Nie udało się pobrać analizy filmu.'});}
+});
+
+app.post('/api/training-team-analysis', auth, staff, async (req,res) => {
+  const token=process.env.NEON_AI_GATEWAY_TOKEN;
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\/+$/,'');
+  if(!token)return res.status(503).json({error:'AI nie jest podłączone. Brakuje NEON_AI_GATEWAY_TOKEN w Render.'});
+  try{
+    const [members,results,videos,analyses]=await Promise.all([
+      pool.query("SELECT id,first_name,last_name FROM members WHERE archived_at IS NULL ORDER BY first_name,last_name"),
+      pool.query("SELECT r.member_id,r.exercise,r.time_ms,r.errors,r.penalty_points,r.splits,r.notes,r.created_at FROM mdp_timing_results r WHERE r.valid=TRUE ORDER BY r.created_at DESC"),
+      pool.query("SELECT v.id,v.member_id,v.exercise,v.title,v.notes,v.created_at,m.first_name,m.last_name FROM mdp_training_videos v JOIN members m ON m.id=v.member_id ORDER BY v.created_at DESC"),
+      pool.query(`SELECT DISTINCT ON(v.member_id,v.exercise) v.member_id,v.exercise,a.analysis,a.created_at FROM mdp_training_video_analyses a JOIN mdp_training_videos v ON v.id=a.video_id ORDER BY v.member_id,v.exercise,a.created_at DESC`)
+    ]);
+    const dataset=members.rows.map(m=>({zawodnik:(m.first_name||'')+' '+(m.last_name||''),pomiary:results.rows.filter(r=>r.member_id===m.id).slice(0,30).map(r=>({konkurencja:r.exercise,czas_ms:r.time_ms,czas_koncowy_ms:Number(r.time_ms)+Number(r.penalty_points)*1000,bledy:r.errors,kary:r.penalty_points,miedzyczasy:r.splits||[],uwagi:r.notes||'',data:r.created_at})),filmy:videos.rows.filter(v=>v.member_id===m.id).map(v=>({id:v.id,konkurencja:v.exercise,nazwa:v.title||'',notatki:v.notes||'',data:v.created_at})),ostatnie_analizy_filmow:analyses.rows.filter(a=>a.member_id===m.id).map(a=>({konkurencja:a.exercise,analiza:a.analysis.slice(0,3500)}))})).filter(m=>m.pomiary.length||m.filmy.length);
+    if(!dataset.length)return res.status(400).json({error:'Brak wyników i filmów do analizy drużyny.'});
+    const model=process.env.NEON_AI_GATEWAY_MODEL||'gpt-5-mini';
+    const system='Jesteś głównym trenerem analitycznym młodzieżowej drużyny pożarniczej MDP. Odpowiadaj po polsku, profesjonalnie, konkretnie i sprawiedliwie. Analizuj CAŁY przekazany zestaw: każdego zawodnika osobno, konkurencje, trendy czasów, kary, międzyczasy, notatki i zapisane analizy kadrów. Nie twórz rankingu na podstawie różnych konkurencji ani nie porównuj surowych czasów różnych ćwiczeń. Nie oceniaj osoby, tylko dane i wykonanie. Wskaż małą liczbę priorytetów, mocne strony, postęp, powtarzalne problemy i braki danych. Nie wymyślaj, że obejrzałeś pliki wideo: masz tylko metadane oraz zapisane raporty kadrów. Zaproponuj wspólne i indywidualne, bezpieczne ćwiczenia pod nadzorem opiekuna, bez ryzykownych symulacji. Zaznacz, jeśli brakuje pomiarów lub analiz filmów.';
+    const response=await fetch(baseUrl+'/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:'Przygotuj pełny raport drużyny oraz oddzielny raport dla każdego zawodnika. Uwzględnij analizę każdej konkurencji i konkretne priorytety poprawy. Dane:\n'+JSON.stringify(dataset)}],max_completion_tokens:5000}),signal:AbortSignal.timeout(120000)});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok){console.error('AI analiza drużyny:',response.status,payload?.error?.message||payload);return res.status(response.status===403?503:502).json({error:response.status===403?'Neon AI Gateway nie ma kredytów lub dostępu do modelu.':'AI nie mogło przygotować raportu drużyny ('+response.status+').'});}
+    let analysis=payload?.choices?.[0]?.message?.content;if(Array.isArray(analysis))analysis=analysis.map(x=>x.text||'').join('');
+    if(typeof analysis!=='string'||!analysis.trim())throw new Error('Pusta analiza drużyny.');
+    res.json({ok:true,analysis:analysis.trim().slice(0,30000),members_count:dataset.length,model});
+  }catch(e){console.error('Błąd raportu drużyny:',e);res.status(e.name==='TimeoutError'?504:500).json({error:e.name==='TimeoutError'?'Raport drużyny trwał zbyt długo. Spróbuj ponownie.':'Nie udało się przygotować raportu drużyny.'});}
 });
 
 app.get('/api/training-videos/:id', auth, staff, async (req,res) => {
