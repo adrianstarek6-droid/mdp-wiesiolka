@@ -1342,7 +1342,7 @@ app.post('/api/training-videos', auth, staff, async (req,res) => {
 
 app.post('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => {
   const token=process.env.NEON_AI_GATEWAY_TOKEN;
-  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\/+$/,'');
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\/+$/,'');
   if(!token) return res.status(503).json({error:'AI nie jest podłączone. Brakuje NEON_AI_GATEWAY_TOKEN w Render.'});
   try {
     const id=Number(req.params.id);
@@ -1357,7 +1357,7 @@ app.post('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) =>
       SELECT time_ms,errors,penalty_points,splits,notes,created_at FROM mdp_timing_results
       WHERE member_id=$1 AND LOWER(exercise)=LOWER($2) AND valid=TRUE ORDER BY created_at DESC LIMIT 8
     `,[v.member_id,v.exercise]);
-    const validFrames=frames.filter(x=>typeof x==='string'&&/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(x)&&x.length<2800000);
+    const validFrames=frames.filter(x=>typeof x==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(x)&&x.length<2800000);
     if(!validFrames.length) return res.status(400).json({error:'Nie udało się odczytać kadrów z filmu. Spróbuj nagrania MP4 lub MOV.'});
     const model=process.env.NEON_AI_GATEWAY_MODEL||'gpt-5-mini';
     const facts={zawodnik:(v.first_name||'')+' '+(v.last_name||''),konkurencja:v.exercise,nazwa_nagrania:v.title||v.file_name,notatki:v.notes||'',historia_pomiarow:previous.rows.map(x=>({czas_ms:x.time_ms,bledy:x.errors,kary:x.penalty_points,miedzyczasy:x.splits||[],uwagi:x.notes||'',data:x.created_at}))};
@@ -1381,7 +1381,7 @@ app.get('/api/training-videos/:id/ai-analysis', auth, staff, async (req,res) => 
 
 app.post('/api/training-team-analysis', auth, staff, async (req,res) => {
   const token=process.env.NEON_AI_GATEWAY_TOKEN;
-  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\\/+$/,'');
+  const baseUrl=String(process.env.NEON_AI_GATEWAY_BASE_URL||'https://br-hidden-math-b588z4si-api.ai.c-7.us-east-2.aws.neon.tech').replace(/\/+$/,'');
   if(!token)return res.status(503).json({error:'AI nie jest podłączone. Brakuje NEON_AI_GATEWAY_TOKEN w Render.'});
   try{
     const [members,results,videos,analyses]=await Promise.all([
