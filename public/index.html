@@ -5438,4 +5438,31 @@ hr,.divider{border-color:#3d000a!important}
 .home-signature{border:1px solid #39000b!important;background:#030303!important;border-radius:14px!important;padding:10px 13px!important}
 .home-signature .signature-logo{margin-right:2px!important}
 @media(max-width:430px){.hero-emblem{width:clamp(112px,33vw,150px)!important;right:3%!important}.login-logo{width:94px!important;height:94px!important}}
+
+/* FINALNY WYGLAD DOLNEGO MENU — kompaktowy, pływający dock */
+.bottom-nav{
+  left:12px!important;right:12px!important;bottom:calc(9px + env(safe-area-inset-bottom))!important;
+  width:auto!important;max-width:560px!important;margin:0 auto!important;
+  padding:7px!important;background:rgba(8,8,10,.94)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;backdrop-filter:blur(24px) saturate(145%)!important;
+  border:1px solid rgba(255,45,61,.24)!important;border-radius:23px!important;
+  box-shadow:0 12px 38px rgba(0,0,0,.72),0 0 24px rgba(225,15,35,.09),inset 0 1px 0 rgba(255,255,255,.055)!important;
+}
+.bottom-nav .nav-inner{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;width:100%!important;max-width:none!important;overflow:visible!important;padding:0!important}
+.bottom-nav .nav-btn{
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+  gap:3px!important;min-width:0!important;width:100%!important;height:55px!important;flex:none!important;
+  padding:5px 2px!important;border:1px solid transparent!important;border-radius:16px!important;
+  background:transparent!important;color:#85858c!important;font-size:10px!important;font-weight:700!important;
+  letter-spacing:.12px!important;line-height:1.1!important;box-shadow:none!important;
+}
+.bottom-nav .nav-btn b{display:block!important;margin:0!important;font-size:19px!important;line-height:21px!important;filter:none!important;transform:none!important}
+.bottom-nav .nav-btn.active{
+  color:#fff!important;background:linear-gradient(145deg,rgba(111,9,23,.48),rgba(35,5,10,.72))!important;
+  border-color:rgba(255,48,66,.34)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 3px 12px rgba(210,12,32,.12)!important;
+}
+.bottom-nav .nav-btn.active b{color:#ff334b!important;text-shadow:0 0 14px rgba(255,35,58,.35)!important}
+.bottom-nav .nav-btn:active{transform:scale(.96)!important}
+@media(max-width:360px){.bottom-nav{left:8px!important;right:8px!important;padding:6px!important}.bottom-nav .nav-btn{height:52px!important;font-size:9px!important}.bottom-nav .nav-btn b{font-size:18px!important}}
+
 </style>
