@@ -3879,7 +3879,7 @@ function runMemberQuiz(q,timed){
       const pct=Number(result.total)?Math.round(Number(result.score)/Number(result.total)*100):0;
       root.innerHTML=`<div class="quiz-finish-screen"><span class="quiz-card-kicker">QUIZ ZAKOŃCZONY</span><div class="quiz-finish-icon">${pct>=80?'🏆':pct>=50?'🚒':'📚'}</div><h2>${pct>=80?'Świetna robota!':pct>=50?'Dobra robota!':'Trening czyni mistrza!'}</h2><div class="quiz-finish-score">${Number(result.score)}<small>/ ${Number(result.total)} pkt</small></div><div class="quiz-finish-percent">${pct}% poprawnych odpowiedzi</div><p class="muted">${timed?'Tryb na czas':'Spokojny trening'} · ${questions.length} pytań</p><button class="btn red" type="button" onclick="closeModal();renderMemberQuizzes()">Zakończ</button></div>`;
       await renderMemberQuizzes();
-    }catch(err){submitting=false;if(submitBtn)submitBtn.disabled=false;toast(err.message,'error');}
+    }catch(err){submitting=false;const retryBtn=$('quizNextBtn');if(retryBtn)retryBtn.disabled=false;toast(err.message,'error');}
   };
   const render=()=>{
     stopTimer();remaining=20;
