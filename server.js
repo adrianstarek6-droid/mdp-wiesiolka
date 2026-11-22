@@ -10,9 +10,31 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const videoStorageBucket = process.env.MDP_VIDEO_BUCKET || 'mdp-training-videos';
-const videoStorageReady = Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_ENDPOINT_URL_S3 && process.env.AWS_REGION);
-const videoS3 = videoStorageReady ? new S3Client({ region: process.env.AWS_REGION, endpoint: process.env.AWS_ENDPOINT_URL_S3, forcePathStyle: true, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY } }) : null;
-console.log('MDP video storage config:', { accessKey: Boolean(process.env.AWS_ACCESS_KEY_ID), secretKey: Boolean(process.env.AWS_SECRET_ACCESS_KEY), endpoint: Boolean(process.env.AWS_ENDPOINT_URL_S3), region: Boolean(process.env.AWS_REGION), bucket: Boolean(videoStorageBucket), ready: videoStorageReady });
+let videoS3 = null;
+function getVideoS3() {
+  const ready = Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_ENDPOINT_URL_S3 && process.env.AWS_REGION);
+  if (!ready) return null;
+  if (!videoS3) {
+    videoS3 = new S3Client({
+      region: process.env.AWS_REGION,
+      endpoint: process.env.AWS_ENDPOINT_URL_S3,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+  }
+  return videoS3;
+}
+console.log('MDP video storage config:', {
+  accessKey: Boolean(process.env.AWS_ACCESS_KEY_ID),
+  secretKey: Boolean(process.env.AWS_SECRET_ACCESS_KEY),
+  endpoint: Boolean(process.env.AWS_ENDPOINT_URL_S3),
+  region: Boolean(process.env.AWS_REGION),
+  bucket: Boolean(videoStorageBucket),
+  ready: Boolean(getVideoS3())
+});
 const MAX_TRAINING_VIDEO_BYTES = 1024 * 1024 * 1024;
 
 const pool = new Pool({
@@ -1343,7 +1365,8 @@ app.get('/api/training-videos', auth, async (req,res) => {
 
 app.post('/api/training-videos/upload-url', auth, staff, async (req,res) => {
   try {
-    if(!videoS3) return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'});
+    const s3=getVideoS3();
+    if(!s3) { console.error('MDP upload storage unavailable: required environment settings missing'); return res.status(503).json({error:'Magazyn filmów nie jest jeszcze skonfigurowany.'}); }
     const memberId=Number(req.body?.member_id);
     const mime=String(req.body?.mime_type||'').toLowerCase().trim();
     const fileSize=Number(req.body?.file_size);
@@ -1354,7 +1377,7 @@ app.post('/api/training-videos/upload-url', auth, staff, async (req,res) => {
     if(!member.rowCount) return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
     const objectKey='training-videos/'+memberId+'/'+crypto.randomUUID();
     const command=new PutObjectCommand({Bucket:videoStorageBucket,Key:objectKey,ContentType:mime});
-    const uploadUrl=await getSignedUrl(videoS3,command,{expiresIn:900});
+    const uploadUrl=await getSignedUrl(s3,command,{expiresIn:900});
     res.json({upload_url:uploadUrl,object_key:objectKey});
   } catch(e) { console.error('Błąd przygotowania uploadu filmu:',e); res.status(500).json({error:'Nie udało się przygotować wysyłania filmu.'}); }
 });
@@ -1373,9 +1396,9 @@ app.post('/api/training-videos/complete', auth, staff, async (req,res) => {
     if(!/^video\/[a-z0-9.+-]+$/.test(mime)||!new RegExp('^training-videos/'+memberId+'/[a-f0-9-]{36}$','i').test(objectKey)) return res.status(400).json({error:'Nieprawidłowe dane przesłanego filmu.'});
     const member=await pool.query('SELECT id FROM members WHERE id=$1 AND archived_at IS NULL',[memberId]);
     if(!member.rowCount) return res.status(404).json({error:'Nie znaleziono aktywnego członka MDP.'});
-    const head=await videoS3.send(new HeadObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));
+    const head=await s3.send(new HeadObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));
     const fileSize=Number(head.ContentLength||0);
-    if(!fileSize||fileSize>MAX_TRAINING_VIDEO_BYTES){await videoS3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(413).json({error:'Film przekracza limit 1 GB albo jest pusty.'});}
+    if(!fileSize||fileSize>MAX_TRAINING_VIDEO_BYTES){await s3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(413).json({error:'Film przekracza limit 1 GB albo jest pusty.'});}
     if(head.ContentType&&head.ContentType.toLowerCase()!==mime){await videoS3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:objectKey}));return res.status(400).json({error:'Typ przesłanego pliku nie zgadza się z wybranym formatem.'});}
     const saved=await pool.query(`
       INSERT INTO mdp_training_videos(member_id,exercise,title,notes,file_name,mime_type,data_url,object_key,file_size,created_by_role)
@@ -1481,7 +1504,7 @@ app.delete('/api/training-videos/:id', auth, staff, async (req,res) => {
   try {
     const result=await pool.query('DELETE FROM mdp_training_videos WHERE id=$1 RETURNING id,object_key',[Number(req.params.id)]);
     if(!result.rowCount) return res.status(404).json({error:'Nie znaleziono filmu.'});
-    if(result.rows[0].object_key&&videoS3) await videoS3.send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:result.rows[0].object_key}));
+    if(result.rows[0].object_key&&getVideoS3()) await getVideoS3().send(new DeleteObjectCommand({Bucket:videoStorageBucket,Key:result.rows[0].object_key}));
     res.json({ok:true});
   } catch(e) { console.error('Błąd usuwania filmu:',e);res.status(500).json({error:'Nie udało się usunąć filmu.'}); }
 });
