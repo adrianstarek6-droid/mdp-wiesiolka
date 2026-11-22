@@ -1440,6 +1440,19 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
         <button class="btn red" type="submit">💾 Zapisz wynik</button>
       </form>
     </div>
+    <div class="card" id="timingVideoLibraryCard">
+      <h3>🎥 Biblioteka filmów z prób</h3>
+      <p class="muted">Dodawaj nagrania niezależnie od stopera. Możesz przypisać dowolny film do dowolnego członka i konkurencji.</p>
+      <form id="timingLibraryVideoForm">
+        <div class="field"><label for="timingLibraryMember">Członek MDP</label><select id="timingLibraryMember" required></select></div>
+        <div class="field"><label for="timingLibraryExercise">Konkurencja / bieg</label><input id="timingLibraryExercise" maxlength="120" required placeholder="Np. rozwinięcie bojowe – tor 1"></div>
+        <div class="field"><label for="timingLibraryTitle">Nazwa nagrania (opcjonalnie)</label><input id="timingLibraryTitle" maxlength="140" placeholder="Np. Próba treningowa 2"></div>
+        <div class="field"><label for="timingLibraryNotes">Notatka (opcjonalnie)</label><textarea id="timingLibraryNotes" maxlength="1000" placeholder="Co warto sprawdzić na nagraniu…"></textarea></div>
+        <div class="field"><label for="timingLibraryFile">Wybierz film</label><input id="timingLibraryFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm" required><small class="muted">MP4, MOV lub WebM · maks. 60 MB</small></div>
+        <button class="btn red" type="submit">⬆️ Dodaj film do biblioteki</button>
+      </form>
+      <div id="timingVideoLibraryList" style="margin-top:14px"><div class="muted">Ładowanie biblioteki…</div></div>
+    </div>
     <div class="card">
       <h3 id="timingAnalysisTitle">📊 Twoja analiza</h3>
       <div id="timingAnalysisControls" class="field" style="margin:12px 0"><label for="timingAnalysisFilter">Wybierz konkurencję / ćwiczenie</label><select id="timingAnalysisFilter" onchange="renderTimingResults()"><option value="">Wszystkie ćwiczenia</option></select></div>
@@ -4181,7 +4194,7 @@ function openScreen(id){
   // ulice, członków, kolory i liczbę gazet.
   // Galeria Volvo nie wymaga WebGL ani zewnętrznej biblioteki 3D.
   if(id==="galleryScreen") loadGallery();
-  if(id==="timingScreen") { renderTimingMemberOptions(); loadTimingResults(); }
+  if(id==="timingScreen") { renderTimingMemberOptions(); renderTimingLibraryMemberOptions(); loadTimingResults(); loadTimingVideoLibrary(); }
   if(id==="trainingCenterScreen") loadTrainingCenter();
   if(id==="inventoryScreen") loadInventory();
   if(id==="quizScreen" && state.role==="member") renderMemberQuizzes();
@@ -4351,6 +4364,7 @@ function renderTimingSplits(){
   root.innerHTML=timingSplits.length?`<b>Międzyczasy:</b> ${timingSplits.map(s=>`${escapeHtml(s.label)}: ${formatTiming(s.segment_ms)} (łącznie ${formatTiming(s.cumulative_ms)})`).join(" · ")}`:"Międzyczasy: jeszcze nie zapisano żadnego odcinka.";
 }
 function renderTimingMemberOptions(){
+  renderTimingLibraryMemberOptions();
   const sel=$("timingMember");if(!sel)return;
   const members=state.data.members||[];
   const memberView=state.role==="member";
@@ -4496,6 +4510,29 @@ async function extractTimingVideoFrames(dataUrl){
     video.src=dataUrl;
   });
 }
+let timingLibraryVideos=[];
+function renderTimingLibraryMemberOptions(){
+  const sel=$("timingLibraryMember");if(!sel)return;
+  const members=state.data.members||[];
+  sel.innerHTML='<option value="">Wybierz członka…</option>'+members.map(m=>'<option value="'+Number(m.id)+'">'+escapeHtml((m.first_name||"")+" "+(m.last_name||m.name||""))+'</option>').join("");
+}
+async function loadTimingVideoLibrary(){
+  const root=$("timingVideoLibraryList");if(!root||!["admin","guardian"].includes(state.role))return;
+  try{
+    const data=await api("/api/training-videos");timingLibraryVideos=Array.isArray(data?.videos)?data.videos:[];
+    if(!timingLibraryVideos.length){root.innerHTML='<div class="empty">Nie dodano jeszcze filmów. Możesz dodać pierwsze nagranie powyżej.</div>';return;}
+    root.innerHTML=timingLibraryVideos.map(v=>'<article class="card" style="background:#101010;margin:10px 0"><b>'+escapeHtml(v.title||v.file_name||"Nagranie")+'</b><div class="muted">'+escapeHtml((v.first_name||"")+" "+(v.last_name||""))+' · '+escapeHtml(v.exercise)+' · '+formatCreated(v.created_at)+'</div>'+(v.notes?'<p class="muted">'+escapeHtml(v.notes)+'</p>':'')+'<div class="actions"><button class="btn outline" type="button" onclick="playTimingLibraryVideo('+Number(v.id)+')">▶ Odtwórz</button><button class="btn danger" type="button" onclick="deleteTimingLibraryVideo('+Number(v.id)+')">Usuń</button></div><div id="timingLibraryPlayer-'+Number(v.id)+'"></div></article>').join("");
+  }catch(e){root.innerHTML='<div class="empty">Nie udało się pobrać filmów: '+escapeHtml(e.message)+'</div>';}
+}
+async function playTimingLibraryVideo(id){
+  try{const data=await api('/api/training-videos/'+id);const root=$('timingLibraryPlayer-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000;margin-top:10px';video.src=data.video.data_url;root.appendChild(video);}
+  catch(e){toast(e.message,'error');}
+}
+async function deleteTimingLibraryVideo(id){
+  if(!confirm('Usunąć to nagranie z biblioteki?'))return;
+  try{await api('/api/training-videos/'+id,{method:'DELETE'});toast('Film usunięty.');await loadTimingVideoLibrary();}
+  catch(e){toast(e.message,'error');}
+}
 async function viewTimingVideo(id){
   try{const data=await api('/api/timing-results/'+id+'/video');const root=document.getElementById('timingVideoView-'+id);if(!root)return;root.innerHTML='';const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='width:100%;max-height:420px;border-radius:12px;background:#000';video.src=data.video.data_url;root.appendChild(video);}
   catch(e){toast(e.message,'error');}
@@ -4518,6 +4555,22 @@ async function invalidateTimingResult(id){
   try{await api(`/api/timing-results/${id}`,{method:"DELETE",body:JSON.stringify({reason:reason.trim()})});toast("Wynik unieważniony.");await loadTimingResults();}
   catch(e){toast(e.message,"error");}
 }
+$("timingLibraryVideoForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const file=$("timingLibraryFile")?.files?.[0];
+  const memberId=Number($("timingLibraryMember").value);
+  if(!memberId){toast("Wybierz członka MDP.","error");return;}
+  if(!file){toast("Wybierz film.","error");return;}
+  if(!["video/mp4","video/webm","video/quicktime"].includes(file.type)||file.size>60*1024*1024){toast("Film musi być MP4, MOV lub WebM i mieć maksymalnie 60 MB.","error");return;}
+  const submit=e.target.querySelector('button[type="submit"]');if(submit)submit.disabled=true;
+  try{
+    const dataUrl=await fileToDataUrl(file);
+    await api("/api/training-videos",{method:"POST",body:JSON.stringify({member_id:memberId,exercise:$("timingLibraryExercise").value.trim(),title:$("timingLibraryTitle").value.trim(),notes:$("timingLibraryNotes").value.trim(),file_name:file.name,mime_type:file.type,data_url:dataUrl})});
+    e.target.reset();toast("Film dodany do biblioteki.");await loadTimingVideoLibrary();
+  }catch(err){toast(err.message,"error");}
+  finally{if(submit)submit.disabled=false;}
+});
+
 $("timingForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(timingStartedAt)stopTiming();
