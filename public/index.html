@@ -1864,12 +1864,20 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
     <span class="competition-card-kicker">GRAFIKA KONKURENCJI · SCHEMAT POGLĄDOWY</span>
     <h3>Przebieg rozwinięcia bojowego</h3>
     <p class="muted">Schemat pokazuje ogólne części konkurencji, a nie fizyczne rozmieszczenie sprzętu lub stanowisk.</p>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-      <div style="background:#251116;border:1px solid #793039;border-radius:13px;padding:15px"><div style="font-size:24px">🏁</div><b>01 · START</b><div class="muted" style="font-size:12px;margin-top:5px">Rozpoczęcie konkurencji przez drużynę</div></div>
-      <div style="background:#191d25;border:1px solid #3c4a5d;border-radius:13px;padding:15px"><div style="font-size:24px">👨‍🚒</div><b>02 · ZESPÓŁ</b><div class="muted" style="font-size:12px;margin-top:5px">Współpraca i podział ról</div></div>
-      <div style="background:#251116;border:1px solid #793039;border-radius:13px;padding:15px"><div style="font-size:24px">🚒</div><b>03 · KONKURENCJA</b><div class="muted" style="font-size:12px;margin-top:5px">Wykonanie zadań zgodnie z regulaminem</div></div>
-      <div style="background:#191d25;border:1px solid #3c4a5d;border-radius:13px;padding:15px"><div style="font-size:24px">⚖️</div><b>04 · OCENA</b><div class="muted" style="font-size:12px;margin-top:5px">Weryfikacja czasu i ewentualnych kar</div></div>
-    </div>
+    <svg viewBox="0 0 900 470" role="img" aria-label="Poglądowa grafika przebiegu rozwinięcia bojowego: start, strefa konkurencji, kontrola i meta" style="display:block;width:100%;height:auto;background:#11141b;border:1px solid #593039;border-radius:16px">
+      <defs><marker id="bojArrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L0 6 L8 3 z" fill="#ff626a"/></marker></defs>
+      <rect x="26" y="26" width="848" height="418" rx="24" fill="#191d25" stroke="#586170" stroke-width="3"/>
+      <path d="M150 350 L150 145 Q150 95 205 95 L690 95 Q750 95 750 150 L750 320 Q750 375 690 375 L300 375" fill="none" stroke="#aeb6c2" stroke-width="5" stroke-dasharray="13 11" opacity=".65"/>
+      <path d="M150 350 L150 145 Q150 95 205 95 L690 95 Q750 95 750 150 L750 320 Q750 375 690 375 L300 375" fill="none" stroke="#ff626a" stroke-width="4" marker-end="url(#bojArrow)"/>
+      <g font-family="Arial,sans-serif" text-anchor="middle">
+        <rect x="70" y="315" width="160" height="74" rx="12" fill="#511b25" stroke="#ff626a" stroke-width="2"/><text x="150" y="345" fill="#fff" font-size="23" font-weight="700">START</text><text x="150" y="370" fill="#ffd9dc" font-size="14">rozpoczęcie</text>
+        <rect x="330" y="58" width="245" height="78" rx="12" fill="#252d3a" stroke="#8795a8" stroke-width="2"/><text x="452" y="91" fill="#fff" font-size="22" font-weight="700">STREFA KONKURENCJI</text><text x="452" y="116" fill="#d4dbe5" font-size="14">wykonanie zadań</text>
+        <rect x="650" y="210" width="175" height="78" rx="12" fill="#252d3a" stroke="#8795a8" stroke-width="2"/><text x="737" y="242" fill="#fff" font-size="22" font-weight="700">KONTROLA</text><text x="737" y="267" fill="#d4dbe5" font-size="14">ocena sędziów</text>
+        <rect x="225" y="340" width="160" height="70" rx="12" fill="#183b2b" stroke="#55c98b" stroke-width="2"/><text x="305" y="370" fill="#fff" font-size="23" font-weight="700">META</text><text x="305" y="393" fill="#d4ffe7" font-size="14">zakończenie</text>
+      </g>
+      <text x="450" y="225" fill="#aeb6c2" font-family="Arial,sans-serif" font-size="22" text-anchor="middle" font-weight="700">ROZWINIĘCIE BOJOWE MDP</text>
+      <text x="450" y="254" fill="#818b9a" font-family="Arial,sans-serif" font-size="15" text-anchor="middle">schemat poglądowy · nie w skali</text>
+    </svg>
     <div class="competition-callout" style="margin-top:12px"><span>📋</span><p><b>Wynik końcowy</b><br>Ustalany przez komisję sędziowską według regulaminu 2/2026.</p></div>
     <div class="competition-safety-note">To grafika informacyjna. Nie służy do rozstawiania toru ani przygotowania stanowisk. Za organizację konkurencji odpowiadają organizatorzy i opiekunowie.</div>
   </div>
