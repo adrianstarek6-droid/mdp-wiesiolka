@@ -4142,7 +4142,7 @@ app.post('/api/quizzes/:id/submit', auth, async (req,res) => {
     const ids=new Set();
     for(const a of normalized){
       const question=byId.get(a.questionId);
-      if(!question||ids.has(a.questionId)||!Number.isInteger(a.answerIndex)||a.answerIndex<0||a.answerIndex>3) return res.status(400).json({error:'Nieprawidłowe odpowiedzi.'});
+      if(!question||ids.has(a.questionId)||!Number.isInteger(a.answerIndex)||a.answerIndex < -1||a.answerIndex>3) return res.status(400).json({error:'Nieprawidłowe odpowiedzi.'});
       ids.add(a.questionId);
     }
     const questions=normalized.map(a=>byId.get(a.questionId));
