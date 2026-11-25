@@ -3270,6 +3270,11 @@ function renderNewspapers(){
           <div class="stat"><strong>${people.length}</strong><span>Przypisani członkowie</span></div>
         </div>
         <div class="progress" style="margin-top:12px"><div style="width:${progress}%;background:${escapeHtml(g.color||"#e51b23")}"></div></div>
+        <div class="actions" style="margin-top:14px">
+          ${!g.started&&!g.done?`<button class="btn red" type="button" onclick="startNewspaper(${Number(g.id)})">🚀 Rozpocznij kolportaż</button>`:""}
+          ${g.started&&!g.done?`<button class="btn outline" type="button" onclick="openNewspaperMap(${Number(g.id)})">🗺️ Mapa regionu</button><button class="btn outline" type="button" onclick="addDelivered(${Number(g.id)})">➕ Dodaj 10 gazet</button><button class="btn green" type="button" onclick="setNewspaperDone(${Number(g.id)})">✅ Oznacz jako rozniesione</button>`:""}
+          ${g.done?`<span class="status-done">✅ Kolportaż zakończony</span>`:""}
+        </div>
         <div style="margin-top:12px"><b>👥 Członkowie grupy</b>
           <div class="group-members" style="margin-top:7px">${people.length?people.map(name=>`<span class="member-chip">${escapeHtml(name)}</span>`).join(""):`<span class="muted">Nie przypisano członków</span>`}</div>
         </div>
