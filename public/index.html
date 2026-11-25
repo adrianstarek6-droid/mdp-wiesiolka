@@ -1446,7 +1446,7 @@ table td,table th{border-bottom-color:rgba(190,205,220,.12)}
       <div id="timingAnalysisControls" class="field" style="margin:12px 0"><label for="timingAnalysisFilter">Wybierz konkurencję / ćwiczenie</label><select id="timingAnalysisFilter" onchange="renderTimingResults()"><option value="">Wszystkie ćwiczenia</option></select></div>
       <div id="timingStats" class="stats-grid"><div class="muted">Ładowanie wyników…</div></div>
       <div id="timingHistory" style="margin-top:12px"></div>
-      <div id="guardianCompetitionAnalysis" class="card hidden" style="margin-top:14px;border-color:#713036"><div class="section-title"><h3>🏆 Analiza zawodnika — perspektywa opiekuna</h3><small>Próby i konkurencje</small></div><p class="muted">Wybierz członka i konkurencję. Analiza korzysta z zapisanych, ważnych pomiarów stopera: czasu, błędów i międzyczasów. Nie dopisuje wyników, których nie ma w historii.</p><div class="grid-2"><div class="field"><label for="guardianAnalysisMember">Zawodnik</label><select id="guardianAnalysisMember" onchange="renderGuardianCompetitionAnalysis()"><option value="">Wybierz członka</option></select></div><div class="field"><label for="guardianAnalysisExercise">Konkurencja / próba</label><select id="guardianAnalysisExercise" onchange="renderGuardianCompetitionAnalysis()"><option value="">Wybierz konkurencję</option></select></div></div><div id="guardianAnalysisOutput"><div class="empty">Wybierz zawodnika i konkurencję.</div></div></div>
+      <div id="guardianCompetitionAnalysis" class="card hidden" style="margin-top:14px;border-color:#713036"><div class="section-title"><h3>🏆 Pełna analiza zawodnika</h3><small>Wszystkie biegi i próby</small></div><p class="muted">Wybierz członka MDP. Zobaczysz wszystkie jego zapisane biegi i konkurencje, porównanie prób, błędy, międzyczasy oraz wskazówki treningowe.</p><div class="field"><label for="guardianAnalysisMember">Zawodnik</label><select id="guardianAnalysisMember" onchange="renderGuardianCompetitionAnalysis()"><option value="">Wybierz członka</option></select></div><div id="guardianAnalysisOutput"><div class="empty">Wybierz zawodnika, aby zobaczyć pełną analizę.</div></div></div>
     </div>
   </section>
 
@@ -4642,46 +4642,52 @@ function renderGuardianCompetitionAnalysis(){
   const staff=["admin","guardian"].includes(state.role);
   root.classList.toggle("hidden",!staff);
   if(!staff)return;
-  const memberSel=$("guardianAnalysisMember"),exerciseSel=$("guardianAnalysisExercise"),out=$("guardianAnalysisOutput");
-  if(!memberSel||!exerciseSel||!out)return;
-  const previousMember=memberSel.value,previousExercise=exerciseSel.value;
+  const memberSel=$("guardianAnalysisMember"),out=$("guardianAnalysisOutput");
+  if(!memberSel||!out)return;
+  const previousMember=memberSel.value;
   const memberMap=new Map();
   (state.data?.members||[]).forEach(m=>{const id=Number(m.id);if(id)memberMap.set(id,((m.first_name||"")+" "+(m.last_name||m.name||"")).trim()||"Członek MDP");});
   timingResults.forEach(r=>{const id=Number(r.member_id);if(id&&!memberMap.has(id))memberMap.set(id,((r.first_name||"")+" "+(r.last_name||"")).trim()||"Członek MDP");});
   memberSel.innerHTML='<option value="">Wybierz członka</option>'+[...memberMap.entries()].sort((a,b)=>a[1].localeCompare(b[1],"pl")).map(([id,name])=>'<option value="'+id+'">'+escapeHtml(name)+'</option>').join("");
   if(memberMap.has(Number(previousMember)))memberSel.value=previousMember;
-  const exercises=[...new Set(timingResults.map(r=>String(r.exercise||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pl"));
-  exerciseSel.innerHTML='<option value="">Wybierz konkurencję</option>'+exercises.map(name=>'<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>').join("");
-  if(exercises.includes(previousExercise))exerciseSel.value=previousExercise;
-  const memberId=Number(memberSel.value),exercise=exerciseSel.value;
-  if(!memberId||!exercise){out.innerHTML='<div class="empty">Wybierz zawodnika i konkurencję, aby zobaczyć analizę.</div>';return;}
-  const rows=timingResults.filter(r=>Number(r.member_id)===memberId&&String(r.exercise||"").toLowerCase()===exercise.toLowerCase()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const memberId=Number(memberSel.value);
+  if(!memberId){out.innerHTML='<div class="empty">Wybierz zawodnika, aby zobaczyć pełną analizę.</div>';return;}
+  const rows=timingResults.filter(r=>Number(r.member_id)===memberId).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   const valid=rows.filter(r=>r.valid!==false&&r.valid!==0);
-  if(!valid.length){out.innerHTML='<div class="empty">Brak ważnych pomiarów dla tej konkurencji. Unieważnione próby pozostają w historii, ale nie wpływają na analizę.</div>';return;}
-  const times=valid.map(timingFinalMs).filter(Number.isFinite);
-  const best=times.length?Math.min(...times):null,avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
-  const first=valid[0],last=valid[valid.length-1],firstTime=timingFinalMs(first),lastTime=timingFinalMs(last),delta=lastTime-firstTime;
-  const errorTotal=valid.reduce((sum,r)=>sum+Number(r.errors||0),0),firstErrors=Number(first.errors)||0,lastErrors=Number(last.errors)||0;
-  const splits=Array.isArray(last.splits)?last.splits:[];
-  const segments=splits.map((s,i)=>({label:s.label||"Odcinek "+(i+1),ms:Number(s.segment_ms)})).filter(s=>Number.isFinite(s.ms)&&s.ms>=0);
-  const slowest=segments.length?segments.reduce((a,b)=>a.ms>=b.ms?a:b):null;
-  const hints=[];
-  if(valid.length<2)hints.push("Zapisz kolejną próbę w tej samej konkurencji — dopiero wtedy można rzetelnie ocenić zmianę wyniku.");
-  else if(delta<0)hints.push("Ostatnia próba jest szybsza od pierwszej o "+formatTiming(Math.abs(delta))+". Sprawdź, czy poprawa utrzyma się w kolejnych startach.");
-  else if(delta>0)hints.push("Ostatnia próba jest wolniejsza od pierwszej o "+formatTiming(delta)+". Porównaj warunki pomiaru i notatki opiekuna.");
-  else hints.push("Pierwsza i ostatnia próba mają taki sam czas końcowy.");
-  if(valid.length>1&&lastErrors>firstErrors)hints.push("Liczba błędów wzrosła: "+firstErrors+" → "+lastErrors+". Przejrzyj uwagi i zaplanuj spokojne ćwiczenie poprawności.");
-  else if(valid.length>1&&lastErrors<firstErrors)hints.push("Liczba błędów spadła: "+firstErrors+" → "+lastErrors+". To pozytywna zmiana w zapisanych próbach.");
-  if(slowest)hints.push("Najdłuższy zapisany odcinek ostatniej próby: "+slowest.label+" ("+formatTiming(slowest.ms)+"). To punkt do sprawdzenia na treningu, nie automatyczny dowód błędu.");
-  const notes=last.notes?'<div class="notice" style="margin-top:10px"><b>Ostatnia notatka opiekuna:</b><br>'+escapeHtml(last.notes)+'</div>':"";
-  out.innerHTML='<div class="stats" style="margin-top:12px"><div class="stat"><strong>'+valid.length+'</strong><span>Ważne próby</span></div><div class="stat"><strong>'+(best===null?"—":formatTiming(best))+'</strong><span>Najlepszy czas</span></div><div class="stat"><strong>'+(avg===null?"—":formatTiming(avg))+'</strong><span>Średni czas</span></div><div class="stat"><strong>'+errorTotal+'</strong><span>Błędy łącznie</span></div></div>'+
-  '<div class="card" style="margin-top:12px;background:#111820"><h4>📈 Zmiana wyniku</h4><p class="muted">Pierwsza próba: <b>'+formatTiming(firstTime)+'</b> · Ostatnia próba: <b>'+formatTiming(lastTime)+'</b></p><p>'+(valid.length<2?"Za mało prób do oceny trendu.":delta<0?"Poprawa o "+formatTiming(Math.abs(delta)):delta>0?"Wynik wolniejszy o "+formatTiming(delta):"Bez zmiany czasu")+'</p><p class="muted">Błędy: '+firstErrors+' → '+lastErrors+'</p></div>'+
-  '<h4 style="margin-top:14px">🧭 Wnioski dla opiekuna</h4><ul class="hall-bullets">'+hints.map(x=>'<li>'+escapeHtml(x)+'</li>').join("")+'</ul>'+
-  (segments.length?'<h4>Międzyczasy z ostatniej próby</h4>'+segments.map(s=>'<div class="calendar-event-row"><b>'+escapeHtml(s.label)+'</b><span>'+formatTiming(s.ms)+'</span></div>').join(""):'<div class="notice">W ostatniej próbie nie zapisano międzyczasów. Przy kolejnym pomiarze użyj przycisku „Międzyczas”.</div>')+
-  notes+'<div class="muted" style="margin-top:10px">Analiza obejmuje '+rows.length+' zapisanych pomiarów; unieważnione pominięto w obliczeniach.</div>';
-  renderGuardianCompetitionAnalysis();
+  if(!valid.length){out.innerHTML='<div class="empty">Ten zawodnik nie ma jeszcze ważnych pomiarów. Gdy opiekun zapisze jego bieg, pojawi się tu pełna analiza.</div>';return;}
+  const groups=new Map();
+  valid.forEach(r=>{const name=String(r.exercise||"Pozostałe próby").trim()||"Pozostałe próby";if(!groups.has(name))groups.set(name,[]);groups.get(name).push(r);});
+  const allTimes=valid.map(timingFinalMs).filter(Number.isFinite);
+  const best=allTimes.length?Math.min(...allTimes):null;
+  const avg=allTimes.length?Math.round(allTimes.reduce((a,b)=>a+b,0)/allTimes.length):null;
+  const allErrors=valid.reduce((n,r)=>n+(Number(r.errors)||0),0);
+  let sections="";
+  for(const [exercise,list] of groups){
+    const times=list.map(timingFinalMs).filter(Number.isFinite);
+    const first=list[0],last=list[list.length-1];
+    const firstMs=timingFinalMs(first),lastMs=timingFinalMs(last),delta=lastMs-firstMs;
+    const bestMs=times.length?Math.min(...times):null;
+    const avgMs=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):null;
+    const errorCount=list.reduce((n,r)=>n+(Number(r.errors)||0),0);
+    const firstErrors=Number(first.errors)||0,lastErrors=Number(last.errors)||0;
+    const hints=[];
+    if(list.length<2)hints.push("Jest tylko jedna ważna próba — zbierz kolejne pomiary, aby ocenić postęp.");
+    else if(delta<0)hints.push("Ostatnia próba szybsza od pierwszej o "+formatTiming(Math.abs(delta))+".");
+    else if(delta>0)hints.push("Ostatnia próba wolniejsza od pierwszej o "+formatTiming(delta)+". Sprawdź warunki i notatki.");
+    else hints.push("Czas pierwszej i ostatniej próby jest taki sam.");
+    if(lastErrors<firstErrors)hints.push("Liczba błędów spadła z "+firstErrors+" do "+lastErrors+".");
+    if(lastErrors>firstErrors)hints.push("Liczba błędów wzrosła z "+firstErrors+" do "+lastErrors+" — przeanalizuj poprawność wykonania.");
+    const runRows=list.map((r,i)=>{
+      const ms=timingFinalMs(r),date=r.created_at?new Date(r.created_at).toLocaleDateString("pl-PL"):"";
+      const splits=Array.isArray(r.splits)?r.splits:[];
+      const splitText=splits.map((s,j)=>(s.label||"Odcinek "+(j+1))+": "+formatTiming(Number(s.segment_ms)||0)).join(" · ");
+      return '<div class="calendar-event-row" style="display:block;padding:10px 0;border-bottom:1px solid #382126"><b>Próba '+(i+1)+'</b> <span style="float:right">'+(Number.isFinite(ms)?formatTiming(ms):"—")+'</span><div class="muted">'+escapeHtml(date)+' · Błędy: '+(Number(r.errors)||0)+(r.notes?' · '+escapeHtml(r.notes):'')+'</div>'+(splitText?'<div class="muted">'+escapeHtml(splitText)+'</div>':'')+'</div>';
+    }).join("");
+    sections+='<div class="card" style="margin-top:12px;background:#111820"><h4>'+escapeHtml(exercise)+'</h4><div class="stats"><div class="stat"><strong>'+list.length+'</strong><span>Próby</span></div><div class="stat"><strong>'+(bestMs===null?"—":formatTiming(bestMs))+'</strong><span>Najlepszy czas</span></div><div class="stat"><strong>'+(avgMs===null?"—":formatTiming(avgMs))+'</strong><span>Średni czas</span></div><div class="stat"><strong>'+errorCount+'</strong><span>Błędy</span></div></div><p class="muted">Pierwsza: '+formatTiming(firstMs)+' · Ostatnia: '+formatTiming(lastMs)+' · '+(delta<0?"Poprawa o "+formatTiming(Math.abs(delta)):delta>0?"Wolniej o "+formatTiming(delta):"Bez zmiany")+'</p><h4>Wnioski dla opiekuna</h4><ul class="hall-bullets">'+hints.map(x=>'<li>'+escapeHtml(x)+'</li>').join("")+'</ul><details><summary>Historia wszystkich prób ('+list.length+')</summary>'+runRows+'</details></div>';
+  }
+  const invalid=rows.length-valid.length;
+  out.innerHTML='<div class="stats" style="margin-top:12px"><div class="stat"><strong>'+valid.length+'</strong><span>Ważne biegi i próby</span></div><div class="stat"><strong>'+groups.size+'</strong><span>Różne konkurencje</span></div><div class="stat"><strong>'+(best===null?"—":formatTiming(best))+'</strong><span>Najlepszy czas</span></div><div class="stat"><strong>'+allErrors+'</strong><span>Błędy łącznie</span></div></div><p class="muted">Średni czas ze wszystkich zapisanych pomiarów: <b>'+(avg===null?"—":formatTiming(avg))+'</b>. Unieważnione pomiary pominięto: '+invalid+'.</p>'+sections;
 }
-
 async function invalidateTimingResult(id){
   const reason=prompt("Podaj powód unieważnienia. Wynik zostanie zachowany w bazie, ale zniknie z aktywnej historii.");
   if(!reason||!reason.trim())return;
