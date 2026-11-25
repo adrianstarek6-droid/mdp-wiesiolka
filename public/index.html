@@ -4645,7 +4645,8 @@ function renderGuardianCompetitionAnalysis(){
   if(!memberSel||!exerciseSel||!out)return;
   const previousMember=memberSel.value,previousExercise=exerciseSel.value;
   const memberMap=new Map();
-  timingResults.forEach(r=>{const id=Number(r.member_id);if(id)memberMap.set(id,((r.first_name||"")+" "+(r.last_name||"")).trim()||"Członek MDP");});
+  (state.data?.members||[]).forEach(m=>{const id=Number(m.id);if(id)memberMap.set(id,((m.first_name||"")+" "+(m.last_name||m.name||"")).trim()||"Członek MDP");});
+  timingResults.forEach(r=>{const id=Number(r.member_id);if(id&&!memberMap.has(id))memberMap.set(id,((r.first_name||"")+" "+(r.last_name||"")).trim()||"Członek MDP");});
   memberSel.innerHTML='<option value="">Wybierz członka</option>'+[...memberMap.entries()].sort((a,b)=>a[1].localeCompare(b[1],"pl")).map(([id,name])=>'<option value="'+id+'">'+escapeHtml(name)+'</option>').join("");
   if(memberMap.has(Number(previousMember)))memberSel.value=previousMember;
   const exercises=[...new Set(timingResults.map(r=>String(r.exercise||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pl"));
