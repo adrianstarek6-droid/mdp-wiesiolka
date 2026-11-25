@@ -4677,6 +4677,7 @@ function renderGuardianCompetitionAnalysis(){
   '<h4 style="margin-top:14px">🧭 Wnioski dla opiekuna</h4><ul class="hall-bullets">'+hints.map(x=>'<li>'+escapeHtml(x)+'</li>').join("")+'</ul>'+
   (segments.length?'<h4>Międzyczasy z ostatniej próby</h4>'+segments.map(s=>'<div class="calendar-event-row"><b>'+escapeHtml(s.label)+'</b><span>'+formatTiming(s.ms)+'</span></div>').join(""):'<div class="notice">W ostatniej próbie nie zapisano międzyczasów. Przy kolejnym pomiarze użyj przycisku „Międzyczas”.</div>')+
   notes+'<div class="muted" style="margin-top:10px">Analiza obejmuje '+rows.length+' zapisanych pomiarów; unieważnione pominięto w obliczeniach.</div>';
+  renderGuardianCompetitionAnalysis();
 }
 
 async function invalidateTimingResult(id){
